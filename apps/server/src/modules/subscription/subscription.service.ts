@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { SubscriptionStatus } from '@vesper/schemas';
-import type { PrismaService } from '../../core';
+import { PrismaService } from '../../core';
 
 @Injectable()
 export class SubscriptionService {

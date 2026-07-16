@@ -1,15 +1,16 @@
-import { afterEach, describe, expect, it, mock } from 'bun:test';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WgEasyClient } from './wg-easy';
 
 const makeClient = () => new WgEasyClient({ baseUrl: 'http://wg.local', apiKey: 'k' });
 
 afterEach(() => {
-  mock.restore();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('WgEasyClient', () => {
   it('createClient posts and maps the response', async () => {
-    const fetchMock = mock(async () =>
+    const fetchMock = vi.fn(async () =>
       new Response(
         JSON.stringify({
           id: 'client-1',
@@ -21,7 +22,7 @@ describe('WgEasyClient', () => {
         { status: 200 },
       ),
     );
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    vi.stubGlobal('fetch', fetchMock);
 
     const result = await makeClient().createClient('user-1');
 
@@ -31,14 +32,17 @@ describe('WgEasyClient', () => {
   });
 
   it('health returns false on non-ok response', async () => {
-    globalThis.fetch = mock(async () => new Response('', { status: 503 })) as unknown as typeof fetch;
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 503 })));
     expect(await makeClient().health()).toBe(false);
   });
 
   it('health returns false when fetch throws', async () => {
-    globalThis.fetch = mock(async () => {
-      throw new Error('network down');
-    }) as unknown as typeof fetch;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('network down');
+      }),
+    );
     expect(await makeClient().health()).toBe(false);
   });
 });
