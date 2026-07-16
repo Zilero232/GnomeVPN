@@ -34,4 +34,11 @@ describe('WgEasyClient', () => {
     globalThis.fetch = mock(async () => new Response('', { status: 503 })) as unknown as typeof fetch;
     expect(await makeClient().health()).toBe(false);
   });
+
+  it('health returns false when fetch throws', async () => {
+    globalThis.fetch = mock(async () => {
+      throw new Error('network down');
+    }) as unknown as typeof fetch;
+    expect(await makeClient().health()).toBe(false);
+  });
 });
