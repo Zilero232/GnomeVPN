@@ -1,0 +1,22 @@
+{
+  "name": "vesper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "bun --filter '@vesper/server' --filter '@vesper/client' --parallel dev",
+    "dev:server": "bun --filter @vesper/server dev",
+    "dev:client": "bun --filter @vesper/client dev",
+    "dev:infra": "docker compose -f docker-compose.dev.yml up -d",
+    "tauri:dev": "bun --filter '@vesper/server' --filter '@vesper/tauri' --parallel dev",
+    "tauri:build": "bun --filter @vesper/client build && bun --filter @vesper/tauri build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "bun --filter @vesper/schemas typecheck && bun --filter @vesper/server typecheck && bun --filter @vesper/client typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "typescript": "~6.0.3"
+  }
+}
