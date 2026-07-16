@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun --filter '@vesper/server' --filter '@vesper/client' --parallel dev",
     "dev:server": "bun --filter @vesper/server dev",
@@ -13,10 +16,18 @@
     "tauri:build": "bun --filter @vesper/client build && bun --filter @vesper/tauri build",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "bun --filter @vesper/schemas typecheck && bun --filter @vesper/server typecheck && bun --filter @vesper/client typecheck"
+    "typecheck": "bun --filter @vesper/schemas typecheck && bun --filter @vesper/server typecheck && bun --filter @vesper/client typecheck",
+    "lint:css": "stylelint \"apps/client/**/*.scss\"",
+    "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
+    "stylelint": "17.14.0",
+    "stylelint-config-clean-order": "10.0.0",
+    "stylelint-config-standard-scss": "17.0.0",
+    "stylelint-declaration-block-no-ignored-properties": "3.0.0",
+    "stylelint-high-performance-animation": "2.0.0",
+    "stylelint-order": "8.1.1",
     "typescript": "~6.0.3"
   }
 }

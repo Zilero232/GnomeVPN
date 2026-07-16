@@ -1,0 +1,32 @@
+[package]
+name = "vesper"
+version = "0.1.0"
+description = "Vesper VPN desktop client"
+authors = ["Vesper"]
+edition = "2021"
+
+[lib]
+name = "vesper_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+boringtun = "0.7"
+tun-rs = { version = "2", features = ["async_tokio"] }
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+base64 = "0.22"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "sync", "time", "io-util"] }
+parking_lot = "0.12"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"

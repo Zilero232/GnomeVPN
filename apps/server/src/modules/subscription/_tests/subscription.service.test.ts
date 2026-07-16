@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { SubscriptionService } from './subscription.service';
+
+import { SubscriptionService } from '../subscription.service';
 
 const fakePrisma = {
   subscription: {

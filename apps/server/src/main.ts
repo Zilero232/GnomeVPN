@@ -1,0 +1,21 @@
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { json } from 'express';
+import helmet from 'helmet';
+import { ZodValidationPipe } from 'nestjs-zod';
+
+import { AppModule } from './app.module';
+import { allowedOrigins } from './config/cors';
+import { validateEnv } from './config/env.schema';
+
+const env = validateEnv(process.env);
+
+const app = await NestFactory.create(AppModule, { bodyParser: false });
+
+app.use(helmet({ contentSecurityPolicy: false }));
+app.enableCors({ origin: allowedOrigins, credentials: true, exposedHeaders: ['set-auth-token'] });
+app.use(json());
+app.useGlobalPipes(new ZodValidationPipe());
+app.enableShutdownHooks();
+
+await app.listen(env.PORT);

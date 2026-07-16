@@ -1,0 +1,22 @@
+import { api } from '../http';
+
+import type { Node, SubscriptionStatus, TunnelConfig } from '@vesper/schemas';
+
+export const listNodes = async (): Promise<Node[]> => {
+  const { data } = await api.get('/nodes');
+  return data;
+};
+
+export const connectTunnel = async (nodeId: string): Promise<TunnelConfig> => {
+  const { data } = await api.post('/tunnel/connect', { nodeId });
+  return data;
+};
+
+export const disconnectTunnel = async (): Promise<void> => {
+  await api.post('/tunnel/disconnect');
+};
+
+export const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
+  const { data } = await api.get('/subscription/status');
+  return data;
+};

@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { bearer } from 'better-auth/plugins';
+
 import { allowedOrigins } from '../../config/cors';
 import { validateEnv } from '../../config/env.schema';
 import { basePrisma } from '../../core';

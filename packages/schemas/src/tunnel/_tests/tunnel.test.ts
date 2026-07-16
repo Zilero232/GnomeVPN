@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { connectInputSchema, tunnelConfigSchema } from './index';
+
+import { connectInputSchema, tunnelConfigSchema } from '../index';
 
 describe('tunnel schemas', () => {
   it('accepts a valid tunnel config', () => {

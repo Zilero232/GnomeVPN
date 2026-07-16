@@ -6,6 +6,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+
 import type { ApiErrorCode } from '@vesper/schemas';
 
 const body = (code: ApiErrorCode, error: string) => ({ error, code });

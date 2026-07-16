@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Vesper",
+  "version": "0.1.0",
+  "identifier": "app.vesper.desktop",
+  "build": {
+    "frontendDist": "../client/out",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "bun --filter @vesper/client build",
+    "beforeDevCommand": "bun --filter @vesper/client dev"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Vesper",
+        "url": "/app",
+        "width": 420,
+        "height": 720,
+        "center": true,
+        "resizable": true,
+        "minWidth": 380,
+        "minHeight": 640
+      }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.icns"]
+  }
+}

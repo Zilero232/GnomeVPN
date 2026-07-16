@@ -14,8 +14,10 @@ export type Env = z.infer<typeof envSchema>;
 
 export const validateEnv = (raw: Record<string, unknown>): Env => {
   const parsed = envSchema.safeParse(raw);
+
   if (!parsed.success) {
     throw new Error(`Invalid environment:\n${z.prettifyError(parsed.error)}`);
   }
+
   return parsed.data;
 };

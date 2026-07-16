@@ -1,0 +1,21 @@
+:root {
+  --color-bg: #0b0d12;
+  --color-surface: #151922;
+  --color-border: #262c3a;
+  --color-text: #e8ebf2;
+  --color-text-muted: #98a1b5;
+  --color-accent: #5b8cff;
+  --color-danger: #ff5b6e;
+  --color-success: #3ddc91;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}

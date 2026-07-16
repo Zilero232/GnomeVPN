@@ -1,5 +1,6 @@
 import { Global, Injectable, Module } from '@nestjs/common';
-import { ConfigModule as NestConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigModule as NestConfigModule } from '@nestjs/config';
+
 import { type Env, validateEnv } from './env.schema';
 
 @Injectable()

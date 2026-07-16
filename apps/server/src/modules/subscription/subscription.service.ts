@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import type { SubscriptionStatus } from '@vesper/schemas';
+
 import { PrismaService } from '../../core';
+
+import type { SubscriptionStatus } from '@vesper/schemas';
 
 @Injectable()
 export class SubscriptionService {
@@ -15,9 +17,11 @@ export class SubscriptionService {
       where: { userId },
       select: { status: true, currentPeriodEnd: true },
     });
+
     if (!row) {
       return { status: 'expired', currentPeriodEnd: null };
     }
+
     return {
       status: row.status,
       currentPeriodEnd: row.currentPeriodEnd ? row.currentPeriodEnd.toISOString() : null,

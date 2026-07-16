@@ -1,0 +1,53 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+  min-height: 100vh;
+  padding: 32px 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.hint {
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.node {
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 15px;
+  color: inherit;
+  background-color: var(--color-surface);
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.nodeActive {
+  border-color: var(--color-success);
+}
+
+.flag {
+  font-size: 22px;
+}

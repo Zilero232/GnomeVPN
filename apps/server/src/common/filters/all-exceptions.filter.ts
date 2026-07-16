@@ -6,7 +6,18 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+
+import type { ApiErrorCode } from '@vesper/schemas';
 import type { Response } from 'express';
+
+const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
+  400: 'VALIDATION_FAILED',
+  401: 'UNAUTHORIZED',
+  402: 'PAYMENT_REQUIRED',
+  403: 'FORBIDDEN',
+};
+
+const codeForStatus = (status: number): ApiErrorCode => STATUS_TO_CODE[status] ?? 'INTERNAL_ERROR';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -18,9 +29,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const res = exception.getResponse();
       const hasCode = typeof res === 'object' && res !== null && 'code' in res;
-      response.status(exception.getStatus()).json(
-        hasCode ? res : { error: exception.message, code: 'INTERNAL_ERROR' },
-      );
+      const status = exception.getStatus();
+      response
+        .status(status)
+        .json(hasCode ? res : { error: exception.message, code: codeForStatus(status) });
+
       return;
     }
 
