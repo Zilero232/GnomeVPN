@@ -74,6 +74,17 @@
   letter-spacing: 0.14em;
 }
 
+.version {
+  margin: 2px 0 0;
+  padding: 6px 11px 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-align: center;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+
 .divider {
   height: 1px;
   margin: 5px 10px;

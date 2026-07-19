@@ -11,6 +11,7 @@ import { CheckUpdateButton } from '@/features/app/check-update';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
+import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
@@ -81,6 +82,10 @@ export const AppMenu = () => {
               tone="danger"
               onClick={() => signOut.mutate()}
             />
+
+            <motion.p className={s.version} variants={MENU_ITEM_MOTION}>
+              v{env.NEXT_PUBLIC_APP_VERSION}
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>

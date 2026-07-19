@@ -19,11 +19,22 @@
     "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
-    "provision:nodes": "bun --env-file apps/server/.env infra/provision/provision-nodes.ts"
+    "provision:nodes": "bun --env-file apps/server/.env infra/provision/provision-nodes.ts",
+    "version:sync": "node ./scripts/sync-version.mjs",
+    "release:patch": "npm version patch --no-git-tag-version && bun run version:sync",
+    "release:minor": "npm version minor --no-git-tag-version && bun run version:sync",
+    "release:major": "npm version major --no-git-tag-version && bun run version:sync",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true",
+    "apps/client/**/*.scss": "stylelint --fix"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
     "@types/bcryptjs": "^3.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.1.0",
     "stylelint": "17.14.0",
     "stylelint-config-clean-order": "10.0.0",
     "stylelint-config-standard-scss": "17.0.0",
