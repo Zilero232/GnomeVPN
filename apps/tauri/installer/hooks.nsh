@@ -1,29 +1,9 @@
 !macro NSIS_HOOK_PREINSTALL
-  nsExec::ExecToLog 'sc.exe stop GnomeVPNService'
+  ; `net stop` blocks until the service has actually stopped, unlike `sc stop`
+  ; which returns immediately and leaves the binary locked for a moment longer.
+  ; A failure here just means the service was not installed yet.
+  nsExec::ExecToLog 'net stop GnomeVPNService'
   Pop $0
-
-  ; sc возвращает управление до фактической остановки: без ожидания файл службы
-  ; остаётся занят и копирование новой версии падает.
-  StrCpy $1 0
-
-  ${Do}
-    Sleep 500
-    IntOp $1 $1 + 1
-
-    nsExec::ExecToStack 'sc.exe query GnomeVPNService'
-    Pop $0
-    Pop $2
-
-    ${If} $0 != 0
-      ${Break}
-    ${EndIf}
-
-    ${StrContains} $3 "STOPPED" $2
-
-    ${If} $3 != ""
-      ${Break}
-    ${EndIf}
-  ${LoopUntil} $1 >= 30
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
