@@ -5,11 +5,14 @@ name: Release App
 #
 # Secrets: TAURI_SIGNING_PRIVATE_KEY, NEXT_PUBLIC_API_URL
 
+# Runs after Check Code passes. workflow_run has no paths filter, so the guard
+# is the release-already-exists check below: a run without a version bump finds
+# the tag present and stops.
 on:
-  push:
+  workflow_run:
+    workflows: [Check Code]
+    types: [completed]
     branches: [master]
-    paths:
-      - 'package.json'
   workflow_dispatch: {}
 
 concurrency:
@@ -18,6 +21,8 @@ concurrency:
 
 jobs:
   resolve-version:
+    # workflow_run fires on failure too, so the conclusion is checked explicitly.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

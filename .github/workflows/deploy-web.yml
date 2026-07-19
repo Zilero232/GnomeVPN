@@ -11,8 +11,12 @@ name: Deploy Web
 #   DEPLOY_PATH          absolute path on the VPS (e.g. /opt/gnomevpn)
 #   NEXT_PUBLIC_API_URL  https://api.gnomevpn.ru
 
+# Runs only after Check Code passes on master — deploying code that fails its
+# own linters or typecheck is never what we want.
 on:
-  push:
+  workflow_run:
+    workflows: [Check Code]
+    types: [completed]
     branches: [master]
   workflow_dispatch: {}
 
@@ -26,6 +30,8 @@ env:
 
 jobs:
   build-web:
+    # workflow_run fires on failure too, so the conclusion is checked explicitly.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,6 +62,7 @@ jobs:
             ${{ env.WEB_IMAGE }}:${{ github.sha }}
 
   build-api:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
