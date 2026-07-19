@@ -1,1 +1,1 @@
-export { useSubscriptionStatus } from './model/hooks/use-subscription-status';
+export { useSubscriptionStatus } from './model/hooks';

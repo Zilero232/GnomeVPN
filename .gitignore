@@ -7,4 +7,5 @@ target/
 *.log
 .env
 .env.local
+infra/provision/nodes.json
 apps/tauri/gen/

@@ -1,46 +1,6 @@
-type CreateClientResult = {
-  clientId: string;
-  privateKey: string;
-  address: string;
-  serverPublicKey: string;
-  dns: string;
-};
+import { parseIniValue } from './wg-easy-ini';
 
-type WgEasyClientRow = {
-  id: string;
-  name: string;
-  address: string;
-  latestHandshakeAt?: string | null;
-};
-
-const parseIniValue = (config: string, section: string, key: string): string | null => {
-  const lines = config.split('\n').map((line) => line.trim());
-  const start = lines.findIndex((line) => line.toLowerCase() === `[${section.toLowerCase()}]`);
-
-  if (start === -1) {
-    return null;
-  }
-
-  for (let index = start + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-
-    if (line.startsWith('[')) {
-      break;
-    }
-
-    const separator = line.indexOf('=');
-
-    if (separator === -1) {
-      continue;
-    }
-
-    if (line.slice(0, separator).trim().toLowerCase() === key.toLowerCase()) {
-      return line.slice(separator + 1).trim();
-    }
-  }
-
-  return null;
-};
+import type { CreateClientResult, WgEasyClientRow } from './wg-easy.types';
 
 export class WgEasyClient {
   private readonly baseUrl: string;

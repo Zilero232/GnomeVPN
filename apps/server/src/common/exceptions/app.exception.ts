@@ -22,26 +22,31 @@ export class AppNotFoundException extends NotFoundException {
     super(body(code, error));
   }
 }
+
 export class AppForbiddenException extends ForbiddenException {
   constructor(code: ApiErrorCode, error: string) {
     super(body(code, error));
   }
 }
+
 export class AppUnauthorizedException extends UnauthorizedException {
   constructor(code: ApiErrorCode, error: string) {
     super(body(code, error));
   }
 }
+
 export class AppBadRequestException extends BadRequestException {
   constructor(code: ApiErrorCode, error: string) {
     super(body(code, error));
   }
 }
+
 export class AppPaymentRequiredException extends PaymentRequiredException {
   constructor(code: ApiErrorCode, error: string) {
     super(body(code, error));
   }
 }
+
 export class AppServiceUnavailableException extends ServiceUnavailableException {
   constructor(code: ApiErrorCode, error: string) {
     super(body(code, error));

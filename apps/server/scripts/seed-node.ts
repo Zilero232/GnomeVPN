@@ -1,4 +1,9 @@
 import { basePrisma } from '../src/core';
+import { upsertNode } from './lib/upsert-node';
+
+import type { PrismaLike } from './lib/upsert-node';
+
+const prisma = basePrisma as unknown as PrismaLike;
 
 const main = async () => {
   const country = process.env.SEED_COUNTRY ?? 'Germany';
@@ -19,28 +24,18 @@ const main = async () => {
     );
   }
 
-  const existing = await basePrisma.node.findFirst({ where: { publicEndpoint } });
-
-  const node = existing
-    ? await basePrisma.node.update({
-        where: { id: existing.id },
-        data: { country, countryCode, flagEmoji, city, wgEasyUrl, wgEasyApiKeyRef, enabled: true },
-      })
-    : await basePrisma.node.create({
-        data: {
-          country,
-          countryCode,
-          flagEmoji,
-          city,
-          publicEndpoint,
-          wgEasyUrl,
-          wgEasyApiKeyRef,
-          enabled: true,
-        },
-      });
+  const result = await upsertNode(prisma, {
+    country,
+    countryCode,
+    flagEmoji,
+    city,
+    publicEndpoint,
+    wgEasyUrl,
+    wgEasyApiKeyRef,
+  });
 
   process.stdout.write(
-    `${existing ? 'Updated' : 'Seeded'} node ${node.id} (${country}, ${publicEndpoint})\n`,
+    `${result.wasExisting ? 'Updated' : 'Seeded'} node ${result.id} (${country}, ${publicEndpoint})\n`,
   );
 
   await basePrisma.$disconnect();

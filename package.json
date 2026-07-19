@@ -18,16 +18,26 @@
     "lint:fix": "biome check --write .",
     "typecheck": "bun --filter @vesper/schemas typecheck && bun --filter @vesper/server typecheck && bun --filter @vesper/client typecheck",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
-    "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix"
+    "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
+    "provision:nodes": "bun --env-file apps/server/.env infra/provision/provision-nodes.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
+    "@types/bcryptjs": "^3.0.0",
     "stylelint": "17.14.0",
     "stylelint-config-clean-order": "10.0.0",
     "stylelint-config-standard-scss": "17.0.0",
     "stylelint-declaration-block-no-ignored-properties": "3.0.0",
     "stylelint-high-performance-animation": "2.0.0",
     "stylelint-order": "8.1.1",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.0.0",
+    "zod": "^4.4.3"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "node-ssh": "^13.2.1",
+    "remeda": "^2.39.0",
+    "ts-pattern": "^5.9.0"
   }
 }

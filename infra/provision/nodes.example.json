@@ -1,0 +1,11 @@
+[
+  {
+    "host": "203.0.113.10",
+    "sshUser": "root",
+    "sshPassword": "REPLACE_ME",
+    "country": "Germany",
+    "countryCode": "DE",
+    "flagEmoji": "🇩🇪",
+    "city": "Frankfurt"
+  }
+]

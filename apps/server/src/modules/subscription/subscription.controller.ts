@@ -1,11 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
-import { subscriptionStatusSchema } from '@vesper/schemas';
-import { createZodDto, ZodResponse } from 'nestjs-zod';
+import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { SubscriptionStatusDto } from './dto/subscription.dto';
 import { SubscriptionService } from './subscription.service';
-
-class SubscriptionStatusDto extends createZodDto(subscriptionStatusSchema) {}
 
 @Controller('subscription')
 export class SubscriptionController {

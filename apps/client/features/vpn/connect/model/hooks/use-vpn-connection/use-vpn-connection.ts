@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { match } from 'ts-pattern';
 
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import { type VpnEvent, vpnConnect, vpnDisconnect } from '@/shared/lib';
@@ -29,21 +30,24 @@ export const useVpnConnection = () => {
       return;
     }
 
-    if (event.type === 'connected') {
-      clearWatchdog();
-      setStatus('connected');
-    }
-    if (event.type === 'disconnected') {
-      clearWatchdog();
-      setStatus('disconnected');
-      setActiveNodeId(null);
-    }
-    if (event.type === 'error') {
-      clearWatchdog();
-      setStatus('disconnected');
-      setActiveNodeId(null);
-      toast.error(event.message);
-    }
+    match(event)
+      .with({ type: 'connected' }, () => {
+        clearWatchdog();
+        setStatus('connected');
+      })
+      .with({ type: 'disconnected' }, () => {
+        clearWatchdog();
+        setStatus('disconnected');
+        setActiveNodeId(null);
+      })
+      .with({ type: 'error' }, ({ message }) => {
+        clearWatchdog();
+        setStatus('disconnected');
+        setActiveNodeId(null);
+        toast.error(message);
+      })
+      .with({ type: 'connecting' }, { type: 'handshake' }, { type: 'bytesUpdate' }, () => {})
+      .exhaustive();
   };
 
   const connect = async (nodeId: string) => {

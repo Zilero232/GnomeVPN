@@ -1,1 +1,1 @@
-export { useNodes } from './model/hooks/use-nodes';
+export { useNodes } from './model/hooks';
