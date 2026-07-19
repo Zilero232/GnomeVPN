@@ -11,6 +11,8 @@
     "updater:default",
     "log:default",
     "notification:default",
+    "autostart:default",
+    "store:default",
 
     "core:tray:default",
     "core:menu:default",

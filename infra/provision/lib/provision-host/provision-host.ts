@@ -41,10 +41,6 @@ const ensureDocker = async (ssh: SshClient): Promise<void> => {
   }
 };
 
-// wg-quick внутри контейнера вызывает iptables/wg, но modprobe оттуда невозможен:
-// /lib/modules не смонтирован. Если модулей нет на хосте, `wg-quick up wg0` падает
-// ("can't initialize iptables table `nat'") и контейнер уходит в бесконечный рестарт.
-// modules-load.d нужен, чтобы модули поднимались и после ребута VPS.
 const KERNEL_MODULES = ['iptable_nat', 'wireguard'];
 
 const ensureKernelModules = async (ssh: SshClient): Promise<void> => {

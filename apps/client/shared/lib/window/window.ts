@@ -48,36 +48,8 @@ export const toggleMainWindow = async (): Promise<void> => {
   });
 };
 
-export const toggleMaximizeMainWindow = async (): Promise<void> => {
-  await safeWindow('toggleMaximize', async () => {
-    await getCurrentWindow().toggleMaximize();
-  });
-};
-
 export const closeMainWindow = async (): Promise<void> => {
   await safeWindow('close', async () => {
     await getCurrentWindow().close();
   });
-};
-
-export const isMainWindowMaximized = async (): Promise<boolean> => {
-  try {
-    return await getCurrentWindow().isMaximized();
-  } catch (error) {
-    logger.error(`Window isMaximized failed: ${String(error)}`);
-
-    return false;
-  }
-};
-
-export const onMainWindowResized = async (
-  handler: () => void,
-): Promise<(() => void) | undefined> => {
-  try {
-    return await getCurrentWindow().onResized(handler);
-  } catch (error) {
-    logger.error(`Window onResized failed: ${String(error)}`);
-
-    return undefined;
-  }
 };

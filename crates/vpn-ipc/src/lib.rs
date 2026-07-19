@@ -1,0 +1,12 @@
+pub mod frame;
+pub mod types;
+pub mod validate;
+
+pub use frame::{read_frame, write_frame, FrameError, MAX_FRAME_LEN};
+pub use types::{Request, Response, TunnelConfig, TunnelEvent, TunnelStatus};
+pub use validate::{validate_tunnel_config, ValidationError};
+
+pub const PROTOCOL_VERSION: u32 = 1;
+
+#[cfg(target_os = "windows")]
+pub const PIPE_NAME: &str = r"\\.\pipe\gnomevpn-service";

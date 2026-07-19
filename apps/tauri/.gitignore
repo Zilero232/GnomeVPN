@@ -14,3 +14,7 @@
 # Release signing (never commit)
 *.keystore
 keystore.properties
+
+# Built by scripts/build-service.mjs — the privileged tunnel service
+/bin/gnomevpn-service.exe
+

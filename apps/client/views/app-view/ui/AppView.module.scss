@@ -72,3 +72,10 @@
   text-align: center;
   background-color: var(--color-surface);
 }
+
+.version {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}

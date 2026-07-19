@@ -47,6 +47,13 @@
       "a3": "Сейчас — десктоп: Windows, macOS и Linux. Мобильные приложения появятся позже, они требуют отдельной сборки под каждую платформу.",
       "q4": "Почему так дёшево?",
       "a4": "Мы не тратим деньги на рекламу у блогеров и не держим офис. Цена покрывает аренду серверов и эквайринг."
+    },
+    "nav": {
+      "ariaLabel": "Разделы страницы",
+      "how": "Как работает",
+      "pricing": "Тариф",
+      "faq": "Вопросы",
+      "download": "Скачать"
     }
   },
   "auth": {
@@ -97,6 +104,10 @@
     "disconnect": "Отключиться",
     "quit": "Выйти",
     "closeToTray": "Сворачивать в трей",
+    "autoStart": "Запускать при старте",
+    "autoConnect": "Подключаться автоматически",
+    "killSwitch": "Блокировать трафик при обрыве",
+    "autoReconnect": "Переподключаться автоматически",
     "language": "Язык"
   },
   "notifications": {
@@ -144,14 +155,30 @@
     "connect": "Подключить",
     "connecting": "Связь…",
     "disconnect": "Отключить",
-    "statusOnline": "Защищено",
-    "statusOffline": "Не защищено",
+    "statusOnline": "Подключено",
+    "statusOffline": "Отключено",
     "nodeOnline": "Доступен",
     "nodeDegraded": "Нестабилен",
     "nodeOffline": "Недоступен",
     "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
     "openAccount": "Аккаунт",
     "signOut": "Выйти",
-    "menu": "Меню приложения"
+    "menu": "Меню приложения",
+    "uptime": "В сети",
+    "received": "Принято",
+    "sent": "Отправлено"
+  },
+  "downloadApp": {
+    "title": "Скачать GnomeVPN",
+    "description": "Приложение для Windows и Linux. Войдите в аккаунт и подключайтесь.",
+    "platforms": {
+      "windows": "Windows",
+      "linux": "Linux"
+    },
+    "notAvailable": "Недоступно",
+    "loadFailed": "Не удалось загрузить релиз.",
+    "openReleases": "Открыть релизы",
+    "version": "Версия {version}",
+    "releaseNotes": "Список изменений"
   }
 }

@@ -1,6 +1,12 @@
 import { api } from '../http';
 
-import type { CheckoutResult, Node, SubscriptionStatus, TunnelConfig } from '@gnomevpn/schemas';
+import type {
+  CheckoutResult,
+  Node,
+  Release,
+  SubscriptionStatus,
+  TunnelConfig,
+} from '@gnomevpn/schemas';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');
@@ -28,4 +34,9 @@ export const createCheckout = async (): Promise<CheckoutResult> => {
 
 export const cancelAutoRenew = async (): Promise<void> => {
   await api.post('/billing/cancel');
+};
+
+export const getLatestRelease = async (): Promise<Release> => {
+  const { data } = await api.get('/release/latest');
+  return data;
 };

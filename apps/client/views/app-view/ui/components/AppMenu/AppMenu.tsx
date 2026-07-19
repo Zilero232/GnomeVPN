@@ -8,10 +8,10 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { CheckUpdateButton } from '@/features/app/check-update';
+import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
-import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
@@ -25,6 +25,16 @@ export const AppMenu = () => {
   const router = useRouter();
 
   const { closeToTray, setCloseToTray } = useCloseToTray();
+  const {
+    autoStart,
+    autoConnect,
+    killSwitch,
+    autoReconnect,
+    toggleAutoStart,
+    toggleAutoConnect,
+    toggleKillSwitch,
+    toggleAutoReconnect,
+  } = useStartupSettings();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -69,6 +79,34 @@ export const AppMenu = () => {
               onClick={() => setCloseToTray(!closeToTray)}
             />
 
+            <MenuItem
+              isPressed={autoStart}
+              label={tray('autoStart')}
+              trailing={<Switch isChecked={autoStart} />}
+              onClick={() => toggleAutoStart(!autoStart)}
+            />
+
+            <MenuItem
+              isPressed={autoConnect}
+              label={tray('autoConnect')}
+              trailing={<Switch isChecked={autoConnect} />}
+              onClick={() => toggleAutoConnect(!autoConnect)}
+            />
+
+            <MenuItem
+              isPressed={killSwitch}
+              label={tray('killSwitch')}
+              trailing={<Switch isChecked={killSwitch} />}
+              onClick={() => toggleKillSwitch(!killSwitch)}
+            />
+
+            <MenuItem
+              isPressed={autoReconnect}
+              label={tray('autoReconnect')}
+              trailing={<Switch isChecked={autoReconnect} />}
+              onClick={() => toggleAutoReconnect(!autoReconnect)}
+            />
+
             <motion.div className={s.section} variants={MENU_ITEM_MOTION}>
               <span className={s.sectionLabel}>{tray('language')}</span>
               <LocaleSwitcher />
@@ -82,10 +120,6 @@ export const AppMenu = () => {
               tone="danger"
               onClick={() => signOut.mutate()}
             />
-
-            <motion.p className={s.version} variants={MENU_ITEM_MOTION}>
-              v{env.NEXT_PUBLIC_APP_VERSION}
-            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>

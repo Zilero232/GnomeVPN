@@ -9,11 +9,12 @@ import { useState } from 'react';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
-import { ConnectButton, useVpnConnection } from '@/features/vpn/connect';
+import { ConnectButton, useAutoConnect, useVpnConnection } from '@/features/vpn/connect';
+import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { showMainWindow } from '@/shared/lib';
 import { Button, Text } from '@/shared/ui';
-import { AppMenu, NodeList } from './components';
+import { AppMenu, NodeList, TunnelStats } from './components';
 
 import s from './AppView.module.scss';
 
@@ -22,7 +23,7 @@ export const AppView = () => {
   const router = useRouter();
   const { nodes, isLoading, isError } = useNodes();
   const { hasAccess } = useSubscriptionStatus();
-  const { status, activeNodeId, connect, disconnect } = useVpnConnection();
+  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnection();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
@@ -46,6 +47,14 @@ export const AppView = () => {
     await connect(effectiveNodeId, activeNode?.country ?? '');
   };
 
+  useAutoConnect({
+    nodes,
+    hasAccess,
+    isConnected: status !== 'disconnected',
+    isReady: !isLoading && !isError,
+    connect,
+  });
+
   useTraySetup({
     isConnected: isOnline,
     country: activeNode?.country ?? '',
@@ -59,7 +68,7 @@ export const AppView = () => {
   useCloseOnWindowEvent({
     onBeforeQuit: async () => {
       if (status !== 'disconnected') {
-        await disconnect();
+        await disconnect({ isAutomatic: true });
       }
     },
   });
@@ -72,7 +81,10 @@ export const AppView = () => {
           {isOnline ? t('statusOnline') : t('statusOffline')}
         </span>
 
-        <AppMenu />
+        <div className={s.headRight}>
+          <span className={s.version}>v{env.NEXT_PUBLIC_APP_VERSION}</span>
+          <AppMenu />
+        </div>
       </header>
 
       <div className={s.body}>
@@ -90,6 +102,8 @@ export const AppView = () => {
             </Link>
           </div>
         )}
+
+        {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
 
         <NodeList
           activeNodeId={effectiveNodeId}

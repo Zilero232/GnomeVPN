@@ -1,3 +1,11 @@
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './Dialog';
 export { FormField } from './FormField';
 export { SubmitButton } from './SubmitButton';
 

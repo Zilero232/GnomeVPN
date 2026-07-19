@@ -1,16 +1,30 @@
+export {
+  getAutoConnect,
+  getAutoReconnect,
+  getKillSwitch,
+  getLastNodeId,
+  initAutoStartDefault,
+  isAutoStartEnabled,
+  setAutoConnect,
+  setAutoReconnect,
+  setAutoStart,
+  setKillSwitch,
+  setLastNodeId,
+  setManuallyDisconnected,
+  wasManuallyDisconnected,
+} from './app-settings';
 export { logger } from './logger';
 export { notify } from './notifications';
+export { settleAll } from './settle';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
-export { vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
+export { isVpnServiceAvailable, vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
 export {
   closeMainWindow,
   hideMainWindow,
-  isMainWindowMaximized,
   minimizeMainWindow,
-  onMainWindowResized,
   showMainWindow,
   toggleMainWindow,
-  toggleMaximizeMainWindow,
 } from './window';
 
-export type { VpnEvent } from './vpn-bridge';
+export type { NotifyInput, NotifyTone } from './notifications';
+export type { VpnConnectOptions, VpnEvent } from './vpn-bridge';

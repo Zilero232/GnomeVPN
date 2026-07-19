@@ -1,0 +1,109 @@
+.sentinel {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  height: 1px;
+}
+
+.root {
+  position: sticky;
+  z-index: 30;
+
+  // Sits below the custom titlebar in the desktop app; the variable is 0 on web.
+  top: var(--titlebar-height);
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color 0.24s ease,
+    border-color 0.24s ease,
+    backdrop-filter 0.24s ease;
+}
+
+.scrolled {
+  border-bottom-color: var(--color-border);
+  background-color: rgb(7 11 10 / 82%);
+  backdrop-filter: blur(12px);
+}
+
+.inner {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 24px;
+
+  @media (width <= 560px) {
+    gap: 10px;
+    padding: 10px 12px;
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+// The wordmark is the widest element in the bar; the logo alone still
+// identifies the site once space runs out.
+.brandLabel {
+  @media (width <= 620px) {
+    display: none;
+  }
+}
+
+.nav {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+
+  @media (width <= 760px) {
+    display: none;
+  }
+}
+
+.navLink {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.16s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  @media (width <= 560px) {
+    gap: 6px;
+
+    // The default 40px control is oversized for a mobile bar and pushes the
+    // account label onto a second line.
+    button {
+      height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+  }
+}
+
+// Below 460px the download label and the account button stop fitting side by
+// side, so the label collapses and the button keeps only its icon.
+.downloadLabel {
+  @media (width <= 460px) {
+    display: none;
+  }
+}

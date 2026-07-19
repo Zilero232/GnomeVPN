@@ -4,31 +4,6 @@
   padding: 0 24px 100px;
 }
 
-.nav {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 26px 0;
-}
-
-.navRight {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.navLink {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: var(--color-accent);
-  }
-}
-
 .section {
   padding: 88px 0 0;
 }
@@ -48,5 +23,15 @@
 
   50% {
     opacity: 0.35;
+  }
+}
+
+@media (width <= 560px) {
+  .root {
+    padding: 0 16px 64px;
+  }
+
+  .section {
+    padding: 56px 0 0;
   }
 }

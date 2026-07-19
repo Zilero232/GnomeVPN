@@ -10,9 +10,15 @@ export type VpnEvent =
   | { type: 'disconnected' }
   | { type: 'error'; message: string };
 
+export type VpnConnectOptions = {
+  killSwitch: boolean;
+  autoReconnect: boolean;
+};
+
 export const vpnConnect = async (
   config: TunnelConfig,
   onEvent: (event: VpnEvent) => void,
+  options: VpnConnectOptions,
 ): Promise<void> => {
   if (!isTauri()) {
     throw new Error('VPN is only available in the desktop app');
@@ -21,7 +27,12 @@ export const vpnConnect = async (
   const channel = new Channel<VpnEvent>();
   channel.onmessage = onEvent;
 
-  await invoke('vpn_connect', { config, onEvent: channel });
+  await invoke('vpn_connect', {
+    config,
+    onEvent: channel,
+    killSwitch: options.killSwitch,
+    autoReconnect: options.autoReconnect,
+  });
 };
 
 export const vpnDisconnect = async (): Promise<void> => {
@@ -38,4 +49,12 @@ export const vpnStatus = async (): Promise<string> => {
   }
 
   return invoke<string>('vpn_status');
+};
+
+export const isVpnServiceAvailable = async (): Promise<boolean> => {
+  if (!isTauri()) {
+    return false;
+  }
+
+  return invoke<boolean>('vpn_service_available');
 };

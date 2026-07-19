@@ -6,7 +6,9 @@ import { Toaster } from 'sonner';
 import { queryClient } from '@/shared/api';
 import { AuthProvider } from './AuthProvider';
 import { DesktopShell } from './DesktopShell';
+import { DismissToastOnClick } from './DismissToastOnClick';
 import { I18nProvider } from './I18nProvider';
+import { VaultProvider } from './VaultProvider';
 
 import type { ReactNode } from 'react';
 
@@ -27,8 +29,12 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={queryClient}>
     <I18nProvider>
       <DesktopShell>
-        <AuthProvider>{children}</AuthProvider>
+        <VaultProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </VaultProvider>
       </DesktopShell>
+
+      <DismissToastOnClick />
 
       <Toaster
         className="gnomevpn-toaster"

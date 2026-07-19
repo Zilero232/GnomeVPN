@@ -1,3 +1,3 @@
 export { useVpnConnection } from './use-vpn-connection';
 
-export type { VpnConnectionStatus } from './use-vpn-connection.types';
+export type { VpnConnectionStatus, VpnTraffic } from './use-vpn-connection.types';

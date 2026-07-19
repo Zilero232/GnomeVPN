@@ -4,9 +4,10 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = join(here, '..', 'bin', 'wintun.dll');
+const workspaceTarget = join(here, '..', '..', 'target');
 const targets = [
-  join(here, '..', 'target', 'debug', 'wintun.dll'),
-  join(here, '..', 'target', 'release', 'wintun.dll'),
+  join(workspaceTarget, 'debug', 'wintun.dll'),
+  join(workspaceTarget, 'release', 'wintun.dll'),
 ];
 
 if (process.platform !== 'win32') {
@@ -14,7 +15,7 @@ if (process.platform !== 'win32') {
 }
 
 if (!existsSync(source)) {
-  console.error('[sync-wintun] apps/tauri/bin/wintun.dll не найден — см. bin/README.md');
+  console.error('[sync-wintun] apps/tauri/bin/wintun.dll not found — see bin/README.md');
   process.exit(1);
 }
 
@@ -29,4 +30,4 @@ for (const target of targets) {
 }
 
 // biome-ignore lint/suspicious/noConsole: standalone CLI script, console is the output channel
-console.log('[sync-wintun] wintun.dll скопирован в target/debug и target/release');
+console.log('[sync-wintun] wintun.dll copied to target/debug and target/release');

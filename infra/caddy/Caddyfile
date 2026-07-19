@@ -1,0 +1,64 @@
+# GnomeVPN — Caddy config (runs on the VPS).
+#
+# Two site blocks share this VPS:
+#   gnomevpn.ru      — static web client (landing + account area)
+#   api.gnomevpn.ru  — NestJS API server
+#
+# The web client and the API live on different origins, so the server's CORS
+# middleware must allow https://gnomevpn.ru (see CORS_ORIGINS in the server
+# .env). The desktop app's origin (tauri://localhost) needs to be there too.
+#
+# Caddy obtains and renews a free Let's Encrypt certificate automatically.
+# For that to work:
+#   - DNS A-records for gnomevpn.ru, www.gnomevpn.ru and api.gnomevpn.ru all
+#     point at this VPS
+#   - ports 80 and 443 are open on the VPS firewall
+
+www.gnomevpn.ru {
+	redir https://gnomevpn.ru{uri} permanent
+}
+
+api.gnomevpn.ru {
+	# The server container is not published to the host: it is reachable only
+	# inside the compose network, by service name.
+	reverse_proxy server:4000
+
+	encode gzip zstd
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+gnomevpn.ru {
+	root * /srv/www
+
+	encode gzip zstd
+
+	# Static export: every unknown path falls back to the matching .html file,
+	# then to 404.html — Next.js `output: 'export'` produces both.
+	try_files {path} {path}.html {path}/index.html /404.html
+	file_server
+
+	# Hashed assets never change under the same name, so they can be cached
+	# indefinitely; HTML must always be revalidated to pick up a new deploy.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	@html path *.html /
+	header @html Cache-Control "no-cache"
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

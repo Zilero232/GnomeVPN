@@ -1,154 +1,73 @@
 use std::sync::Arc;
 
+use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
 use tauri::ipc::Channel;
 use tauri::State;
-use tokio::sync::oneshot;
 
-use super::engine::run_tunnel;
-use super::state::{VpnRuntime, VpnState, VpnStatus};
-use super::types::{TunnelConfig, VpnError, VpnEvent};
-use parking_lot::Mutex;
-
-fn track_status(sink: &Arc<Mutex<VpnRuntime>>, event: &VpnEvent) {
-    if matches!(event, VpnEvent::Connected { .. }) {
-        sink.lock().status = VpnStatus::Connected;
-    }
-}
+use super::client::{ClientError, ServiceClient};
+use super::state::VpnState;
 
 #[tauri::command]
 pub async fn vpn_connect(
     config: TunnelConfig,
-    on_event: Channel<VpnEvent>,
+    on_event: Channel<TunnelEvent>,
+    kill_switch: Option<bool>,
+    auto_reconnect: Option<bool>,
     state: State<'_, VpnState>,
-) -> Result<(), VpnError> {
-    let (stop_tx, stop_rx) = oneshot::channel();
-    {
-        let mut rt = state.0.lock();
-        if rt.status != VpnStatus::Disconnected {
-            return Err(VpnError::AlreadyConnected);
-        }
-        rt.status = VpnStatus::Connecting;
-        rt.stop = Some(stop_tx);
-    }
+) -> Result<(), ClientError> {
+    log::info!("vpn_connect: asking the service to open a tunnel");
 
-    let status_handle = state.inner();
-    let status_sink = status_handle.handle();
-
-    let emit: Arc<dyn Fn(VpnEvent) + Send + Sync> = Arc::new(move |ev: VpnEvent| {
-        track_status(&status_sink, &ev);
-        let _ = on_event.send(ev);
+    let events = ServiceClient::connect()?;
+    let emit: Arc<dyn Fn(TunnelEvent) + Send + Sync> = Arc::new(move |event| {
+        let _ = on_event.send(event);
     });
 
-    let emit_for_status = emit.clone();
+    std::thread::spawn(move || events.pump_events(emit));
 
-    log::info!("vpn_connect: starting tunnel to {}", config.endpoint);
+    let mut client = ServiceClient::connect()?;
+    client.connect_tunnel(
+        config,
+        kill_switch.unwrap_or(false),
+        auto_reconnect.unwrap_or(true),
+    )?;
 
-    let result = run_tunnel(config, emit, stop_rx).await;
+    state.replace_connection(client);
 
-    {
-        let mut rt = status_handle.0.lock();
-        rt.status = VpnStatus::Disconnected;
-        rt.stop = None;
-    }
-
-    if let Err(err) = &result {
-        log::error!("vpn_connect: tunnel failed: {err}");
-        emit_for_status(VpnEvent::Error {
-            message: err.to_string(),
-        });
-    } else {
-        log::info!("vpn_connect: tunnel closed");
-    }
-
-    result
-}
-
-#[tauri::command]
-pub fn vpn_disconnect(state: State<'_, VpnState>) -> Result<(), VpnError> {
-    log::info!("vpn_disconnect: stopping tunnel");
-
-    let mut rt = state.0.lock();
-    if let Some(stop) = rt.stop.take() {
-        let _ = stop.send(());
-    }
-    rt.status = VpnStatus::Disconnected;
     Ok(())
 }
 
 #[tauri::command]
-pub fn vpn_status(state: State<'_, VpnState>) -> String {
-    match state.0.lock().status {
-        VpnStatus::Disconnected => "disconnected",
-        VpnStatus::Connecting => "connecting",
-        VpnStatus::Connected => "connected",
-    }
-    .to_string()
+pub async fn vpn_disconnect(state: State<'_, VpnState>) -> Result<(), ClientError> {
+    log::info!("vpn_disconnect: asking the service to close the tunnel");
+
+    ServiceClient::connect()?.disconnect_tunnel()?;
+    state.clear_connection();
+
+    Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[tauri::command]
+pub async fn vpn_status() -> Result<String, ClientError> {
+    use gnomevpn_ipc::TunnelStatus;
 
-    #[test]
-    fn connected_event_promotes_shared_status() {
-        let state = VpnState::default();
-        state.0.lock().status = VpnStatus::Connecting;
-        let sink = state.handle();
-
-        track_status(&sink, &VpnEvent::Handshake);
-        assert_eq!(state.0.lock().status, VpnStatus::Connecting);
-
-        track_status(
-            &sink,
-            &VpnEvent::Connected {
-                assigned_ip: "10.8.0.2/32".to_string(),
-            },
-        );
-        assert_eq!(state.0.lock().status, VpnStatus::Connected);
-    }
-
-    #[test]
-    fn connecting_status_and_stop_sender_are_set_atomically() {
-        let state = VpnState::default();
-        let (stop_tx, _stop_rx) = oneshot::channel();
-
-        {
-            let mut rt = state.0.lock();
-            assert_eq!(rt.status, VpnStatus::Disconnected);
-            rt.status = VpnStatus::Connecting;
-            rt.stop = Some(stop_tx);
+    let status = match ServiceClient::connect() {
+        Ok(mut client) => client.status()?,
+        Err(ClientError::Unavailable(reason)) => {
+            log::debug!("service unavailable: {reason}");
+            TunnelStatus::Disconnected
         }
+        Err(error) => return Err(error),
+    };
 
-        let rt = state.0.lock();
-        assert_eq!(rt.status, VpnStatus::Connecting);
-        assert!(
-            rt.stop.is_some(),
-            "stop sender must be present whenever status is Connecting, \
-             otherwise a concurrent disconnect finds no sender and the tunnel leaks"
-        );
+    Ok(match status {
+        TunnelStatus::Disconnected => "disconnected",
+        TunnelStatus::Connecting => "connecting",
+        TunnelStatus::Connected => "connected",
     }
+    .to_string())
+}
 
-    #[test]
-    fn disconnect_after_connecting_setup_always_finds_a_stop_sender() {
-        let state = VpnState::default();
-        let (stop_tx, stop_rx) = oneshot::channel();
-
-        {
-            let mut rt = state.0.lock();
-            rt.status = VpnStatus::Connecting;
-            rt.stop = Some(stop_tx);
-        }
-
-        let mut rt = state.0.lock();
-        let sent = if let Some(stop) = rt.stop.take() {
-            stop.send(()).is_ok()
-        } else {
-            false
-        };
-        rt.status = VpnStatus::Disconnected;
-        drop(rt);
-
-        assert!(sent, "disconnect must observe a stop sender and signal it");
-        assert!(stop_rx.blocking_recv().is_ok());
-    }
+#[tauri::command]
+pub async fn vpn_service_available() -> bool {
+    ServiceClient::connect().is_ok()
 }

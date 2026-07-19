@@ -1,0 +1,96 @@
+# GnomeVPN production stack.
+#
+#   web       — static Next.js client + Caddy (serves the site, proxies the API
+#               subdomain, terminates HTTPS); the only public-facing container
+#   server    — NestJS API on Bun
+#   postgres  — self-hosted database
+#
+# The web and server images are built by CI and pushed to ghcr.io. The VPS
+# builds nothing — it only pulls ready images, and must be logged in to ghcr.io
+# once (see DEPLOY.md).
+#
+# The VPS does NOT hold a clone of the repository. Two files live side by side
+# in one directory:
+#   docker-compose.yml  — copied here by CI on every deploy
+#   .env                — created once by hand with production values
+#
+# Pull latest & restart: docker compose pull && docker compose up -d
+# Logs:                  docker compose logs -f
+# Stop:                  docker compose down
+
+services:
+  web:
+    image: ghcr.io/zilero232/gnomevpn-web:latest
+    container_name: gnomevpn-web
+    restart: always
+    depends_on:
+      - server
+    ports:
+      # 80 is required for the Let's Encrypt HTTP challenge; 443 serves HTTPS.
+      - '80:80'
+      - '443:443'
+    volumes:
+      # Persists issued TLS certificates across restarts.
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - gnomevpn
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: gnomevpn-postgres
+    restart: always
+    # The postgres entrypoint reads POSTGRES_* directly from the env file.
+    env_file:
+      - ./.env
+    # Not published: the database is reachable only inside the compose network.
+    # Use an SSH tunnel for external clients instead of opening 5432.
+    expose:
+      - '5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - gnomevpn
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  server:
+    image: ghcr.io/zilero232/gnomevpn-server:latest
+    container_name: gnomevpn-server
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      # Sits next to this compose file on the VPS. Create it once from
+      # apps/server/.env.example with production values.
+      - ./.env
+    expose:
+      - '4000'
+    networks:
+      - gnomevpn
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'bun',
+          '-e',
+          "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pgdata:
+
+networks:
+  gnomevpn:
+    driver: bridge

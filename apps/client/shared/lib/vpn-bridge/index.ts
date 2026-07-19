@@ -1,3 +1,3 @@
-export { vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
+export { isVpnServiceAvailable, vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
 
-export type { VpnEvent } from './vpn-bridge';
+export type { VpnConnectOptions, VpnEvent } from './vpn-bridge';

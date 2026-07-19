@@ -1,0 +1,132 @@
+name: Release App
+
+# Desktop release on a root package.json version bump → GitHub Release `vX.Y.Z`.
+# Builds the GUI and the privileged service, then ships them in one installer.
+#
+# Secrets: TAURI_SIGNING_PRIVATE_KEY, NEXT_PUBLIC_API_URL
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'package.json'
+  workflow_dispatch: {}
+
+concurrency:
+  group: release-app
+  cancel-in-progress: false
+
+jobs:
+  resolve-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Read version from root package.json
+        id: read
+        run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.read.outputs.version }}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-desktop:
+    needs: resolve-version
+    if: needs.resolve-version.outputs.should_release == 'true'
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ''
+          - platform: ubuntu-22.04
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    env:
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.1
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+
+      - name: Install Linux system deps
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma client
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+        run: bunx prisma generate
+
+      # wintun.dll is not redistributable through git: the tunnel adapter needs it
+      # at runtime, so the installer bundles a copy fetched here.
+      - name: Fetch wintun
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        run: |
+          curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o wintun.zip
+          unzip -q wintun.zip
+          cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun.dll
+
+      # The privileged service is a separate binary that the NSIS hooks install.
+      - name: Build tunnel service
+        if: matrix.platform == 'windows-latest'
+        working-directory: apps/tauri
+        run: node ./scripts/build-service.mjs --release
+
+      - name: Apply app icons
+        working-directory: apps/tauri
+        run: bunx tauri icon icon.manifest.json -o icons
+
+      - name: Build & upload desktop app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        with:
+          projectPath: apps/tauri
+          tagName: v${{ needs.resolve-version.outputs.version }}
+          releaseName: GnomeVPN v${{ needs.resolve-version.outputs.version }}
+          releaseBody: |
+            GnomeVPN v${{ needs.resolve-version.outputs.version }}
+
+            **Windows** — `.exe` installer (installs the tunnel service, auto-update enabled)
+
+            **Linux** — `.deb` / `.AppImage`
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

@@ -1,0 +1,148 @@
+name: Deploy Web
+
+# Deploys the web client + API on every push to master. No GitHub Release.
+# Desktop binaries → release-app.yml, on a root package.json version bump.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   SSH_HOST             VPS IP or hostname
+#   SSH_USER             SSH login
+#   SSH_PRIVATE_KEY      private key whose public half is in authorized_keys
+#   SSH_PORT             SSH port (optional, defaults to 22)
+#   DEPLOY_PATH          absolute path on the VPS (e.g. /opt/gnomevpn)
+#   NEXT_PUBLIC_API_URL  https://api.gnomevpn.ru
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-web-production
+  cancel-in-progress: false
+
+env:
+  WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/gnomevpn-web
+  API_IMAGE: ghcr.io/${{ github.repository_owner }}/gnomevpn-server
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Normalize image name
+        run: echo "WEB_IMAGE=${WEB_IMAGE,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/client/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          tags: |
+            ${{ env.WEB_IMAGE }}:latest
+            ${{ env.WEB_IMAGE }}:${{ github.sha }}
+
+  build-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Normalize image name
+        run: echo "API_IMAGE=${API_IMAGE,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push server image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          push: true
+          tags: |
+            ${{ env.API_IMAGE }}:latest
+            ${{ env.API_IMAGE }}:${{ github.sha }}
+
+  deploy:
+    needs: [build-web, build-api]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Copy compose file to VPS
+        run: |
+          scp -i ~/.ssh/deploy_key -P "${{ secrets.SSH_PORT || 22 }}" \
+            docker-compose.yml \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/docker-compose.yml"
+
+      - name: Pull images and restart on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e && \
+             cd '${{ secrets.DEPLOY_PATH }}' && \
+             docker compose pull && \
+             docker compose up -d && \
+             docker image prune -f"
+
+      # Schema changes ship inside the image, so migrations run once the new
+      # server container is up with the matching Prisma client.
+      #
+      # Requires prisma/migrations to exist — see DEPLOY.md for the one-time
+      # switch from `db push` to a migration history.
+      - name: Apply database migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e && \
+             cd '${{ secrets.DEPLOY_PATH }}' && \
+             docker compose exec -T server bunx prisma migrate deploy"
+
+  cleanup-registry:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete old gnomevpn-web versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: gnomevpn-web
+          package-type: container
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: false
+
+      - name: Delete old gnomevpn-server versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: gnomevpn-server
+          package-type: container
+          min-versions-to-keep: 2
+          delete-only-untagged-versions: false

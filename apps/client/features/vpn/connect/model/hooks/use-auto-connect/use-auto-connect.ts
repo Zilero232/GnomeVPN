@@ -1,0 +1,57 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+
+import { getAutoConnect, getLastNodeId, logger, wasManuallyDisconnected } from '@/shared/lib';
+
+import type { UseAutoConnectParams } from './use-auto-connect.types';
+
+export const useAutoConnect = ({
+  nodes,
+  hasAccess,
+  isConnected,
+  isReady,
+  connect,
+}: UseAutoConnectParams): void => {
+  const attemptedRef = useRef(false);
+
+  useEffect(() => {
+    if (attemptedRef.current || !isReady || !hasAccess || isConnected || nodes.length === 0) {
+      return;
+    }
+
+    const run = async () => {
+      const [isEnabled, wasDisconnectedByUser] = await Promise.all([
+        getAutoConnect(),
+        wasManuallyDisconnected(),
+      ]);
+
+      if (!isEnabled || wasDisconnectedByUser) {
+        attemptedRef.current = true;
+
+        return;
+      }
+
+      const lastNodeId = await getLastNodeId();
+      const target =
+        nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ??
+        nodes.find((node) => node.status !== 'offline');
+
+      if (!target) {
+        logger.warn('autoconnect: no reachable node available');
+        attemptedRef.current = true;
+
+        return;
+      }
+
+      attemptedRef.current = true;
+      logger.info(`autoconnect: connecting to ${target.country}`);
+
+      await connect(target.id, target.country, true);
+    };
+
+    run().catch((error: unknown) => {
+      logger.error(`autoconnect failed: ${String(error)}`);
+    });
+  }, [nodes, hasAccess, isConnected, isReady, connect]);
+};

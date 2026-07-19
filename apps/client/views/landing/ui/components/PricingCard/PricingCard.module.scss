@@ -64,3 +64,9 @@
   height: 16px;
   color: var(--color-accent);
 }
+
+@media (width <= 560px) {
+  .root {
+    padding: 28px 20px;
+  }
+}

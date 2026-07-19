@@ -9,7 +9,16 @@ export {
   Switch,
   Text,
 } from './atoms';
-export { FormField, SubmitButton } from './molecules';
+export {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  FormField,
+  SubmitButton,
+} from './molecules';
 export { StatusScreen } from './organisms';
 
 export type {

@@ -1,0 +1,61 @@
+name: Check Code
+
+# Checks every push and pull request: linters, types and a full Rust build.
+# Release builds live in release-app.yml and run on a version bump.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch: {}
+
+concurrency:
+  group: check-code-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.1
+
+      - run: bun install --frozen-lockfile --ignore-scripts
+
+      # Prisma types are generated, not committed: typecheck fails without them.
+      - name: Generate Prisma client
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+        run: bunx prisma generate
+
+      - run: bun lint
+
+      - run: bun run typecheck
+
+      - name: Check styles
+        run: bunx stylelint "apps/client/**/*.scss"
+
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      # Only the service and the protocol: the GUI crate needs a built frontend,
+      # which release-app.yml produces. These two are pure Rust.
+      - name: Clippy
+        run: cargo clippy -p gnomevpn-service -p gnomevpn-ipc --all-targets -- -D warnings

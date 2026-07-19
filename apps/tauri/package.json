@@ -6,11 +6,14 @@
   "scripts": {
     "tauri": "tauri",
     "icon": "tauri icon icon.manifest.json -o icons",
-    "predev": "node ./scripts/kill-app.mjs && node ./scripts/sync-wintun.mjs && bun run icon",
+    "predev": "bun run kill && node ./scripts/sync-wintun.mjs && node ./scripts/build-service.mjs && bun run icon",
     "dev": "tauri dev",
-    "prebuild": "node ./scripts/sync-wintun.mjs && bun run icon",
+    "prebuild": "node ./scripts/sync-wintun.mjs && node ./scripts/build-service.mjs --release && bun run icon",
     "build": "tauri build",
-    "kill": "node ./scripts/kill-app.mjs",
+    "service:build": "node ./scripts/build-service.mjs",
+    "signer:sign": "tauri signer sign",
+    "signer:generate": "tauri signer generate -w ~/.tauri/gnomevpn.key --ci",
+    "kill": "fkill --force --silent gnomevpn.exe",
     "info": "tauri info"
   },
   "devDependencies": {

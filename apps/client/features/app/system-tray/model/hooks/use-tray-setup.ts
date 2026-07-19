@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 
-import { isTauriDesktop, logger } from '@/shared/lib';
+import { isTauriDesktop, logger, settleAll } from '@/shared/lib';
 import { buildTrayMenu } from '../../lib/build-tray-menu';
 import { setupTray } from '../../lib/setup-tray';
 
@@ -78,17 +78,9 @@ export const useTraySetup = ({ isConnected, country, onToggle, onOpenAccount }: 
     const statusLine = isConnected ? t('online') : t('offline');
     const tooltip = country ? `GnomeVPN — ${statusLine} · ${country}` : `GnomeVPN — ${statusLine}`;
 
-    const updates = [
+    settleAll('tray update', [
       items.toggle.setText(isConnected ? t('disconnect') : t('connect')),
       tray.setTooltip(tooltip),
-    ];
-
-    Promise.allSettled(updates).then((results) => {
-      for (const result of results) {
-        if (result.status === 'rejected') {
-          logger.warn(`tray update failed: ${String(result.reason)}`);
-        }
-      }
-    });
+    ]);
   }, [isConnected, country, t]);
 };

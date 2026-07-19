@@ -47,6 +47,13 @@
       "a3": "Desktop for now: Windows, macOS and Linux. Mobile apps will come later, they need a separate build per platform.",
       "q4": "Why so cheap?",
       "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
+    },
+    "nav": {
+      "ariaLabel": "Landing sections",
+      "how": "How it works",
+      "pricing": "Pricing",
+      "faq": "Questions",
+      "download": "Download"
     }
   },
   "auth": {
@@ -97,6 +104,10 @@
     "disconnect": "Disconnect",
     "quit": "Quit",
     "closeToTray": "Minimize to tray",
+    "autoStart": "Launch at startup",
+    "autoConnect": "Connect automatically",
+    "killSwitch": "Block traffic if tunnel drops",
+    "autoReconnect": "Reconnect automatically",
     "language": "Language"
   },
   "notifications": {
@@ -144,14 +155,30 @@
     "connect": "Connect",
     "connecting": "Linking…",
     "disconnect": "Disconnect",
-    "statusOnline": "Protected",
-    "statusOffline": "Unprotected",
+    "statusOnline": "Connected",
+    "statusOffline": "Disconnected",
     "nodeOnline": "Available",
     "nodeDegraded": "Unstable",
     "nodeOffline": "Unavailable",
     "nodeOfflineHint": "This node is not responding — pick another country",
     "openAccount": "Account",
     "signOut": "Sign out",
-    "menu": "App menu"
+    "menu": "App menu",
+    "uptime": "Uptime",
+    "received": "Received",
+    "sent": "Sent"
+  },
+  "downloadApp": {
+    "title": "Download GnomeVPN",
+    "description": "Desktop app for Windows and Linux. Sign in with your account and connect.",
+    "platforms": {
+      "windows": "Windows",
+      "linux": "Linux"
+    },
+    "notAvailable": "Not available",
+    "loadFailed": "Could not load the release.",
+    "openReleases": "Open releases",
+    "version": "Version {version}",
+    "releaseNotes": "Release notes"
   }
 }

@@ -1,6 +1,8 @@
+pub mod vault;
 pub mod vpn;
 
-use vpn::commands::{vpn_connect, vpn_disconnect, vpn_status};
+use vault::{vault_clear_token, vault_read_token, vault_save_token};
+use vpn::commands::{vpn_connect, vpn_disconnect, vpn_service_available, vpn_status};
 use vpn::state::VpnState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -17,6 +19,12 @@ pub fn run() {
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = builder.plugin(tauri_plugin_autostart::init(
+        tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+        Some(vec!["--autostart"]),
+    ));
 
     builder
         .plugin(
@@ -38,11 +46,16 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .manage(VpnState::default())
         .invoke_handler(tauri::generate_handler![
             vpn_connect,
             vpn_disconnect,
-            vpn_status
+            vpn_status,
+            vpn_service_available,
+            vault_save_token,
+            vault_read_token,
+            vault_clear_token
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
