@@ -13,9 +13,6 @@ const CACHE_TTL_MS = 10 * 60_000;
 const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
   exe: 'windows',
   msi: 'windows',
-  deb: 'linux',
-  appimage: 'linux',
-  rpm: 'linux',
 };
 
 type GithubAsset = {

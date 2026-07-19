@@ -1,9 +1,8 @@
 'use client';
 
 import { useClickOutside } from '@siberiacancode/reactuse';
-import { LogOut, Settings, UserRound } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -12,7 +11,6 @@ import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
-import { ROUTES } from '@/shared/constants';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
 import { MenuItem } from './components';
@@ -22,7 +20,6 @@ import s from './AppMenu.module.scss';
 export const AppMenu = () => {
   const t = useTranslations('app');
   const tray = useTranslations('tray');
-  const router = useRouter();
 
   const { closeToTray, setCloseToTray } = useCloseToTray();
   const {
@@ -60,12 +57,6 @@ export const AppMenu = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div className={s.menu} {...MENU_MOTION}>
-            <MenuItem
-              icon={UserRound}
-              label={t('openAccount')}
-              onClick={() => router.push(ROUTES.account)}
-            />
-
             <motion.div variants={MENU_ITEM_MOTION}>
               <CheckUpdateButton />
             </motion.div>

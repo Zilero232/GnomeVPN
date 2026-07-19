@@ -194,4 +194,4 @@ Full walkthrough — domain, secrets, `.env`, first launch — in **[DEPLOY.md](
 
 In development. Working: tunnel, subscriptions, node health, autostart, kill switch, auto-updates.
 
-Not there yet: mobile apps, per-app split tunneling (needs a signed kernel driver), DPI evasion.
+Windows only for now — the tunnel runs in a LocalSystem service, and macOS/Linux would each need their own privileged helper. Also not there yet: mobile apps, per-app split tunneling (needs a signed kernel driver), DPI evasion.

@@ -1,6 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
+import { UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -83,6 +84,11 @@ export const AppView = () => {
 
         <div className={s.headRight}>
           <span className={s.version}>v{env.NEXT_PUBLIC_APP_VERSION}</span>
+
+          <Link aria-label={t('openAccount')} className={s.accountLink} href={ROUTES.account}>
+            <UserRound size={15} />
+          </Link>
+
           <AppMenu />
         </div>
       </header>

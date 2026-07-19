@@ -44,7 +44,7 @@
       "q2": "What happens when I cancel?",
       "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
       "q3": "Which devices are supported?",
-      "a3": "Desktop for now: Windows, macOS and Linux. Mobile apps will come later, they need a separate build per platform.",
+      "a3": "Windows for now. macOS and Linux need their own privileged helper, and mobile needs a separate build per platform — both are planned.",
       "q4": "Why so cheap?",
       "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
     },
@@ -170,10 +170,9 @@
   },
   "downloadApp": {
     "title": "Download GnomeVPN",
-    "description": "Desktop app for Windows and Linux. Sign in with your account and connect.",
+    "description": "Desktop app for Windows. Sign in with your account and connect.",
     "platforms": {
-      "windows": "Windows",
-      "linux": "Linux"
+      "windows": "Windows"
     },
     "notAvailable": "Not available",
     "loadFailed": "Could not load the release.",

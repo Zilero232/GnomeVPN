@@ -1,0 +1,36 @@
+.root {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+.back {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.16s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brandLabel {
+  @media (width <= 520px) {
+    display: none;
+  }
+}
+
+
