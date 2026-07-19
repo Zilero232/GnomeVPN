@@ -35,10 +35,6 @@
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.icns"],
     "shortDescription": "GnomeVPN desktop client",
     "longDescription": "GnomeVPN — WireGuard VPN desktop client built with Tauri 2.",
-    "resources": {
-      "bin/wintun.dll": "wintun.dll",
-      "bin/gnomevpn-service.exe": "gnomevpn-service.exe"
-    },
     "windows": {
       "nsis": {
         "installerHooks": "installer/hooks.nsh",
