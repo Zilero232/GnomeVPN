@@ -1,0 +1,149 @@
+{
+  "common": {
+    "brand": "Vesper",
+    "loading": "Loading…",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "landing": {
+    "eyebrow": "No traffic logging",
+    "titleLine1": "A connection",
+    "titleLine2": "that is",
+    "titleAccent": "yours",
+    "lead": "Vesper brings up a WireGuard tunnel to a node in another country in one tap. No provider accounts, no logs, no ads. Just a clean channel.",
+    "cta": "Start for 100 ₽",
+    "ctaSecondary": "How it works",
+    "account": "Account",
+    "metrics": {
+      "protocol": "protocol",
+      "price": "per month",
+      "cipher": "encryption"
+    },
+    "how": {
+      "title": "How it works",
+      "step1Title": "Subscribe",
+      "step1Body": "Card payment via YooKassa. 100 ₽ per month, cancel in one click, no hidden charges.",
+      "step2Title": "Pick a country",
+      "step2Body": "Every node is a separate server with its own WireGuard. Switch on the fly.",
+      "step3Title": "Hit Connect",
+      "step3Body": "The app brings the tunnel up locally. Keys are generated for you and live until you disconnect."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "period": "/ month",
+      "cta": "Subscribe",
+      "feature1": "Every country, no extra fees",
+      "feature2": "Unlimited traffic",
+      "feature3": "Cancel auto-renewal in one click",
+      "feature4": "No connection logs"
+    },
+    "faq": {
+      "title": "Questions",
+      "q1": "Do you keep logs?",
+      "a1": "No. The server only knows that you have an active subscription and which node you picked. Browsing history is never collected or stored.",
+      "q2": "What happens when I cancel?",
+      "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
+      "q3": "Which devices are supported?",
+      "a3": "Desktop for now: Windows, macOS and Linux. Mobile apps will come later, they need a separate build per platform.",
+      "q4": "Why so cheap?",
+      "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signInAction": "Sign in",
+    "signUpAction": "Create account",
+    "hasAccount": "Already have an account?",
+    "noAccount": "No account yet?",
+    "toggleSignIn": "Sign in",
+    "toggleSignUp": "Create",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Repeat password"
+    },
+    "errors": {
+      "signInFailed": "Could not sign in",
+      "signUpFailed": "Could not sign up"
+    }
+  },
+  "account": {
+    "loading": "Loading…",
+    "title": "Account",
+    "backToVpn": "Back to VPN",
+    "signOut": "Sign out",
+    "active": "Subscription active",
+    "activeUntil": "Valid until {date}",
+    "autoRenewOff": "Auto-renewal is off",
+    "cancelAutoRenew": "Turn off auto-renewal",
+    "inactive": "No active subscription",
+    "pitch": "100 ₽ per month, access to every country",
+    "pay": "Pay 100 ₽"
+  },
+  "desktopOnly": {
+    "title": "Connect from the app",
+    "body": "The VPN tunnel runs on your device, so the connection can only be managed from the desktop app. Your account and payments stay available in the browser.",
+    "download": "Download the app",
+    "account": "Open account"
+  },
+  "tray": {
+    "tooltip": "Vesper VPN",
+    "online": "Connected",
+    "offline": "Disconnected",
+    "show": "Open Vesper",
+    "quit": "Quit",
+    "closeToTray": "Minimize to tray",
+    "closeToTrayOff": "Close completely",
+    "language": "Language"
+  },
+  "notifications": {
+    "connectedTitle": "Connected",
+    "connectedBody": "Traffic now goes through {country}",
+    "disconnectedTitle": "Disconnected",
+    "disconnectedBody": "Tunnel closed, traffic goes directly",
+    "errorTitle": "Connection dropped"
+  },
+  "window": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
+  "update": {
+    "check": "Check for updates",
+    "checking": "Checking…",
+    "upToDate": "You are up to date",
+    "failed": "Could not check for updates"
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Route not found",
+    "body": "This page does not exist. It may have moved, or the link was mistyped.",
+    "home": "Go home",
+    "account": "Open account"
+  },
+  "error": {
+    "code": "500",
+    "title": "Channel dropped",
+    "body": "Something broke on our side. Try again — if it keeps happening, let us know.",
+    "retry": "Try again",
+    "home": "Go home",
+    "details": "Error details"
+  },
+  "app": {
+    "nodesLoading": "Loading countries…",
+    "nodesError": "Could not load the country list",
+    "nodesEmpty": "No countries available",
+    "gateTitle": "Subscription required",
+    "gateAction": "Subscribe",
+    "connect": "Connect",
+    "connecting": "Linking…",
+    "disconnect": "Disconnect",
+    "statusOnline": "Protected",
+    "statusOffline": "Unprotected",
+    "openAccount": "Account",
+    "signOut": "Sign out"
+  }
+}

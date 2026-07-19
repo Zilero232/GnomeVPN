@@ -1,0 +1,34 @@
+'use client';
+
+import { NextIntlClientProvider } from 'next-intl';
+import { useEffect } from 'react';
+
+import { useLocale } from '@/entities/app/locale';
+import { DEFAULT_LOCALE, messages } from '@/shared/i18n';
+
+import type { ReactNode } from 'react';
+
+const timeZone =
+  typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
+
+export const I18nProvider = ({ children }: { children: ReactNode }) => {
+  const { locale, isReady } = useLocale();
+
+  const activeLocale = isReady ? locale : DEFAULT_LOCALE;
+
+  useEffect(() => {
+    if (isReady) {
+      document.documentElement.lang = locale;
+    }
+  }, [locale, isReady]);
+
+  return (
+    <NextIntlClientProvider
+      locale={activeLocale}
+      messages={messages[activeLocale]}
+      timeZone={timeZone}
+    >
+      {children}
+    </NextIntlClientProvider>
+  );
+};

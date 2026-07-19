@@ -9,3 +9,4 @@ target/
 .env.local
 infra/provision/nodes.json
 apps/tauri/gen/
+.codebase-memory/

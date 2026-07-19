@@ -1,0 +1,31 @@
+@mixin spin($duration: 0.7s) {
+  animation: vesper-spin $duration linear infinite;
+}
+
+@mixin rise($duration: 0.5s, $delay: 0s, $distance: 12px) {
+  animation: vesper-rise $duration ease $delay both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  --vesper-rise-distance: #{$distance};
+}
+
+@keyframes vesper-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vesper-rise {
+  from {
+    transform: translateY(var(--vesper-rise-distance, 12px));
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

@@ -1,0 +1,38 @@
+.root {
+  display: inline-flex;
+  gap: 1px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  background-color: var(--color-bg-deep);
+}
+
+.option {
+  cursor: pointer;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: none;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.active {
+  color: var(--color-bg-deep);
+  background-color: var(--color-accent);
+
+  &:hover {
+    color: var(--color-bg-deep);
+  }
+}

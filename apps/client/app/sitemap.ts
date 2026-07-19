@@ -1,0 +1,15 @@
+import { SITE } from '@/shared/config';
+
+import type { MetadataRoute } from 'next';
+
+export const dynamic = 'force-static';
+
+const sitemap = (): MetadataRoute.Sitemap => [
+  {
+    url: SITE.url,
+    changeFrequency: 'weekly',
+    priority: 1,
+  },
+];
+
+export default sitemap;

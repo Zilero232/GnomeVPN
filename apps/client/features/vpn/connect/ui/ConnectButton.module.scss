@@ -1,43 +1,86 @@
+.wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 248px;
+  height: 248px;
+}
+
+.ring {
+  position: absolute;
+  inset: 14px;
+  border: 1px solid var(--color-border-bright);
+  border-radius: 50%;
+}
+
+.ringOuter {
+  inset: -12px;
+}
+
 .root {
   cursor: pointer;
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   justify-content: center;
-  width: 160px;
-  height: 160px;
-  border: none;
+  width: 164px;
+  height: 164px;
+  border: 1px solid var(--color-border-bright);
   border-radius: 50%;
-  font-size: 15px;
-  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   transition:
-    background-color 200ms ease,
-    transform 120ms ease;
-
-  &:active:not(:disabled) {
-    transform: scale(0.97);
-  }
+    box-shadow 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
 
   &:disabled {
-    cursor: default;
-    opacity: 0.85;
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 }
 
 .icon {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
 }
 
 .disconnected {
+  color: var(--color-text);
   background-color: var(--color-surface);
+  box-shadow: 0 0 30px -18px var(--color-accent);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-accent-dim);
+    color: var(--color-accent);
+    box-shadow: 0 0 50px -10px var(--color-accent);
+  }
 }
 
 .connecting {
-  background-color: #ca8a04;
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  background-color: var(--color-surface);
+  box-shadow: 0 0 38px -10px var(--color-warning);
 }
 
 .connected {
-  background-color: var(--color-success);
+  border-color: var(--color-accent);
+  color: var(--color-bg-deep);
+  background-color: var(--color-accent);
+  box-shadow: 0 0 60px -10px var(--color-accent);
+}
+
+.halo {
+  pointer-events: none;
+  position: absolute;
+  inset: 42px;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
 }

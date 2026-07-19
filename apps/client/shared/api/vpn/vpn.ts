@@ -1,6 +1,6 @@
 import { api } from '../http';
 
-import type { Node, SubscriptionStatus, TunnelConfig } from '@vesper/schemas';
+import type { CheckoutResult, Node, SubscriptionStatus, TunnelConfig } from '@vesper/schemas';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');
@@ -19,4 +19,13 @@ export const disconnectTunnel = async (): Promise<void> => {
 export const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
   const { data } = await api.get('/subscription/status');
   return data;
+};
+
+export const createCheckout = async (): Promise<CheckoutResult> => {
+  const { data } = await api.post('/billing/checkout');
+  return data;
+};
+
+export const cancelAutoRenew = async (): Promise<void> => {
+  await api.post('/billing/cancel');
 };

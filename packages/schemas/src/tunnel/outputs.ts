@@ -5,6 +5,7 @@ export const tunnelConfigSchema = z.object({
   address: z.string().min(1),
   dns: z.string().min(1),
   serverPublicKey: z.string().min(1),
+  presharedKey: z.string().min(1).nullable().default(null),
   endpoint: z.string().min(1),
   allowedIps: z.array(z.string().min(1)),
   persistentKeepalive: z.number().int().nonnegative(),

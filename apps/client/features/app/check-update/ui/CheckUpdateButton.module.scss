@@ -1,0 +1,19 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  @include menu-item;
+
+  &:disabled {
+    cursor: default;
+    color: var(--color-text-muted);
+  }
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.spinning {
+  @include spin(0.9s);
+}

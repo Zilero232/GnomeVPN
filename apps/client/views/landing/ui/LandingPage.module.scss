@@ -1,0 +1,52 @@
+.root {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px 100px;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26px 0;
+}
+
+.navRight {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.navLink {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.section {
+  padding: 88px 0 0;
+}
+
+.sectionTitle {
+  margin: 0 0 32px;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}

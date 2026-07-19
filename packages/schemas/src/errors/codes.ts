@@ -5,6 +5,8 @@ export const apiErrorCodeSchema = z.enum([
   'UNAUTHORIZED',
   'FORBIDDEN',
   'PAYMENT_REQUIRED',
+  'PAYMENT_FAILED',
+  'WEBHOOK_INVALID',
   'NODE_NOT_FOUND',
   'NODE_UNAVAILABLE',
   'TUNNEL_FAILED',

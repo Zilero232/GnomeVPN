@@ -1,0 +1,43 @@
+.root {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.button {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 100%;
+  border: none;
+  color: var(--color-text-muted);
+  background: transparent;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface-raised);
+  }
+
+  &:focus-visible {
+    background-color: var(--color-surface-raised);
+    outline: none;
+  }
+}
+
+.closeButton {
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+    background-color: var(--color-danger);
+  }
+}
+
+.icon {
+  width: 13px;
+  height: 13px;
+}

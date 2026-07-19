@@ -18,7 +18,7 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
     ports:
       - '51820:51820/udp'
-      - '127.0.0.1:51821:51821/tcp'
+      - '51821:51821/tcp'
     volumes:
       - wg-easy-data:/etc/wireguard
 

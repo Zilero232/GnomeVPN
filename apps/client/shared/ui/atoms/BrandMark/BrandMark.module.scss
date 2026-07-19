@@ -1,0 +1,61 @@
+.root {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.sm {
+  gap: 8px;
+  font-size: 11px;
+}
+
+.md {
+  font-size: 13px;
+}
+
+.lg {
+  gap: 10px;
+  font-size: 15px;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+.dotSm {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 8px var(--color-accent);
+}
+
+.dotLg {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 12px var(--color-accent);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}

@@ -3,6 +3,7 @@ export type CreateClientResult = {
   privateKey: string;
   address: string;
   serverPublicKey: string;
+  presharedKey: string | null;
   dns: string;
 };
 

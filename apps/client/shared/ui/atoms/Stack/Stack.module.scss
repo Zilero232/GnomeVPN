@@ -1,0 +1,16 @@
+.root {
+  display: flex;
+  flex-direction: column;
+}
+
+.sm {
+  gap: 8px;
+}
+
+.md {
+  gap: 16px;
+}
+
+.lg {
+  gap: 24px;
+}

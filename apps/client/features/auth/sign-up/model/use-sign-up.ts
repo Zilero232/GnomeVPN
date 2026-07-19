@@ -1,0 +1,21 @@
+import { useMutation } from '@tanstack/react-query';
+import { type SignUpValues, signUpSchema } from '@vesper/schemas';
+
+import { authClient } from '@/shared/api';
+
+export type { SignUpValues };
+export { signUpSchema };
+
+export const useSignUp = () => {
+  return useMutation({
+    mutationFn: async ({ email, password, name }: SignUpValues) => {
+      const { data, error } = await authClient.signUp.email({ email, password, name });
+
+      if (error) {
+        throw new Error(error.message ?? 'Не удалось зарегистрироваться');
+      }
+
+      return data;
+    },
+  });
+};

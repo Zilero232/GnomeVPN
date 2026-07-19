@@ -41,6 +41,22 @@ const ensureDocker = async (ssh: SshClient): Promise<void> => {
   }
 };
 
+// wg-quick внутри контейнера вызывает iptables/wg, но modprobe оттуда невозможен:
+// /lib/modules не смонтирован. Если модулей нет на хосте, `wg-quick up wg0` падает
+// ("can't initialize iptables table `nat'") и контейнер уходит в бесконечный рестарт.
+// modules-load.d нужен, чтобы модули поднимались и после ребута VPS.
+const KERNEL_MODULES = ['iptable_nat', 'wireguard'];
+
+const ensureKernelModules = async (ssh: SshClient): Promise<void> => {
+  for (const module of KERNEL_MODULES) {
+    await ssh.exec(`modprobe ${module}`);
+  }
+
+  await ssh.exec(
+    `mkdir -p /etc/modules-load.d && printf '%s\\n' ${KERNEL_MODULES.join(' ')} > /etc/modules-load.d/vesper-wg-easy.conf`,
+  );
+};
+
 const shipComposeStack = async (
   ssh: SshClient,
   config: NodeConfig,
@@ -103,6 +119,7 @@ export const provisionHost = async (
     });
 
     await ensureDocker(ssh);
+    await ensureKernelModules(ssh);
 
     const { password, isNew } = await resolvePanelPassword(opts.serverEnvPath, config.countryCode);
     const passwordHash = await hashPanelPassword(password);

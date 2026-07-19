@@ -7,11 +7,16 @@ enum SubscriptionStatus {
 model Subscription {
   id               String             @id @default(dbgenerated("gen_random_uuid()"))
   userId           String             @unique @map("user_id")
-  status           SubscriptionStatus @default(active)
+  status           SubscriptionStatus @default(expired)
   currentPeriodEnd DateTime?          @map("current_period_end") @db.Timestamptz(3)
-  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  yookassaPaymentMethodId String? @map("yookassa_payment_method_id")
+  yookassaCustomerId      String? @map("yookassa_customer_id")
+  cancelAtPeriodEnd       Boolean @default(false) @map("cancel_at_period_end")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscription")
 }

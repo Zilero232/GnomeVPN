@@ -1,0 +1,84 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  position: relative;
+}
+
+.trigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-accent-dim);
+  }
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  transform-origin: top right;
+  min-width: 218px;
+  padding: 5px;
+  border: 1px solid var(--color-border-bright);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 4%) inset,
+    0 24px 48px -20px rgb(0 0 0 / 85%);
+}
+
+.item {
+  @include menu-item;
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.itemDanger {
+  color: var(--color-danger);
+
+  .itemIcon {
+    color: var(--color-danger);
+  }
+}
+
+.itemLabel {
+  flex: 1;
+}
+
+.section {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.divider {
+  height: 1px;
+  margin: 5px 8px;
+  background-color: var(--color-border);
+}

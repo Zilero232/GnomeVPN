@@ -86,6 +86,7 @@ export class TunnelService {
       address: created.address,
       dns: created.dns,
       serverPublicKey: created.serverPublicKey,
+      presharedKey: created.presharedKey,
       endpoint: node.publicEndpoint,
       allowedIps: ALLOWED_IPS,
       persistentKeepalive: KEEPALIVE,

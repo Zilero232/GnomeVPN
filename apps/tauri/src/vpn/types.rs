@@ -8,6 +8,8 @@ pub struct TunnelConfig {
     pub address: String,
     pub dns: String,
     pub server_public_key: String,
+    #[serde(default)]
+    pub preshared_key: Option<String>,
     pub endpoint: String,
     pub allowed_ips: Vec<String>,
     pub persistent_keepalive: u16,
@@ -20,6 +22,10 @@ impl fmt::Debug for TunnelConfig {
             .field("address", &self.address)
             .field("dns", &self.dns)
             .field("server_public_key", &self.server_public_key)
+            .field(
+                "preshared_key",
+                &self.preshared_key.as_ref().map(|_| "[redacted]"),
+            )
             .field("endpoint", &self.endpoint)
             .field("allowed_ips", &self.allowed_ips)
             .field("persistent_keepalive", &self.persistent_keepalive)

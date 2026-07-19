@@ -1,53 +1,74 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: 32px;
   align-items: center;
-  min-height: 100vh;
-  padding: 32px 20px;
+  min-height: var(--viewport-height);
+  padding: 26px 24px 36px;
 }
 
-.title {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.nodes {
+.body {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 44px;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 320px;
+  padding: 32px 0;
 }
 
-.hint {
-  color: var(--color-text-muted);
-  text-align: center;
-}
-
-.node {
-  cursor: pointer;
+.head {
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 12px 16px;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 340px;
+}
+
+.headRight {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 13px;
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  font-size: 15px;
-  color: inherit;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.statusOn {
+  border-color: rgb(53 240 160 / 30%);
+  color: var(--color-accent);
+}
+
+.statusOff {
+  color: var(--color-text-muted);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentcolor;
+}
+
+.gate {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  padding: 34px 30px;
+  border: 1px dashed var(--color-border-bright);
+  border-radius: var(--radius-lg);
+  text-align: center;
   background-color: var(--color-surface);
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.6;
-  }
-}
-
-.nodeActive {
-  border-color: var(--color-success);
-}
-
-.flag {
-  font-size: 22px;
 }

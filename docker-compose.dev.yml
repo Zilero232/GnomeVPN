@@ -8,7 +8,8 @@ services:
       POSTGRES_PASSWORD: vesper
       POSTGRES_DB: vesper
     ports:
-      - '5432:5432'
+      # 5433 на хосте: 5432 занят нативной службой Windows postgresql-x64-18.
+      - '5433:5432'
     volumes:
       - vesper-postgres-data:/var/lib/postgresql/data
     healthcheck:

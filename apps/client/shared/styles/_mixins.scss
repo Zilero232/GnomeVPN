@@ -1,0 +1,34 @@
+@forward '@/shared/styles/animations';
+
+@mixin stack($gap: 16px) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+@mixin surface-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+@mixin menu-item {
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+  background: none;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-surface);
+  }
+}

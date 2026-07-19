@@ -1,0 +1,19 @@
+enum PaymentStatus {
+  pending
+  succeeded
+  canceled
+}
+
+model Payment {
+  id                String        @id @default(dbgenerated("gen_random_uuid()"))
+  userId            String        @map("user_id")
+  yookassaPaymentId String        @unique @map("yookassa_payment_id")
+  amount            Decimal       @map("amount") @db.Decimal(10, 2)
+  status            PaymentStatus @default(pending)
+  isRecurring       Boolean       @default(false) @map("is_recurring")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("payment")
+}

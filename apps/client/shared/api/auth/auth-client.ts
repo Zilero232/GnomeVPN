@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
 
-import { env } from '@/shared/config/client-env';
+import { env } from '@/shared/config';
 
 const STORAGE_KEY = 'vesper.auth-token';
 

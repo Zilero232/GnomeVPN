@@ -8,6 +8,10 @@ export const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(1),
   BETTER_AUTH_URL: z.url(),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  YOOKASSA_SHOP_ID: z.string().default(''),
+  YOOKASSA_SECRET_KEY: z.string().default(''),
+  YOOKASSA_RETURN_URL: z.url().default('http://localhost:3000/account'),
+  SUBSCRIPTION_PRICE_RUB: z.coerce.number().default(100),
 });
 
 export type Env = z.infer<typeof envSchema>;

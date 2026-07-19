@@ -89,6 +89,36 @@ describe('provisionHost', () => {
     expect(fakeSsh.dispose).toHaveBeenCalled();
   });
 
+  it('loads the kernel modules wg-easy needs before starting the stack', async () => {
+    const fakeSsh = makeFakeSsh({
+      'docker --version': { stdout: 'Docker version 27.0.0', exitCode: 0 },
+      'command -v ufw': { stdout: '/usr/sbin/ufw', exitCode: 0 },
+    });
+
+    await provisionHost(baseConfig, {
+      serverEnvPath,
+      wgEasyComposeContent: 'services: {}',
+      createSshClient: () => fakeSsh as never,
+      healthCheck: vi.fn(async () => true),
+      upsertNode: makeFakeUpsertNode(),
+      basePrisma: fakeBasePrisma as never,
+    });
+
+    const commands = fakeSsh.exec.mock.calls.map(([command]) => command as string);
+
+    // wg-quick внутри контейнера не может сделать modprobe (/lib/modules не смонтирован),
+    // поэтому iptable_nat и wireguard должны быть загружены на хосте.
+    expect(commands.some((command) => command.includes('modprobe iptable_nat'))).toBe(true);
+    expect(commands.some((command) => command.includes('modprobe wireguard'))).toBe(true);
+
+    // ...и обязательно ДО docker compose up, иначе контейнер уйдёт в краш-луп.
+    const modprobeIndex = commands.findIndex((command) => command.includes('modprobe iptable_nat'));
+    const composeUpIndex = commands.findIndex((command) => command.includes('docker compose up'));
+
+    expect(modprobeIndex).toBeGreaterThanOrEqual(0);
+    expect(composeUpIndex).toBeGreaterThan(modprobeIndex);
+  });
+
   it('installs docker when docker --version fails', async () => {
     const fakeSsh = makeFakeSsh({
       'docker --version': { stdout: '', exitCode: 127 },

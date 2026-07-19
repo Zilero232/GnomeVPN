@@ -1,0 +1,22 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  @include menu-item;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.danger {
+  color: var(--color-danger);
+
+  .icon {
+    color: var(--color-danger);
+  }
+}
+
+.label {
+  flex: 1;
+}

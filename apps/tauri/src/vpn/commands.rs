@@ -41,6 +41,8 @@ pub async fn vpn_connect(
 
     let emit_for_status = emit.clone();
 
+    log::info!("vpn_connect: starting tunnel to {}", config.endpoint);
+
     let result = run_tunnel(config, emit, stop_rx).await;
 
     {
@@ -50,15 +52,21 @@ pub async fn vpn_connect(
     }
 
     if let Err(err) = &result {
+        log::error!("vpn_connect: tunnel failed: {err}");
         emit_for_status(VpnEvent::Error {
             message: err.to_string(),
         });
+    } else {
+        log::info!("vpn_connect: tunnel closed");
     }
+
     result
 }
 
 #[tauri::command]
 pub fn vpn_disconnect(state: State<'_, VpnState>) -> Result<(), VpnError> {
+    log::info!("vpn_disconnect: stopping tunnel");
+
     let mut rt = state.0.lock();
     if let Some(stop) = rt.stop.take() {
         let _ = stop.send(());

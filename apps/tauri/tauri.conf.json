@@ -20,7 +20,10 @@
         "center": true,
         "resizable": true,
         "minWidth": 380,
-        "minHeight": 640
+        "minHeight": 640,
+        "backgroundColor": "#070b0a",
+        "decorations": false,
+        "dragDropEnabled": false
       }
     ],
     "security": { "csp": null }
@@ -28,6 +31,17 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.icns"]
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.icns"],
+    "shortDescription": "Vesper VPN desktop client",
+    "longDescription": "Vesper — WireGuard VPN desktop client built with Tauri 2.",
+    "resources": { "bin/wintun.dll": "wintun.dll" }
+  },
+  "plugins": {
+    "updater": {
+      "active": false,
+      "pubkey": "",
+      "endpoints": ["https://vesper.app/releases/latest.json"],
+      "windows": { "installMode": "passive" }
+    }
   }
 }

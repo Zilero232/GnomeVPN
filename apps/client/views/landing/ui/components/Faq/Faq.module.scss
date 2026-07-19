@@ -1,0 +1,30 @@
+.list {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-border);
+}
+
+.item {
+  padding: 24px 26px;
+  background-color: var(--color-surface);
+}
+
+.question {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.answer {
+  max-width: 68ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+}

@@ -59,12 +59,13 @@ export class WgEasyClient {
     const address = parseIniValue(config, 'Interface', 'Address');
     const dns = parseIniValue(config, 'Interface', 'DNS');
     const serverPublicKey = parseIniValue(config, 'Peer', 'PublicKey');
+    const presharedKey = parseIniValue(config, 'Peer', 'PresharedKey');
 
     if (!privateKey || !address || !dns || !serverPublicKey) {
       throw new Error('wg-easy createClient failed: incomplete configuration');
     }
 
-    return { clientId: created.id, privateKey, address, serverPublicKey, dns };
+    return { clientId: created.id, privateKey, address, serverPublicKey, presharedKey, dns };
   }
 
   async deleteClient(clientId: string): Promise<void> {

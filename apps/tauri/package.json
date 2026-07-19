@@ -5,8 +5,11 @@
   "private": true,
   "scripts": {
     "tauri": "tauri",
+    "predev": "node ./scripts/kill-app.mjs && node ./scripts/sync-wintun.mjs",
     "dev": "tauri dev",
+    "prebuild": "node ./scripts/sync-wintun.mjs",
     "build": "tauri build",
+    "kill": "node ./scripts/kill-app.mjs",
     "info": "tauri info"
   },
   "devDependencies": {

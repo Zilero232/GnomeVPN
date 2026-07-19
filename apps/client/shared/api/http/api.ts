@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { env } from '@/shared/config/client-env';
+import { env } from '@/shared/config';
 import { getAuthToken } from '../auth/auth-client';
 import { toApiError } from './api-error';
 

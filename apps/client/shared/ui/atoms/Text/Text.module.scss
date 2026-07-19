@@ -1,0 +1,34 @@
+.root {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.xs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.sm {
+  font-size: 14px;
+}
+
+.md {
+  font-size: 16px;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.danger {
+  color: var(--color-danger);
+}
+
+.success {
+  color: var(--color-success);
+}
+
+.center {
+  text-align: center;
+}
