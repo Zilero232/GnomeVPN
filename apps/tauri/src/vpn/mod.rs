@@ -53,7 +53,7 @@ mod tests {
             dns: "10.8.0.1".to_string(),
             server_public_key: "server-pub".to_string(),
             preshared_key,
-            endpoint: "de.vesper.example:51820".to_string(),
+            endpoint: "de.gnomevpn.example:51820".to_string(),
             allowed_ips: vec!["0.0.0.0/0".to_string()],
             persistent_keepalive: 25,
         }

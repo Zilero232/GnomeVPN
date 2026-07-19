@@ -30,44 +30,61 @@ export const useVpnConnection = () => {
     }
   };
 
-  const onEvent = (generation: number, event: VpnEvent) => {
+  const releaseTunnel = async () => {
+    const results = await Promise.allSettled([disconnectTunnel(), vpnDisconnect()]);
+
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        logger.warn(`tunnel cleanup failed: ${String(result.reason)}`);
+      }
+    }
+  };
+
+  const onEvent = async (generation: number, event: VpnEvent) => {
     if (generation !== generationRef.current) {
       return;
     }
 
-    match(event)
-      .with({ type: 'connected' }, () => {
+    await match(event)
+      .with({ type: 'connected' }, async () => {
         clearWatchdog();
         setStatus('connected');
         wasConnectedRef.current = true;
-        void notify({
+
+        await notify({
           title: t('connectedTitle'),
           body: t('connectedBody', { country: countryRef.current }),
           tone: 'success',
         });
       })
-      .with({ type: 'disconnected' }, () => {
+      .with({ type: 'disconnected' }, async () => {
         clearWatchdog();
         setStatus('disconnected');
         setActiveNodeId(null);
 
-        if (wasConnectedRef.current) {
-          wasConnectedRef.current = false;
-          void notify({ title: t('disconnectedTitle'), body: t('disconnectedBody') });
+        if (!wasConnectedRef.current) {
+          return;
         }
+
+        wasConnectedRef.current = false;
+
+        await notify({ title: t('disconnectedTitle'), body: t('disconnectedBody') });
       })
-      .with({ type: 'error' }, ({ message }) => {
+      .with({ type: 'error' }, async ({ message }) => {
         clearWatchdog();
         setStatus('disconnected');
         setActiveNodeId(null);
         toast.error(message);
 
-        if (wasConnectedRef.current) {
-          wasConnectedRef.current = false;
-          void notify({ title: t('errorTitle'), body: message, tone: 'error' });
+        if (!wasConnectedRef.current) {
+          return;
         }
+
+        wasConnectedRef.current = false;
+
+        await notify({ title: t('errorTitle'), body: message, tone: 'error' });
       })
-      .with({ type: 'connecting' }, { type: 'handshake' }, { type: 'bytesUpdate' }, () => {})
+      .with({ type: 'connecting' }, { type: 'handshake' }, { type: 'bytesUpdate' }, async () => {})
       .exhaustive();
   };
 
@@ -79,26 +96,25 @@ export const useVpnConnection = () => {
     setStatus('connecting');
     setActiveNodeId(nodeId);
 
-    watchdogRef.current = setTimeout(() => {
+    watchdogRef.current = setTimeout(async () => {
       if (generation !== generationRef.current) {
         return;
       }
 
       watchdogRef.current = null;
 
-      void disconnectTunnel().catch(() => undefined);
-      void vpnDisconnect().catch(() => undefined);
+      await releaseTunnel();
 
       setStatus('disconnected');
       setActiveNodeId(null);
-      toast.error('Не удалось подключиться');
+      toast.error(t('connectFailed'));
     }, CONNECT_TIMEOUT_MS);
 
     try {
       const config = await connectTunnel(nodeId);
 
-      await vpnConnect(config, (event) => {
-        onEvent(generation, event);
+      await vpnConnect(config, async (event) => {
+        await onEvent(generation, event);
       });
     } catch (error) {
       if (generation !== generationRef.current) {
@@ -107,7 +123,7 @@ export const useVpnConnection = () => {
 
       clearWatchdog();
 
-      await disconnectTunnel().catch(() => undefined);
+      await releaseTunnel();
 
       setStatus('disconnected');
       setActiveNodeId(null);
@@ -116,9 +132,7 @@ export const useVpnConnection = () => {
 
       logger.error(`vpn connect failed [${code}]: ${String(error)}`);
 
-      toast.error(
-        code === 'PAYMENT_REQUIRED' ? 'Требуется активная подписка' : 'Не удалось подключиться',
-      );
+      toast.error(code === 'PAYMENT_REQUIRED' ? t('subscriptionRequired') : t('connectFailed'));
     }
   };
 
@@ -126,9 +140,7 @@ export const useVpnConnection = () => {
     generationRef.current += 1;
     clearWatchdog();
 
-    await disconnectTunnel().catch(() => undefined);
-
-    await vpnDisconnect().catch(() => undefined);
+    await releaseTunnel();
 
     setStatus('disconnected');
     setActiveNodeId(null);

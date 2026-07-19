@@ -19,6 +19,16 @@ export const Hero = () => {
 
   return (
     <section className={s.root}>
+      {/** biome-ignore lint/performance/noImgElement: an inline SVG needs no next/image pipeline, and the app is a static export */}
+      <img
+        alt=""
+        aria-hidden
+        className={s.mark}
+        height={200}
+        src="/brand/logo-mark.svg"
+        width={200}
+      />
+
       <span className={s.eyebrow}>{t('eyebrow')}</span>
 
       <h1 className={s.title}>

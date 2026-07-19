@@ -1,26 +1,25 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Vesper",
+  "productName": "GnomeVPN",
   "version": "0.1.0",
-  "identifier": "app.vesper.desktop",
+  "identifier": "app.gnomevpn.desktop",
   "build": {
     "frontendDist": "../client/out",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun --filter @vesper/client build",
-    "beforeDevCommand": "bun --filter @vesper/client dev"
+    "beforeBuildCommand": "bun --filter @gnomevpn/client build",
+    "beforeDevCommand": "bun --filter @gnomevpn/client dev"
   },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "Vesper",
+        "title": "GnomeVPN",
         "url": "/app",
         "width": 420,
         "height": 720,
         "center": true,
-        "resizable": true,
-        "minWidth": 380,
-        "minHeight": 640,
+        "resizable": false,
+        "maximizable": false,
         "backgroundColor": "#070b0a",
         "decorations": false,
         "dragDropEnabled": false
@@ -32,15 +31,15 @@
     "active": true,
     "targets": "all",
     "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico", "icons/icon.icns"],
-    "shortDescription": "Vesper VPN desktop client",
-    "longDescription": "Vesper — WireGuard VPN desktop client built with Tauri 2.",
+    "shortDescription": "GnomeVPN desktop client",
+    "longDescription": "GnomeVPN — WireGuard VPN desktop client built with Tauri 2.",
     "resources": { "bin/wintun.dll": "wintun.dll" }
   },
   "plugins": {
     "updater": {
       "active": false,
       "pubkey": "",
-      "endpoints": ["https://vesper.app/releases/latest.json"],
+      "endpoints": ["https://gnomevpn.ru/releases/latest.json"],
       "windows": { "installMode": "passive" }
     }
   }

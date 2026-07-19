@@ -6,12 +6,18 @@ import { useEffect, useRef } from 'react';
 import { hideMainWindow, isTauriDesktop, logger } from '@/shared/lib';
 import { useCloseToTray } from './use-close-to-tray';
 
-export const useCloseOnWindowEvent = () => {
+type CloseOnWindowEventInput = {
+  onBeforeQuit?: () => Promise<void>;
+};
+
+export const useCloseOnWindowEvent = ({ onBeforeQuit }: CloseOnWindowEventInput = {}) => {
   const { closeToTray } = useCloseToTray();
 
   const closeToTrayRef = useRef(closeToTray);
+  const beforeQuitRef = useRef(onBeforeQuit);
 
   closeToTrayRef.current = closeToTray;
+  beforeQuitRef.current = onBeforeQuit;
 
   useEffect(() => {
     if (!isTauriDesktop()) {
@@ -23,13 +29,20 @@ export const useCloseOnWindowEvent = () => {
 
     const subscribe = async () => {
       try {
-        const off = await getCurrentWindow().onCloseRequested((event) => {
-          if (!closeToTrayRef.current) {
+        const off = await getCurrentWindow().onCloseRequested(async (event) => {
+          if (closeToTrayRef.current) {
+            event.preventDefault();
+
+            await hideMainWindow();
+
             return;
           }
 
-          event.preventDefault();
-          void hideMainWindow();
+          try {
+            await beforeQuitRef.current?.();
+          } catch (error) {
+            logger.warn(`cleanup before quit failed: ${String(error)}`);
+          }
         });
 
         if (cancelled) {
@@ -42,7 +55,7 @@ export const useCloseOnWindowEvent = () => {
       }
     };
 
-    void subscribe();
+    subscribe();
 
     return () => {
       cancelled = true;

@@ -10,7 +10,7 @@ use super::types::{TunnelConfig, VpnError, VpnEvent};
 use super::{parse_keys, parse_preshared_key, route};
 
 const MAX_PACKET: usize = 65535;
-const TUNNEL_NAME: &str = "vesper0";
+const TUNNEL_NAME: &str = "gnomevpn0";
 
 pub async fn run_tunnel(
     config: TunnelConfig,

@@ -14,21 +14,31 @@
 
 @mixin menu-item {
   cursor: pointer;
+  position: relative;
   display: flex;
-  gap: 10px;
+  gap: 11px;
   align-items: center;
   width: 100%;
-  padding: 9px 10px;
-  border: none;
-  border-radius: var(--radius-sm);
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   font-family: var(--font-sans);
   font-size: 13px;
   color: var(--color-text);
   text-align: left;
   background: none;
-  transition: background-color 0.15s ease;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease;
 
   &:hover:not(:disabled) {
-    background-color: var(--color-surface);
+    border-color: rgb(230 240 236 / 10%);
+    color: var(--color-text);
+    background-color: rgb(230 240 236 / 7%);
+  }
+
+  &:active:not(:disabled) {
+    background-color: rgb(230 240 236 / 4%);
   }
 }

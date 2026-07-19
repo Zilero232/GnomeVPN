@@ -1,7 +1,7 @@
-# Vesper — VPN-сервис. Дизайн-документ
+# GnomeVPN — VPN-сервис. Дизайн-документ
 
 > Статус: черновик на ревью. Дата: 2026-07-16.
-> Рабочее название продукта: **Vesper**. Пакеты монорепо: `@vesper/*`.
+> Рабочее название продукта: **GnomeVPN**. Пакеты монорепо: `@gnomevpn/*`.
 
 ## 1. Что это
 
@@ -17,7 +17,7 @@
 - **Desktop-обёртка**: Tauri 2 (Rust). Здесь же живёт VPN-движок.
 - **Backend (control plane)**: NestJS на Bun + Prisma + self-hosted Postgres,
   аутентификация через better-auth.
-- **Общие типы**: Zod-схемы в `packages/schemas` (`@vesper/schemas`).
+- **Общие типы**: Zod-схемы в `packages/schemas` (`@gnomevpn/schemas`).
 - **VPN-серверы**: WireGuard через **wg-easy** (docker), по одному VPS на страну.
 
 ### Ключевые решения (зафиксированы на брейншторме)
@@ -78,7 +78,7 @@ apps/
 ├── tauri/      # Rust-обёртка + VPN-движок (boringtun) + команды vpn_connect/disconnect/status
 └── server/     # NestJS на Bun — control plane: auth, subscription, billing, nodes, tunnel
 packages/
-└── schemas/    # Zod-схемы (@vesper/schemas): TunnelConfig, Node, SubscriptionStatus, DTO
+└── schemas/    # Zod-схемы (@gnomevpn/schemas): TunnelConfig, Node, SubscriptionStatus, DTO
 infra/
 ├── wg-easy/    # docker-compose шаблон одного странового узла (wg-easy)
 └── control/    # docker-compose для backend + Postgres
@@ -170,7 +170,7 @@ NestJS на Bun + Prisma + Postgres + better-auth. Модули по конве�
 
 ### Общие схемы
 
-`packages/schemas` (`@vesper/schemas`), общие client↔server: `Node` (публичная
+`packages/schemas` (`@gnomevpn/schemas`), общие client↔server: `Node` (публичная
 форма), `TunnelConfig`, `SubscriptionStatus`, DTO connect/disconnect. Источник
 правды по типам — схемы, типы через `z.infer`.
 

@@ -264,7 +264,7 @@ mod tests {
     #[test]
     fn remove_default_route_never_panics_on_missing_route() {
         let result =
-            remove_default_route("vesper-test0", IpAddr::V4(Ipv4Addr::new(203, 0, 113, 1)));
+            remove_default_route("gnomevpn-test0", IpAddr::V4(Ipv4Addr::new(203, 0, 113, 1)));
         assert!(result.is_ok());
     }
 }

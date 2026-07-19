@@ -3,7 +3,7 @@ import { AuthPage } from '@/views/auth';
 
 export const metadata = createPageMetadata({
   title: 'Вход',
-  description: 'Войдите в Vesper или создайте аккаунт, чтобы оформить подписку и подключиться.',
+  description: 'Войдите в GnomeVPN или создайте аккаунт, чтобы оформить подписку и подключиться.',
   path: '/auth',
   index: false,
 });

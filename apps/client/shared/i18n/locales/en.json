@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "Vesper",
+    "brand": "GnomeVPN",
     "loading": "Loading…",
     "showPassword": "Show password",
     "hidePassword": "Hide password"
@@ -10,7 +10,7 @@
     "titleLine1": "A connection",
     "titleLine2": "that is",
     "titleAccent": "yours",
-    "lead": "Vesper brings up a WireGuard tunnel to a node in another country in one tap. No provider accounts, no logs, no ads. Just a clean channel.",
+    "lead": "GnomeVPN brings up a WireGuard tunnel to a node in another country in one tap. No provider accounts, no logs, no ads. Just a clean channel.",
     "cta": "Start for 100 ₽",
     "ctaSecondary": "How it works",
     "account": "Account",
@@ -89,13 +89,14 @@
     "account": "Open account"
   },
   "tray": {
-    "tooltip": "Vesper VPN",
+    "tooltip": "GnomeVPN",
     "online": "Connected",
     "offline": "Disconnected",
-    "show": "Open Vesper",
+    "account": "Account",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
     "quit": "Quit",
     "closeToTray": "Minimize to tray",
-    "closeToTrayOff": "Close completely",
     "language": "Language"
   },
   "notifications": {
@@ -103,7 +104,9 @@
     "connectedBody": "Traffic now goes through {country}",
     "disconnectedTitle": "Disconnected",
     "disconnectedBody": "Tunnel closed, traffic goes directly",
-    "errorTitle": "Connection dropped"
+    "errorTitle": "Connection dropped",
+    "connectFailed": "Could not connect",
+    "subscriptionRequired": "An active subscription is required"
   },
   "window": {
     "minimize": "Minimize",
@@ -143,7 +146,12 @@
     "disconnect": "Disconnect",
     "statusOnline": "Protected",
     "statusOffline": "Unprotected",
+    "nodeOnline": "Available",
+    "nodeDegraded": "Unstable",
+    "nodeOffline": "Unavailable",
+    "nodeOfflineHint": "This node is not responding — pick another country",
     "openAccount": "Account",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "menu": "App menu"
   }
 }

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One command (`bun run provision:nodes`) that takes a JSON list of bare VPS hosts and turns each into a working, registered Vesper VPN node — Docker + wg-easy installed over SSH, firewall locked down, panel password written to `apps/server/.env`, and a `Node` row upserted in Postgres.
+**Goal:** One command (`bun run provision:nodes`) that takes a JSON list of bare VPS hosts and turns each into a working, registered GnomeVPN VPN node — Docker + wg-easy installed over SSH, firewall locked down, panel password written to `apps/server/.env`, and a `Node` row upserted in Postgres.
 
 **Architecture:** A single Bun/TypeScript script (`infra/provision/provision-nodes.ts`) reads and Zod-validates `infra/provision/nodes.json`, then for each host sequentially: connects over SSH (`node-ssh`, password auth), ensures Docker, resolves/writes the wg-easy panel password, ships the compose stack, configures `ufw`, starts the stack, health-checks it via the existing `WgEasyClient.health()`, appends the `WG_KEY_<CODE>` env line, and upserts the `Node` row via a shared helper extracted from the existing `seed-node.ts`. Per-host failures are isolated and reported in a summary table; the process exits non-zero if any host failed.
 
@@ -90,7 +90,7 @@ import { loadNodesConfig } from '../lib/nodes-config';
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-nodes-config-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-nodes-config-'));
 });
 
 afterEach(async () => {
@@ -262,7 +262,7 @@ let dir: string;
 let filePath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-env-file-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-env-file-'));
   filePath = join(dir, '.env');
 });
 
@@ -620,7 +620,7 @@ void main();
 Run: `cd apps/server && bun run test`
 Expected: PASS, all existing tests plus the 3 new ones (19 total, up from 16).
 
-Run: `bun --filter @vesper/server typecheck` (from repo root `c:/Projects/vesper`)
+Run: `bun --filter @gnomevpn/server typecheck` (from repo root `c:/Projects/gnomevpn`)
 Expected: exit code 0.
 
 - [ ] **Step 7: Commit**
@@ -645,7 +645,7 @@ git commit -m "refactor(server): extract shared upsertNode helper from seed-node
 
 - [ ] **Step 1: Install `node-ssh`**
 
-Run (from repo root `c:/Projects/vesper`): `bun add node-ssh`
+Run (from repo root `c:/Projects/gnomevpn`): `bun add node-ssh`
 Expected: adds `node-ssh` to root `package.json` dependencies (this is a root-level tool, not scoped to `apps/server` or any workspace package, since `infra/provision` is not itself a workspace package).
 
 - [ ] **Step 2: Write the failing test**
@@ -744,7 +744,7 @@ export class SshClient {
   }
 
   async putFile(localContent: string, remotePath: string): Promise<void> {
-    const dir = await mkdtemp(join(tmpdir(), 'vesper-ssh-put-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gnomevpn-ssh-put-'));
     const localPath = join(dir, 'payload');
 
     try {
@@ -808,7 +808,7 @@ let dir: string;
 let envPath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-panel-password-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-panel-password-'));
   envPath = join(dir, '.env');
 });
 
@@ -946,7 +946,7 @@ let dir: string;
 let serverEnvPath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-provision-host-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-provision-host-'));
   serverEnvPath = join(dir, '.env');
   await writeFile(serverEnvPath, '');
 });
@@ -1137,7 +1137,7 @@ import type { NodeConfig } from './nodes-config';
 import { hashPanelPassword, resolvePanelPassword } from './panel-password';
 import { SshClient } from './ssh-client';
 
-const REMOTE_DIR = '/opt/vesper-wg-easy';
+const REMOTE_DIR = '/opt/gnomevpn-wg-easy';
 const WIREGUARD_PORT = 51820;
 const PANEL_PORT = 51821;
 const HEALTH_CHECK_TIMEOUT_MS = 60_000;
@@ -1418,7 +1418,7 @@ This step cannot be automated — it is the same kind of manual verification thi
 2. Run: `bun run provision:nodes` (optionally with `--backend-ip=<your known backend IP>` if you have one).
 3. Confirm the summary line shows `provisioned` for the host.
 4. Confirm `apps/server/.env` now has a `WG_KEY_<CODE>=...` line.
-5. Confirm the `Node` row exists: `docker exec vesper-postgres-dev psql -U vesper -d vesper -c "select country, public_endpoint, wg_easy_url, wg_easy_api_key_ref from node;"` (adjust container name if your local Postgres container differs — see `docker-compose.dev.yml`).
+5. Confirm the `Node` row exists: `docker exec gnomevpn-postgres-dev psql -U gnomevpn -d gnomevpn -c "select country, public_endpoint, wg_easy_url, wg_easy_api_key_ref from node;"` (adjust container name if your local Postgres container differs — see `docker-compose.dev.yml`).
 6. Run `bun run provision:nodes` again with the same `nodes.json` — confirm it exits 0, the summary shows `updated` (not `provisioned`), and `apps/server/.env` still has exactly one `WG_KEY_<CODE>` line (not duplicated).
 7. From the backend host (or wherever `apps/server` runs), confirm the full connect/disconnect flow works against this newly provisioned node — same manual E2E steps as Stage 1's Task 18 (sign up, `GET /nodes`, `POST /tunnel/connect`, verify the returned `TunnelConfig`, `POST /tunnel/disconnect`).
 

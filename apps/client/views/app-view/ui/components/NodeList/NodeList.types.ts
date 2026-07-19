@@ -1,4 +1,4 @@
-import type { Node } from '@vesper/schemas';
+import type { Node } from '@gnomevpn/schemas';
 
 export type NodeListProps = {
   nodes: Node[];

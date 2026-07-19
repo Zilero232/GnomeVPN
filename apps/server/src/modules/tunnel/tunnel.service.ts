@@ -5,7 +5,7 @@ import { PrismaService } from '../../core';
 import { WgEasyClient } from '../../lib';
 import { NodesService } from '../nodes/nodes.service';
 
-import type { TunnelConfig } from '@vesper/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 
 const ALLOWED_IPS = ['0.0.0.0/0', '::/0'];
 const KEEPALIVE = 25;

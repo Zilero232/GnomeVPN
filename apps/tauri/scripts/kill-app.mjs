@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// Kills leftover Vesper desktop processes so `tauri dev` can start cleanly.
-// A crashed run leaves vesper.exe holding the TUN adapter and the single-instance
+// Kills leftover GnomeVPN desktop processes so `tauri dev` can start cleanly.
+// A crashed run leaves gnomevpn.exe holding the TUN adapter and the single-instance
 // lock, which makes the next launch either fail or silently focus the zombie
 // window. Protects the current/parent PID so the predev hook can't suicide.
 
 import { execSync, spawnSync } from 'node:child_process';
 import { platform } from 'node:os';
 
-const PROCESS_NAMES = ['vesper.exe', 'vesper'];
+const PROCESS_NAMES = ['gnomevpn.exe', 'gnomevpn'];
 
 const myPid = String(process.pid);
 const parentPid = String(process.ppid);
@@ -28,7 +28,7 @@ const report = (pid, name) => {
 
 const killWindows = () => {
   // `tasklist /FO CSV` lines look like:
-  //   "vesper.exe","12345","Console","1","52 000 КБ"
+  //   "gnomevpn.exe","12345","Console","1","52 000 КБ"
   const out = run('tasklist /FO CSV /NH');
 
   for (const line of out.split('\n')) {
@@ -40,7 +40,7 @@ const killWindows = () => {
 
     const [, name, pid] = match;
 
-    if (name.toLowerCase() !== 'vesper.exe' || protect.has(pid)) {
+    if (name.toLowerCase() !== 'gnomevpn.exe' || protect.has(pid)) {
       continue;
     }
 

@@ -8,7 +8,7 @@ import { loadNodesConfig } from '../nodes-config';
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-nodes-config-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-nodes-config-'));
 });
 
 afterEach(async () => {

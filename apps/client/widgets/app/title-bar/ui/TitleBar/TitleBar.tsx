@@ -10,7 +10,7 @@ import s from './TitleBar.module.scss';
 
 export const TitleBar = () => {
   const platform = useWindowPlatform();
-  const { isMaximized, minimize, toggleMaximize, close } = useWindowControls();
+  const { minimize, close } = useWindowControls();
 
   if (!platform) {
     return null;
@@ -24,14 +24,7 @@ export const TitleBar = () => {
         <BrandMark className={s.brand} size="sm" tone="muted" />
       </div>
 
-      {!isMacos && (
-        <TitleBarControls
-          isMaximized={isMaximized}
-          onClose={close}
-          onMinimize={minimize}
-          onToggleMaximize={toggleMaximize}
-        />
-      )}
+      {!isMacos && <TitleBarControls onClose={close} onMinimize={minimize} />}
     </div>
   );
 };

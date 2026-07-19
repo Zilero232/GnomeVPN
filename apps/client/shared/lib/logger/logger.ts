@@ -6,13 +6,13 @@ type LogFn = (message: string) => void;
 
 const toTauri = (tauriFn: LogFn, consoleFn: LogFn): LogFn => {
   return (message: string) => {
-    if (isTauriDesktop()) {
-      void tauriFn(message);
+    if (!isTauriDesktop()) {
+      consoleFn(message);
 
       return;
     }
 
-    consoleFn(message);
+    Promise.resolve(tauriFn(message)).catch(() => consoleFn(message));
   };
 };
 

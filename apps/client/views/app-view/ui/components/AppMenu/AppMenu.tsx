@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { CheckUpdateButton } from '@/features/app/check-update';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
-import { authClient, clearToken } from '@/shared/api';
+import { useSignOut } from '@/features/auth/sign-out';
 import { ROUTES } from '@/shared/constants';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
@@ -29,16 +29,14 @@ export const AppMenu = () => {
 
   const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
-  const onSignOut = async () => {
-    await authClient.signOut();
-    clearToken();
-  };
+  const signOut = useSignOut();
 
   return (
     <div className={s.root} ref={ref}>
       <motion.button
         animate={{ rotate: isOpen ? 45 : 0 }}
         aria-expanded={isOpen}
+        aria-label={t('menu')}
         className={s.trigger}
         transition={{ type: 'spring', stiffness: 420, damping: 22 }}
         type="button"
@@ -77,7 +75,12 @@ export const AppMenu = () => {
 
             <div className={s.divider} />
 
-            <MenuItem icon={LogOut} label={t('signOut')} tone="danger" onClick={onSignOut} />
+            <MenuItem
+              icon={LogOut}
+              label={t('signOut')}
+              tone="danger"
+              onClick={() => signOut.mutate()}
+            />
           </motion.div>
         )}
       </AnimatePresence>

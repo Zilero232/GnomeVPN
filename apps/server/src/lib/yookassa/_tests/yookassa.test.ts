@@ -6,7 +6,7 @@ const makeClient = () => new YooKassaClient({ shopId: 'shop-1', secretKey: 'secr
 
 const paymentInput = {
   amountRub: 100,
-  description: 'Vesper',
+  description: 'GnomeVPN',
   returnUrl: 'https://app.test/account',
   idempotenceKey: 'key-1',
   savePaymentMethod: true,
@@ -77,7 +77,7 @@ describe('YooKassaClient', () => {
 
     await makeClient().chargeRecurring({
       amountRub: 100,
-      description: 'Vesper',
+      description: 'GnomeVPN',
       paymentMethodId: 'pm-1',
       idempotenceKey: 'key-2',
     });

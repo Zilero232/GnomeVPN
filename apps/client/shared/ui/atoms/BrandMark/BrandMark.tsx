@@ -6,11 +6,18 @@ import s from './BrandMark.module.scss';
 
 import type { BrandMarkProps } from './BrandMark.types';
 
-const DOT_SIZE = { sm: s.dotSm, md: undefined, lg: s.dotLg } as const;
+const LOGO_SIZE = { sm: 18, md: 22, lg: 28 } as const;
 
 export const BrandMark = ({ size = 'md', tone = 'default', className }: BrandMarkProps) => (
   <span className={clsx(s.root, s[size], tone === 'muted' && s.muted, className)}>
-    <span className={clsx(s.dot, DOT_SIZE[size])} />
+    {/** biome-ignore lint/performance/noImgElement: an inline SVG needs no next/image pipeline, and the app is a static export */}
+    <img
+      alt=""
+      className={s.logo}
+      height={LOGO_SIZE[size]}
+      src="/brand/favicon.svg"
+      width={LOGO_SIZE[size]}
+    />
     {SITE.name}
   </span>
 );

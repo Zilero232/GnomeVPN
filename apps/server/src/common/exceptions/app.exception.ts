@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import type { ApiErrorCode } from '@vesper/schemas';
+import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 const body = (code: ApiErrorCode, error: string) => ({ error, code });
 

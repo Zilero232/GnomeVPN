@@ -1,26 +1,26 @@
 @mixin spin($duration: 0.7s) {
-  animation: vesper-spin $duration linear infinite;
+  animation: gnomevpn-spin $duration linear infinite;
 }
 
 @mixin rise($duration: 0.5s, $delay: 0s, $distance: 12px) {
-  animation: vesper-rise $duration ease $delay both;
+  animation: gnomevpn-rise $duration ease $delay both;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;
   }
 
-  --vesper-rise-distance: #{$distance};
+  --gnomevpn-rise-distance: #{$distance};
 }
 
-@keyframes vesper-spin {
+@keyframes gnomevpn-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes vesper-rise {
+@keyframes gnomevpn-rise {
   from {
-    transform: translateY(var(--vesper-rise-distance, 12px));
+    transform: translateY(var(--gnomevpn-rise-distance, 12px));
     opacity: 0;
   }
 

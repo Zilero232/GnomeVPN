@@ -9,7 +9,7 @@ let dir: string;
 let filePath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-env-file-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-env-file-'));
   filePath = join(dir, '.env');
 });
 

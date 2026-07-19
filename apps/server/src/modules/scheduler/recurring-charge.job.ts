@@ -7,7 +7,7 @@ import { PrismaService } from '../../core';
 import { YooKassaClient } from '../../lib';
 
 const RENEW_WINDOW_MS = 24 * 3_600_000;
-const DESCRIPTION = 'Продление подписки Vesper';
+const DESCRIPTION = 'Продление подписки GnomeVPN';
 
 @Injectable()
 export class RecurringChargeJob {

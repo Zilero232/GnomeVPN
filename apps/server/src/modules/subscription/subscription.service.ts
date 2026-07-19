@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../core';
 
-import type { SubscriptionStatus } from '@vesper/schemas';
+import type { SubscriptionStatus } from '@gnomevpn/schemas';
 
 @Injectable()
 export class SubscriptionService {

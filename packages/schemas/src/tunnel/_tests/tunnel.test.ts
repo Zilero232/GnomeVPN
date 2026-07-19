@@ -8,7 +8,7 @@ describe('tunnel schemas', () => {
     address: '10.8.0.2/32',
     dns: '10.8.0.1',
     serverPublicKey: 'c2VydmVy',
-    endpoint: 'de.vesper.example:51820',
+    endpoint: 'de.gnomevpn.example:51820',
     allowedIps: ['0.0.0.0/0', '::/0'],
     persistentKeepalive: 25,
   };

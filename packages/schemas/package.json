@@ -1,5 +1,5 @@
 {
-  "name": "@vesper/schemas",
+  "name": "@gnomevpn/schemas",
   "type": "module",
   "version": "0.1.0",
   "private": true,

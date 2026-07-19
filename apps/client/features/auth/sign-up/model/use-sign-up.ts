@@ -1,5 +1,5 @@
+import { type SignUpValues, signUpSchema } from '@gnomevpn/schemas';
 import { useMutation } from '@tanstack/react-query';
-import { type SignUpValues, signUpSchema } from '@vesper/schemas';
 
 import { authClient } from '@/shared/api';
 

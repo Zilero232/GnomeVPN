@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "Vesper",
+    "brand": "GnomeVPN",
     "loading": "Загрузка…",
     "showPassword": "Показать пароль",
     "hidePassword": "Скрыть пароль"
@@ -10,7 +10,7 @@
     "titleLine1": "Соединение,",
     "titleLine2": "которое",
     "titleAccent": "ваше",
-    "lead": "Vesper поднимает WireGuard-туннель до узла в другой стране одним нажатием. Без учётных записей у провайдера, без логов, без рекламы. Только чистый канал.",
+    "lead": "GnomeVPN поднимает WireGuard-туннель до узла в другой стране одним нажатием. Без учётных записей у провайдера, без логов, без рекламы. Только чистый канал.",
     "cta": "Начать за 100 ₽",
     "ctaSecondary": "Как это работает",
     "account": "Личный кабинет",
@@ -89,13 +89,14 @@
     "account": "В личный кабинет"
   },
   "tray": {
-    "tooltip": "Vesper VPN",
+    "tooltip": "GnomeVPN",
     "online": "Подключено",
     "offline": "Отключено",
-    "show": "Открыть Vesper",
+    "account": "Личный кабинет",
+    "connect": "Подключиться",
+    "disconnect": "Отключиться",
     "quit": "Выйти",
     "closeToTray": "Сворачивать в трей",
-    "closeToTrayOff": "Закрывать полностью",
     "language": "Язык"
   },
   "notifications": {
@@ -103,7 +104,9 @@
     "connectedBody": "Трафик идёт через {country}",
     "disconnectedTitle": "Отключено",
     "disconnectedBody": "Соединение закрыто, трафик идёт напрямую",
-    "errorTitle": "Соединение разорвано"
+    "errorTitle": "Соединение разорвано",
+    "connectFailed": "Не удалось подключиться",
+    "subscriptionRequired": "Требуется активная подписка"
   },
   "window": {
     "minimize": "Свернуть",
@@ -143,7 +146,12 @@
     "disconnect": "Отключить",
     "statusOnline": "Защищено",
     "statusOffline": "Не защищено",
+    "nodeOnline": "Доступен",
+    "nodeDegraded": "Нестабилен",
+    "nodeOffline": "Недоступен",
+    "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
     "openAccount": "Аккаунт",
-    "signOut": "Выйти"
+    "signOut": "Выйти",
+    "menu": "Меню приложения"
   }
 }

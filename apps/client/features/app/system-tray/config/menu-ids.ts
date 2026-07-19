@@ -1,8 +1,7 @@
-export const TRAY_ID = 'vesper-main';
+export const TRAY_ID = 'gnomevpn-main';
 
 export const TRAY_MENU_ID = {
-  status: 'tray_status',
   toggle: 'tray_toggle',
-  show: 'tray_show',
+  account: 'tray_account',
   quit: 'tray_quit',
 } as const;

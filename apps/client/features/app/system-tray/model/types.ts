@@ -1,5 +1,15 @@
 export type TrayMenuLabels = {
-  status: string;
-  show: string;
+  toggle: string;
+  account: string;
   quit: string;
+};
+
+export type TrayMenuActions = {
+  onToggle: () => Promise<void>;
+  onOpenAccount: () => Promise<void>;
+};
+
+export type TraySetupInput = TrayMenuActions & {
+  isConnected: boolean;
+  country: string;
 };

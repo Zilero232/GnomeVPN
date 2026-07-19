@@ -24,9 +24,10 @@
       },
     },
     "apps/client": {
-      "name": "@vesper/client",
+      "name": "@gnomevpn/client",
       "version": "0.1.0",
       "dependencies": {
+        "@gnomevpn/schemas": "workspace:*",
         "@hookform/resolvers": "^5.4.0",
         "@siberiacancode/reactuse": "^1.0.10",
         "@tanstack/react-query": "^5.101.2",
@@ -37,7 +38,6 @@
         "@tauri-apps/plugin-os": "^2",
         "@tauri-apps/plugin-process": "^2.3.1",
         "@tauri-apps/plugin-updater": "^2.10.1",
-        "@vesper/schemas": "workspace:*",
         "axios": "^1.18.1",
         "better-auth": "^1.6.23",
         "clsx": "^2.1.1",
@@ -64,9 +64,10 @@
       },
     },
     "apps/server": {
-      "name": "@vesper/server",
+      "name": "@gnomevpn/server",
       "version": "0.1.0",
       "dependencies": {
+        "@gnomevpn/schemas": "workspace:*",
         "@nestjs/common": "11.1.28",
         "@nestjs/config": "4.0.4",
         "@nestjs/core": "11.1.28",
@@ -78,7 +79,6 @@
         "@prisma/client": "^7.8.0",
         "@prisma/client-runtime-utils": "^7.8.0",
         "@thallesp/nestjs-better-auth": "2.7.0",
-        "@vesper/schemas": "workspace:*",
         "better-auth": "^1.6.23",
         "express": "^4.21.0",
         "helmet": "^8.0.0",
@@ -98,14 +98,14 @@
       },
     },
     "apps/tauri": {
-      "name": "@vesper/tauri",
+      "name": "@gnomevpn/tauri",
       "version": "0.1.0",
       "devDependencies": {
         "@tauri-apps/cli": "^2",
       },
     },
     "packages/schemas": {
-      "name": "@vesper/schemas",
+      "name": "@gnomevpn/schemas",
       "version": "0.1.0",
       "dependencies": {
         "zod": "^4.4.3",
@@ -196,6 +196,14 @@
     "@formatjs/icu-skeleton-parser": ["@formatjs/icu-skeleton-parser@2.1.11", "", {}, "sha512-j8cUmOJzVgkHuS0QiQ6ga76UIoLOFSAMWhs7aZJztH3aAdCOAE6vpC8KVvFB4cU10ON0y2/5oOVmPJ43s2lTwA=="],
 
     "@formatjs/intl-localematcher": ["@formatjs/intl-localematcher@0.8.13", "", { "dependencies": { "@formatjs/fast-memoize": "3.1.7" } }, "sha512-kHEAFOkeJSPNi7c5PaKaRjxcBrJwzzt81ifUu+8uve1EDW/VJl83KsxmqgqNZLzcFEhSliZGvx3+pk/RH0IOmg=="],
+
+    "@gnomevpn/client": ["@gnomevpn/client@workspace:apps/client"],
+
+    "@gnomevpn/schemas": ["@gnomevpn/schemas@workspace:packages/schemas"],
+
+    "@gnomevpn/server": ["@gnomevpn/server@workspace:apps/server"],
+
+    "@gnomevpn/tauri": ["@gnomevpn/tauri@workspace:apps/tauri"],
 
     "@hono/node-server": ["@hono/node-server@1.19.11", "", { "peerDependencies": { "hono": "^4" } }, "sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g=="],
 
@@ -550,14 +558,6 @@
     "@types/send": ["@types/send@0.17.6", "", { "dependencies": { "@types/mime": "^1", "@types/node": "*" } }, "sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og=="],
 
     "@types/serve-static": ["@types/serve-static@1.15.10", "", { "dependencies": { "@types/http-errors": "*", "@types/node": "*", "@types/send": "<1" } }, "sha512-tRs1dB+g8Itk72rlSI2ZrW6vZg0YrLI81iQSTkMmOqnqCaNr/8Ek4VwWcN5vZgCYWbg/JJSGBlUaYGAOP73qBw=="],
-
-    "@vesper/client": ["@vesper/client@workspace:apps/client"],
-
-    "@vesper/schemas": ["@vesper/schemas@workspace:packages/schemas"],
-
-    "@vesper/server": ["@vesper/server@workspace:apps/server"],
-
-    "@vesper/tauri": ["@vesper/tauri@workspace:apps/tauri"],
 
     "@vitest/expect": ["@vitest/expect@4.1.10", "", { "dependencies": { "@standard-schema/spec": "^1.1.0", "@types/chai": "^5.2.2", "@vitest/spy": "4.1.10", "@vitest/utils": "4.1.10", "chai": "^6.2.2", "tinyrainbow": "^3.1.0" } }, "sha512-YsCn+qAk1GWjQOWFEsEcL2gNQ0zmVmQu3T03qP6UyjhtmdtwtbuI+DASn/7iQB3HGTXkdBwGddzxPlmiql5vlA=="],
 

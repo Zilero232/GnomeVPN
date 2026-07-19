@@ -1,5 +1,5 @@
 {
-  "name": "@vesper/server",
+  "name": "@gnomevpn/server",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -29,7 +29,7 @@
     "@prisma/client": "^7.8.0",
     "@prisma/client-runtime-utils": "^7.8.0",
     "@thallesp/nestjs-better-auth": "2.7.0",
-    "@vesper/schemas": "workspace:*",
+    "@gnomevpn/schemas": "workspace:*",
     "better-auth": "^1.6.23",
     "express": "^4.21.0",
     "helmet": "^8.0.0",

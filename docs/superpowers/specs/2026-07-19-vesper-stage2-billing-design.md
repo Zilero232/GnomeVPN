@@ -1,4 +1,4 @@
-# Vesper Этап 2: оплата, кабинет, гейт подписки
+# GnomeVPN Этап 2: оплата, кабинет, гейт подписки
 
 **Дата:** 2026-07-19
 **Статус:** дизайн
@@ -60,7 +60,7 @@ apps/server/src/modules/
 │   ├── billing.module.ts
 │   ├── billing.controller.ts      # POST /billing/checkout, POST /billing/webhook
 │   ├── billing.service.ts         # бизнес-логика платежей
-│   ├── dto/billing.dto.ts         # createZodDto из @vesper/schemas
+│   ├── dto/billing.dto.ts         # createZodDto из @gnomevpn/schemas
 │   └── _tests/
 ├── subscription/                   # существует, меняется hasActiveAccess
 └── scheduler/
@@ -97,7 +97,7 @@ apps/client/
     └── molecules/{FormField,SubmitButton}/
 ```
 
-`shared/ui` в Vesper практически пуст — примитивы создаются с нуля по образцу Chatovo:
+`shared/ui` в GnomeVPN практически пуст — примитивы создаются с нуля по образцу Chatovo:
 SCSS-модули, `clsx`, типы в `<Name>.types.ts`, barrel на каждую папку.
 
 ## 4. Модель данных
@@ -240,7 +240,7 @@ async hasActiveAccess(userId: string): Promise<boolean> {
 хендшейк, — это нормальный сценарий (юзер нажал Connect и не успел). Порог считается
 от `max(createdAt, lastHandshakeAt)`.
 
-## 8. Схемы (`@vesper/schemas`)
+## 8. Схемы (`@gnomevpn/schemas`)
 
 ```
 packages/schemas/src/
@@ -306,7 +306,7 @@ packages/schemas/src/
 
 Пять блоков, каждый проверяемый отдельно:
 
-1. **Схемы + миграция БД** — Prisma, `@vesper/schemas`, изменение хука регистрации
+1. **Схемы + миграция БД** — Prisma, `@gnomevpn/schemas`, изменение хука регистрации
 2. **shared/ui примитивы** — Input, PasswordInput, FormField, SubmitButton, Button, Text
 3. **Auth** — слайсы sign-in/sign-up, `views/auth`, AuthProvider с редиректами
 4. **Billing** — YooKassaClient, модуль, вебхук, кабинет `/account`

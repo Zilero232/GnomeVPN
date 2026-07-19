@@ -1,13 +1,14 @@
 {
-  "name": "@vesper/tauri",
+  "name": "@gnomevpn/tauri",
   "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "tauri": "tauri",
-    "predev": "node ./scripts/kill-app.mjs && node ./scripts/sync-wintun.mjs",
+    "icon": "tauri icon icon.manifest.json -o icons",
+    "predev": "node ./scripts/kill-app.mjs && node ./scripts/sync-wintun.mjs && bun run icon",
     "dev": "tauri dev",
-    "prebuild": "node ./scripts/sync-wintun.mjs",
+    "prebuild": "node ./scripts/sync-wintun.mjs && bun run icon",
     "build": "tauri build",
     "kill": "node ./scripts/kill-app.mjs",
     "info": "tauri info"

@@ -59,3 +59,66 @@
 .flag {
   font-size: 20px;
 }
+
+.country {
+  flex: 1;
+}
+
+.nodeOffline {
+  opacity: 0.45;
+
+  &:hover {
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+  }
+}
+
+.status {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: currentcolor;
+}
+
+.online {
+  color: var(--color-accent);
+
+  .statusDot {
+    box-shadow: 0 0 8px currentcolor;
+    animation: node-pulse 2.4s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .statusDot {
+      animation: none;
+    }
+  }
+}
+
+.degraded {
+  color: var(--color-warning);
+}
+
+.offline {
+  color: var(--color-text-muted);
+}
+
+@keyframes node-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}

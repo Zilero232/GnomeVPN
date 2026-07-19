@@ -6,11 +6,10 @@ import {
 
 import { logger } from '../logger';
 import { isTauriDesktop } from '../tauri-platform';
+import { NOTIFICATION_GROUP, NOTIFICATION_ICON, STATUS_NOTIFICATION_ID } from './config';
+import { resolveSound } from './lib';
 
-import type { NotifyInput } from './notifications.types';
-
-const NOTIFICATION_GROUP = 'vesper-vpn';
-const STATUS_NOTIFICATION_ID = 1;
+import type { NotifyInput } from './model';
 
 const ensurePermission = async (): Promise<boolean> => {
   if (await isPermissionGranted()) {
@@ -35,8 +34,8 @@ export const notify = async ({ title, body, tone = 'info' }: NotifyInput): Promi
       title,
       body,
       group: NOTIFICATION_GROUP,
-      icon: 'icons/128x128.png',
-      sound: tone === 'error' ? 'Notification.Looping.Alarm' : 'Notification.Default',
+      icon: NOTIFICATION_ICON,
+      sound: resolveSound(tone),
     });
   } catch (error) {
     logger.warn(`notification failed: ${String(error)}`);

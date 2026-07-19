@@ -1,3 +1,3 @@
-export { nodeSchema } from './outputs';
+export { nodeSchema, nodeStatusSchema } from './outputs';
 
-export type { Node } from './types';
+export type { Node, NodeStatus } from './types';

@@ -27,7 +27,7 @@ let dir: string;
 let serverEnvPath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-provision-host-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-provision-host-'));
   serverEnvPath = join(dir, '.env');
   await writeFile(serverEnvPath, '');
 });

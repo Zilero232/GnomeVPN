@@ -1,7 +1,7 @@
 export const SITE = {
-  url: 'https://vesper.app',
-  name: 'Vesper',
-  title: 'Vesper — VPN без логов за 100 ₽ в месяц',
+  url: 'https://gnomevpn.ru',
+  name: 'GnomeVPN',
+  title: 'GnomeVPN — VPN без логов за 100 ₽ в месяц',
   description:
     'WireGuard-туннель до узла в другой стране одним нажатием. Без логов подключений, без рекламы, без ограничений трафика. 100 ₽ в месяц, отмена в один клик.',
   locale: 'ru_RU',
@@ -11,7 +11,7 @@ export const SITE = {
     dark: '#070b0a',
   },
   keywords: [
-    'Vesper',
+    'GnomeVPN',
     'VPN',
     'ВПН',
     'WireGuard',
@@ -25,7 +25,7 @@ export const SITE = {
     'дешёвый VPN',
   ],
   en: {
-    title: 'Vesper — a no-logs VPN for 100 ₽ a month',
+    title: 'GnomeVPN — a no-logs VPN for 100 ₽ a month',
     description:
       'A WireGuard tunnel to a node in another country in one tap. No connection logs, no ads, no traffic caps. 100 ₽ a month, cancel in one click.',
     locale: 'en_US',

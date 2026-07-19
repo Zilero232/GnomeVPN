@@ -1,0 +1,8 @@
+export {
+  LINUX_SOUND,
+  MACOS_SOUND,
+  NOTIFICATION_GROUP,
+  NOTIFICATION_ICON,
+  STATUS_NOTIFICATION_ID,
+  WINDOWS_SOUND,
+} from './notifications.config';

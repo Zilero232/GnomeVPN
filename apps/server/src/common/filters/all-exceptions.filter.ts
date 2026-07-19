@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 
-import type { ApiErrorCode } from '@vesper/schemas';
+import type { ApiErrorCode } from '@gnomevpn/schemas';
 import type { Response } from 'express';
 
 const STATUS_TO_CODE: Record<number, ApiErrorCode> = {

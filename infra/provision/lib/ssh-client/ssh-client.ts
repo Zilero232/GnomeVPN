@@ -19,7 +19,7 @@ export class SshClient {
   }
 
   async putFile(localContent: string, remotePath: string): Promise<void> {
-    const dir = await mkdtemp(join(tmpdir(), 'vesper-ssh-put-'));
+    const dir = await mkdtemp(join(tmpdir(), 'gnomevpn-ssh-put-'));
     const localPath = join(dir, 'payload');
 
     try {

@@ -9,6 +9,12 @@ import s from './NodeList.module.scss';
 
 import type { NodeListProps } from './NodeList.types';
 
+const STATUS_LABEL = {
+  online: 'nodeOnline',
+  degraded: 'nodeDegraded',
+  offline: 'nodeOffline',
+} as const;
+
 export const NodeList = ({
   nodes,
   activeNodeId,
@@ -29,23 +35,39 @@ export const NodeList = ({
     <section className={s.root}>
       {hint && <p className={s.hint}>{hint}</p>}
 
-      {nodes.map((node, index) => (
-        <motion.button
-          animate={{ opacity: 1, y: 0 }}
-          className={clsx(s.node, activeNodeId === node.id && s.nodeActive)}
-          disabled={isLocked}
-          initial={{ opacity: 0, y: 8 }}
-          key={node.id}
-          transition={{ delay: index * 0.05, type: 'spring', stiffness: 400, damping: 28 }}
-          type="button"
-          whileTap={isLocked ? undefined : { scale: 0.98 }}
-          onClick={() => onSelect(node.id)}
-        >
-          {activeNodeId === node.id && <motion.span className={s.marker} layoutId="node-marker" />}
-          <span className={s.flag}>{node.flagEmoji}</span>
-          <span>{node.country}</span>
-        </motion.button>
-      ))}
+      {nodes.map((node, index) => {
+        const isOffline = node.status === 'offline';
+
+        return (
+          <motion.button
+            animate={{ opacity: 1, y: 0 }}
+            className={clsx(
+              s.node,
+              activeNodeId === node.id && s.nodeActive,
+              isOffline && s.nodeOffline,
+            )}
+            disabled={isLocked || isOffline}
+            initial={{ opacity: 0, y: 8 }}
+            key={node.id}
+            title={isOffline ? t('nodeOfflineHint') : undefined}
+            transition={{ delay: index * 0.05, type: 'spring', stiffness: 400, damping: 28 }}
+            type="button"
+            whileTap={isLocked || isOffline ? undefined : { scale: 0.98 }}
+            onClick={() => onSelect(node.id)}
+          >
+            {activeNodeId === node.id && (
+              <motion.span className={s.marker} layoutId="node-marker" />
+            )}
+
+            <span className={s.flag}>{node.flagEmoji}</span>
+            <span className={s.country}>{node.country}</span>
+
+            <span className={clsx(s.status, s[node.status])} title={t(STATUS_LABEL[node.status])}>
+              <span className={s.statusDot} />
+            </span>
+          </motion.button>
+        );
+      })}
     </section>
   );
 };

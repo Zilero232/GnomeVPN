@@ -2,7 +2,7 @@ import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
 
-const STORAGE_KEY = 'vesper.auth-token';
+const STORAGE_KEY = 'gnomevpn.auth-token';
 
 export const getAuthToken = () => {
   if (typeof window === 'undefined') {

@@ -34,8 +34,13 @@ export const setupTray = async ({ tooltip, menu }: SetupTrayArgs) => {
   });
 
   return {
+    setTooltip: async (value: string) => {
+      await tray.setTooltip(value);
+    },
     dispose: async () => {
       await tray.close();
     },
   };
 };
+
+export type TrayHandle = Awaited<ReturnType<typeof setupTray>>;

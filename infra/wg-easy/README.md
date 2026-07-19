@@ -1,4 +1,4 @@
-# Vesper VPN node (wg-easy)
+# GnomeVPN node (wg-easy)
 
 Один узел = одна страна. Разворачивается на VPS в целевой стране; backend ходит в его REST API,
 клиенты — только в WireGuard-порт.
@@ -26,8 +26,12 @@ docker run --rm ghcr.io/wg-easy/wg-easy:14 \
 ```env
 WG_HOST=203.0.113.10
 WG_EASY_PASSWORD_HASH=$$2a$$12$$...сгенерированный.хеш...
-WG_DEFAULT_DNS=1.1.1.1
 ```
+
+Остальное берётся из дефолтов wg-easy: подсеть `10.8.0.x`, DNS `1.1.1.1`,
+`AllowedIPs = 0.0.0.0/0, ::/0`. В `docker-compose.yml` задан только
+`WG_PERSISTENT_KEEPALIVE=25` — его дефолт (`0`) отключил бы keepalive
+и туннель отваливался бы за NAT.
 
 **Каждый `$` в хеше нужно удвоить (`$$`).** docker compose раскрывает `$foo` как переменную:
 с одиночными долларами bcrypt-хеш приедет в контейнер обрезанным, и любой REST-запрос будет
@@ -39,7 +43,7 @@ docker run --rm ghcr.io/wg-easy/wg-easy:14 \
   | sed 's/\$/$$/g'
 ```
 
-Проверить, что хеш доехал целым: `docker exec vesper-wg-easy printenv PASSWORD_HASH`.
+Проверить, что хеш доехал целым: `docker exec gnomevpn-wg-easy printenv PASSWORD_HASH`.
 
 3. Поднять узел:
 
@@ -48,7 +52,7 @@ docker compose up -d
 docker compose logs -f wg-easy
 ```
 
-## Регистрация узла в Vesper
+## Регистрация узла в GnomeVPN
 
 В таблице `node` backend хранит:
 

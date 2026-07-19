@@ -1,14 +1,14 @@
-# Vesper Этап 2: оплата, кабинет, гейт подписки — план реализации
+# GnomeVPN Этап 2: оплата, кабинет, гейт подписки — план реализации
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Закрыть туннель платным гейтом: регистрация/вход через UI, оплата 100₽/мес через ЮKassa, автопродление, кабинет `/account`, GC висячих пиров.
 
-**Architecture:** Backend — новый модуль `billing` (контроллер + сервис + `lib/yookassa` клиент) и `scheduler` (два cron-джоба); в `subscription` меняется единственный метод `hasActiveAccess`. Frontend — FSD по образцу Chatovo: `shared/ui` примитивы, слайсы `features/auth/*` и `features/billing/checkout`, `views/auth` и `views/account`, редиректы в `AuthProvider`. Схемы только в `@vesper/schemas`.
+**Architecture:** Backend — новый модуль `billing` (контроллер + сервис + `lib/yookassa` клиент) и `scheduler` (два cron-джоба); в `subscription` меняется единственный метод `hasActiveAccess`. Frontend — FSD по образцу Chatovo: `shared/ui` примитивы, слайсы `features/auth/*` и `features/billing/checkout`, `views/auth` и `views/account`, редиректы в `AuthProvider`. Схемы только в `@gnomevpn/schemas`.
 
 **Tech Stack:** NestJS 11 (Bun runtime), Prisma 7, better-auth, `@nestjs/schedule`, Next.js 16, react-hook-form + zodResolver, TanStack Query, sonner, ts-pattern, SCSS-модули, vitest.
 
-**Спека:** `docs/superpowers/specs/2026-07-19-vesper-stage2-billing-design.md`
+**Спека:** `docs/superpowers/specs/2026-07-19-gnomevpn-stage2-billing-design.md`
 
 ---
 
@@ -95,7 +95,7 @@ export const apiErrorCodeSchema = z.enum([
 
 - [ ] **Шаг 2: Проверить типы**
 
-Run: `bun --filter @vesper/schemas typecheck`
+Run: `bun --filter @gnomevpn/schemas typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 3: Коммит**
@@ -468,7 +468,7 @@ Expected: `Your database is now in sync with your Prisma schema`
 
 - [ ] **Шаг 5: Проверить таблицу**
 
-Run: `docker exec vesper-postgres-dev psql -U vesper -d vesper -c "\d payment"`
+Run: `docker exec gnomevpn-postgres-dev psql -U gnomevpn -d gnomevpn -c "\d payment"`
 Expected: таблица с колонкой `yookassa_payment_id` и уникальным индексом
 
 - [ ] **Шаг 6: Коммит**
@@ -505,7 +505,7 @@ git commit -m "feat(db): add Payment model and subscription billing fields"
 
 - [ ] **Шаг 2: Проверить типы**
 
-Run: `bun --filter @vesper/server typecheck`
+Run: `bun --filter @gnomevpn/server typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 3: Коммит**
@@ -756,7 +756,7 @@ describe('YooKassaClient', () => {
     const client = makeClient();
     await client.createPayment({
       amountRub: 100,
-      description: 'Vesper',
+      description: 'GnomeVPN',
       returnUrl: 'https://app.test/account',
       idempotenceKey: 'key-1',
       savePaymentMethod: true,
@@ -784,7 +784,7 @@ describe('YooKassaClient', () => {
 
     const result = await makeClient().createPayment({
       amountRub: 100,
-      description: 'Vesper',
+      description: 'GnomeVPN',
       returnUrl: 'https://app.test/account',
       idempotenceKey: 'key-1',
       savePaymentMethod: true,
@@ -806,7 +806,7 @@ describe('YooKassaClient', () => {
     await expect(
       makeClient().createPayment({
         amountRub: 100,
-        description: 'Vesper',
+        description: 'GnomeVPN',
         returnUrl: 'https://app.test/account',
         idempotenceKey: 'key-1',
         savePaymentMethod: true,
@@ -823,7 +823,7 @@ describe('YooKassaClient', () => {
 
     await makeClient().chargeRecurring({
       amountRub: 100,
-      description: 'Vesper',
+      description: 'GnomeVPN',
       paymentMethodId: 'pm-1',
       idempotenceKey: 'key-2',
     });
@@ -1181,9 +1181,9 @@ import { AppConfigService } from '../../config/config.service';
 import { PrismaService } from '../../core';
 import { YooKassaClient } from '../../lib';
 
-import type { CheckoutResult } from '@vesper/schemas';
+import type { CheckoutResult } from '@gnomevpn/schemas';
 
-const DESCRIPTION = 'Подписка Vesper на 1 месяц';
+const DESCRIPTION = 'Подписка GnomeVPN на 1 месяц';
 
 @Injectable()
 export class BillingService {
@@ -1442,7 +1442,7 @@ Expected: FAIL — `handleWebhook is not a function`
 Добавить в импорты типов файла:
 
 ```ts
-import type { CheckoutResult, WebhookEvent } from '@vesper/schemas';
+import type { CheckoutResult, WebhookEvent } from '@gnomevpn/schemas';
 ```
 
 - [ ] **Шаг 4: Тесты проходят**
@@ -1526,7 +1526,7 @@ git commit -m "feat(billing): add auto-renew cancellation"
 Create `apps/server/src/modules/billing/dto/billing.dto.ts`:
 
 ```ts
-import { checkoutResultSchema, webhookEventSchema } from '@vesper/schemas';
+import { checkoutResultSchema, webhookEventSchema } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 
 export class CheckoutResultDto extends createZodDto(checkoutResultSchema) {}
@@ -1611,7 +1611,7 @@ import { BillingModule } from './modules/billing/billing.module';
 
 - [ ] **Шаг 5: Проверить типы и старт**
 
-Run: `bun --filter @vesper/server typecheck`
+Run: `bun --filter @gnomevpn/server typecheck`
 Expected: без ошибок
 
 Run: `cd apps/server && timeout 15 bun run dev`
@@ -2071,7 +2071,7 @@ import { PrismaService } from '../../core';
 import { YooKassaClient } from '../../lib';
 
 const RENEW_WINDOW_MS = 24 * 3_600_000;
-const DESCRIPTION = 'Продление подписки Vesper';
+const DESCRIPTION = 'Продление подписки GnomeVPN';
 
 @Injectable()
 export class RecurringChargeJob {
@@ -2421,7 +2421,7 @@ export type { LabelProps, SpinnerProps, TextProps } from './atoms';
 
 - [ ] **Шаг 5: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 6: Коммит**
@@ -2722,7 +2722,7 @@ export type {
 
 - [ ] **Шаг 5: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 6: Коммит**
@@ -2873,7 +2873,7 @@ export type { FormFieldProps, SubmitButtonProps } from './molecules';
 
 - [ ] **Шаг 4: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 5: Коммит**
@@ -2934,7 +2934,7 @@ export { useCurrentUser } from './model/hooks';
 
 - [ ] **Шаг 3: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 4: Коммит**
@@ -2958,7 +2958,7 @@ git commit -m "feat(entities): add current user hook"
 `model/use-sign-in.ts`:
 
 ```ts
-import { type SignInValues, signInSchema } from '@vesper/schemas';
+import { type SignInValues, signInSchema } from '@gnomevpn/schemas';
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/shared/api';
@@ -3059,7 +3059,7 @@ export { SignInForm } from './ui/SignInForm';
 
 - [ ] **Шаг 4: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 5: Коммит**
@@ -3083,7 +3083,7 @@ git commit -m "feat(auth): add sign-in form"
 `model/use-sign-up.ts`:
 
 ```ts
-import { type SignUpValues, signUpSchema } from '@vesper/schemas';
+import { type SignUpValues, signUpSchema } from '@gnomevpn/schemas';
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/shared/api';
@@ -3201,7 +3201,7 @@ export { SignUpForm } from './ui/SignUpForm';
 
 - [ ] **Шаг 4: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 5: Коммит**
@@ -3356,7 +3356,7 @@ export { AuthPage } from './ui/AuthPage';
 ```tsx
 import { AuthPage } from '@/views/auth';
 
-export const metadata = { title: 'Вход — Vesper' };
+export const metadata = { title: 'Вход — GnomeVPN' };
 
 const Page = () => <AuthPage />;
 
@@ -3508,7 +3508,7 @@ export const cancelAutoRenew = async (): Promise<void> => {
 Добавить `CheckoutResult` в импорты типов файла:
 
 ```ts
-import type { CheckoutResult } from '@vesper/schemas';
+import type { CheckoutResult } from '@gnomevpn/schemas';
 ```
 
 - [ ] **Шаг 2: Обновить barrel**
@@ -3567,7 +3567,7 @@ export { useSubscriptionStatus } from './api';
 
 - [ ] **Шаг 5: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 6: Коммит**
@@ -3668,7 +3668,7 @@ export { CheckoutButton } from './ui/CheckoutButton';
 
 - [ ] **Шаг 5: Проверить типы**
 
-Run: `bun --filter @vesper/client typecheck`
+Run: `bun --filter @gnomevpn/client typecheck`
 Expected: без ошибок
 
 - [ ] **Шаг 6: Коммит**
@@ -3826,7 +3826,7 @@ export { AccountPage } from './ui/AccountPage';
 ```tsx
 import { AccountPage } from '@/views/account';
 
-export const metadata = { title: 'Кабинет — Vesper' };
+export const metadata = { title: 'Кабинет — GnomeVPN' };
 
 const Page = () => <AccountPage />;
 
@@ -3943,7 +3943,7 @@ Expected: `HTTP/1.1 402` с телом `{"error":"...","code":"PAYMENT_REQUIRED"
 6. Симулировать успешную оплату (без боевых ключей ЮKassa):
 
 ```bash
-docker exec vesper-postgres-dev psql -U vesper -d vesper -c \
+docker exec gnomevpn-postgres-dev psql -U gnomevpn -d gnomevpn -c \
   "update subscription set status='active', current_period_end=now() + interval '1 month' where user_id=(select id from \"user\" limit 1);"
 ```
 

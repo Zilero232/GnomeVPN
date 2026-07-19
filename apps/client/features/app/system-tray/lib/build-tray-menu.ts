@@ -1,23 +1,33 @@
 import { Menu, MenuItem, PredefinedMenuItem } from '@tauri-apps/api/menu';
 import { exit } from '@tauri-apps/plugin-process';
 
-import { showMainWindow } from '@/shared/lib';
+import { logger } from '@/shared/lib';
 import { TRAY_MENU_ID } from '../config/menu-ids';
 
-import type { TrayMenuLabels } from '../model/types';
+import type { TrayMenuActions, TrayMenuLabels } from '../model/types';
 
-export const buildTrayMenu = async (labels: TrayMenuLabels) => {
-  const status = await MenuItem.new({
-    id: TRAY_MENU_ID.status,
-    text: labels.status,
-    enabled: false,
+export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuActions) => {
+  const toggle = await MenuItem.new({
+    id: TRAY_MENU_ID.toggle,
+    text: labels.toggle,
+    action: async () => {
+      try {
+        await actions.onToggle();
+      } catch (error) {
+        logger.warn(`tray toggle failed: ${String(error)}`);
+      }
+    },
   });
 
-  const show = await MenuItem.new({
-    id: TRAY_MENU_ID.show,
-    text: labels.show,
+  const account = await MenuItem.new({
+    id: TRAY_MENU_ID.account,
+    text: labels.account,
     action: async () => {
-      await showMainWindow();
+      try {
+        await actions.onOpenAccount();
+      } catch (error) {
+        logger.warn(`tray account failed: ${String(error)}`);
+      }
     },
   });
 
@@ -27,17 +37,17 @@ export const buildTrayMenu = async (labels: TrayMenuLabels) => {
     action: async () => {
       try {
         await exit(0);
-      } catch {}
+      } catch (error) {
+        logger.warn(`tray quit failed: ${String(error)}`);
+      }
     },
   });
 
-  const separator = () => PredefinedMenuItem.new({ item: 'Separator' });
+  const separator = await PredefinedMenuItem.new({ item: 'Separator' });
 
-  const items = { status, show, quit } as const;
+  const items = { toggle, account, quit } as const;
 
-  const menu = await Menu.new({
-    items: [status, await separator(), show, await separator(), quit],
-  });
+  const menu = await Menu.new({ items: [toggle, account, separator, quit] });
 
   return { menu, items };
 };

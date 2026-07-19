@@ -31,7 +31,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
       </DesktopShell>
 
       <Toaster
-        className="vesper-toaster"
+        className="gnomevpn-toaster"
         gap={8}
         position="top-center"
         theme="dark"

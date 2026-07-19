@@ -5,10 +5,10 @@
 
 ## Problem
 
-Vesper's control plane already orchestrates ephemeral WireGuard peers per user
+GnomeVPN's control plane already orchestrates ephemeral WireGuard peers per user
 (connect creates a peer on the chosen node's wg-easy instance, disconnect
 removes it — this part is done and E2E-verified). What's missing: turning a
-list of bare VPS hosts (one per country) into registered, working Vesper
+list of bare VPS hosts (one per country) into registered, working GnomeVPN
 nodes. Today that's a fully manual process — SSH in, install Docker, copy
 `infra/wg-easy/docker-compose.yml`, hand-generate a bcrypt password hash,
 start the stack, add a `WG_KEY_*` line to `apps/server/.env`, run
@@ -99,7 +99,7 @@ batch size grows, but Stage 1's list is small):
    approach already documented in `infra/wg-easy/README.md`) for use in
    the next step.
 4. **Ship the compose stack.** SFTP `infra/wg-easy/docker-compose.yml` to
-   `/opt/vesper-wg-easy/docker-compose.yml` on the VPS (fixed remote path),
+   `/opt/gnomevpn-wg-easy/docker-compose.yml` on the VPS (fixed remote path),
    and write a `.env` next to it with `WG_HOST=<host>`,
    `WG_EASY_PASSWORD_HASH=<hash-from-step-3>` (with the `$`→`$$` doubling
    this repo already discovered and documented — the script does this

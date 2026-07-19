@@ -1,6 +1,6 @@
-import { apiErrorSchema } from '@vesper/schemas';
+import { apiErrorSchema } from '@gnomevpn/schemas';
 
-import type { ApiErrorCode } from '@vesper/schemas';
+import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

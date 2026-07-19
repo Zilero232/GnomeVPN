@@ -9,5 +9,6 @@ import { TunnelService } from './tunnel.service';
   imports: [NodesModule, SubscriptionModule],
   controllers: [TunnelController],
   providers: [TunnelService],
+  exports: [TunnelService],
 })
 export class TunnelModule {}

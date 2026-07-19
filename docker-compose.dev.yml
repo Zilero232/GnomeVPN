@@ -1,22 +1,22 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: vesper-postgres-dev
+    container_name: gnomevpn-postgres-dev
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vesper
-      POSTGRES_PASSWORD: vesper
-      POSTGRES_DB: vesper
+      POSTGRES_USER: gnomevpn
+      POSTGRES_PASSWORD: gnomevpn
+      POSTGRES_DB: gnomevpn
     ports:
       # 5433 на хосте: 5432 занят нативной службой Windows postgresql-x64-18.
       - '5433:5432'
     volumes:
-      - vesper-postgres-data:/var/lib/postgresql/data
+      - gnomevpn-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vesper -d vesper']
+      test: ['CMD-SHELL', 'pg_isready -U gnomevpn -d gnomevpn']
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  vesper-postgres-data:
+  gnomevpn-postgres-data:

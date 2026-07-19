@@ -1,4 +1,4 @@
-# Vesper Stage 1 (MVP) Implementation Plan
+# GnomeVPN Stage 1 (MVP) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,15 +6,15 @@
 
 **Architecture:** Bun-workspaces монорепо (как Chatovo). Backend (NestJS) — control plane: better-auth + оркестратор, который через wg-easy REST создаёт пира на выбранном узле и отдаёт клиенту `TunnelConfig`. Desktop-клиент (Next.js в Tauri) показывает экран стран + Connect и через новые Rust-команды (`vpn_connect`/`vpn_disconnect`/`vpn_status`) поднимает userspace-WireGuard-туннель (boringtun + tun-rs). Подписка на Этапе 1 — заглушка (guard всегда разрешает), оплаты нет.
 
-**Tech Stack:** Bun workspaces, NestJS 11 (на Bun), Prisma 7 + Postgres, better-auth (Bearer), Zod 4 (`@vesper/schemas`), Next.js 16 (App Router, `output: 'export'`, React 19, FSD), Tauri 2 (Rust, edition 2021), boringtun 0.7 + tun-rs, wg-easy (Docker) как VPN-узел.
+**Tech Stack:** Bun workspaces, NestJS 11 (на Bun), Prisma 7 + Postgres, better-auth (Bearer), Zod 4 (`@gnomevpn/schemas`), Next.js 16 (App Router, `output: 'export'`, React 19, FSD), Tauri 2 (Rust, edition 2021), boringtun 0.7 + tun-rs, wg-easy (Docker) как VPN-узел.
 
 ## Global Constraints
 
-- **Рабочее имя продукта:** `Vesper`. Пакеты: `@vesper/schemas`, `@vesper/server`, `@vesper/client`, `@vesper/tauri`. (Плейсхолдер — заказчик может переименовать позже.)
+- **Рабочее имя продукта:** `GnomeVPN`. Пакеты: `@gnomevpn/schemas`, `@gnomevpn/server`, `@gnomevpn/client`, `@gnomevpn/tauri`. (Плейсхолдер — заказчик может переименовать позже.)
 - **Язык общения с пользователем — русский; код/идентификаторы/коммиты — английский.** (правило Chatovo)
 - **Без комментариев в коде** (`//`, JSDoc) кроме случаев, где заказчик явно просит. Код самодокументируем именами. (правило Chatovo)
 - **Никаких git-операций без явного запроса** в сообщении — максимум `git add`. Коммиты в шагах плана исполнитель делает как часть задачи (это и есть явная инструкция плана).
-- **Zod-схема — единственный источник правды**: DTO сервера через `createZodDto`, формы клиента через `zodResolver`, всё из `@vesper/schemas`. `class-validator` запрещён.
+- **Zod-схема — единственный источник правды**: DTO сервера через `createZodDto`, формы клиента через `zodResolver`, всё из `@gnomevpn/schemas`. `class-validator` запрещён.
 - **Zod 4 API**: `z.uuid()`, `z.url()`, `z.email()`, `z.coerce.number()` — top-level, не `z.string().uuid()`.
 - **Tauri-API всегда за `isTauri()`** — web-сборка не должна ломаться.
 - **Приватный ключ пира** живёт только в ответе connect и в памяти Rust — никогда в БД/логах.
@@ -27,10 +27,10 @@
 
 ## File Structure
 
-Монорепо создаётся с нуля в `c:/Projects/vesper` (git уже инициализирован, есть только `docs/`).
+Монорепо создаётся с нуля в `c:/Projects/gnomevpn` (git уже инициализирован, есть только `docs/`).
 
 ```text
-vesper/
+gnomevpn/
 ├── package.json                      # корень: workspaces [apps/*, packages/*], скрипты
 ├── bun.lock                          # (создаётся bun install)
 ├── tsconfig.json                     # базовый tsconfig
@@ -38,7 +38,7 @@ vesper/
 ├── docker-compose.dev.yml            # локальный wg-easy + Postgres для dev
 ├── .gitignore
 ├── packages/
-│   └── schemas/                      # @vesper/schemas
+│   └── schemas/                      # @gnomevpn/schemas
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── src/
@@ -48,7 +48,7 @@ vesper/
 │           ├── tunnel/               # inputs.ts (connectInputSchema), outputs.ts (tunnelConfigSchema), types.ts, index.ts
 │           └── subscription/         # outputs.ts (subscriptionStatusSchema), types.ts, index.ts
 ├── apps/
-│   ├── server/                       # @vesper/server (NestJS на Bun)
+│   ├── server/                       # @gnomevpn/server (NestJS на Bun)
 │   │   ├── package.json
 │   │   ├── tsconfig.json
 │   │   ├── prisma.config.ts
@@ -71,7 +71,7 @@ vesper/
 │   │           ├── subscription/     # subscription.module.ts, subscription.service.ts, subscription.guard.ts
 │   │           ├── nodes/            # nodes.module.ts, nodes.controller.ts, nodes.service.ts, dto/
 │   │           └── tunnel/           # tunnel.module.ts, tunnel.controller.ts, tunnel.service.ts, dto/
-│   ├── client/                       # @vesper/client (Next.js FSD)
+│   ├── client/                       # @gnomevpn/client (Next.js FSD)
 │   │   ├── package.json
 │   │   ├── next.config.ts
 │   │   ├── tsconfig.json
@@ -80,7 +80,7 @@ vesper/
 │   │   ├── features/                 # auth/sign-in, vpn/connect
 │   │   ├── entities/                 # vpn/node, vpn/tunnel, billing/subscription
 │   │   └── shared/                   # api/, ui/, lib/tauri-platform, lib/vpn-bridge, constants/query-keys, config/client-env
-│   └── tauri/                        # @vesper/tauri (Rust + VPN-движок)
+│   └── tauri/                        # @gnomevpn/tauri (Rust + VPN-движок)
 │       ├── package.json
 │       ├── Cargo.toml
 │       ├── build.rs
@@ -100,10 +100,10 @@ vesper/
 
 **Files:**
 
-- Create: `c:/Projects/vesper/package.json`
-- Create: `c:/Projects/vesper/tsconfig.json`
-- Create: `c:/Projects/vesper/biome.json`
-- Create: `c:/Projects/vesper/.gitignore`
+- Create: `c:/Projects/gnomevpn/package.json`
+- Create: `c:/Projects/gnomevpn/tsconfig.json`
+- Create: `c:/Projects/gnomevpn/biome.json`
+- Create: `c:/Projects/gnomevpn/.gitignore`
 
 **Interfaces:**
 
@@ -113,21 +113,21 @@ vesper/
 
 ```json
 {
-  "name": "vesper",
+  "name": "gnomevpn",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "bun --filter '@vesper/server' --filter '@vesper/client' --parallel dev",
-    "dev:server": "bun --filter @vesper/server dev",
-    "dev:client": "bun --filter @vesper/client dev",
+    "dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/client' --parallel dev",
+    "dev:server": "bun --filter @gnomevpn/server dev",
+    "dev:client": "bun --filter @gnomevpn/client dev",
     "dev:infra": "docker compose -f docker-compose.dev.yml up -d",
-    "tauri:dev": "bun --filter '@vesper/server' --filter '@vesper/tauri' --parallel dev",
-    "tauri:build": "bun --filter @vesper/client build && bun --filter @vesper/tauri build",
+    "tauri:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel dev",
+    "tauri:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri build",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "bun --filter @vesper/schemas typecheck && bun --filter @vesper/server typecheck && bun --filter @vesper/client typecheck"
+    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
@@ -184,20 +184,20 @@ apps/tauri/icons/
 
 - [ ] **Step 5: Проверить, что bun видит workspace**
 
-Run: `cd c:/Projects/vesper && bun install`
+Run: `cd c:/Projects/gnomevpn && bun install`
 Expected: устанавливается без ошибок, создаётся `bun.lock` (workspace пока пустой — это нормально).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd c:/Projects/vesper
+cd c:/Projects/gnomevpn
 git add package.json tsconfig.json biome.json .gitignore bun.lock
 git commit -m "chore: bootstrap bun workspace monorepo"
 ```
 
 ---
 
-## Task 2: Пакет `@vesper/schemas` (Zod-контракты)
+## Task 2: Пакет `@gnomevpn/schemas` (Zod-контракты)
 
 **Files:**
 
@@ -223,7 +223,7 @@ git commit -m "chore: bootstrap bun workspace monorepo"
 
 ```json
 {
-  "name": "@vesper/schemas",
+  "name": "@gnomevpn/schemas",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -425,7 +425,7 @@ describe('tunnel schemas', () => {
       address: '10.8.0.2/32',
       dns: '10.8.0.1',
       serverPublicKey: 'c2VydmVy',
-      endpoint: 'de.vesper.example:51820',
+      endpoint: 'de.gnomevpn.example:51820',
       allowedIps: ['0.0.0.0/0', '::/0'],
       persistentKeepalive: 25,
     };
@@ -444,12 +444,12 @@ describe('tunnel schemas', () => {
 
 - [ ] **Step 10: Прогнать тест — должен пройти (схемы уже написаны)**
 
-Run: `cd c:/Projects/vesper && bun install && bun --filter @vesper/schemas test`
+Run: `cd c:/Projects/gnomevpn && bun install && bun --filter @gnomevpn/schemas test`
 Expected: 3 passing.
 
 - [ ] **Step 11: Typecheck**
 
-Run: `bun --filter @vesper/schemas typecheck`
+Run: `bun --filter @gnomevpn/schemas typecheck`
 Expected: без ошибок.
 
 - [ ] **Step 12: Commit**
@@ -475,7 +475,7 @@ git commit -m "feat(schemas): add node, tunnel, subscription, error Zod contract
 
 **Interfaces:**
 
-- Consumes: `@vesper/schemas` (`ApiErrorCode`).
+- Consumes: `@gnomevpn/schemas` (`ApiErrorCode`).
 - Produces:
   - `env` (validated) + `AppConfigService.get(key)`.
   - `PrismaService` (DI, `@Global PrismaModule`), `basePrisma` (raw, для better-auth).
@@ -488,7 +488,7 @@ git commit -m "feat(schemas): add node, tunnel, subscription, error Zod contract
 
 ```json
 {
-  "name": "@vesper/server",
+  "name": "@gnomevpn/server",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -521,7 +521,7 @@ git commit -m "feat(schemas): add node, tunnel, subscription, error Zod contract
     "express": "^4.21.0",
     "reflect-metadata": "^0.2.2",
     "remeda": "^2.17.0",
-    "@vesper/schemas": "workspace:*"
+    "@gnomevpn/schemas": "workspace:*"
   },
   "devDependencies": {
     "prisma": "^7.8.0",
@@ -864,7 +864,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { ApiErrorCode } from '@vesper/schemas';
+import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 const body = (code: ApiErrorCode, error: string) => ({ error, code });
 
@@ -956,8 +956,8 @@ Create `apps/server/.env`:
 ```
 NODE_ENV=development
 PORT=4000
-DATABASE_URL=postgresql://vesper:vesper@localhost:5432/vesper
-DIRECT_URL=postgresql://vesper:vesper@localhost:5432/vesper
+DATABASE_URL=postgresql://gnomevpn:gnomevpn@localhost:5432/gnomevpn
+DIRECT_URL=postgresql://gnomevpn:gnomevpn@localhost:5432/gnomevpn
 BETTER_AUTH_SECRET=dev-secret-change-me-min-32-chars-000
 BETTER_AUTH_URL=http://localhost:4000
 CORS_ORIGINS=http://localhost:3000
@@ -965,7 +965,7 @@ CORS_ORIGINS=http://localhost:3000
 
 - [ ] **Step 16: Установить зависимости и сгенерить Prisma-клиент**
 
-Run: `cd c:/Projects/vesper && bun install`
+Run: `cd c:/Projects/gnomevpn && bun install`
 Expected: устанавливается; `postinstall` вызывает `prisma generate` (может ругнуться на отсутствие БД — это ок, генерация клиента не требует коннекта).
 
 Если `prisma generate` не отработал в postinstall:
@@ -974,7 +974,7 @@ Expected: `Generated Prisma Client` в `apps/server/generated`.
 
 - [ ] **Step 17: Typecheck**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server typecheck`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server typecheck`
 Expected: без ошибок (все импорты `../../generated` резолвятся после генерации).
 
 - [ ] **Step 18: Commit**
@@ -1049,7 +1049,7 @@ export class AuthModule {}
 
 - [ ] **Step 3: Typecheck**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server typecheck`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server typecheck`
 Expected: без ошибок.
 
 - [ ] **Step 4: Commit**
@@ -1124,7 +1124,7 @@ describe('WgEasyClient', () => {
 
 - [ ] **Step 2: Прогнать тест — должен упасть**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: FAIL — `WgEasyClient` не найден.
 
 - [ ] **Step 3: Реализовать `apps/server/src/lib/wg-easy.ts`**
@@ -1216,7 +1216,7 @@ export { WgEasyClient } from './wg-easy';
 
 - [ ] **Step 5: Прогнать тест — должен пройти**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: 2 passing (wg-easy) + предыдущие.
 
 - [ ] **Step 6: Commit**
@@ -1239,7 +1239,7 @@ git commit -m "feat(server): add wg-easy REST client wrapper"
 
 **Interfaces:**
 
-- Consumes: `PrismaService`, `@vesper/schemas` (`SubscriptionStatus`).
+- Consumes: `PrismaService`, `@gnomevpn/schemas` (`SubscriptionStatus`).
 - Produces:
   - `SubscriptionService.hasActiveAccess(userId: string): Promise<boolean>` — на Этапе 1 всегда `true` (заглушка).
   - `SubscriptionService.getStatus(userId: string): Promise<SubscriptionStatus>` — читает БД.
@@ -1273,14 +1273,14 @@ describe('SubscriptionService (stage 1 stub)', () => {
 
 - [ ] **Step 2: Прогнать — упадёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: FAIL — `SubscriptionService` не найден.
 
 - [ ] **Step 3: `subscription.service.ts`**
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import type { SubscriptionStatus } from '@vesper/schemas';
+import type { SubscriptionStatus } from '@gnomevpn/schemas';
 import { PrismaService } from '../../core';
 
 @Injectable()
@@ -1347,7 +1347,7 @@ export class SubscriptionModule {}
 
 - [ ] **Step 6: Прогнать — пройдёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: 2 passing (subscription) + предыдущие.
 
 - [ ] **Step 7: Commit**
@@ -1371,7 +1371,7 @@ git commit -m "feat(server): add subscription service + guard (stage 1 stub alwa
 
 **Interfaces:**
 
-- Consumes: `PrismaService`, `WgEasyClient` (lib), `nodeSchema` (`@vesper/schemas`).
+- Consumes: `PrismaService`, `WgEasyClient` (lib), `nodeSchema` (`@gnomevpn/schemas`).
 - Produces:
   - `NodesService.listPublicNodes(): Promise<Node[]>` — только `enabled`, публичные поля.
   - `NodesService.getNodeForConnect(nodeId: string): Promise<{ id, publicEndpoint, wgEasyUrl, wgEasyApiKeyRef }>` — внутренние поля для оркестратора; кидает `AppNotFoundException('NODE_NOT_FOUND')` если нет/disabled.
@@ -1415,14 +1415,14 @@ describe('NodesService', () => {
 
 - [ ] **Step 2: Прогнать — упадёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: FAIL — `NodesService` не найден.
 
 - [ ] **Step 3: `nodes.service.ts`**
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import type { Node } from '@vesper/schemas';
+import type { Node } from '@gnomevpn/schemas';
 import { AppNotFoundException } from '../../common/exceptions';
 import { PrismaService } from '../../core';
 
@@ -1461,7 +1461,7 @@ export class NodesService {
 - [ ] **Step 4: `dto/nodes.dto.ts`**
 
 ```ts
-import { nodeSchema } from '@vesper/schemas';
+import { nodeSchema } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 
 export class NodeDto extends createZodDto(nodeSchema) {}
@@ -1504,7 +1504,7 @@ export class NodesModule {}
 
 - [ ] **Step 7: Прогнать — пройдёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: 2 passing (nodes) + предыдущие.
 
 - [ ] **Step 8: Commit**
@@ -1528,7 +1528,7 @@ git commit -m "feat(server): add nodes module (GET /nodes, connect lookup)"
 
 **Interfaces:**
 
-- Consumes: `PrismaService`, `NodesService`, `AppConfigService`, `WgEasyClient` (lib), `tunnelConfigSchema`/`connectInputSchema` (`@vesper/schemas`), `AppServiceUnavailableException`.
+- Consumes: `PrismaService`, `NodesService`, `AppConfigService`, `WgEasyClient` (lib), `tunnelConfigSchema`/`connectInputSchema` (`@gnomevpn/schemas`), `AppServiceUnavailableException`.
 - Produces:
   - `TunnelService.connect(userId, nodeId): Promise<TunnelConfig>` — снимает старый пир (single-connection), создаёт нового через wg-easy, пишет `ActivePeer`, возвращает `TunnelConfig`.
   - `TunnelService.disconnect(userId): Promise<void>` — удаляет пира на wg-easy + `ActivePeer`; идемпотентно.
@@ -1603,14 +1603,14 @@ describe('TunnelService.connect', () => {
 
 - [ ] **Step 2: Прогнать — упадёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: FAIL — `TunnelService` не найден.
 
 - [ ] **Step 3: `tunnel.service.ts`**
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import type { TunnelConfig } from '@vesper/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { AppConfigService } from '../../config/config.module';
 import { PrismaService } from '../../core';
@@ -1701,7 +1701,7 @@ export class TunnelService {
 - [ ] **Step 4: `dto/tunnel.dto.ts`**
 
 ```ts
-import { connectInputSchema, tunnelConfigSchema } from '@vesper/schemas';
+import { connectInputSchema, tunnelConfigSchema } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 
 export class ConnectDto extends createZodDto(connectInputSchema) {}
@@ -1756,7 +1756,7 @@ export class TunnelModule {}
 
 - [ ] **Step 7: Прогнать — пройдёт**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server test`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server test`
 Expected: 2 passing (tunnel) + предыдущие.
 
 - [ ] **Step 8: Commit**
@@ -1788,7 +1788,7 @@ git commit -m "feat(server): add tunnel orchestrator (connect/disconnect via wg-
 
 ```ts
 import { Controller, Get } from '@nestjs/common';
-import { subscriptionStatusSchema } from '@vesper/schemas';
+import { subscriptionStatusSchema } from '@gnomevpn/schemas';
 import { createZodDto, ZodResponse } from 'nestjs-zod';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SubscriptionService } from './subscription.service';
@@ -1882,13 +1882,13 @@ await app.listen(env.PORT);
 
 - [ ] **Step 5: Поднять Postgres и применить схему**
 
-Run: `cd c:/Projects/vesper && docker compose -f docker-compose.dev.yml up -d postgres` (создаётся в Task 12; если ещё не создан — поднять любой локальный Postgres на 5432 с базой `vesper`)
+Run: `cd c:/Projects/gnomevpn && docker compose -f docker-compose.dev.yml up -d postgres` (создаётся в Task 12; если ещё не создан — поднять любой локальный Postgres на 5432 с базой `gnomevpn`)
 Then: `cd apps/server && bun run db:push`
 Expected: `Your database is now in sync with your Prisma schema`.
 
 - [ ] **Step 6: Запустить сервер и проверить `/nodes`**
 
-Run (терминал 1): `cd c:/Projects/vesper && bun --filter @vesper/server dev`
+Run (терминал 1): `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server dev`
 Run (терминал 2): `curl http://localhost:4000/nodes`
 Expected: `[]` (узлов ещё нет) со статусом 200 — сервер жив, роут работает.
 
@@ -1899,7 +1899,7 @@ Expected: 200 с телом сессии/пользователя и загол�
 
 - [ ] **Step 8: Typecheck + commit**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/server typecheck`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/server typecheck`
 Expected: без ошибок.
 
 ```bash
@@ -1919,7 +1919,7 @@ git commit -m "feat(server): wire app module, main bootstrap, subscription statu
 
 **Interfaces:**
 
-- Produces: собираемая Tauri-оболочка (`vesper_lib::run()`), которая грузит клиента с `/app`. Пока без VPN-команд.
+- Produces: собираемая Tauri-оболочка (`gnomevpn_lib::run()`), которая грузит клиента с `/app`. Пока без VPN-команд.
 
 > **Замечание:** как в Chatovo, Rust-корень — это сам `apps/tauri/` (папки `src-tauri/` нет).
 
@@ -1927,7 +1927,7 @@ git commit -m "feat(server): wire app module, main bootstrap, subscription statu
 
 ```json
 {
-  "name": "@vesper/tauri",
+  "name": "@gnomevpn/tauri",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -1947,14 +1947,14 @@ git commit -m "feat(server): wire app module, main bootstrap, subscription statu
 
 ```toml
 [package]
-name = "vesper"
+name = "gnomevpn"
 version = "0.1.0"
-description = "Vesper VPN desktop client"
-authors = ["Vesper"]
+description = "GnomeVPN VPN desktop client"
+authors = ["GnomeVPN"]
 edition = "2021"
 
 [lib]
-name = "vesper_lib"
+name = "gnomevpn_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -1995,20 +1995,20 @@ fn main() {
 ```json
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Vesper",
+  "productName": "GnomeVPN",
   "version": "0.1.0",
-  "identifier": "app.vesper.desktop",
+  "identifier": "app.gnomevpn.desktop",
   "build": {
     "frontendDist": "../client/out",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "bun --filter @vesper/client build",
-    "beforeDevCommand": "bun --filter @vesper/client dev"
+    "beforeBuildCommand": "bun --filter @gnomevpn/client build",
+    "beforeDevCommand": "bun --filter @gnomevpn/client dev"
   },
   "app": {
     "windows": [
       {
         "label": "main",
-        "title": "Vesper",
+        "title": "GnomeVPN",
         "url": "/app",
         "width": 420,
         "height": 720,
@@ -2048,7 +2048,7 @@ fn main() {
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    vesper_lib::run()
+    gnomevpn_lib::run()
 }
 ```
 
@@ -2324,13 +2324,13 @@ pub async fn run_tunnel(
     socket.connect(endpoint).await.map_err(|e| VpnError::Io(e.to_string()))?;
 
     let dev = tun_rs::DeviceBuilder::new()
-        .name("vesper0")
+        .name("gnomevpn0")
         .ipv4(parse_cidr(&config.address)?, 32, None)
         .mtu(1420)
         .build_async()
         .map_err(|e| VpnError::Tun(e.to_string()))?;
 
-    route::apply_default_route("vesper0", endpoint.ip(), &config.dns)
+    route::apply_default_route("gnomevpn0", endpoint.ip(), &config.dns)
         .map_err(|e| VpnError::Io(format!("route: {e}")))?;
 
     let mut tun_buf = vec![0u8; MAX_PACKET];
@@ -2385,7 +2385,7 @@ pub async fn run_tunnel(
         }
     };
 
-    let _ = route::remove_default_route("vesper0", endpoint.ip());
+    let _ = route::remove_default_route("gnomevpn0", endpoint.ip());
     emit(VpnEvent::Disconnected);
     result
 }
@@ -2644,7 +2644,7 @@ git commit -m "feat(tauri): expose vpn_connect/disconnect/status commands with e
 
 **Interfaces:**
 
-- Consumes: `@vesper/schemas`.
+- Consumes: `@gnomevpn/schemas`.
 - Produces:
   - `api` (axios, Bearer из localStorage), `ApiError`, `toApiError`.
   - `authClient` (better-auth), `getAuthToken`/`saveAuthToken`/`clearToken`.
@@ -2657,7 +2657,7 @@ git commit -m "feat(tauri): expose vpn_connect/disconnect/status commands with e
 
 ```json
 {
-  "name": "@vesper/client",
+  "name": "@gnomevpn/client",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -2677,7 +2677,7 @@ git commit -m "feat(tauri): expose vpn_connect/disconnect/status commands with e
     "react-hook-form": "^7.81.0",
     "@hookform/resolvers": "^5.4.0",
     "zod": "^4.4.3",
-    "@vesper/schemas": "workspace:*",
+    "@gnomevpn/schemas": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^0.500.0",
     "sonner": "^2.0.0",
@@ -2751,7 +2751,7 @@ export const env = schema.parse({
 import { createAuthClient } from 'better-auth/react';
 import { env } from '@/shared/config/client-env';
 
-const STORAGE_KEY = 'vesper.auth-token';
+const STORAGE_KEY = 'gnomevpn.auth-token';
 
 export const getAuthToken = () => {
   if (typeof window === 'undefined') return '';
@@ -2784,8 +2784,8 @@ export const authClient = createAuthClient({
 - [ ] **Step 6: `apps/client/shared/api/http/api-error.ts`**
 
 ```ts
-import { apiErrorSchema } from '@vesper/schemas';
-import type { ApiErrorCode } from '@vesper/schemas';
+import { apiErrorSchema } from '@gnomevpn/schemas';
+import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
@@ -2904,7 +2904,7 @@ export { authClient, clearToken, getAuthToken, saveAuthToken } from './auth/auth
 
 - [ ] **Step 12: Установить и проверить typecheck (skeleton без страниц ещё не соберётся — только typecheck модулей)**
 
-Run: `cd c:/Projects/vesper && bun install`
+Run: `cd c:/Projects/gnomevpn && bun install`
 Expected: ставится.
 
 > Полный `next build` пока невозможен (нет `app/` роутов) — они появятся в Task 15. Здесь проверяем только, что модули shared/ типизируются:
@@ -2931,7 +2931,7 @@ git commit -m "feat(client): bootstrap Next.js + FSD shared (api, auth, query, t
 
 **Interfaces:**
 
-- Consumes: `api`, `@vesper/schemas` (`Node`, `TunnelConfig`, `ConnectRequest`, `SubscriptionStatus`), Tauri `invoke`/`Channel`.
+- Consumes: `api`, `@gnomevpn/schemas` (`Node`, `TunnelConfig`, `ConnectRequest`, `SubscriptionStatus`), Tauri `invoke`/`Channel`.
 - Produces:
   - `listNodes(): Promise<Node[]>`, `connectTunnel(nodeId): Promise<TunnelConfig>`, `disconnectTunnel(): Promise<void>`, `getSubscriptionStatus(): Promise<SubscriptionStatus>`.
   - `vpnConnect(config, onEvent): Promise<void>`, `vpnDisconnect(): Promise<void>`, `vpnStatus(): Promise<string>` — обёртки над Rust-командами (гейт `isTauri()`).
@@ -2942,7 +2942,7 @@ git commit -m "feat(client): bootstrap Next.js + FSD shared (api, auth, query, t
 
 ```ts
 import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
-import type { TunnelConfig } from '@vesper/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 
 export type VpnEvent =
   | { type: 'connecting' }
@@ -2993,7 +2993,7 @@ export type { VpnEvent } from './vpn-bridge';
 - [ ] **Step 2: `apps/client/shared/api/vpn/vpn.ts`**
 
 ```ts
-import type { Node, SubscriptionStatus, TunnelConfig } from '@vesper/schemas';
+import type { Node, SubscriptionStatus, TunnelConfig } from '@gnomevpn/schemas';
 import { api } from '../http';
 
 export const listNodes = async (): Promise<Node[]> => {
@@ -3266,7 +3266,7 @@ export const AppView = () => {
 
   return (
     <main className={s.root}>
-      <h1 className={s.title}>Vesper</h1>
+      <h1 className={s.title}>GnomeVPN</h1>
 
       <ConnectButton status={status} disabled={!effectiveNodeId} onToggle={onToggle} />
 
@@ -3369,7 +3369,7 @@ import { AppProviders } from './providers/AppProviders';
 import type { ReactNode } from 'react';
 import './globals.scss';
 
-export const metadata = { title: 'Vesper', description: 'Vesper VPN' };
+export const metadata = { title: 'GnomeVPN', description: 'GnomeVPN VPN' };
 
 const RootLayout = ({ children }: { children: ReactNode }) => (
   <html lang="ru" className="dark">
@@ -3399,7 +3399,7 @@ export default Page;
 ```tsx
 const Page = () => (
   <main style={{ padding: 40 }}>
-    <h1>Vesper VPN</h1>
+    <h1>GnomeVPN VPN</h1>
     <p>Лендинг появится на Этапе 3. Скачайте десктоп-приложение, чтобы подключиться.</p>
     <a href="/account">Личный кабинет</a>
   </main>
@@ -3444,9 +3444,9 @@ git commit -m "feat(client): add VPN connect feature and /app screen with countr
 
 **Files:**
 
-- Create: `c:/Projects/vesper/docker-compose.dev.yml`
-- Create: `c:/Projects/vesper/infra/wg-easy/docker-compose.yml`
-- Create: `c:/Projects/vesper/infra/wg-easy/README.md`
+- Create: `c:/Projects/gnomevpn/docker-compose.dev.yml`
+- Create: `c:/Projects/gnomevpn/infra/wg-easy/docker-compose.yml`
+- Create: `c:/Projects/gnomevpn/infra/wg-easy/README.md`
 
 **Interfaces:**
 
@@ -3462,16 +3462,16 @@ services:
     image: postgres:17
     restart: unless-stopped
     environment:
-      POSTGRES_USER: vesper
-      POSTGRES_PASSWORD: vesper
-      POSTGRES_DB: vesper
+      POSTGRES_USER: gnomevpn
+      POSTGRES_PASSWORD: gnomevpn
+      POSTGRES_DB: gnomevpn
     ports:
       - "5432:5432"
     volumes:
-      - vesper_pg:/var/lib/postgresql/data
+      - gnomevpn_pg:/var/lib/postgresql/data
 
 volumes:
-  vesper_pg:
+  gnomevpn_pg:
 ```
 
 - [ ] **Step 2: `infra/wg-easy/docker-compose.yml` (страновой узел)**
@@ -3508,16 +3508,16 @@ volumes:
 - [ ] **Step 3: `infra/wg-easy/README.md`**
 
 ```markdown
-# Vesper — wg-easy country node
+# GnomeVPN — wg-easy country node
 
 One VPS per country. Deploy steps:
 
-1. Point a DNS record (e.g. `de.vesper.example`) at the VPS public IP.
+1. Point a DNS record (e.g. `de.gnomevpn.example`) at the VPS public IP.
 2. Copy this folder to the VPS.
 3. Create `.env` next to compose:
    ```
 
-   WG_HOST=de.vesper.example
+   WG_HOST=de.gnomevpn.example
    WG_EASY_PASSWORD=<strong-secret>
 
    ```
@@ -3526,7 +3526,7 @@ One VPS per country. Deploy steps:
    must be reachable only from the backend (private network or SSH tunnel).
 6. Register the node in the backend DB (`Node` table):
    - `country`, `countryCode`, `flagEmoji`
-   - `publicEndpoint` = `de.vesper.example:51820`
+   - `publicEndpoint` = `de.gnomevpn.example:51820`
    - `wgEasyUrl` = private URL of the REST API (e.g. `http://10.0.0.5:51821`)
    - `wgEasyApiKeyRef` = name of the backend env var holding the REST secret
      (e.g. `WG_EASY_KEY_DE`), and set that env var on the backend to `WG_EASY_PASSWORD`.
@@ -3534,7 +3534,7 @@ One VPS per country. Deploy steps:
 
 - [ ] **Step 4: Поднять Postgres и убедиться, что backend видит БД**
 
-Run: `cd c:/Projects/vesper && docker compose -f docker-compose.dev.yml up -d`
+Run: `cd c:/Projects/gnomevpn && docker compose -f docker-compose.dev.yml up -d`
 Then: `cd apps/server && bun run db:push`
 Expected: схема применяется без ошибок.
 
@@ -3601,7 +3601,7 @@ void main();
 - В `apps/server/.env` добавь секрет узла: `WG_EASY_KEY_DE=<пароль из wg-easy>`.
 - Запусти сид:
 
-Run: `cd apps/server && SEED_ENDPOINT=de.vesper.example:51820 SEED_WG_EASY_URL=http://<private-ip>:51821 bun run seed:node`
+Run: `cd apps/server && SEED_ENDPOINT=de.gnomevpn.example:51820 SEED_WG_EASY_URL=http://<private-ip>:51821 bun run seed:node`
 Expected: `Seeded node <uuid> (Germany)`.
 
 - [ ] **Step 4: Проверить, что `/nodes` отдаёт страну**
@@ -3611,14 +3611,14 @@ Expected: JSON-массив с одной страной (`Germany`, флаг, �
 
 - [ ] **Step 5: Запустить desktop-приложение**
 
-Run: `cd c:/Projects/vesper && bun run tauri:dev`
-Expected: открывается окно Vesper с экраном `/app`, показана страна Germany и кнопка «Подключиться».
+Run: `cd c:/Projects/gnomevpn && bun run tauri:dev`
+Expected: открывается окно GnomeVPN с экраном `/app`, показана страна Germany и кнопка «Подключиться».
 
 > **Права:** для поднятия TUN и правки маршрутов приложению нужны админ-права (спека §7B). На Windows — запустить из терминала с админ-правами; на Linux — `sudo` или `setcap cap_net_admin+ep` на бинарь; на macOS — с правами. Это Этап-1-компромисс (хелпер — Этап 4).
 
 - [ ] **Step 6: E2E — зарегистрироваться, подключиться, проверить смену IP**
 
-1. В приложении (или через веб `/account` на Этапе 2 — сейчас регистрация через API) создай пользователя: `curl -X POST http://localhost:4000/auth/sign-up/email -H "Content-Type: application/json" -d '{"email":"e2e@vesper.test","password":"password123","name":"E2E"}'` и сохрани `set-auth-token`.
+1. В приложении (или через веб `/account` на Этапе 2 — сейчас регистрация через API) создай пользователя: `curl -X POST http://localhost:4000/auth/sign-up/email -H "Content-Type: application/json" -d '{"email":"e2e@gnomevpn.test","password":"password123","name":"E2E"}'` и сохрани `set-auth-token`.
 2. Проверь исходный IP: `curl https://api.ipify.org` — запиши.
 3. В приложении выбери Germany → нажми «Подключиться». Дождись зелёного «Отключиться».
 4. Проверь IP снова: `curl https://api.ipify.org`.
@@ -3644,7 +3644,7 @@ Expected: старый пир снят, `ActivePeer` один; на wg-easy не
 
 - [ ] **Step 10: Финальный прогон всех юнит-тестов и typecheck**
 
-Run: `cd c:/Projects/vesper && bun --filter @vesper/schemas test && bun --filter @vesper/server test && cargo test --manifest-path apps/tauri/Cargo.toml && bun typecheck`
+Run: `cd c:/Projects/gnomevpn && bun --filter @gnomevpn/schemas test && bun --filter @gnomevpn/server test && cargo test --manifest-path apps/tauri/Cargo.toml && bun typecheck`
 Expected: все тесты зелёные, typecheck без ошибок.
 
 - [ ] **Step 11: Commit**

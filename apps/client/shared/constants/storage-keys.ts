@@ -1,5 +1,5 @@
 export const STORAGE_KEYS = {
-  authToken: 'vesper.auth-token',
-  locale: 'vesper.locale',
-  closeToTray: 'vesper.close-to-tray',
+  authToken: 'gnomevpn.auth-token',
+  locale: 'gnomevpn.locale',
+  closeToTray: 'gnomevpn.close-to-tray',
 } as const;

@@ -1,6 +1,6 @@
 import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
 
-import type { TunnelConfig } from '@vesper/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 
 export type VpnEvent =
   | { type: 'connecting' }

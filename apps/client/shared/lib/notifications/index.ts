@@ -1,3 +1,3 @@
 export { notify } from './notifications';
 
-export type { NotifyInput } from './notifications.types';
+export type { NotifyInput, NotifyTone } from './model';

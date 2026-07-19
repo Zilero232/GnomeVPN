@@ -6,9 +6,9 @@ import { AppConfigService } from '../../config/config.module';
 import { PrismaService } from '../../core';
 import { YooKassaClient } from '../../lib';
 
-import type { CheckoutResult, WebhookEvent } from '@vesper/schemas';
+import type { CheckoutResult, WebhookEvent } from '@gnomevpn/schemas';
 
-const DESCRIPTION = 'Подписка Vesper на 1 месяц';
+const DESCRIPTION = 'Подписка GnomeVPN на 1 месяц';
 
 @Injectable()
 export class BillingService {

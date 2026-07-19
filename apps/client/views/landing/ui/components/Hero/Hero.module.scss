@@ -3,6 +3,22 @@
   padding: 72px 0 40px;
 }
 
+.mark {
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+  top: 24px;
+  right: 0;
+  border-radius: 34px;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 70px rgb(53 240 160 / 30%));
+  animation: rise 0.7s ease 0.1s both;
+
+  @media (width <= 900px) {
+    display: none;
+  }
+}
+
 .eyebrow {
   display: inline-flex;
   gap: 10px;

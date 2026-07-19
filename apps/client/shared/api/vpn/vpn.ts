@@ -1,6 +1,6 @@
 import { api } from '../http';
 
-import type { CheckoutResult, Node, SubscriptionStatus, TunnelConfig } from '@vesper/schemas';
+import type { CheckoutResult, Node, SubscriptionStatus, TunnelConfig } from '@gnomevpn/schemas';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');

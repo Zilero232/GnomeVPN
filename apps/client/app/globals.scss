@@ -84,15 +84,15 @@ body > * {
   outline-offset: 2px;
 }
 
-.vesper-toaster {
+.gnomevpn-toaster {
   width: min(100vw - 24px, 380px) !important;
   max-width: calc(100vw - 24px) !important;
 }
 
-.vesper-toaster > li {
+.gnomevpn-toaster > li {
   width: 100% !important;
 }
 
-:root[data-desktop-app='true'] .vesper-toaster {
+:root[data-desktop-app='true'] .gnomevpn-toaster {
   top: calc(var(--titlebar-height) + 10px) !important;
 }

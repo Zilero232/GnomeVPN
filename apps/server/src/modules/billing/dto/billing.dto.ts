@@ -1,4 +1,4 @@
-import { checkoutResultSchema, webhookEventSchema } from '@vesper/schemas';
+import { checkoutResultSchema, webhookEventSchema } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 
 export class CheckoutResultDto extends createZodDto(checkoutResultSchema) {}

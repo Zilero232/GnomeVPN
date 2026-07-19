@@ -10,7 +10,7 @@ let dir: string;
 let envPath: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'vesper-panel-password-'));
+  dir = await mkdtemp(join(tmpdir(), 'gnomevpn-panel-password-'));
   envPath = join(dir, '.env');
 });
 

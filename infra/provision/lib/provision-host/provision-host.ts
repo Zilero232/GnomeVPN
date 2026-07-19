@@ -7,7 +7,7 @@ import { SshClient } from '../ssh-client';
 import type { NodeConfig } from '../nodes-config';
 import type { ProvisionHostOptions, ProvisionResult } from './provision-host.types';
 
-const REMOTE_DIR = '/opt/vesper-wg-easy';
+const REMOTE_DIR = '/opt/gnomevpn-wg-easy';
 const WIREGUARD_PORT = 51820;
 const PANEL_PORT = 51821;
 const HEALTH_CHECK_TIMEOUT_MS = 60_000;
@@ -53,7 +53,7 @@ const ensureKernelModules = async (ssh: SshClient): Promise<void> => {
   }
 
   await ssh.exec(
-    `mkdir -p /etc/modules-load.d && printf '%s\\n' ${KERNEL_MODULES.join(' ')} > /etc/modules-load.d/vesper-wg-easy.conf`,
+    `mkdir -p /etc/modules-load.d && printf '%s\\n' ${KERNEL_MODULES.join(' ')} > /etc/modules-load.d/gnomevpn-wg-easy.conf`,
   );
 };
 
@@ -67,7 +67,7 @@ const shipComposeStack = async (
 
   await ssh.putFile(composeContent, `${REMOTE_DIR}/docker-compose.yml`);
   await ssh.putFile(
-    `WG_HOST=${config.host}\nWG_EASY_PASSWORD_HASH=${passwordHash}\nWG_DEFAULT_DNS=1.1.1.1\n`,
+    `WG_HOST=${config.host}\nWG_EASY_PASSWORD_HASH=${passwordHash}\n`,
     `${REMOTE_DIR}/.env`,
   );
 };

@@ -24,7 +24,12 @@ export const MenuItem = ({
     variants={MENU_ITEM_MOTION}
     onClick={onClick}
   >
-    {Icon && <Icon className={s.icon} size={14} />}
+    {Icon && (
+      <span className={s.icon}>
+        <Icon size={14} />
+      </span>
+    )}
+
     <span className={s.label}>{label}</span>
     {trailing}
   </motion.button>

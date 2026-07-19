@@ -14,6 +14,11 @@ export const defaultMetadata: Metadata = {
   keywords: [...SITE.keywords],
   category: 'utilities',
   formatDetection: { email: false, address: false, telephone: false },
+  icons: {
+    icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
+    shortcut: '/brand/favicon.svg',
+    apple: [{ url: '/brand/logo-mark.svg', type: 'image/svg+xml' }],
+  },
   alternates: {
     canonical: '/',
     languages: { 'ru-RU': '/', 'x-default': '/' },

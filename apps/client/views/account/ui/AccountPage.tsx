@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -8,9 +8,9 @@ import { usePlatform } from '@/entities/app/platform';
 import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
-import { authClient, clearToken } from '@/shared/api';
+import { useSignOut } from '@/features/auth/sign-out';
 import { ROUTES } from '@/shared/constants';
-import { Button, Text } from '@/shared/ui';
+import { Text } from '@/shared/ui';
 import { SubscriptionCard } from './components';
 
 import s from './AccountPage.module.scss';
@@ -21,10 +21,7 @@ export const AccountPage = () => {
   const { email } = useCurrentUser();
   const { subscription, isLoading } = useSubscriptionStatus();
 
-  const onSignOut = async () => {
-    await authClient.signOut();
-    clearToken();
-  };
+  const signOut = useSignOut();
 
   return (
     <main className={s.root}>
@@ -38,12 +35,7 @@ export const AccountPage = () => {
       <div className={s.header}>
         <h1 className={s.title}>{t('title')}</h1>
 
-        <div className={s.headerActions}>
-          <LocaleSwitcher />
-          <Button variant="ghost" onClick={onSignOut}>
-            {t('signOut')}
-          </Button>
-        </div>
+        <LocaleSwitcher />
       </div>
 
       <Text size="xs" tone="muted">
@@ -53,6 +45,18 @@ export const AccountPage = () => {
       <div className={s.card}>
         <SubscriptionCard isLoading={isLoading} subscription={subscription} />
       </div>
+
+      <footer className={s.footer}>
+        <button
+          className={s.signOut}
+          disabled={signOut.isPending}
+          type="button"
+          onClick={() => signOut.mutate()}
+        >
+          <LogOut size={15} />
+          {t('signOut')}
+        </button>
+      </footer>
     </main>
   );
 };

@@ -1,34 +1,20 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { Copy, Minus, Square, X } from 'lucide-react';
+import { Minus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import s from './TitleBarControls.module.scss';
 
 import type { TitleBarControlsProps } from './TitleBarControls.types';
 
-export const TitleBarControls = ({
-  isMaximized,
-  onMinimize,
-  onToggleMaximize,
-  onClose,
-}: TitleBarControlsProps) => {
+export const TitleBarControls = ({ onMinimize, onClose }: TitleBarControlsProps) => {
   const t = useTranslations('window');
 
   return (
     <div className={s.root}>
       <button aria-label={t('minimize')} className={s.button} type="button" onClick={onMinimize}>
         <Minus className={s.icon} />
-      </button>
-
-      <button
-        aria-label={isMaximized ? t('restore') : t('maximize')}
-        className={s.button}
-        type="button"
-        onClick={onToggleMaximize}
-      >
-        {isMaximized ? <Copy className={s.icon} /> : <Square className={s.icon} />}
       </button>
 
       <button

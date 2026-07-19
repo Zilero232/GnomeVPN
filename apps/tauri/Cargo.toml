@@ -1,12 +1,12 @@
 [package]
-name = "vesper"
+name = "gnomevpn"
 version = "0.1.0"
-description = "Vesper VPN desktop client"
-authors = ["Vesper"]
+description = "GnomeVPN desktop client"
+authors = ["GnomeVPN"]
 edition = "2021"
 
 [lib]
-name = "vesper_lib"
+name = "gnomevpn_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
