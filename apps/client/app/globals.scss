@@ -1,8 +1,6 @@
-@import 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap';
-
 :root {
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   --color-bg: #070b0a;
   --color-bg-deep: #040706;

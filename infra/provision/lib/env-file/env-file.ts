@@ -1,39 +1,44 @@
 import { appendFile, readFile } from 'node:fs/promises';
 
-const readLines = async (filePath: string): Promise<string[]> => {
+const read = async (filePath: string): Promise<string> => {
   try {
-    const raw = await readFile(filePath, 'utf8');
-
-    return raw.split('\n');
+    return await readFile(filePath, 'utf8');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return [];
+      return '';
     }
 
     throw error;
   }
 };
 
-const findLine = (lines: string[], key: string): string | undefined =>
-  lines.find((line) => line.startsWith(`${key}=`));
+const findValue = (raw: string, key: string): string | null => {
+  const line = raw
+    .split('\n')
+    .map((entry) => entry.trimEnd())
+    .find((entry) => entry.startsWith(`${key}=`));
+
+  return line?.slice(key.length + 1) || null;
+};
 
 export const hasEnvKey = async (filePath: string, key: string): Promise<boolean> =>
-  findLine(await readLines(filePath), key) !== undefined;
+  findValue(await read(filePath), key) !== null;
 
-export const readEnvValue = async (filePath: string, key: string): Promise<string | null> => {
-  const line = findLine(await readLines(filePath), key);
-
-  return line ? line.slice(key.length + 1) : null;
-};
+export const readEnvValue = async (filePath: string, key: string): Promise<string | null> =>
+  findValue(await read(filePath), key);
 
 export const appendEnvLine = async (
   filePath: string,
   key: string,
   value: string,
 ): Promise<void> => {
-  if (await hasEnvKey(filePath, key)) {
+  const raw = await read(filePath);
+
+  if (findValue(raw, key) !== null) {
     throw new Error(`Refusing to append ${key}: it already exists in ${filePath}`);
   }
 
-  await appendFile(filePath, `${key}=${value}\n`);
+  const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
+
+  await appendFile(filePath, `${separator}${key}=${value}\n`);
 };
