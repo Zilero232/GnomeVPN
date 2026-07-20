@@ -119,12 +119,20 @@ jobs:
              docker compose up -d && \
              docker image prune -f"
 
+      - name: Check for migrations
+        id: migrations
+        run: |
+          if compgen -G "apps/server/prisma/migrations/*/migration.sql" > /dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No migration files in apps/server/prisma/migrations — skipping migrate deploy. The schema on the VPS is whatever \`db push\` last left there, and further schema changes will NOT reach production. See DEPLOY.md to create the baseline migration."
+          fi
+
       # Schema changes ship inside the image, so migrations run once the new
       # server container is up with the matching Prisma client.
-      #
-      # Requires prisma/migrations to exist — see DEPLOY.md for the one-time
-      # switch from `db push` to a migration history.
       - name: Apply database migrations
+        if: steps.migrations.outputs.present == 'true'
         run: |
           ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
