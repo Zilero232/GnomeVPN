@@ -8,7 +8,6 @@ const prisma = basePrisma as unknown as PrismaLike;
 const main = async () => {
   const country = process.env.SEED_COUNTRY ?? 'Germany';
   const countryCode = process.env.SEED_COUNTRY_CODE ?? 'DE';
-  const flagEmoji = process.env.SEED_FLAG ?? '🇩🇪';
   const city = process.env.SEED_CITY;
   const publicEndpoint = process.env.SEED_ENDPOINT;
   const wgEasyUrl = process.env.SEED_WG_EASY_URL;
@@ -27,7 +26,6 @@ const main = async () => {
   const result = await upsertNode(prisma, {
     country,
     countryCode,
-    flagEmoji,
     city,
     publicEndpoint,
     wgEasyUrl,

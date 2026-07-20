@@ -3,7 +3,6 @@ model Node {
 
   country     String
   countryCode String  @map("country_code")
-  flagEmoji   String  @map("flag_emoji")
   city        String?
 
   publicEndpoint  String @map("public_endpoint")
@@ -16,7 +15,7 @@ model Node {
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  activePeers ActivePeer[]
+  peers Peer[]
 
   @@map("node")
 }

@@ -11,7 +11,6 @@ export type PrismaLike = {
 export type UpsertNodeInput = {
   country: string;
   countryCode: string;
-  flagEmoji: string;
   city?: string;
   publicEndpoint: string;
   wgEasyUrl: string;

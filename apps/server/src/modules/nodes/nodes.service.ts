@@ -18,7 +18,6 @@ export class NodesService {
         id: true,
         country: true,
         countryCode: true,
-        flagEmoji: true,
         city: true,
         enabled: true,
         lastHealthyAt: true,
@@ -29,7 +28,6 @@ export class NodesService {
       id: r.id,
       country: r.country,
       countryCode: r.countryCode,
-      flagEmoji: r.flagEmoji,
       city: r.city ?? undefined,
       status: resolveNodeStatus({ enabled: r.enabled, lastHealthyAt: r.lastHealthyAt }),
       lastHealthyAt: r.lastHealthyAt ? r.lastHealthyAt.toISOString() : null,
@@ -41,6 +39,8 @@ export class NodesService {
       where: { id: nodeId, enabled: true },
       select: {
         id: true,
+        country: true,
+        countryCode: true,
         publicEndpoint: true,
         wgEasyUrl: true,
         wgEasyApiKeyRef: true,
@@ -53,8 +53,6 @@ export class NodesService {
       throw new AppNotFoundException('NODE_NOT_FOUND', 'Node not found');
     }
 
-    // Degraded means the node has not answered a probe in minutes. Handing it
-    // out produces a connect that fails at wg-easy with no useful message.
     if (
       resolveNodeStatus({ enabled: node.enabled, lastHealthyAt: node.lastHealthyAt }) !== 'online'
     ) {

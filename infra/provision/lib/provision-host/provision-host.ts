@@ -144,7 +144,6 @@ export const provisionHost = async (
     const upsertResult = await opts.upsertNode(opts.basePrisma, {
       country: config.country,
       countryCode: config.countryCode,
-      flagEmoji: config.flagEmoji,
       city: config.city,
       publicEndpoint: `${config.host}:${WIREGUARD_PORT}`,
       wgEasyUrl: `http://${config.host}:${PANEL_PORT}`,

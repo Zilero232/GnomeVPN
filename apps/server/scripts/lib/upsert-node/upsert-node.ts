@@ -14,7 +14,6 @@ export const upsertNode = async (
       data: {
         country: input.country,
         countryCode: input.countryCode,
-        flagEmoji: input.flagEmoji,
         city: input.city,
         wgEasyUrl: input.wgEasyUrl,
         wgEasyApiKeyRef: input.wgEasyApiKeyRef,
@@ -29,7 +28,6 @@ export const upsertNode = async (
     data: {
       country: input.country,
       countryCode: input.countryCode,
-      flagEmoji: input.flagEmoji,
       city: input.city,
       publicEndpoint: input.publicEndpoint,
       wgEasyUrl: input.wgEasyUrl,

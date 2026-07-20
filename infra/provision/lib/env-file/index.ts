@@ -1,1 +1,1 @@
-export { appendEnvLine, hasEnvKey, readEnvValue } from './env-file';
+export { appendEnvLine, hasEnvKey, pruneEnvKeys, readEnvValue } from './env-file';

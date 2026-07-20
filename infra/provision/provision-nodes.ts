@@ -6,6 +6,7 @@ import { isNonNullish, prop } from 'remeda';
 import { upsertNode } from '../../apps/server/scripts/lib/upsert-node';
 import { basePrisma } from '../../apps/server/src/core';
 import { WgEasyClient } from '../../apps/server/src/lib/wg-easy';
+import { pruneEnvKeys } from './lib/env-file';
 import { loadNodesConfig } from './lib/nodes-config';
 import { provisionHost } from './lib/provision-host';
 
@@ -20,6 +21,7 @@ const WG_EASY_COMPOSE_PATH = resolve(HERE, '..', 'wg-easy', 'docker-compose.yml'
 const SERVER_ENV_PATH = resolve(HERE, '..', '..', 'apps', 'server', '.env');
 
 const BACKEND_IP_FLAG = '--backend-ip=';
+const WG_KEY_PREFIX = 'WG_KEY_';
 
 const parseBackendIp = (argv: string[]): string | undefined =>
   argv.find((arg) => arg.startsWith(BACKEND_IP_FLAG))?.slice(BACKEND_IP_FLAG.length);
@@ -31,6 +33,27 @@ const formatResultLine = (result: ProvisionResult): string => {
   const suffix = isNonNullish(result.error) ? ` (${result.error})` : '';
 
   return `  ${result.country.padEnd(20)} ${result.host.padEnd(16)} ${result.status}${suffix}`;
+};
+
+const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
+  const removedKeys = await pruneEnvKeys(
+    SERVER_ENV_PATH,
+    WG_KEY_PREFIX,
+    countryCodes.map((code) => `${WG_KEY_PREFIX}${code}`),
+  );
+
+  if (removedKeys.length > 0) {
+    process.stdout.write(`Removed stale keys: ${removedKeys.join(', ')}\n`);
+  }
+
+  const disabled = await basePrisma.node.updateMany({
+    where: { countryCode: { notIn: countryCodes }, enabled: true },
+    data: { enabled: false },
+  });
+
+  if (disabled.count > 0) {
+    process.stdout.write(`Disabled ${disabled.count} node(s) missing from nodes.json\n`);
+  }
 };
 
 const provisionAll = async (backendIp: string | undefined): Promise<ProvisionResult[]> => {
@@ -53,6 +76,10 @@ const provisionAll = async (backendIp: string | undefined): Promise<ProvisionRes
 
     results.push(result);
     process.stdout.write(`  -> ${result.status}${result.error ? `: ${result.error}` : ''}\n`);
+  }
+
+  if (!results.map(prop('status')).includes('failed')) {
+    await pruneRemovedNodes(nodes.map(prop('countryCode')));
   }
 
   return results;

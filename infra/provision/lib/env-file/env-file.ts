@@ -1,4 +1,4 @@
-import { appendFile, readFile } from 'node:fs/promises';
+import { appendFile, readFile, writeFile } from 'node:fs/promises';
 
 const read = async (filePath: string): Promise<string> => {
   try {
@@ -41,4 +41,37 @@ export const appendEnvLine = async (
   const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
 
   await appendFile(filePath, `${separator}${key}=${value}\n`);
+};
+
+export const pruneEnvKeys = async (
+  filePath: string,
+  prefix: string,
+  keep: string[],
+): Promise<string[]> => {
+  const raw = await read(filePath);
+
+  if (raw.length === 0) {
+    return [];
+  }
+
+  const kept = new Set(keep);
+  const removed: string[] = [];
+
+  const lines = raw.split('\n').filter((line) => {
+    const key = line.trimEnd().split('=')[0];
+
+    if (!key.startsWith(prefix) || kept.has(key)) {
+      return true;
+    }
+
+    removed.push(key);
+
+    return false;
+  });
+
+  if (removed.length > 0) {
+    await writeFile(filePath, lines.join('\n'), 'utf8');
+  }
+
+  return removed;
 };
