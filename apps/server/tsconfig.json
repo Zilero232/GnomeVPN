@@ -8,8 +8,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "types": ["bun"],
+    "jsx": "react-jsx",
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "prisma.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "prisma.config.ts"],
   "exclude": ["node_modules", "generated"]
 }

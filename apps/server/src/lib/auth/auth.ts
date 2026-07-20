@@ -1,10 +1,13 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { bearer } from 'better-auth/plugins';
+import { createElement } from 'react';
 
 import { allowedOrigins } from '../../config/cors';
 import { validateEnv } from '../../config/env.schema';
 import { basePrisma } from '../../core';
+import { ChangeEmail, ResetPassword, sendEmail, VerifyEmail } from '../email';
+import { withClientCallback } from './auth-callback-url';
 
 const env = validateEnv(process.env);
 
@@ -13,7 +16,44 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: allowedOrigins,
-  emailAndPassword: { enabled: true, requireEmailVerification: false },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: 'Сброс пароля GnomeVPN',
+        react: createElement(ResetPassword, { url }),
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: false,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: 'Подтвердите почту GnomeVPN',
+        react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') }),
+      });
+    },
+  },
+  user: {
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, url, newEmail }) => {
+        await sendEmail({
+          to: user.email,
+          subject: 'Подтвердите смену почты GnomeVPN',
+          react: createElement(ChangeEmail, {
+            newEmail,
+            url: withClientCallback(url, '/account'),
+          }),
+        });
+      },
+    },
+  },
   databaseHooks: {
     user: {
       create: {

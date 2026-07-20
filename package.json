@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
     "@types/bcryptjs": "^3.0.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "fkill-cli": "^9.0.0",
     "husky": "^9.1.7",
     "kill-port": "^2.0.1",

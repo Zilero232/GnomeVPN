@@ -74,12 +74,37 @@ CORS_ORIGINS=https://gnomevpn.ru,tauri://localhost,http://tauri.localhost
 YOOKASSA_SHOP_ID=<из личного кабинета ЮKassa>
 YOOKASSA_SECRET_KEY=<оттуда же>
 YOOKASSA_RETURN_URL=https://gnomevpn.ru/account
-SUBSCRIPTION_PRICE_RUB=100
+# Автосписания ЮKassa подключает вручную по заявке в поддержку.
+YOOKASSA_RECURRING=false
+
+# Почта: подтверждение адреса, смена почты, сброс пароля.
+# Адрес в EMAIL_FROM обязан совпадать с SMTP_USER, иначе провайдер отклонит
+# письмо с ошибкой "Sender address rejected: not owned by auth user".
+SMTP_HOST=smtp.timeweb.ru
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=noreply@gnomevpn.ru
+SMTP_PASSWORD=<пароль почтового ящика>
+EMAIL_FROM=GnomeVPN <noreply@gnomevpn.ru>
+
+# Куда ведут ссылки из писем.
+CLIENT_URL=https://gnomevpn.ru
 
 # Имя переменной берётся из колонки node.wg_easy_api_key_env_var — по одной на узел.
 # Проверить, какие нужны: SELECT country, wg_easy_api_key_env_var FROM node;
 WG_KEY_DE=<пароль панели wg-easy на узле>
 ```
+
+Цены тарифов в `.env` не задаются — они живут в `PLANS` (`packages/schemas`),
+откуда их читает и сервер при списании, и лендинг при отрисовке.
+
+**Если в пароле есть `$`, его нужно удвоить: `$$`.** Docker Compose
+подставляет переменные внутри `.env`, и одиночный `$` съедается.
+
+Письма не заработают, пока у домена нет записей **SPF, DKIM и DMARC** —
+Gmail и mail.ru отправляют такие сообщения в спам или отклоняют совсем.
+Значения выдаёт почтовый провайдер. Пока SMTP не заполнен, регистрация и
+вход работают, а письма молча не отправляются (в лог пишется ошибка).
 
 Пароли генерируются так:
 
