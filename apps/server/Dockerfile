@@ -36,6 +36,10 @@ COPY --from=deps /app /app
 COPY packages/schemas ./packages/schemas
 COPY apps/server ./apps/server
 
+# `bun provision` ships this compose file to every VPN node over SSH, so the
+# template has to travel with the image that runs the script.
+COPY infra/wg-easy/docker-compose.yml ./infra/wg-easy/docker-compose.yml
+
 WORKDIR /app/apps/server
 
 # prisma.config.ts resolves DIRECT_URL through env(), which throws when unset.
