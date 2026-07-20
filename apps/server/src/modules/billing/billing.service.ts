@@ -10,7 +10,7 @@ import { makeYooKassaClient, YooKassaClient } from '../../lib';
 import { describePlan } from './lib';
 
 import type { BindCardResult, CheckoutResult, PlanId, WebhookEvent } from '@gnomevpn/schemas';
-import type { ActivateInput, AttachMethodInput } from './billing.types';
+import type { ActivateInput, AttachMethodInput, AutoRenewInput } from './billing.types';
 
 @Injectable()
 export class BillingService {
@@ -71,6 +71,14 @@ export class BillingService {
     return { confirmationUrl: payment.confirmationUrl };
   }
 
+  private resolveAutoRenew({ hasMethod, wasCancelled }: AutoRenewInput): boolean {
+    if (!this.isRecurringEnabled() || !hasMethod) {
+      return true;
+    }
+
+    return wasCancelled;
+  }
+
   private async activate({ userId, planId, method }: ActivateInput): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
@@ -84,25 +92,22 @@ export class BillingService {
 
     const plan = findPlan(planId);
     const currentPeriodEnd = subscription?.currentPeriodEnd;
-    const isStillActive = isPeriodActive(currentPeriodEnd);
 
-    const hasMethod = Boolean(method?.id ?? subscription?.yookassaPaymentMethodId);
-    const cancelAtPeriodEnd =
-      !this.isRecurringEnabled() || !hasMethod || (subscription?.cancelAtPeriodEnd ?? false);
+    const paidPlan = isPeriodActive(currentPeriodEnd) ? (subscription?.plan ?? plan.id) : plan.id;
 
     const data = {
       status: 'active' as const,
-      plan: isStillActive ? (subscription?.plan ?? plan.id) : plan.id,
+      plan: paidPlan,
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
-      cancelAtPeriodEnd,
+      cancelAtPeriodEnd: this.resolveAutoRenew({
+        hasMethod: Boolean(method?.id ?? subscription?.yookassaPaymentMethodId),
+        wasCancelled: subscription?.cancelAtPeriodEnd ?? false,
+      }),
       ...(method?.id
         ? { yookassaPaymentMethodId: method.id, paymentMethodTitle: method.title }
         : {}),
     };
 
-    // Upsert, not update: the row is created by a better-auth hook, and if that
-    // ever missed, a paid webhook would fail here with the payment already
-    // marked succeeded — money taken, access never granted, no retry.
     await this.prisma.subscription.upsert({
       where: { userId },
       create: { userId, ...data },
@@ -234,8 +239,6 @@ export class BillingService {
     });
   }
 
-  // YooKassa has no endpoint to revoke a saved method, so this only stops us
-  // from using it: the token stays alive on their side.
   async unbindCard(userId: string): Promise<void> {
     await this.prisma.subscription.update({
       where: { userId },

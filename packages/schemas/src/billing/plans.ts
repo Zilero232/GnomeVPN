@@ -20,8 +20,15 @@ export const LOWEST_MONTHLY_RUB = Math.round(
   Math.min(...PLANS.map((plan) => plan.priceRub / plan.months)),
 );
 
-export const findPlan = (id: z.infer<typeof planIdSchema>) =>
-  PLANS.find((plan) => plan.id === id) ?? PLANS[0];
+export const findPlan = (id: z.infer<typeof planIdSchema>) => {
+  const plan = PLANS.find((entry) => entry.id === id);
+
+  if (!plan) {
+    throw new Error(`Unknown plan: ${id}`);
+  }
+
+  return plan;
+};
 
 export const planDiscountPercent = (id: z.infer<typeof planIdSchema>): number => {
   const plan = findPlan(id);

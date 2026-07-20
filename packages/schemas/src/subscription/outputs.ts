@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { planIdSchema } from '../billing/plans';
 
 export const subscriptionStatusSchema = z.object({
-  status: z.enum(['active', 'expired', 'canceled']),
+  status: z.enum(['active', 'expired']),
   plan: planIdSchema,
   currentPeriodEnd: z.string().nullable(),
   cancelAtPeriodEnd: z.boolean(),

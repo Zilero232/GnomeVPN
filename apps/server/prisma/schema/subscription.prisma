@@ -1,7 +1,6 @@
 enum SubscriptionStatus {
   active
   expired
-  canceled
 }
 
 enum SubscriptionPlan {
@@ -19,7 +18,6 @@ model Subscription {
   currentPeriodEnd  DateTime?        @map("current_period_end") @db.Timestamptz(3)
   cancelAtPeriodEnd Boolean          @default(false) @map("cancel_at_period_end")
 
-  yookassaCustomerId      String? @map("yookassa_customer_id")
   yookassaPaymentMethodId String? @map("yookassa_payment_method_id")
   paymentMethodTitle      String? @map("payment_method_title")
   pendingPaymentMethodId  String? @unique @map("pending_payment_method_id")
