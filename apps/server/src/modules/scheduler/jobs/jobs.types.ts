@@ -8,13 +8,6 @@ export type PeerRow = {
   node: { wgEasyUrl: string; wgEasyApiKeyRef: string };
 };
 
-export type PeerAccessRow = {
-  userId: string;
-  user: {
-    subscription: { status: string; currentPeriodEnd: Date | null } | null;
-  };
-};
-
 export type ProbeNodeRow = {
   id: string;
   wgEasyUrl: string;

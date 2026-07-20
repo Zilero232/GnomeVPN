@@ -2,18 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { isBefore, subMilliseconds } from 'date-fns';
 
-import { resolveNodeApiKey } from '../../../common/lib';
+import { describeError, resolveNodeApiKey } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { WgEasyClient } from '../../../lib';
+import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../config';
 
 import type { PeerRow } from './jobs.types';
-
-const STALE_MS = 5 * 60_000;
-
-// A peer that has never handshaked is not idle — the user may have fetched the
-// config and not brought the tunnel up yet. Collecting it at STALE_MS revokes a
-// config the client still believes is valid, and it fails with no error.
-const NEVER_CONNECTED_GRACE_MS = 60 * 60_000;
 
 @Injectable()
 export class PeerGcJob {
@@ -39,7 +33,7 @@ export class PeerGcJob {
 
     if (!this.isStale(peer.createdAt, handshake)) {
       if (handshake && handshake.getTime() !== peer.lastHandshakeAt?.getTime()) {
-        await this.prisma.activePeer.update({
+        await this.prisma.peer.updateMany({
           where: { id: peer.id },
           data: { lastHandshakeAt: handshake },
         });
@@ -49,12 +43,14 @@ export class PeerGcJob {
     }
 
     await wg.deleteClient(peer.wgEasyClientId).catch(() => undefined);
-    await this.prisma.activePeer.delete({ where: { id: peer.id } });
+
+    await this.prisma.peer.deleteMany({ where: { id: peer.id } });
   }
 
   @Cron('*/2 * * * *')
   async run(): Promise<void> {
-    const peers = await this.prisma.activePeer.findMany({
+    const peers = await this.prisma.peer.findMany({
+      where: { kind: 'session' },
       select: {
         id: true,
         wgEasyClientId: true,
@@ -68,7 +64,7 @@ export class PeerGcJob {
 
     for (const result of results) {
       if (result.status === 'rejected') {
-        this.logger.warn(`Peer collection failed: ${String(result.reason)}`);
+        this.logger.warn(`Peer collection failed: ${describeError(result.reason)}`);
       }
     }
   }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { resolveNodeApiKey } from '../../../common/lib';
+import { describeError, resolveNodeApiKey } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { WgEasyClient } from '../../../lib';
 
@@ -40,7 +40,7 @@ export class NodeHealthJob {
 
     for (const result of results) {
       if (result.status === 'rejected') {
-        this.logger.warn(`Node probe failed: ${String(result.reason)}`);
+        this.logger.warn(`Node probe failed: ${describeError(result.reason)}`);
       }
     }
   }

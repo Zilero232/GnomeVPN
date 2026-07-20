@@ -10,3 +10,12 @@ export const tunnelConfigSchema = z.object({
   allowedIps: z.array(z.string().min(1)),
   persistentKeepalive: z.number().int().nonnegative(),
 });
+
+export const downloadedConfigSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  nodeId: z.string().min(1),
+  country: z.string().min(1),
+  countryCode: z.string().min(1),
+  createdAt: z.string(),
+});

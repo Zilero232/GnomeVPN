@@ -1,14 +1,18 @@
 import { api } from '../http';
+import { parseFileName } from './vpn.lib';
 
 import type {
   BindCardResult,
   CheckoutResult,
+  DownloadedConfig,
+  IssueConfigRequest,
   Node,
   PlanId,
   Release,
   SubscriptionStatus,
   TunnelConfig,
 } from '@gnomevpn/schemas';
+import type { ConfigDownload } from './vpn.types';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');
@@ -49,6 +53,24 @@ export const bindCard = async (): Promise<BindCardResult> => {
 
 export const unbindCard = async (): Promise<void> => {
   await api.post('/billing/unbind-card');
+};
+
+export const listConfigs = async (): Promise<DownloadedConfig[]> => {
+  const { data } = await api.get('/configs');
+  return data;
+};
+
+export const issueConfig = async (input: IssueConfigRequest): Promise<ConfigDownload> => {
+  const response = await api.post('/configs', input, { responseType: 'blob' });
+
+  return {
+    blob: response.data as Blob,
+    fileName: parseFileName(response.headers['content-disposition']),
+  };
+};
+
+export const revokeConfig = async (id: string): Promise<void> => {
+  await api.delete('/configs', { data: { id } });
 };
 
 export const getLatestRelease = async (): Promise<Release> => {

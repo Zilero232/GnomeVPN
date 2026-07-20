@@ -1,4 +1,10 @@
-export { connectInputSchema } from './inputs';
-export { tunnelConfigSchema } from './outputs';
+export { connectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
+export { downloadedConfigSchema, tunnelConfigSchema } from './outputs';
 
-export type { ConnectRequest, TunnelConfig } from './types';
+export type {
+  ConnectRequest,
+  DownloadedConfig,
+  IssueConfigRequest,
+  RevokeConfigRequest,
+  TunnelConfig,
+} from './types';

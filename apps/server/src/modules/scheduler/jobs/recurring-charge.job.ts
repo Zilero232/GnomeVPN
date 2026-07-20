@@ -4,16 +4,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { addHours, subHours } from 'date-fns';
 
+import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { PrismaService } from '../../../core';
 import { makeYooKassaClient, YooKassaClient } from '../../../lib';
 import { describeRenewal } from '../../billing';
+import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../config';
 
 import type { DueSubscription } from './jobs.types';
-
-const RENEW_WINDOW_HOURS = 24;
-
-const IN_FLIGHT_WINDOW_HOURS = 24;
 
 @Injectable()
 export class RecurringChargeJob {
@@ -87,7 +85,9 @@ export class RecurringChargeJob {
       try {
         await this.charge(subscription);
       } catch (error) {
-        this.logger.warn(`Recurring charge failed for ${subscription.userId}: ${String(error)}`);
+        this.logger.warn(
+          `Recurring charge failed for ${subscription.userId}: ${describeError(error)}`,
+        );
       }
     }
   }

@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { AppServiceUnavailableException } from '../../common/exceptions';
-import { resolveNodeApiKey } from '../../common/lib';
+import { AppBadRequestException, AppServiceUnavailableException } from '../../common/exceptions';
+import { describeError, resolveNodeApiKey } from '../../common/lib';
 import { PrismaService } from '../../core';
 import { WgEasyClient } from '../../lib';
 import { NodesService } from '../nodes';
+import { ALLOWED_IPS, CONFIG_LIMIT, KEEPALIVE, SESSION_PEER_NAME } from './config';
+import { configFileName, peerClientName, renderConfigFile } from './lib';
 
-import type { TunnelConfig } from '@gnomevpn/schemas';
-
-const ALLOWED_IPS = ['0.0.0.0/0', '::/0'];
-const KEEPALIVE = 25;
+import type { DownloadedConfig, TunnelConfig } from '@gnomevpn/schemas';
+import type { ConfigFile, IssueConfigInput, PeerRef } from './tunnel.types';
 
 @Injectable()
 export class TunnelService {
@@ -24,22 +24,24 @@ export class TunnelService {
     return new WgEasyClient({ baseUrl, apiKey: resolveNodeApiKey(apiKeyRef) });
   }
 
-  // Best effort: a node that is unreachable or missing its key must not fail
-  // the caller, or a country switch would break on the node being left behind.
-  private async releasePeer(nodeId: string, wgEasyClientId: string): Promise<void> {
+  private async releasePeer({ nodeId, wgEasyClientId }: PeerRef): Promise<boolean> {
     const node = await this.prisma.node.findUnique({
       where: { id: nodeId },
       select: { wgEasyUrl: true, wgEasyApiKeyRef: true },
     });
 
     if (!node) {
-      return;
+      return false;
     }
 
     try {
       await this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef).deleteClient(wgEasyClientId);
+
+      return true;
     } catch (error) {
-      this.logger.warn(`Failed to release peer ${wgEasyClientId}: ${String(error)}`);
+      this.logger.warn(`Failed to release peer ${wgEasyClientId}: ${describeError(error)}`);
+
+      return false;
     }
   }
 
@@ -47,33 +49,29 @@ export class TunnelService {
     const node = await this.nodes.getNodeForConnect(nodeId);
     const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef);
 
-    const existing = await this.prisma.activePeer.findUnique({ where: { userId } });
+    const existing = await this.prisma.peer.findUnique({
+      where: { userId_kind_name: { userId, kind: 'session', name: SESSION_PEER_NAME } },
+    });
 
     let created: Awaited<ReturnType<WgEasyClient['createClient']>>;
 
     try {
-      created = await wg.createClient(userId);
+      created = await wg.createClient(peerClientName({ userId, kind: 'session' }));
     } catch {
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wg-easy node unreachable');
     }
 
-    // The row is claimed before the old peer is removed: if this fails the user
-    // keeps a working tunnel, and the new client is rolled back. Removing first
-    // would leave them with nothing.
     try {
-      await this.prisma.activePeer.upsert({
-        where: { userId },
+      await this.prisma.peer.upsert({
+        where: { userId_kind_name: { userId, kind: 'session', name: SESSION_PEER_NAME } },
         create: {
           userId,
           nodeId,
+          kind: 'session',
+          name: SESSION_PEER_NAME,
           wgEasyClientId: created.clientId,
-          assignedIp: created.address,
         },
-        update: {
-          nodeId,
-          wgEasyClientId: created.clientId,
-          assignedIp: created.address,
-        },
+        update: { nodeId, wgEasyClientId: created.clientId, lastHandshakeAt: null },
       });
     } catch (error) {
       await wg.deleteClient(created.clientId).catch(() => undefined);
@@ -81,7 +79,7 @@ export class TunnelService {
     }
 
     if (existing) {
-      await this.releasePeer(existing.nodeId, existing.wgEasyClientId);
+      await this.releasePeer(existing);
     }
 
     return {
@@ -97,14 +95,140 @@ export class TunnelService {
   }
 
   async disconnect(userId: string): Promise<void> {
-    const existing = await this.prisma.activePeer.findUnique({ where: { userId } });
+    const existing = await this.prisma.peer.findUnique({
+      where: { userId_kind_name: { userId, kind: 'session', name: SESSION_PEER_NAME } },
+    });
 
     if (!existing) {
       return;
     }
 
-    await this.releasePeer(existing.nodeId, existing.wgEasyClientId);
+    await this.releasePeer(existing);
 
-    await this.prisma.activePeer.delete({ where: { userId } });
+    await this.prisma.peer.deleteMany({ where: { id: existing.id } });
+  }
+
+  async listConfigs(userId: string): Promise<DownloadedConfig[]> {
+    const rows = await this.prisma.peer.findMany({
+      where: { userId, kind: 'config' },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        nodeId: true,
+        createdAt: true,
+        node: { select: { country: true, countryCode: true } },
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name ?? '',
+      nodeId: row.nodeId,
+      country: row.node.country,
+      countryCode: row.node.countryCode,
+      createdAt: row.createdAt.toISOString(),
+    }));
+  }
+
+  async issueConfig({ userId, nodeId, name }: IssueConfigInput): Promise<ConfigFile> {
+    const node = await this.nodes.getNodeForConnect(nodeId);
+    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef);
+
+    const existing = await this.prisma.peer.findFirst({
+      where: { userId, kind: 'config', name: { equals: name, mode: 'insensitive' } },
+    });
+
+    const count = await this.prisma.peer.count({ where: { userId, kind: 'config' } });
+
+    if (!existing && count >= CONFIG_LIMIT) {
+      throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${CONFIG_LIMIT} configs`);
+    }
+
+    let created: Awaited<ReturnType<WgEasyClient['createClient']>>;
+
+    try {
+      created = await wg.createClient(peerClientName({ userId, kind: 'config', name }));
+    } catch {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wg-easy node unreachable');
+    }
+
+    try {
+      await (existing
+        ? this.prisma.peer.update({
+            where: { id: existing.id },
+            data: { nodeId, wgEasyClientId: created.clientId },
+          })
+        : this.prisma.peer.create({
+            data: { userId, nodeId, kind: 'config', name, wgEasyClientId: created.clientId },
+          }));
+    } catch (error) {
+      await wg.deleteClient(created.clientId).catch(() => undefined);
+      throw error;
+    }
+
+    if (existing) {
+      await this.releasePeer(existing);
+    }
+
+    return {
+      fileName: `${configFileName(node.countryCode, name)}.conf`,
+      content: renderConfigFile({
+        deviceName: name,
+        country: node.country,
+        config: {
+          privateKey: created.privateKey,
+          address: created.address,
+          dns: created.dns,
+          serverPublicKey: created.serverPublicKey,
+          presharedKey: created.presharedKey,
+          endpoint: node.publicEndpoint,
+          allowedIps: ALLOWED_IPS,
+          persistentKeepalive: KEEPALIVE,
+        },
+      }),
+    };
+  }
+
+  async revokeConfig(userId: string, id: string): Promise<void> {
+    const existing = await this.prisma.peer.findFirst({
+      where: { id, userId, kind: 'config' },
+      select: { id: true, nodeId: true, wgEasyClientId: true },
+    });
+
+    if (!existing) {
+      return;
+    }
+
+    if (!(await this.releasePeer(existing))) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Could not revoke the peer');
+    }
+
+    await this.prisma.peer.deleteMany({ where: { id: existing.id } });
+  }
+
+  async revokeAllConfigs(userId: string): Promise<void> {
+    const rows = await this.prisma.peer.findMany({
+      where: { userId, kind: 'config' },
+      select: { id: true, nodeId: true, wgEasyClientId: true },
+    });
+
+    const released: string[] = [];
+
+    for (const row of rows) {
+      if (await this.releasePeer(row)) {
+        released.push(row.id);
+      }
+    }
+
+    if (released.length > 0) {
+      await this.prisma.peer.deleteMany({ where: { id: { in: released } } });
+    }
+
+    if (released.length < rows.length) {
+      this.logger.warn(
+        `Kept ${rows.length - released.length} config row(s) for ${userId}: peers still live`,
+      );
+    }
   }
 }

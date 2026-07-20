@@ -1,0 +1,26 @@
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.field {
+  min-width: 0;
+}
+
+.submit {
+  height: 46px;
+  margin-bottom: 20px;
+}
+
+@media (width <= 640px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .submit {
+    width: 100%;
+    margin-bottom: 0;
+  }
+}
