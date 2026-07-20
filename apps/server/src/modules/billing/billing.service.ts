@@ -31,14 +31,10 @@ export class BillingService {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { plan: true, status: true, currentPeriodEnd: true },
+      select: { plan: true, currentPeriodEnd: true },
     });
 
-    if (
-      subscription?.status === 'active' &&
-      isPeriodActive(subscription.currentPeriodEnd) &&
-      subscription.plan !== plan.id
-    ) {
+    if (isPeriodActive(subscription?.currentPeriodEnd) && subscription?.plan !== plan.id) {
       throw new AppBadRequestException(
         'PLAN_CHANGE_LOCKED',
         'Plan cannot change while the current period runs',
@@ -96,7 +92,6 @@ export class BillingService {
     const paidPlan = isPeriodActive(currentPeriodEnd) ? (subscription?.plan ?? plan.id) : plan.id;
 
     const data = {
-      status: 'active' as const,
       plan: paidPlan,
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
       cancelAtPeriodEnd: this.resolveAutoRenew({

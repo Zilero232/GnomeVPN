@@ -74,9 +74,11 @@ export class RecurringChargeJob {
   async run(): Promise<void> {
     const due = await this.prisma.subscription.findMany({
       where: {
-        status: 'active',
         cancelAtPeriodEnd: false,
-        currentPeriodEnd: { lt: addHours(new Date(), RENEW_WINDOW_HOURS) },
+        currentPeriodEnd: {
+          gt: new Date(),
+          lt: addHours(new Date(), RENEW_WINDOW_HOURS),
+        },
       },
       select: { userId: true, savedCardId: true, plan: true },
     });

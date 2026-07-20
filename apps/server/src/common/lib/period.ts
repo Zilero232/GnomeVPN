@@ -10,3 +10,6 @@ export const nextPeriodEnd = ({ currentPeriodEnd, months }: PeriodInput): Date =
 
   return addMonths(base, months);
 };
+
+export const resolveStatus = (currentPeriodEnd: Date | null | undefined): 'active' | 'expired' =>
+  isPeriodActive(currentPeriodEnd) ? 'active' : 'expired';

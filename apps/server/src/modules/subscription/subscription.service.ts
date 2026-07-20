@@ -1,7 +1,7 @@
 import { DEFAULT_PLAN_ID } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 
-import { isPeriodActive } from '../../common/lib';
+import { isPeriodActive, resolveStatus } from '../../common/lib';
 import { AppConfigService } from '../../config/config.module';
 import { PrismaService } from '../../core';
 
@@ -17,10 +17,10 @@ export class SubscriptionService {
   async hasActiveAccess(userId: string): Promise<boolean> {
     const row = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { status: true, currentPeriodEnd: true },
+      select: { currentPeriodEnd: true },
     });
 
-    return row?.status === 'active' && isPeriodActive(row.currentPeriodEnd);
+    return isPeriodActive(row?.currentPeriodEnd);
   }
 
   async getStatus(userId: string): Promise<SubscriptionStatus> {
@@ -29,7 +29,6 @@ export class SubscriptionService {
     const row = await this.prisma.subscription.findUnique({
       where: { userId },
       select: {
-        status: true,
         plan: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
@@ -51,7 +50,7 @@ export class SubscriptionService {
     }
 
     return {
-      status: row.status,
+      status: resolveStatus(row.currentPeriodEnd),
       plan: row.plan,
       currentPeriodEnd: row.currentPeriodEnd ? row.currentPeriodEnd.toISOString() : null,
       cancelAtPeriodEnd: row.cancelAtPeriodEnd,

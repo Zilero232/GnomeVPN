@@ -1,8 +1,3 @@
-enum SubscriptionStatus {
-  active
-  expired
-}
-
 enum SubscriptionPlan {
   monthly
   halfYearly
@@ -10,9 +5,8 @@ enum SubscriptionPlan {
 }
 
 model Subscription {
-  id     String             @id @default(dbgenerated("gen_random_uuid()"))
-  userId String             @unique @map("user_id")
-  status SubscriptionStatus @default(expired)
+  id     String @id @default(dbgenerated("gen_random_uuid()"))
+  userId String @unique @map("user_id")
 
   plan              SubscriptionPlan @default(monthly)
   currentPeriodEnd  DateTime?        @map("current_period_end") @db.Timestamptz(3)
@@ -27,6 +21,7 @@ model Subscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([status, cancelAtPeriodEnd, currentPeriodEnd])
+  @@index([currentPeriodEnd])
+  @@index([cancelAtPeriodEnd, currentPeriodEnd])
   @@map("subscription")
 }

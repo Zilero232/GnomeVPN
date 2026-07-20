@@ -19,7 +19,7 @@ export const auth = betterAuth({
       create: {
         after: async (user) => {
           await basePrisma.subscription.create({
-            data: { userId: user.id, status: 'expired' },
+            data: { userId: user.id },
           });
         },
       },

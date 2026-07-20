@@ -6,8 +6,7 @@ import { map, pipe, unique } from 'remeda';
 import { PrismaService } from '../../../core';
 import { TunnelService } from '../../tunnel';
 import { CONFIG_GRACE_HOURS } from '../config';
-
-import type { Prisma } from '../../../../generated';
+import { lapsedBefore } from '../lib';
 
 @Injectable()
 export class ExpiredAccessJob {
@@ -18,27 +17,9 @@ export class ExpiredAccessJob {
     private readonly tunnel: TunnelService,
   ) {}
 
-  private lapsedBefore(moment: Date): Prisma.UserWhereInput {
-    return {
-      OR: [
-        { subscription: null },
-        {
-          subscription: {
-            updatedAt: { lt: moment },
-            OR: [
-              { status: { not: 'active' } },
-              { currentPeriodEnd: null },
-              { currentPeriodEnd: { lt: moment } },
-            ],
-          },
-        },
-      ],
-    };
-  }
-
   private async revokeExpiredSessions(): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
-      where: { kind: 'session', user: this.lapsedBefore(new Date()) },
+      where: { kind: 'session', user: lapsedBefore(new Date()) },
       select: { userId: true },
     });
 
@@ -53,7 +34,7 @@ export class ExpiredAccessJob {
     const configs = await this.prisma.peer.findMany({
       where: {
         kind: 'config',
-        user: this.lapsedBefore(subHours(new Date(), CONFIG_GRACE_HOURS)),
+        user: lapsedBefore(subHours(new Date(), CONFIG_GRACE_HOURS)),
       },
       select: { userId: true },
     });
