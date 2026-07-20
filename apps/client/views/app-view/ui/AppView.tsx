@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { UpdateGate } from '@/features/app/check-update';
+import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
 import { env } from '@/shared/config';
@@ -94,6 +95,8 @@ export const AppView = () => {
       </header>
 
       <div className={s.body}>
+        <ServiceRepairBanner />
+
         <ConnectButton
           status={status}
           disabled={hasAccess && (!effectiveNodeId || (!canConnect && status === 'disconnected'))}

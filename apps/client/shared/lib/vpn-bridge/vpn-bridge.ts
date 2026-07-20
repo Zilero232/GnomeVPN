@@ -58,3 +58,11 @@ export const isVpnServiceAvailable = async (): Promise<boolean> => {
 
   return invoke<boolean>('vpn_service_available');
 };
+
+export const repairVpnService = async (): Promise<void> => {
+  if (!isTauri()) {
+    return;
+  }
+
+  await invoke('service_repair');
+};

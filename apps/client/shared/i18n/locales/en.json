@@ -279,5 +279,12 @@
     "openReleases": "Open releases",
     "version": "Version {version}",
     "releaseNotes": "Release notes"
+  },
+  "service": {
+    "title": "VPN service is not running",
+    "description": "Connections will not work without it. Start it — administrator rights are required.",
+    "repair": "Start service",
+    "repairing": "Starting…",
+    "repairFailed": "Could not start the service"
   }
 }
