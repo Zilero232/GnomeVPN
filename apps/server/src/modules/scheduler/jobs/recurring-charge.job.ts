@@ -1,12 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { addHours } from 'date-fns';
 
-import { AppConfigService } from '../../config/config.module';
-import { PrismaService } from '../../core';
-import { YooKassaClient } from '../../lib';
+import { AppConfigService } from '../../../config/config.module';
+import { PrismaService } from '../../../core';
+import { YooKassaClient } from '../../../lib';
 
-const RENEW_WINDOW_MS = 24 * 3_600_000;
+const RENEW_WINDOW_HOURS = 24;
 const DESCRIPTION = 'Продление подписки GnomeVPN';
 
 @Injectable()
@@ -29,7 +30,7 @@ export class RecurringChargeJob {
       where: {
         status: 'active',
         cancelAtPeriodEnd: false,
-        currentPeriodEnd: { lt: new Date(Date.now() + RENEW_WINDOW_MS) },
+        currentPeriodEnd: { lt: addHours(new Date(), RENEW_WINDOW_HOURS) },
       },
       select: { userId: true, yookassaPaymentMethodId: true },
     });

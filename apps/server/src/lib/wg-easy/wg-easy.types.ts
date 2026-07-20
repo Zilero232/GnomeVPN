@@ -1,3 +1,8 @@
+export type WgEasyClientOptions = {
+  baseUrl: string;
+  apiKey: string;
+};
+
 export type CreateClientResult = {
   clientId: string;
   privateKey: string;

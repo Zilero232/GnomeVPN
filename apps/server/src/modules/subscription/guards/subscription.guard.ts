@@ -1,7 +1,7 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 
-import { AppPaymentRequiredException } from '../../common/exceptions';
-import { SubscriptionService } from './subscription.service';
+import { AppPaymentRequiredException } from '../../../common/exceptions';
+import { SubscriptionService } from '../subscription.service';
 
 import type { UserSession } from '@thallesp/nestjs-better-auth';
 

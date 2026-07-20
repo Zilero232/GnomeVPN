@@ -5,4 +5,5 @@ export type {
   CreatePaymentInput,
   CreatePaymentResult,
   PaymentInfo,
+  YooKassaClientOptions,
 } from './yookassa.types';

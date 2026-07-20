@@ -3,6 +3,13 @@ export type YooKassaClientOptions = {
   secretKey: string;
 };
 
+export type PaymentResponse = {
+  id: string;
+  status: string;
+  confirmation?: { confirmation_url?: string };
+  payment_method?: { id?: string };
+};
+
 export type CreatePaymentInput = {
   amountRub: number;
   description: string;

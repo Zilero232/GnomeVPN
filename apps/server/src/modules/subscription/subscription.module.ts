@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
+import { SubscriptionGuard } from './guards';
 import { SubscriptionController } from './subscription.controller';
-import { SubscriptionGuard } from './subscription.guard';
 import { SubscriptionService } from './subscription.service';
 
 @Module({

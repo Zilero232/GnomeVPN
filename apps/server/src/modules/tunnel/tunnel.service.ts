@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { PrismaService } from '../../core';
 import { WgEasyClient } from '../../lib';
-import { NodesService } from '../nodes/nodes.service';
+import { NodesService } from '../nodes';
 
 import type { TunnelConfig } from '@gnomevpn/schemas';
 

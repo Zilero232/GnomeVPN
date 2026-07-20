@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { PrismaService } from '../../core';
-import { WgEasyClient } from '../../lib';
+import { PrismaService } from '../../../core';
+import { WgEasyClient } from '../../../lib';
 
 @Injectable()
 export class NodeHealthJob {

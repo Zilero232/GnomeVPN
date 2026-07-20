@@ -1,6 +1,6 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 
-import { AppForbiddenException } from '../../common/exceptions';
+import { AppForbiddenException } from '../../../common/exceptions';
 
 const ALLOWED_PREFIXES = [
   '185.71.76.',

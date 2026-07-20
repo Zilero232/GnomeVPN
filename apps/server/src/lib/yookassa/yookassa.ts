@@ -3,18 +3,12 @@ import type {
   CreatePaymentInput,
   CreatePaymentResult,
   PaymentInfo,
+  PaymentResponse,
   YooKassaClientOptions,
 } from './yookassa.types';
 
 const API_URL = 'https://api.yookassa.ru/v3';
 const CURRENCY = 'RUB';
-
-type PaymentResponse = {
-  id: string;
-  status: string;
-  confirmation?: { confirmation_url?: string };
-  payment_method?: { id?: string };
-};
 
 export class YooKassaClient {
   private readonly shopId: string;

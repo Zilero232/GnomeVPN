@@ -1,8 +1,8 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { SubscriptionGuard } from '../subscription/subscription.guard';
+import { CurrentUser } from '../../common/decorators';
+import { SubscriptionGuard } from '../subscription';
 import { ConnectDto, TunnelConfigDto } from './dto/tunnel.dto';
 import { TunnelService } from './tunnel.service';
 

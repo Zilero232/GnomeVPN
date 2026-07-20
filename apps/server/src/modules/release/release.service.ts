@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AppServiceUnavailableException } from '../../common/exceptions';
 
 import type { Release, ReleaseAsset, ReleasePlatform } from '@gnomevpn/schemas';
+import type { GithubRelease } from './release.types';
 
 const GITHUB_RELEASE_URL = 'https://api.github.com/repos/Zilero232/GnomeVPN/releases/latest';
 
@@ -13,19 +14,6 @@ const CACHE_TTL_MS = 10 * 60_000;
 const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
   exe: 'windows',
   msi: 'windows',
-};
-
-type GithubAsset = {
-  name: string;
-  size: number;
-  browser_download_url: string;
-};
-
-type GithubRelease = {
-  tag_name: string;
-  html_url: string;
-  published_at: string | null;
-  assets: GithubAsset[];
 };
 
 @Injectable()

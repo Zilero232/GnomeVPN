@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { NodesModule } from '../nodes/nodes.module';
-import { SubscriptionModule } from '../subscription/subscription.module';
+import { NodesModule } from '../nodes';
+import { SubscriptionModule } from '../subscription';
 import { TunnelController } from './tunnel.controller';
 import { TunnelService } from './tunnel.service';
 

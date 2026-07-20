@@ -1,3 +1,7 @@
 export { WgEasyClient } from './wg-easy';
 
-export type { CreateClientResult, WgEasyClientRow } from './wg-easy.types';
+export type {
+  CreateClientResult,
+  WgEasyClientOptions,
+  WgEasyClientRow,
+} from './wg-easy.types';

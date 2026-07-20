@@ -1,12 +1,12 @@
 import { parseIniValue } from './wg-easy-ini';
 
-import type { CreateClientResult, WgEasyClientRow } from './wg-easy.types';
+import type { CreateClientResult, WgEasyClientOptions, WgEasyClientRow } from './wg-easy.types';
 
 export class WgEasyClient {
   private readonly baseUrl: string;
   private readonly apiKey: string;
 
-  constructor(opts: { baseUrl: string; apiKey: string }) {
+  constructor(opts: WgEasyClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.apiKey = opts.apiKey;
   }

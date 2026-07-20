@@ -8,24 +8,35 @@ Guidance for the API. Extends the root [../../CLAUDE.md](../../CLAUDE.md); those
 
 ```text
 src/
-├── modules/         # one folder per domain: module + controller + service + dto/
-│   ├── auth/        # better-auth handler
-│   ├── billing/     # YooKassa checkout and webhooks
+├── modules/         # one folder per domain
+│   ├── auth/        # better-auth module wiring
+│   ├── billing/     # YooKassa checkout and webhooks — guards/
 │   ├── health/      # /health — also probes the database
-│   ├── nodes/       # public node list with health status
+│   ├── nodes/       # public node list with health status — lib/
 │   ├── release/     # latest desktop release, proxied from GitHub
-│   ├── scheduler/   # cron jobs
-│   ├── subscription/
+│   ├── scheduler/   # cron jobs — jobs/
+│   ├── subscription/# guards/
 │   └── tunnel/      # issues WireGuard configs
-├── lib/             # external integrations: wg-easy, yookassa
+├── lib/             # external integrations: auth, wg-easy, yookassa
 ├── core/            # Prisma service
-├── common/          # exceptions, filters, guards
+├── common/          # exceptions, filters, decorators
 └── config/          # env schema (Zod)
 ```
 
 ## Module convention
 
-A module is `x.module.ts` + `x.controller.ts` + `x.service.ts` + `dto/`. Controllers stay thin: validate, delegate, return. Business logic lives in the service.
+A module is `x.module.ts` + `x.controller.ts` + `x.service.ts`, plus `dto/`, `guards/`, `lib/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in the service.
+
+Every module has an `index.ts` — its public API. **Import from the barrel across module boundaries**, never reach into another module's files:
+
+```ts
+import { SubscriptionGuard } from '../subscription';       // yes
+import { SubscriptionGuard } from '../subscription/guards/subscription.guard'; // no
+```
+
+Inside a module, relative paths are fine. The barrel exports only what other modules legitimately need — a controller or a DTO has no business being imported elsewhere.
+
+The better-auth instance lives in `lib/auth/`, not in `modules/auth/`: it is configuration for an external library, and `modules/auth/` only wires it into Nest.
 
 DTOs come from shared schemas:
 

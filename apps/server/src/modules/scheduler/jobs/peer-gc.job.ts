@@ -1,18 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 
-import { PrismaService } from '../../core';
-import { WgEasyClient } from '../../lib';
+import { PrismaService } from '../../../core';
+import { WgEasyClient } from '../../../lib';
+
+import type { PeerRow } from './jobs.types';
 
 const STALE_MS = 5 * 60_000;
-
-type PeerRow = {
-  id: string;
-  wgEasyClientId: string;
-  createdAt: Date;
-  lastHandshakeAt: Date | null;
-  node: { wgEasyUrl: string; wgEasyApiKeyRef: string };
-};
 
 @Injectable()
 export class PeerGcJob {

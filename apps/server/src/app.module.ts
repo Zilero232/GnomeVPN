@@ -2,17 +2,17 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { AllExceptionsFilter } from './common/filters';
 import { AppConfigModule } from './config/config.module';
 import { PrismaModule } from './core';
-import { AuthModule } from './modules/auth/auth.module';
-import { BillingModule } from './modules/billing/billing.module';
-import { HealthModule } from './modules/health/health.module';
-import { NodesModule } from './modules/nodes/nodes.module';
-import { ReleaseModule } from './modules/release/release.module';
-import { SchedulerModule } from './modules/scheduler/scheduler.module';
-import { SubscriptionModule } from './modules/subscription/subscription.module';
-import { TunnelModule } from './modules/tunnel/tunnel.module';
+import { AuthModule } from './modules/auth';
+import { BillingModule } from './modules/billing';
+import { HealthModule } from './modules/health';
+import { NodesModule } from './modules/nodes';
+import { ReleaseModule } from './modules/release';
+import { SchedulerModule } from './modules/scheduler';
+import { SubscriptionModule } from './modules/subscription';
+import { TunnelModule } from './modules/tunnel';
 
 @Module({
   imports: [

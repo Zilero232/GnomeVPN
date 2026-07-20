@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
+import { addMonths, isAfter } from 'date-fns';
 
 import { AppBadRequestException } from '../../common/exceptions';
 import { AppConfigService } from '../../config/config.module';
@@ -26,14 +27,6 @@ export class BillingService {
 
   private priceRub(): number {
     return this.config.get('SUBSCRIPTION_PRICE_RUB');
-  }
-
-  private addMonth(from: Date): Date {
-    const next = new Date(from);
-
-    next.setMonth(next.getMonth() + 1);
-
-    return next;
   }
 
   async createCheckout(userId: string): Promise<CheckoutResult> {
@@ -72,13 +65,13 @@ export class BillingService {
 
     const now = new Date();
     const current = subscription?.currentPeriodEnd;
-    const base = current && current.getTime() > now.getTime() ? current : now;
+    const base = current && isAfter(current, now) ? current : now;
 
     await this.prisma.subscription.update({
       where: { userId },
       data: {
         status: 'active',
-        currentPeriodEnd: this.addMonth(base),
+        currentPeriodEnd: addMonths(base, 1),
         ...(paymentMethodId ? { yookassaPaymentMethodId: paymentMethodId } : {}),
       },
     });

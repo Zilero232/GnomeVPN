@@ -1,15 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { PrismaService } from '../../core';
-import { TunnelService } from '../tunnel/tunnel.service';
+import { PrismaService } from '../../../core';
+import { TunnelService } from '../../tunnel';
 
-type PeerAccessRow = {
-  userId: string;
-  user: {
-    subscription: { status: string; currentPeriodEnd: Date | null } | null;
-  };
-};
+import type { PeerAccessRow } from './jobs.types';
 
 @Injectable()
 export class ExpiredAccessJob {

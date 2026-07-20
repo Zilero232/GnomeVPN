@@ -2,10 +2,10 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { Public } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentUser } from '../../common/decorators';
 import { BillingService } from './billing.service';
 import { CheckoutResultDto, WebhookEventDto } from './dto/billing.dto';
-import { WebhookIpGuard } from './webhook-ip.guard';
+import { WebhookIpGuard } from './guards';
 
 @Controller('billing')
 export class BillingController {
