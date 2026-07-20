@@ -5,6 +5,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { CurrentUser } from '../../common/decorators';
 import { BillingService } from './billing.service';
 import {
+  BindCardDto,
   BindCardResultDto,
   CheckoutResultDto,
   CreateCheckoutDto,
@@ -19,7 +20,7 @@ export class BillingController {
   @Post('checkout')
   @ZodResponse({ type: CheckoutResultDto })
   createCheckout(@Body() body: CreateCheckoutDto, @CurrentUser() userId: string) {
-    return this.billing.createCheckout(userId, body.planId);
+    return this.billing.createCheckout(userId, body.planId, body.client);
   }
 
   @Post('cancel')
@@ -36,8 +37,8 @@ export class BillingController {
 
   @Post('bind-card')
   @ZodResponse({ type: BindCardResultDto })
-  bindCard(@CurrentUser() userId: string) {
-    return this.billing.bindCard(userId);
+  bindCard(@Body() body: BindCardDto, @CurrentUser() userId: string) {
+    return this.billing.bindCard(userId, body.client);
   }
 
   @Post('unbind-card')

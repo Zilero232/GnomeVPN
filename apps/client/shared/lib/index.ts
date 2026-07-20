@@ -15,9 +15,16 @@ export {
 } from './app-settings';
 export { logger } from './logger';
 export { notify } from './notifications';
+export { openExternal } from './open-external';
 export { settleAll } from './settle';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
-export { isVpnServiceAvailable, vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
+export {
+  isVpnServiceAvailable,
+  repairVpnService,
+  vpnConnect,
+  vpnDisconnect,
+  vpnStatus,
+} from './vpn-bridge';
 export {
   closeMainWindow,
   hideMainWindow,

@@ -1,4 +1,9 @@
-export { createCheckoutSchema, webhookEventSchema } from './inputs';
+export {
+  bindCardSchema,
+  checkoutClientSchema,
+  createCheckoutSchema,
+  webhookEventSchema,
+} from './inputs';
 export { bindCardResultSchema, checkoutResultSchema } from './outputs';
 export {
   DEFAULT_PLAN_ID,
@@ -11,7 +16,9 @@ export {
 } from './plans';
 
 export type {
+  BindCardInput,
   BindCardResult,
+  CheckoutClient,
   CheckoutResult,
   CreateCheckoutInput,
   Plan,

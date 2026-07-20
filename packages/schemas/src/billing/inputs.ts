@@ -15,6 +15,13 @@ export const webhookEventSchema = z.object({
   }),
 });
 
+export const checkoutClientSchema = z.enum(['web', 'desktop']);
+
 export const createCheckoutSchema = z.object({
   planId: planIdSchema,
+  client: checkoutClientSchema.default('web'),
+});
+
+export const bindCardSchema = z.object({
+  client: checkoutClientSchema.default('web'),
 });

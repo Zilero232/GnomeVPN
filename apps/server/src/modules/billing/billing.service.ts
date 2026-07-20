@@ -9,7 +9,13 @@ import { PrismaService } from '../../core';
 import { makeYooKassaClient, YooKassaClient } from '../../lib';
 import { describePlan } from './lib';
 
-import type { BindCardResult, CheckoutResult, PlanId, WebhookEvent } from '@gnomevpn/schemas';
+import type {
+  BindCardResult,
+  CheckoutClient,
+  CheckoutResult,
+  PlanId,
+  WebhookEvent,
+} from '@gnomevpn/schemas';
 import type { ActivateInput, AttachMethodInput, AutoRenewInput } from './billing.types';
 
 @Injectable()
@@ -27,7 +33,17 @@ export class BillingService {
     return this.config.get('YOOKASSA_RECURRING');
   }
 
-  async createCheckout(userId: string, planId: PlanId): Promise<CheckoutResult> {
+  private returnUrlFor(client: CheckoutClient): string {
+    return client === 'desktop'
+      ? this.config.get('YOOKASSA_RETURN_URL_DESKTOP')
+      : this.config.get('YOOKASSA_RETURN_URL');
+  }
+
+  async createCheckout(
+    userId: string,
+    planId: PlanId,
+    client: CheckoutClient,
+  ): Promise<CheckoutResult> {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
@@ -44,7 +60,7 @@ export class BillingService {
     const payment = await this.makeClient().createPayment({
       amountRub: plan.priceRub,
       description: describePlan(plan),
-      returnUrl: this.config.get('YOOKASSA_RETURN_URL'),
+      returnUrl: this.returnUrlFor(client),
       idempotenceKey: randomUUID(),
       savePaymentMethod: this.isRecurringEnabled(),
     });
@@ -185,7 +201,7 @@ export class BillingService {
     await this.setAutoRenew(userId, true);
   }
 
-  async bindCard(userId: string): Promise<BindCardResult> {
+  async bindCard(userId: string, client: CheckoutClient): Promise<BindCardResult> {
     if (!this.isRecurringEnabled()) {
       throw new AppBadRequestException(
         'RECURRING_UNAVAILABLE',
@@ -194,7 +210,7 @@ export class BillingService {
     }
 
     const method = await this.makeClient().bindPaymentMethod({
-      returnUrl: this.config.get('YOOKASSA_RETURN_URL'),
+      returnUrl: this.returnUrlFor(client),
       idempotenceKey: randomUUID(),
     });
 

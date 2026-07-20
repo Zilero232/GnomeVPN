@@ -13,7 +13,9 @@
     "notification:default",
     "autostart:default",
     "store:default",
+    "deep-link:default",
 
+    "core:event:default",
     "core:tray:default",
     "core:menu:default",
 

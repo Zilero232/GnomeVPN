@@ -3,6 +3,7 @@ import { parseFileName } from './vpn.lib';
 
 import type {
   BindCardResult,
+  CheckoutClient,
   CheckoutResult,
   DownloadedConfig,
   IssueConfigRequest,
@@ -33,8 +34,11 @@ export const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
   return data;
 };
 
-export const createCheckout = async (planId: PlanId): Promise<CheckoutResult> => {
-  const { data } = await api.post('/billing/checkout', { planId });
+export const createCheckout = async (
+  planId: PlanId,
+  client: CheckoutClient,
+): Promise<CheckoutResult> => {
+  const { data } = await api.post('/billing/checkout', { planId, client });
   return data;
 };
 
@@ -46,8 +50,8 @@ export const resumeAutoRenew = async (): Promise<void> => {
   await api.post('/billing/resume');
 };
 
-export const bindCard = async (): Promise<BindCardResult> => {
-  const { data } = await api.post('/billing/bind-card');
+export const bindCard = async (client: CheckoutClient): Promise<BindCardResult> => {
+  const { data } = await api.post('/billing/bind-card', { client });
   return data;
 };
 
