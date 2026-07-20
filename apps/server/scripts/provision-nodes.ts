@@ -3,22 +3,30 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isNonNullish, prop } from 'remeda';
 
-import { upsertNode } from '../../apps/server/scripts/lib/upsert-node';
-import { basePrisma } from '../../apps/server/src/core';
-import { WgEasyClient } from '../../apps/server/src/lib/wg-easy';
+import { basePrisma } from '../src/core';
+import { WgEasyClient } from '../src/lib/wg-easy';
 import { pruneEnvKeys } from './lib/env-file';
 import { loadNodesConfig } from './lib/nodes-config';
 import { provisionHost } from './lib/provision-host';
+import { upsertNode } from './lib/upsert-node';
 
-import type { PrismaLike } from '../../apps/server/scripts/lib/upsert-node';
 import type { ProvisionResult } from './lib/provision-host';
+import type { PrismaLike } from './lib/upsert-node';
 
 const prisma = basePrisma as unknown as PrismaLike;
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const NODES_CONFIG_PATH = resolve(HERE, 'nodes.json');
-const WG_EASY_COMPOSE_PATH = resolve(HERE, '..', 'wg-easy', 'docker-compose.yml');
-const SERVER_ENV_PATH = resolve(HERE, '..', '..', 'apps', 'server', '.env');
+const WG_EASY_COMPOSE_PATH = resolve(
+  HERE,
+  '..',
+  '..',
+  '..',
+  'infra',
+  'wg-easy',
+  'docker-compose.yml',
+);
+const SERVER_ENV_PATH = resolve(HERE, '..', '.env');
 
 const BACKEND_IP_FLAG = '--backend-ip=';
 const WG_KEY_PREFIX = 'WG_KEY_';

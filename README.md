@@ -164,7 +164,7 @@ Adding a country is one command. It installs Docker, brings up wg-easy, opens th
 bun run provision:nodes
 ```
 
-Node list lives in `infra/provision/nodes.json`.
+Node list lives in `apps/server/scripts/nodes.json`. Provisioning is run by hand from a machine that can reach the nodes over SSH — it is not part of CI.
 
 <br/>
 

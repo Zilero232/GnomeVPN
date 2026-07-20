@@ -19,7 +19,7 @@
     "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
-    "provision:nodes": "bun --env-file apps/server/.env infra/provision/provision-nodes.ts",
+    "provision:nodes": "bun --env-file apps/server/.env apps/server/scripts/provision-nodes.ts",
     "release:patch": "npm version patch --no-git-tag-version",
     "release:minor": "npm version minor --no-git-tag-version",
     "release:major": "npm version major --no-git-tag-version",

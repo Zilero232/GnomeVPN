@@ -1,9 +1,5 @@
-import type {
-  PrismaLike,
-  UpsertNodeInput,
-  UpsertNodeResult,
-} from '../../../../apps/server/scripts/lib/upsert-node';
 import type { SshClient } from '../ssh-client';
+import type { PrismaLike, UpsertNodeInput, UpsertNodeResult } from '../upsert-node';
 
 export type ProvisionStatus = 'provisioned' | 'updated' | 'failed';
 
