@@ -3,31 +3,47 @@
 import { clsx } from 'clsx';
 import { RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useCheckUpdate } from '../model/use-check-update';
+import { useUpdateCheck } from '../model/hooks';
+import { UpdateDialog } from './components';
 
 import s from './CheckUpdateButton.module.scss';
 
 export const CheckUpdateButton = () => {
   const t = useTranslations('update');
-  const { isPending, mutate } = useCheckUpdate();
+  const { data: update, isFetching, refetch } = useUpdateCheck(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const onClick = () => {
-    mutate(undefined, {
-      onSuccess: (version) => {
-        if (!version) {
-          toast.success(t('upToDate'));
-        }
-      },
-      onError: () => toast.error(t('failed')),
-    });
+  const onClick = async () => {
+    const { data, isError } = await refetch();
+
+    if (isError) {
+      toast.error(t('failed'));
+
+      return;
+    }
+
+    if (data) {
+      setIsDialogOpen(true);
+
+      return;
+    }
+
+    toast.success(t('upToDate'));
   };
 
   return (
-    <button className={s.root} disabled={isPending} type="button" onClick={onClick}>
-      <RefreshCw className={clsx(s.icon, isPending && s.spinning)} size={14} />
-      {isPending ? t('checking') : t('check')}
-    </button>
+    <>
+      <button className={s.root} disabled={isFetching} type="button" onClick={onClick}>
+        <RefreshCw className={clsx(s.icon, isFetching && s.spinning)} size={14} />
+        {isFetching ? t('checking') : t('check')}
+      </button>
+
+      {update && (
+        <UpdateDialog isOpen={isDialogOpen} update={update} onOpenChange={setIsDialogOpen} />
+      )}
+    </>
   );
 };
