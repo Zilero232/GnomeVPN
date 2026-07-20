@@ -109,13 +109,17 @@ jobs:
             docker-compose.yml \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/docker-compose.yml"
 
+      # Only our own images are pulled. postgres comes from Docker Hub, which
+      # rate-limits anonymous pulls per IP — and a VPS shares that IP with
+      # every other tenant, so a routine deploy can fail with a 429 on an
+      # image that has not changed since the last one.
       - name: Pull images and restart on VPS
         run: |
           ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             "set -e && \
              cd '${{ secrets.DEPLOY_PATH }}' && \
-             docker compose pull && \
+             docker compose pull web server && \
              docker compose up -d && \
              docker image prune -f"
 
