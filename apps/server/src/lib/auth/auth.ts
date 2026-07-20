@@ -13,7 +13,7 @@ const env = validateEnv(process.env);
 
 export const auth = betterAuth({
   basePath: '/auth',
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.API_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: allowedOrigins,
   emailAndPassword: {

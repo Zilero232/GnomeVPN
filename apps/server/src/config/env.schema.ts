@@ -6,7 +6,7 @@ export const envSchema = z.object({
   DATABASE_URL: z.url(),
   DIRECT_URL: z.url(),
   BETTER_AUTH_SECRET: z.string().min(1),
-  BETTER_AUTH_URL: z.url(),
+  API_URL: z.url(),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   YOOKASSA_SHOP_ID: z.string().default(''),
   YOOKASSA_SECRET_KEY: z.string().default(''),
@@ -28,6 +28,8 @@ export const envSchema = z.object({
   DEV_EMAIL_OVERRIDE: z.email().optional(),
 
   CLIENT_URL: z.url().default('http://localhost:3000'),
+
+  GITHUB_TOKEN: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
