@@ -9,17 +9,17 @@ const main = async () => {
   const country = process.env.SEED_COUNTRY ?? 'Germany';
   const countryCode = process.env.SEED_COUNTRY_CODE ?? 'DE';
   const city = process.env.SEED_CITY;
-  const publicEndpoint = process.env.SEED_ENDPOINT;
+  const wireguardEndpoint = process.env.SEED_ENDPOINT;
   const wgEasyUrl = process.env.SEED_WG_EASY_URL;
-  const wgEasyApiKeyRef = process.env.SEED_WG_EASY_KEY_REF ?? 'WG_EASY_KEY_DE';
+  const wgEasyApiKeyEnvVar = process.env.SEED_WG_EASY_KEY_REF ?? 'WG_EASY_KEY_DE';
 
-  if (!publicEndpoint || !wgEasyUrl) {
+  if (!wireguardEndpoint || !wgEasyUrl) {
     throw new Error('SEED_ENDPOINT and SEED_WG_EASY_URL are required');
   }
 
-  if (!process.env[wgEasyApiKeyRef]) {
+  if (!process.env[wgEasyApiKeyEnvVar]) {
     process.stdout.write(
-      `Warning: ${wgEasyApiKeyRef} is not set in this environment; connect will fail with NODE_UNAVAILABLE until it is.\n`,
+      `Warning: ${wgEasyApiKeyEnvVar} is not set in this environment; connect will fail with NODE_UNAVAILABLE until it is.\n`,
     );
   }
 
@@ -27,13 +27,13 @@ const main = async () => {
     country,
     countryCode,
     city,
-    publicEndpoint,
+    wireguardEndpoint,
     wgEasyUrl,
-    wgEasyApiKeyRef,
+    wgEasyApiKeyEnvVar,
   });
 
   process.stdout.write(
-    `${result.wasExisting ? 'Updated' : 'Seeded'} node ${result.id} (${country}, ${publicEndpoint})\n`,
+    `${result.wasExisting ? 'Updated' : 'Seeded'} node ${result.id} (${country}, ${wireguardEndpoint})\n`,
   );
 
   await basePrisma.$disconnect();

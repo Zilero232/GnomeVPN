@@ -5,12 +5,12 @@ model Node {
   countryCode String  @map("country_code")
   city        String?
 
-  publicEndpoint  String @map("public_endpoint")
-  wgEasyUrl       String @map("wg_easy_url")
-  wgEasyApiKeyRef String @map("wg_easy_api_key_ref")
+  wireguardEndpoint  String @map("wireguard_endpoint")
+  wgEasyUrl          String @map("wg_easy_url")
+  wgEasyApiKeyEnvVar String @map("wg_easy_api_key_env_var")
 
-  enabled       Boolean   @default(true)
-  sortOrder     Int       @default(0) @map("sort_order")
+  isAvailable   Boolean   @default(true) @map("is_available")
+  displayOrder  Int       @default(0) @map("display_order")
   lastHealthyAt DateTime? @map("last_healthy_at") @db.Timestamptz(3)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

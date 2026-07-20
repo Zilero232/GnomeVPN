@@ -55,8 +55,8 @@ const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
   }
 
   const disabled = await basePrisma.node.updateMany({
-    where: { countryCode: { notIn: countryCodes }, enabled: true },
-    data: { enabled: false },
+    where: { countryCode: { notIn: countryCodes }, isAvailable: true },
+    data: { isAvailable: false },
   });
 
   if (disabled.count > 0) {

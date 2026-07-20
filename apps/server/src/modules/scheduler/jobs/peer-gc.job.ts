@@ -26,7 +26,7 @@ export class PeerGcJob {
   private async collect(peer: PeerRow): Promise<void> {
     const wg = new WgEasyClient({
       baseUrl: peer.node.wgEasyUrl,
-      apiKey: resolveNodeApiKey(peer.node.wgEasyApiKeyRef),
+      apiKey: resolveNodeApiKey(peer.node.wgEasyApiKeyEnvVar),
     });
 
     const handshake = await wg.getClientHandshake(peer.wgEasyClientId);
@@ -56,7 +56,7 @@ export class PeerGcJob {
         wgEasyClientId: true,
         createdAt: true,
         lastHandshakeAt: true,
-        node: { select: { wgEasyUrl: true, wgEasyApiKeyRef: true } },
+        node: { select: { wgEasyUrl: true, wgEasyApiKeyEnvVar: true } },
       },
     });
 

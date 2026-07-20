@@ -67,10 +67,10 @@ The schema itself belongs in [`packages/schemas`](../../packages/schemas) — th
 
 `config/env.schema.ts` validates on boot and **throws** on a missing variable. That is deliberate: a server that starts without `DATABASE_URL` fails later, in a harder-to-read way.
 
-Node panel passwords are the exception. The `node` table stores the *name* of an env var (`wgEasyApiKeyRef`), never the password:
+Node panel passwords are the exception. The `node` table stores the *name* of an env var (`wgEasyApiKeyEnvVar`), never the password:
 
 ```ts
-const key = process.env[node.wgEasyApiKeyRef];
+const key = process.env[node.wgEasyApiKeyEnvVar];
 ```
 
 So credentials stay out of the database, and adding a country means adding one `WG_KEY_XX` to `.env`.
@@ -94,7 +94,7 @@ Two flags decide what auto-renewal does, and they are not the same thing:
 - **`YOOKASSA_RECURRING`** — whether the shop *can* charge recurrently at all. YooKassa enables this per shop by hand, on request to support; there is no dashboard toggle. Until they do, `save_payment_method` and `POST /v3/payment_methods` both answer `forbidden`, so checkout fails outright. It defaults to `false`.
 - **`subscription.cancelAtPeriodEnd`** — whether *this user* wants renewal. Theirs to flip.
 
-Renewal also needs a card on file (`yookassaPaymentMethodId`). Without one the job has nothing to charge, so `resumeAutoRenew` refuses rather than promising a renewal that never happens — the client offers `bindCard` instead.
+Renewal also needs a card on file (`savedCardId`). Without one the job has nothing to charge, so `resumeAutoRenew` refuses rather than promising a renewal that never happens — the client offers `bindCard` instead.
 
 Webhooks are the only thing that activates a subscription; the browser returning to `YOOKASSA_RETURN_URL` proves nothing. `handleWebhook` never trusts the request body either — it re-reads the payment or payment method from the API, because a webhook is just JSON somebody posted. It answers `200` even when it does nothing: any other status makes YooKassa retry for a day.
 

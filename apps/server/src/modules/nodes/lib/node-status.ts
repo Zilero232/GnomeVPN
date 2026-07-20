@@ -5,8 +5,8 @@ import { DEGRADED_WINDOW_MS, ONLINE_WINDOW_MS } from '../config';
 import type { NodeStatus } from '@gnomevpn/schemas';
 import type { HealthInput } from './node-status.types';
 
-export const resolveNodeStatus = ({ enabled, lastHealthyAt }: HealthInput): NodeStatus => {
-  if (!enabled || !lastHealthyAt) {
+export const resolveNodeStatus = ({ isAvailable, lastHealthyAt }: HealthInput): NodeStatus => {
+  if (!isAvailable || !lastHealthyAt) {
     return 'offline';
   }
 

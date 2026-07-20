@@ -145,9 +145,9 @@ export const provisionHost = async (
       country: config.country,
       countryCode: config.countryCode,
       city: config.city,
-      publicEndpoint: `${config.host}:${WIREGUARD_PORT}`,
+      wireguardEndpoint: `${config.host}:${WIREGUARD_PORT}`,
       wgEasyUrl: `http://${config.host}:${PANEL_PORT}`,
-      wgEasyApiKeyRef: `WG_KEY_${config.countryCode}`,
+      wgEasyApiKeyEnvVar: `WG_KEY_${config.countryCode}`,
     });
 
     return {

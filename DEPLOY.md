@@ -76,8 +76,8 @@ YOOKASSA_SECRET_KEY=<оттуда же>
 YOOKASSA_RETURN_URL=https://gnomevpn.ru/account
 SUBSCRIPTION_PRICE_RUB=100
 
-# Имя переменной берётся из колонки node.wg_easy_api_key_ref — по одной на узел.
-# Проверить, какие нужны: SELECT country, wg_easy_api_key_ref FROM node;
+# Имя переменной берётся из колонки node.wg_easy_api_key_env_var — по одной на узел.
+# Проверить, какие нужны: SELECT country, wg_easy_api_key_env_var FROM node;
 WG_KEY_DE=<пароль панели wg-easy на узле>
 ```
 

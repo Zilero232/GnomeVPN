@@ -12,14 +12,14 @@ export class NodesService {
 
   async listPublicNodes(): Promise<Node[]> {
     const rows = await this.prisma.node.findMany({
-      where: { enabled: true },
-      orderBy: { sortOrder: 'asc' },
+      where: { isAvailable: true },
+      orderBy: { displayOrder: 'asc' },
       select: {
         id: true,
         country: true,
         countryCode: true,
         city: true,
-        enabled: true,
+        isAvailable: true,
         lastHealthyAt: true,
       },
     });
@@ -29,22 +29,22 @@ export class NodesService {
       country: r.country,
       countryCode: r.countryCode,
       city: r.city ?? undefined,
-      status: resolveNodeStatus({ enabled: r.enabled, lastHealthyAt: r.lastHealthyAt }),
+      status: resolveNodeStatus({ isAvailable: r.isAvailable, lastHealthyAt: r.lastHealthyAt }),
       lastHealthyAt: r.lastHealthyAt ? r.lastHealthyAt.toISOString() : null,
     }));
   }
 
   async getNodeForConnect(nodeId: string) {
     const node = await this.prisma.node.findFirst({
-      where: { id: nodeId, enabled: true },
+      where: { id: nodeId, isAvailable: true },
       select: {
         id: true,
         country: true,
         countryCode: true,
-        publicEndpoint: true,
+        wireguardEndpoint: true,
         wgEasyUrl: true,
-        wgEasyApiKeyRef: true,
-        enabled: true,
+        wgEasyApiKeyEnvVar: true,
+        isAvailable: true,
         lastHealthyAt: true,
       },
     });
@@ -54,7 +54,8 @@ export class NodesService {
     }
 
     if (
-      resolveNodeStatus({ enabled: node.enabled, lastHealthyAt: node.lastHealthyAt }) !== 'online'
+      resolveNodeStatus({ isAvailable: node.isAvailable, lastHealthyAt: node.lastHealthyAt }) !==
+      'online'
     ) {
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is not healthy');
     }

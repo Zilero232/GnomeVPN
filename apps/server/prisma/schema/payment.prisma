@@ -9,15 +9,15 @@ model Payment {
   userId            String @map("user_id")
   yookassaPaymentId String @unique @map("yookassa_payment_id")
 
-  amount      Decimal          @map("amount") @db.Decimal(10, 2)
-  status      PaymentStatus    @default(pending)
-  plan        SubscriptionPlan @default(monthly)
-  isRecurring Boolean          @default(false) @map("is_recurring")
+  amount       Decimal          @map("amount") @db.Decimal(10, 2)
+  status       PaymentStatus    @default(pending)
+  plan         SubscriptionPlan @default(monthly)
+  isAutoCharge Boolean          @default(false) @map("is_auto_charge")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, isRecurring, status, createdAt])
+  @@index([userId, isAutoCharge, status, createdAt])
   @@map("payment")
 }

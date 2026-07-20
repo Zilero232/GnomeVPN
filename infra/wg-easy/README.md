@@ -58,9 +58,9 @@ docker compose logs -f wg-easy
 
 - `wgEasyUrl` — адрес REST API узла: `http://203.0.113.10:51821`. Доступ к порту ограничен
   firewall'ом на IP backend'а (см. «Требования»).
-- `wgEasyApiKeyRef` — **имя переменной окружения** backend'а, в которой лежит пароль панели
+- `wgEasyApiKeyEnvVar` — **имя переменной окружения** backend'а, в которой лежит пароль панели
   (не сам пароль). Например `WG_KEY_DE`; тогда в окружении backend'а должно быть `WG_KEY_DE=ВАШ_ПАРОЛЬ`.
-- `publicEndpoint` — то, что попадёт клиенту как endpoint: `203.0.113.10:51820`.
+- `wireguardEndpoint` — то, что попадёт клиенту как endpoint: `203.0.113.10:51820`.
 
 ## Особенности API wg-easy 14 (проверено на живом узле)
 

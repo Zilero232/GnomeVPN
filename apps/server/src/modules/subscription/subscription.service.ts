@@ -33,8 +33,8 @@ export class SubscriptionService {
         plan: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
-        yookassaPaymentMethodId: true,
-        paymentMethodTitle: true,
+        savedCardId: true,
+        savedCardTitle: true,
       },
     });
 
@@ -45,7 +45,7 @@ export class SubscriptionService {
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
         hasPaymentMethod: false,
-        paymentMethodTitle: null,
+        savedCardTitle: null,
         isRecurringAvailable,
       };
     }
@@ -55,8 +55,8 @@ export class SubscriptionService {
       plan: row.plan,
       currentPeriodEnd: row.currentPeriodEnd ? row.currentPeriodEnd.toISOString() : null,
       cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-      hasPaymentMethod: row.yookassaPaymentMethodId !== null,
-      paymentMethodTitle: row.paymentMethodTitle,
+      hasPaymentMethod: row.savedCardId !== null,
+      savedCardTitle: row.savedCardTitle,
       isRecurringAvailable,
     };
   }

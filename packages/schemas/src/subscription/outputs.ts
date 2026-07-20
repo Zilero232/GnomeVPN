@@ -8,6 +8,6 @@ export const subscriptionStatusSchema = z.object({
   currentPeriodEnd: z.string().nullable(),
   cancelAtPeriodEnd: z.boolean(),
   hasPaymentMethod: z.boolean(),
-  paymentMethodTitle: z.string().nullable(),
+  savedCardTitle: z.string().nullable(),
   isRecurringAvailable: z.boolean(),
 });

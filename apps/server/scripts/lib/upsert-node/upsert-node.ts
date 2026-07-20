@@ -5,7 +5,7 @@ export const upsertNode = async (
   input: UpsertNodeInput,
 ): Promise<UpsertNodeResult> => {
   const existing = await prisma.node.findFirst({
-    where: { publicEndpoint: input.publicEndpoint },
+    where: { wireguardEndpoint: input.wireguardEndpoint },
   });
 
   if (existing) {
@@ -16,8 +16,8 @@ export const upsertNode = async (
         countryCode: input.countryCode,
         city: input.city,
         wgEasyUrl: input.wgEasyUrl,
-        wgEasyApiKeyRef: input.wgEasyApiKeyRef,
-        enabled: true,
+        wgEasyApiKeyEnvVar: input.wgEasyApiKeyEnvVar,
+        isAvailable: true,
       },
     });
 
@@ -29,10 +29,10 @@ export const upsertNode = async (
       country: input.country,
       countryCode: input.countryCode,
       city: input.city,
-      publicEndpoint: input.publicEndpoint,
+      wireguardEndpoint: input.wireguardEndpoint,
       wgEasyUrl: input.wgEasyUrl,
-      wgEasyApiKeyRef: input.wgEasyApiKeyRef,
-      enabled: true,
+      wgEasyApiKeyEnvVar: input.wgEasyApiKeyEnvVar,
+      isAvailable: true,
     },
   });
 

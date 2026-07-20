@@ -5,17 +5,17 @@ export type PeerRow = {
   wgEasyClientId: string;
   createdAt: Date;
   lastHandshakeAt: Date | null;
-  node: { wgEasyUrl: string; wgEasyApiKeyRef: string };
+  node: { wgEasyUrl: string; wgEasyApiKeyEnvVar: string };
 };
 
 export type ProbeNodeRow = {
   id: string;
   wgEasyUrl: string;
-  wgEasyApiKeyRef: string;
+  wgEasyApiKeyEnvVar: string;
 };
 
 export type DueSubscription = {
   userId: string;
-  yookassaPaymentMethodId: string | null;
+  savedCardId: string | null;
   plan: PlanId;
 };

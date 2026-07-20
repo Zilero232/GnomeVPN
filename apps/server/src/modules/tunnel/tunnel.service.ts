@@ -27,7 +27,7 @@ export class TunnelService {
   private async releasePeer({ nodeId, wgEasyClientId }: PeerRef): Promise<boolean> {
     const node = await this.prisma.node.findUnique({
       where: { id: nodeId },
-      select: { wgEasyUrl: true, wgEasyApiKeyRef: true },
+      select: { wgEasyUrl: true, wgEasyApiKeyEnvVar: true },
     });
 
     if (!node) {
@@ -35,7 +35,7 @@ export class TunnelService {
     }
 
     try {
-      await this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef).deleteClient(wgEasyClientId);
+      await this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyEnvVar).deleteClient(wgEasyClientId);
 
       return true;
     } catch (error) {
@@ -47,7 +47,7 @@ export class TunnelService {
 
   async connect(userId: string, nodeId: string): Promise<TunnelConfig> {
     const node = await this.nodes.getNodeForConnect(nodeId);
-    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef);
+    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyEnvVar);
 
     const existing = await this.prisma.peer.findUnique({
       where: { userId_kind_name: { userId, kind: 'session', name: SESSION_PEER_NAME } },
@@ -88,7 +88,7 @@ export class TunnelService {
       dns: created.dns,
       serverPublicKey: created.serverPublicKey,
       presharedKey: created.presharedKey,
-      endpoint: node.publicEndpoint,
+      endpoint: node.wireguardEndpoint,
       allowedIps: ALLOWED_IPS,
       persistentKeepalive: KEEPALIVE,
     };
@@ -133,7 +133,7 @@ export class TunnelService {
 
   async issueConfig({ userId, nodeId, name }: IssueConfigInput): Promise<ConfigFile> {
     const node = await this.nodes.getNodeForConnect(nodeId);
-    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef);
+    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyEnvVar);
 
     const existing = await this.prisma.peer.findFirst({
       where: { userId, kind: 'config', name: { equals: name, mode: 'insensitive' } },
@@ -182,7 +182,7 @@ export class TunnelService {
           dns: created.dns,
           serverPublicKey: created.serverPublicKey,
           presharedKey: created.presharedKey,
-          endpoint: node.publicEndpoint,
+          endpoint: node.wireguardEndpoint,
           allowedIps: ALLOWED_IPS,
           persistentKeepalive: KEEPALIVE,
         },

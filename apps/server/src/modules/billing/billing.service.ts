@@ -59,7 +59,7 @@ export class BillingService {
         yookassaPaymentId: payment.id,
         amount: plan.priceRub,
         status: 'pending',
-        isRecurring: false,
+        isAutoCharge: false,
         plan: plan.id,
       },
     });
@@ -86,7 +86,7 @@ export class BillingService {
         plan: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
-        yookassaPaymentMethodId: true,
+        savedCardId: true,
       },
     });
 
@@ -100,12 +100,10 @@ export class BillingService {
       plan: paidPlan,
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
       cancelAtPeriodEnd: this.resolveAutoRenew({
-        hasMethod: Boolean(method?.id ?? subscription?.yookassaPaymentMethodId),
+        hasMethod: Boolean(method?.id ?? subscription?.savedCardId),
         wasCancelled: subscription?.cancelAtPeriodEnd ?? false,
       }),
-      ...(method?.id
-        ? { yookassaPaymentMethodId: method.id, paymentMethodTitle: method.title }
-        : {}),
+      ...(method?.id ? { savedCardId: method.id, savedCardTitle: method.title } : {}),
     };
 
     await this.prisma.subscription.upsert({
@@ -182,10 +180,10 @@ export class BillingService {
   async resumeAutoRenew(userId: string): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { yookassaPaymentMethodId: true },
+      select: { savedCardId: true },
     });
 
-    if (!subscription?.yookassaPaymentMethodId) {
+    if (!subscription?.savedCardId) {
       throw new AppBadRequestException('PAYMENT_METHOD_MISSING', 'No saved payment method');
     }
 
@@ -217,7 +215,7 @@ export class BillingService {
 
     await this.prisma.subscription.update({
       where: { userId },
-      data: { pendingPaymentMethodId: method.id },
+      data: { pendingCardId: method.id },
     });
 
     return { confirmationUrl: method.confirmationUrl, isActive: false };
@@ -231,9 +229,9 @@ export class BillingService {
     await this.prisma.subscription.update({
       where: { userId },
       data: {
-        yookassaPaymentMethodId: paymentMethodId,
-        paymentMethodTitle: title,
-        pendingPaymentMethodId: null,
+        savedCardId: paymentMethodId,
+        savedCardTitle: title,
+        pendingCardId: null,
         cancelAtPeriodEnd: false,
       },
     });
@@ -243,9 +241,9 @@ export class BillingService {
     await this.prisma.subscription.update({
       where: { userId },
       data: {
-        yookassaPaymentMethodId: null,
-        paymentMethodTitle: null,
-        pendingPaymentMethodId: null,
+        savedCardId: null,
+        savedCardTitle: null,
+        pendingCardId: null,
         cancelAtPeriodEnd: true,
       },
     });
@@ -253,7 +251,7 @@ export class BillingService {
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
-      where: { pendingPaymentMethodId: paymentMethodId },
+      where: { pendingCardId: paymentMethodId },
       select: { userId: true },
     });
 
@@ -266,7 +264,7 @@ export class BillingService {
     if (method.status !== 'active') {
       await this.prisma.subscription.update({
         where: { userId: subscription.userId },
-        data: { pendingPaymentMethodId: null },
+        data: { pendingCardId: null },
       });
 
       return;

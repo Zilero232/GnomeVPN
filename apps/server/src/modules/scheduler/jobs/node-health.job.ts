@@ -16,7 +16,7 @@ export class NodeHealthJob {
   private async probe(node: ProbeNodeRow): Promise<void> {
     const wg = new WgEasyClient({
       baseUrl: node.wgEasyUrl,
-      apiKey: resolveNodeApiKey(node.wgEasyApiKeyRef),
+      apiKey: resolveNodeApiKey(node.wgEasyApiKeyEnvVar),
     });
 
     if (!(await wg.health())) {
@@ -32,8 +32,8 @@ export class NodeHealthJob {
   @Cron(CronExpression.EVERY_MINUTE)
   async run(): Promise<void> {
     const nodes = await this.prisma.node.findMany({
-      where: { enabled: true },
-      select: { id: true, wgEasyUrl: true, wgEasyApiKeyRef: true },
+      where: { isAvailable: true },
+      select: { id: true, wgEasyUrl: true, wgEasyApiKeyEnvVar: true },
     });
 
     const results = await Promise.allSettled(nodes.map((node) => this.probe(node)));

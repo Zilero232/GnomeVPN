@@ -1,4 +1,4 @@
 export type HealthInput = {
-  enabled: boolean;
+  isAvailable: boolean;
   lastHealthyAt: Date | null;
 };

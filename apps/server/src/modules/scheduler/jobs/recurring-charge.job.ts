@@ -30,7 +30,7 @@ export class RecurringChargeJob {
     const pending = await this.prisma.payment.findFirst({
       where: {
         userId,
-        isRecurring: true,
+        isAutoCharge: true,
         status: 'pending',
         createdAt: { gt: subHours(new Date(), IN_FLIGHT_WINDOW_HOURS) },
       },
@@ -41,7 +41,7 @@ export class RecurringChargeJob {
   }
 
   private async charge(subscription: DueSubscription): Promise<void> {
-    if (!subscription.yookassaPaymentMethodId) {
+    if (!subscription.savedCardId) {
       return;
     }
 
@@ -54,7 +54,7 @@ export class RecurringChargeJob {
     const payment = await this.makeClient().chargeRecurring({
       amountRub: plan.priceRub,
       description: describeRenewal(plan),
-      paymentMethodId: subscription.yookassaPaymentMethodId,
+      paymentMethodId: subscription.savedCardId,
       idempotenceKey: randomUUID(),
     });
 
@@ -64,7 +64,7 @@ export class RecurringChargeJob {
         yookassaPaymentId: payment.id,
         amount: plan.priceRub,
         status: 'pending',
-        isRecurring: true,
+        isAutoCharge: true,
         plan: plan.id,
       },
     });
@@ -78,7 +78,7 @@ export class RecurringChargeJob {
         cancelAtPeriodEnd: false,
         currentPeriodEnd: { lt: addHours(new Date(), RENEW_WINDOW_HOURS) },
       },
-      select: { userId: true, yookassaPaymentMethodId: true, plan: true },
+      select: { userId: true, savedCardId: true, plan: true },
     });
 
     for (const subscription of due) {

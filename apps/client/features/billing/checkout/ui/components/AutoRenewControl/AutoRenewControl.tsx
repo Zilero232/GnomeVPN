@@ -22,13 +22,13 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   const cancel = useCancelAutoRenew();
   const resume = useResumeAutoRenew();
 
-  const { isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd, paymentMethodTitle } =
+  const { isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd, savedCardTitle } =
     subscription;
 
   const card = (
     <span className={s.card}>
       <Text size="xs" tone="muted">
-        {paymentMethodTitle ?? t('cardBound')}
+        {savedCardTitle ?? t('cardBound')}
       </Text>
 
       <Button
