@@ -26,7 +26,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
     subscription;
 
   const card = (
-    <span className={s.card}>
+    <div className={s.card}>
       <Text size="xs" tone="muted">
         {savedCardTitle ?? t('cardBound')}
       </Text>
@@ -39,7 +39,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       >
         {t('unbindCard')}
       </Button>
-    </span>
+    </div>
   );
 
   return match({ isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd })

@@ -5,7 +5,8 @@
     "nameMax": "Keep it under 32 characters",
     "emailInvalid": "Enter a valid email",
     "passwordMin": "At least 8 characters",
-    "passwordsMismatch": "Passwords do not match"
+    "passwordsMismatch": "Passwords do not match",
+    "required": "This field is required"
   },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong. Please try again later.",
@@ -104,8 +105,19 @@
     },
     "errors": {
       "signInFailed": "Could not sign in",
-      "signUpFailed": "Could not sign up"
-    }
+      "signUpFailed": "Could not sign up",
+      "resetLinkFailed": "Could not send the email",
+      "passwordResetFailed": "Could not change the password"
+    },
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordHint": "Enter your email and we will send a link to set a new password.",
+    "sendResetLink": "Send link",
+    "resetLinkSent": "If that account exists, the email is on its way. Check your inbox.",
+    "backToSignIn": "Back to sign in",
+    "resetPassword": "New password",
+    "resetPasswordAction": "Save password",
+    "passwordReset": "Password changed — sign in with the new one",
+    "resetLinkInvalid": "This link is invalid or has expired. Request a new one."
   },
   "account": {
     "loading": "Loading…",
@@ -131,6 +143,27 @@
       "price": "{price} ₽",
       "save": "−{percent}%",
       "pay": "Pay {price} ₽"
+    },
+    "profile": {
+      "title": "Profile",
+      "nameLabel": "Name",
+      "saveName": "Save",
+      "nameUpdated": "Name updated",
+      "currentEmailLabel": "Current email",
+      "newEmailLabel": "New email",
+      "emailChangeHint": "We will send a link to your current address — the change applies once confirmed.",
+      "changeEmail": "Change email",
+      "emailChangeRequested": "Check your current email to confirm the change",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Repeat password",
+      "passwordHint": "At least 8 characters. Other devices will be signed out.",
+      "changePassword": "Change password",
+      "passwordChanged": "Password changed",
+      "security": "Security"
+    },
+    "tabs": {
+      "subscription": "Subscription"
     }
   },
   "configs": {
@@ -208,8 +241,7 @@
     "nodesLoading": "Loading countries…",
     "nodesError": "Could not load the country list",
     "nodesEmpty": "No countries available",
-    "gateTitle": "Subscription required",
-    "gateAction": "Subscribe",
+    "gateHint": "Tap to subscribe",
     "connect": "Connect",
     "connecting": "Linking…",
     "disconnect": "Disconnect",

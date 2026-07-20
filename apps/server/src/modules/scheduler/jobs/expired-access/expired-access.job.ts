@@ -3,10 +3,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
 import { map, pipe, unique } from 'remeda';
 
-import { PrismaService } from '../../../core';
-import { TunnelService } from '../../tunnel';
-import { CONFIG_GRACE_HOURS } from '../config';
-import { lapsedBefore } from '../lib';
+import { PrismaService } from '../../../../core';
+import { TunnelService } from '../../../tunnel';
+import { CONFIG_GRACE_HOURS } from '../../config';
+import { lapsedBefore } from '../../lib';
 
 @Injectable()
 export class ExpiredAccessJob {

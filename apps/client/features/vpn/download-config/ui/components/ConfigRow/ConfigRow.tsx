@@ -14,32 +14,39 @@ export const ConfigRow = ({ config, isPending, onRedownload, onRevoke }: ConfigR
 
   return (
     <div className={s.root}>
-      <span className={s.body}>
+      <div className={s.body}>
         <CountryFlag countryCode={config.countryCode} />
 
-        <span className={s.info}>
+        <div className={s.info}>
           <span className={s.name}>{config.name}</span>
 
           <Text size="xs" tone="muted">
             {config.country}
           </Text>
-        </span>
-      </span>
+        </div>
+      </div>
 
-      <span className={s.actions}>
+      <div className={s.actions}>
         <Button
           aria-label={t('redownload')}
           disabled={isPending}
+          size="icon"
           variant="ghost"
           onClick={onRedownload}
         >
           <Download aria-hidden size={15} />
         </Button>
 
-        <Button aria-label={t('revoke')} disabled={isPending} variant="ghost" onClick={onRevoke}>
+        <Button
+          aria-label={t('revoke')}
+          disabled={isPending}
+          size="icon"
+          variant="ghost"
+          onClick={onRevoke}
+        >
           <Trash2 aria-hidden size={15} />
         </Button>
-      </span>
+      </div>
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { describeError, resolveNodeApiKey } from '../../../common/lib';
-import { PrismaService } from '../../../core';
-import { WgEasyClient } from '../../../lib';
+import { describeError, resolveNodeApiKey } from '../../../../common/lib';
+import { PrismaService } from '../../../../core';
+import { WgEasyClient } from '../../../../lib';
 
-import type { ProbeNodeRow } from './jobs.types';
+import type { ProbeNodeRow } from './node-health.job.types';
 
 @Injectable()
 export class NodeHealthJob {

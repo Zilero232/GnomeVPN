@@ -4,8 +4,10 @@
   gap: 6px;
 }
 
-// Reserves the error's line so a form row keeps its height whether or not the
-// message is showing, instead of shifting its neighbours when it appears.
+.hint {
+  line-height: 1.5;
+}
+
 .floatingError {
   position: relative;
   padding-bottom: 20px;

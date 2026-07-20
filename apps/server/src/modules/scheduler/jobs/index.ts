@@ -1,4 +1,4 @@
-export { ExpiredAccessJob } from './expired-access.job';
-export { NodeHealthJob } from './node-health.job';
-export { PeerGcJob } from './peer-gc.job';
-export { RecurringChargeJob } from './recurring-charge.job';
+export { ExpiredAccessJob } from './expired-access';
+export { NodeHealthJob } from './node-health';
+export { PeerGcJob } from './peer-gc';
+export { RecurringChargeJob } from './recurring-charge';

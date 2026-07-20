@@ -1,0 +1,16 @@
+.root {
+  position: relative;
+}
+
+.spinner {
+  position: absolute;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.visible {
+  opacity: 1;
+}

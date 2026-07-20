@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: rootPackage.version,
   },
   output: 'export',
+  reactCompiler: true,
   reactStrictMode: false,
   images: { unoptimized: true },
   sassOptions: { loadPaths: [clientRoot] },

@@ -22,6 +22,7 @@ export {
   FormField,
   SelectableCard,
   SubmitButton,
+  Tabs,
 } from './molecules';
 export { StatusScreen } from './organisms';
 
@@ -40,5 +41,11 @@ export type {
   SwitchProps,
   TextProps,
 } from './atoms';
-export type { FormFieldProps, SelectableCardProps, SubmitButtonProps } from './molecules';
+export type {
+  FormFieldProps,
+  SelectableCardProps,
+  SubmitButtonProps,
+  TabItem,
+  TabsProps,
+} from './molecules';
 export type { StatusScreenProps } from './organisms';

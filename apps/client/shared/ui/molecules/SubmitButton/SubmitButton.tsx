@@ -1,4 +1,8 @@
+import { clsx } from 'clsx';
+
 import { Button, Spinner } from '../../atoms';
+
+import s from './SubmitButton.module.scss';
 
 import type { SubmitButtonProps } from './SubmitButton.types';
 
@@ -8,10 +12,20 @@ export const SubmitButton = ({
   size = 'lg',
   type = 'submit',
   children,
+  className,
   ...props
 }: SubmitButtonProps) => (
-  <Button disabled={disabled || isPending} size={size} type={type} {...props}>
-    {isPending && <Spinner />}
+  <Button
+    className={clsx(s.root, className)}
+    disabled={disabled || isPending}
+    size={size}
+    type={type}
+    {...props}
+  >
+    <span className={clsx(s.spinner, isPending && s.visible)}>
+      <Spinner />
+    </span>
+
     {children}
   </Button>
 );

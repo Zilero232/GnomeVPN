@@ -13,6 +13,7 @@ export const FormField = ({
   label,
   children,
   error,
+  hint,
   htmlFor,
   hasFloatingError,
   className,
@@ -24,6 +25,12 @@ export const FormField = ({
     <Field.Label render={<Label htmlFor={htmlFor} />}>{label}</Field.Label>
 
     {children}
+
+    {hint && !error && (
+      <Field.Description className={s.hint} render={<Text size="xs" tone="muted" />}>
+        {hint}
+      </Field.Description>
+    )}
 
     {error && (
       <Field.Error className={s.error} match render={<Text size="xs" tone="danger" />}>

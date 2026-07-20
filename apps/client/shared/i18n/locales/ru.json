@@ -5,7 +5,8 @@
     "nameMax": "Не длиннее 32 символов",
     "emailInvalid": "Неверный email",
     "passwordMin": "Минимум 8 символов",
-    "passwordsMismatch": "Пароли не совпадают"
+    "passwordsMismatch": "Пароли не совпадают",
+    "required": "Заполните поле"
   },
   "errors": {
     "INTERNAL_ERROR": "Что-то пошло не так. Попробуйте позже.",
@@ -104,8 +105,19 @@
     },
     "errors": {
       "signInFailed": "Не удалось войти",
-      "signUpFailed": "Не удалось зарегистрироваться"
-    }
+      "signUpFailed": "Не удалось зарегистрироваться",
+      "resetLinkFailed": "Не удалось отправить письмо",
+      "passwordResetFailed": "Не удалось сменить пароль"
+    },
+    "forgotPassword": "Забыли пароль?",
+    "forgotPasswordHint": "Укажите почту — пришлём ссылку для входа с новым паролем.",
+    "sendResetLink": "Отправить ссылку",
+    "resetLinkSent": "Если такой аккаунт есть, письмо уже отправлено. Проверьте почту.",
+    "backToSignIn": "Вернуться ко входу",
+    "resetPassword": "Новый пароль",
+    "resetPasswordAction": "Сохранить пароль",
+    "passwordReset": "Пароль изменён — войдите с новым",
+    "resetLinkInvalid": "Ссылка недействительна или устарела. Запросите новую."
   },
   "account": {
     "loading": "Загрузка…",
@@ -131,6 +143,27 @@
       "price": "{price} ₽",
       "save": "−{percent}%",
       "pay": "Оплатить {price} ₽"
+    },
+    "profile": {
+      "title": "Профиль",
+      "nameLabel": "Имя",
+      "saveName": "Сохранить",
+      "nameUpdated": "Имя обновлено",
+      "currentEmailLabel": "Текущая почта",
+      "newEmailLabel": "Новая почта",
+      "emailChangeHint": "Мы отправим ссылку на текущий адрес — смена вступит в силу после подтверждения.",
+      "changeEmail": "Сменить почту",
+      "emailChangeRequested": "Проверьте текущую почту и подтвердите смену",
+      "currentPasswordLabel": "Текущий пароль",
+      "newPasswordLabel": "Новый пароль",
+      "confirmPasswordLabel": "Повторите пароль",
+      "passwordHint": "Минимум 8 символов. Остальные устройства выйдут из аккаунта.",
+      "changePassword": "Сменить пароль",
+      "passwordChanged": "Пароль изменён",
+      "security": "Безопасность"
+    },
+    "tabs": {
+      "subscription": "Подписка"
     }
   },
   "configs": {
@@ -208,8 +241,7 @@
     "nodesLoading": "Загрузка стран…",
     "nodesError": "Не удалось загрузить список стран",
     "nodesEmpty": "Нет доступных стран",
-    "gateTitle": "Нужна подписка",
-    "gateAction": "Оформить подписку",
+    "gateHint": "Нажмите, чтобы оформить подписку",
     "connect": "Подключить",
     "connecting": "Связь…",
     "disconnect": "Отключить",

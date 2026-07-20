@@ -2,12 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { isBefore, subMilliseconds } from 'date-fns';
 
-import { describeError, resolveNodeApiKey } from '../../../common/lib';
-import { PrismaService } from '../../../core';
-import { WgEasyClient } from '../../../lib';
-import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../config';
+import { describeError, resolveNodeApiKey } from '../../../../common/lib';
+import { PrismaService } from '../../../../core';
+import { WgEasyClient } from '../../../../lib';
+import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
 
-import type { PeerRow } from './jobs.types';
+import type { PeerRow } from './peer-gc.job.types';
 
 @Injectable()
 export class PeerGcJob {
