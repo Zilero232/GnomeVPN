@@ -8,7 +8,10 @@
 
 - **Версия:** 0.14.1, сборка amd64 (x64)
 - **Источник:** <https://www.wintun.net/builds/wintun-0.14.1.zip>
-- **Лицензия:** см. `wintun-LICENSE.txt` (GPLv2 с исключением для линковки)
+- **Лицензия:** см. `wintun-LICENSE.txt` — проприетарная «Prebuilt Binaries
+  License» от WireGuard LLC, не GPL. Пункт 3(d) разрешает распространять DLL
+  вместе с ПО, которое использует её только через публичный API (наш случай).
+  Модифицировать DLL и удалять из неё копирайты нельзя.
 
 Linux и macOS в этом файле не нуждаются — TUN там встроен в ядро
 (`/dev/net/tun` и `utun` соответственно).
@@ -21,7 +24,14 @@ Linux и macOS в этом файле не нуждаются — TUN там в�
 
 ### Куда попадает при сборке
 
-`tauri.conf.json` → `bundle.resources` кладёт DLL рядом с `vesper.exe`.
+`tauri.windows.conf.json` → `bundle.resources` кладёт DLL в корень
+установки, рядом с `GnomeVPN.exe` и `gnomevpn-service.exe`. Соседство
+со службой обязательно: TUN-адаптер создаёт именно она, а `tun-rs`
+грузит DLL через `LoadLibraryExW` из каталога своего процесса.
+
+Конфиг именно платформенный — в базовом `tauri.conf.json` эти ресурсы
+ломают сборку под Linux и macOS.
+
 Для `cargo run` / `tauri dev` файл должен лежать в `target/debug/`
 (копируется скриптом `scripts/sync-wintun.mjs` через `predev`).
 

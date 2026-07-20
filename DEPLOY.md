@@ -67,9 +67,11 @@ DATABASE_URL=postgresql://gnomevpn:<пароль>@postgres:5432/gnomevpn
 DIRECT_URL=postgresql://gnomevpn:<пароль>@postgres:5432/gnomevpn
 
 BETTER_AUTH_SECRET=<32+ случайных символа>
-BETTER_AUTH_URL=https://api.gnomevpn.ru
+API_URL=https://api.gnomevpn.ru
 
 CORS_ORIGINS=https://gnomevpn.ru,tauri://localhost,http://tauri.localhost
+
+GITHUB_TOKEN=<PAT с правом Contents: Read — без него не работают обновления десктопа>
 
 YOOKASSA_SHOP_ID=<из личного кабинета ЮKassa>
 YOOKASSA_SECRET_KEY=<оттуда же>

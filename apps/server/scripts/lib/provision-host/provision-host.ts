@@ -1,5 +1,3 @@
-import { match } from 'ts-pattern';
-
 import { appendEnvLine, hasEnvKey } from '../env-file';
 import { hashPanelPassword, resolvePanelPassword } from '../panel-password';
 import { SshClient } from '../ssh-client';
@@ -68,12 +66,7 @@ const shipComposeStack = async (
   );
 };
 
-const panelFirewallRule = (backendIp: string | undefined): string =>
-  match(backendIp)
-    .with(undefined, () => `ufw allow ${PANEL_PORT}/tcp`)
-    .otherwise((ip) => `ufw allow from ${ip} to any port ${PANEL_PORT} proto tcp`);
-
-const configureFirewall = async (ssh: SshClient, backendIp: string | undefined): Promise<void> => {
+const configureFirewall = async (ssh: SshClient): Promise<void> => {
   const ufwCheck = await ssh.exec('command -v ufw');
 
   if (ufwCheck.exitCode !== 0) {
@@ -81,7 +74,7 @@ const configureFirewall = async (ssh: SshClient, backendIp: string | undefined):
   }
 
   await ssh.exec(`ufw allow ${WIREGUARD_PORT}/udp`);
-  await ssh.exec(panelFirewallRule(backendIp));
+  await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
 };
 
 const registerPanelPassword = async (
@@ -121,7 +114,7 @@ export const provisionHost = async (
     const passwordHash = await hashPanelPassword(password);
 
     await shipComposeStack(ssh, config, opts.wgEasyComposeContent, passwordHash);
-    await configureFirewall(ssh, opts.backendIp);
+    await configureFirewall(ssh);
     await ssh.exec(`cd ${REMOTE_DIR} && docker compose up -d`);
 
     const healthy = await waitForHealthy(

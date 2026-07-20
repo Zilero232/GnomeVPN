@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "seed:node": "bun --env-file .env scripts/seed-node.ts",
+    "provision": "bun --env-file .env scripts/provision-nodes.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },

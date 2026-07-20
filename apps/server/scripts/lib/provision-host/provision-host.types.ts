@@ -18,7 +18,6 @@ export type UpsertNodeFn = (
 ) => Promise<UpsertNodeResult>;
 
 export type ProvisionHostOptions = {
-  backendIp?: string;
   serverEnvPath: string;
   wgEasyComposeContent: string;
   createSshClient?: () => SshClient;

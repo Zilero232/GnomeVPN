@@ -9,6 +9,7 @@ import { useState } from 'react';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
+import { UpdateGate } from '@/features/app/check-update';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
 import { env } from '@/shared/config';
@@ -112,6 +113,8 @@ export const AppView = () => {
           onSelect={setSelectedNodeId}
         />
       </div>
+
+      <UpdateGate />
     </main>
   );
 };

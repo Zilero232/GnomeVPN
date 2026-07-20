@@ -2,15 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { describeError } from '../../common/lib';
+import { AppConfigService } from '../../config/config.module';
 import {
   CACHE_TTL_MS,
-  EXTENSION_TO_PLATFORM,
   GITHUB_RELEASE_URL,
   GITHUB_TIMEOUT_MS,
+  githubAssetUrl,
+  UPDATER_TARGET,
 } from './config';
+import { findUpdaterAssets, pickInstallers } from './lib';
 
-import type { Release, ReleaseAsset, ReleasePlatform } from '@gnomevpn/schemas';
-import type { CachedRelease, GithubRelease } from './release.types';
+import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
+import type { CachedRelease, GithubRelease, UpdaterManifest } from './release.types';
 
 @Injectable()
 export class ReleaseService {
@@ -18,41 +21,37 @@ export class ReleaseService {
 
   private cached: CachedRelease | null = null;
 
-  private detectPlatform(name: string): ReleasePlatform | null {
-    const extension = name.toLowerCase().split('.').pop();
+  constructor(private readonly config: AppConfigService) {}
 
-    return extension ? (EXTENSION_TO_PLATFORM[extension] ?? null) : null;
+  private githubHeaders(accept: string): Record<string, string> {
+    const token = this.config.get('GITHUB_TOKEN');
+
+    return token ? { Accept: accept, Authorization: `Bearer ${token}` } : { Accept: accept };
+  }
+
+  private unavailable(): AppServiceUnavailableException {
+    return new AppServiceUnavailableException('INTERNAL_ERROR', 'Release info unavailable');
   }
 
   private toRelease(data: GithubRelease): Release {
-    const seen = new Set<ReleasePlatform>();
-    const assets: ReleaseAsset[] = [];
+    const apiUrl = this.config.get('API_URL');
 
-    for (const asset of data.assets) {
-      const platform = this.detectPlatform(asset.name);
-
-      if (!platform || seen.has(platform)) {
-        continue;
-      }
-
-      seen.add(platform);
-      assets.push({
-        platform,
-        name: asset.name,
-        sizeBytes: asset.size,
-        downloadUrl: asset.browser_download_url,
-      });
-    }
+    const assets: ReleaseAsset[] = pickInstallers(data.assets).map(({ platform, asset }) => ({
+      platform,
+      name: asset.name,
+      sizeBytes: asset.size,
+      downloadUrl: `${apiUrl}/release/download/${asset.id}`,
+    }));
 
     return {
       version: data.tag_name.replace(/^v/, ''),
-      htmlUrl: data.html_url,
+      htmlUrl: `${this.config.get('CLIENT_URL')}/#download`,
       publishedAt: data.published_at,
       assets,
     };
   }
 
-  async getLatest(): Promise<Release> {
+  private async fetchLatest(): Promise<GithubRelease> {
     if (this.cached && this.cached.expiresAt > Date.now()) {
       return this.cached.value;
     }
@@ -61,25 +60,104 @@ export class ReleaseService {
 
     try {
       response = await fetch(GITHUB_RELEASE_URL, {
-        headers: { Accept: 'application/vnd.github+json' },
+        headers: this.githubHeaders('application/vnd.github+json'),
         signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
       });
     } catch (error) {
       this.logger.warn(`GitHub releases unreachable: ${describeError(error)}`);
 
-      throw new AppServiceUnavailableException('INTERNAL_ERROR', 'Release info unavailable');
+      throw this.unavailable();
     }
 
     if (!response.ok) {
       this.logger.warn(`GitHub responded with ${response.status}`);
 
-      throw new AppServiceUnavailableException('INTERNAL_ERROR', 'Release info unavailable');
+      throw this.unavailable();
     }
 
-    const release = this.toRelease((await response.json()) as GithubRelease);
+    const release = (await response.json()) as GithubRelease;
 
     this.cached = { value: release, expiresAt: Date.now() + CACHE_TTL_MS };
 
     return release;
+  }
+
+  async getLatest(): Promise<Release> {
+    return this.toRelease(await this.fetchLatest());
+  }
+
+  async resolveAssetUrl(assetId: number): Promise<string> {
+    let response: Response;
+
+    try {
+      response = await fetch(githubAssetUrl(assetId), {
+        headers: this.githubHeaders('application/octet-stream'),
+        redirect: 'manual',
+        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
+      });
+    } catch (error) {
+      this.logger.warn(`GitHub asset ${assetId} unreachable: ${describeError(error)}`);
+
+      throw this.unavailable();
+    }
+
+    const location = response.headers.get('location');
+
+    if (!location) {
+      this.logger.warn(`GitHub asset ${assetId} answered ${response.status} without a redirect`);
+
+      throw this.unavailable();
+    }
+
+    return location;
+  }
+
+  private async fetchSignature(assetId: number): Promise<string> {
+    const url = await this.resolveAssetUrl(assetId);
+
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
+      });
+    } catch (error) {
+      this.logger.warn(`Signature ${assetId} unreachable: ${describeError(error)}`);
+
+      throw this.unavailable();
+    }
+
+    if (!response.ok) {
+      this.logger.warn(`Signature ${assetId} answered ${response.status}`);
+
+      throw this.unavailable();
+    }
+
+    return (await response.text()).trim();
+  }
+
+  async getUpdaterManifest(): Promise<UpdaterManifest> {
+    const release = await this.fetchLatest();
+    const updater = findUpdaterAssets(release.assets);
+
+    if (!updater) {
+      this.logger.warn(`Release ${release.tag_name} ships no updater artifacts`);
+
+      throw this.unavailable();
+    }
+
+    const apiUrl = this.config.get('API_URL');
+
+    return {
+      version: release.tag_name.replace(/^v/, ''),
+      notes: release.body ?? '',
+      pub_date: release.published_at,
+      platforms: {
+        [UPDATER_TARGET]: {
+          signature: await this.fetchSignature(updater.signature.id),
+          url: `${apiUrl}/release/download/${updater.archive.id}`,
+        },
+      },
+    };
   }
 }

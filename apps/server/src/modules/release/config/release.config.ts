@@ -1,6 +1,11 @@
 import type { ReleasePlatform } from '@gnomevpn/schemas';
 
-export const GITHUB_RELEASE_URL = 'https://api.github.com/repos/Zilero232/GnomeVPN/releases/latest';
+const GITHUB_REPO_URL = 'https://api.github.com/repos/Zilero232/GnomeVPN';
+
+export const GITHUB_RELEASE_URL = `${GITHUB_REPO_URL}/releases/latest`;
+
+export const githubAssetUrl = (assetId: number): string =>
+  `${GITHUB_REPO_URL}/releases/assets/${assetId}`;
 
 export const GITHUB_TIMEOUT_MS = 8_000;
 
@@ -10,3 +15,10 @@ export const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
   exe: 'windows',
   msi: 'windows',
 };
+
+export const PLATFORM_EXTENSION_PRIORITY = ['exe', 'msi'];
+
+export const UPDATER_ARCHIVE_SUFFIX = '.nsis.zip';
+export const UPDATER_SIGNATURE_SUFFIX = '.nsis.zip.sig';
+
+export const UPDATER_TARGET = 'windows-x86_64';

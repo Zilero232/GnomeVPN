@@ -18,9 +18,7 @@ export const loadNodesConfig = async (filePath: string): Promise<NodeConfig[]> =
   const result = nodesConfigSchema.safeParse(parsed);
 
   if (!result.success) {
-    throw new Error(
-      `Invalid apps/server/scripts/nodes.json:\n${formatIssues(result.error.issues)}`,
-    );
+    throw new Error(`Invalid apps/server/nodes.json:\n${formatIssues(result.error.issues)}`);
   }
 
   return result.data;
