@@ -8,26 +8,23 @@ import { initAutoStartDefault, isTauriDesktop } from '@/shared/lib';
 import type { ReactNode } from 'react';
 
 export const VaultProvider = ({ children }: { children: ReactNode }) => {
-  const [isRestored, setIsRestored] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
 
   useEffect(() => {
     if (!isTauriDesktop()) {
-      setIsRestored(true);
-
       return;
     }
+
+    setIsBlocking(true);
 
     initAutoStartDefault().catch(() => undefined);
 
     restoreTokenFromVault()
       .catch(() => false)
-      .finally(() => setIsRestored(true));
+      .finally(() => setIsBlocking(false));
   }, []);
 
-  // Rendering children while the token is still missing would bounce the user
-  // to the sign-in screen, but only the desktop app has a vault to wait for —
-  // in the browser the effect resolves on the first tick.
-  if (!isRestored && isTauriDesktop()) {
+  if (isBlocking) {
     return null;
   }
 

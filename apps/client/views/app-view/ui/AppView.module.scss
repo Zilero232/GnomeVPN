@@ -61,18 +61,6 @@
   background-color: currentcolor;
 }
 
-.gate {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: center;
-  padding: 34px 30px;
-  border: 1px dashed var(--color-border-bright);
-  border-radius: var(--radius-lg);
-  text-align: center;
-  background-color: var(--color-surface);
-}
-
 .version {
   font-family: var(--font-mono);
   font-size: 10px;

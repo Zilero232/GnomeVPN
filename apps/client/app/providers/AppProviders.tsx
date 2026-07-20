@@ -3,6 +3,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
+import { VpnConnectionProvider } from '@/features/vpn/connect';
 import { queryClient } from '@/shared/api';
 import { AuthProvider } from './AuthProvider';
 import { DesktopShell } from './DesktopShell';
@@ -30,7 +31,9 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
     <I18nProvider>
       <DesktopShell>
         <VaultProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <VpnConnectionProvider>{children}</VpnConnectionProvider>
+          </AuthProvider>
         </VaultProvider>
       </DesktopShell>
 

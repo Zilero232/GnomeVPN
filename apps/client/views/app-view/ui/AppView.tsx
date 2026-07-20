@@ -10,11 +10,11 @@ import { useState } from 'react';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
-import { ConnectButton, useAutoConnect, useVpnConnection } from '@/features/vpn/connect';
+import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { showMainWindow } from '@/shared/lib';
-import { Button, Text } from '@/shared/ui';
+import { Text } from '@/shared/ui';
 import { AppMenu, NodeList, TunnelStats } from './components';
 
 import s from './AppView.module.scss';
@@ -24,7 +24,8 @@ export const AppView = () => {
   const router = useRouter();
   const { nodes, isLoading, isError } = useNodes();
   const { hasAccess } = useSubscriptionStatus();
-  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnection();
+  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } =
+    useVpnConnectionContext();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
@@ -41,20 +42,18 @@ export const AppView = () => {
       return;
     }
 
+    if (!hasAccess) {
+      router.push(ROUTES.account);
+
+      return;
+    }
+
     if (!effectiveNodeId || !canConnect) {
       return;
     }
 
     await connect(effectiveNodeId, activeNode?.country ?? '');
   };
-
-  useAutoConnect({
-    nodes,
-    hasAccess,
-    isConnected: status !== 'disconnected',
-    isReady: !isLoading && !isError,
-    connect,
-  });
 
   useTraySetup({
     isConnected: isOnline,
@@ -94,20 +93,13 @@ export const AppView = () => {
       </header>
 
       <div className={s.body}>
-        {hasAccess ? (
-          <ConnectButton
-            status={status}
-            disabled={!effectiveNodeId || (!canConnect && status === 'disconnected')}
-            onToggle={onToggle}
-          />
-        ) : (
-          <div className={s.gate}>
-            <Text tone="muted">{t('gateTitle')}</Text>
-            <Link href={ROUTES.account}>
-              <Button>{t('gateAction')}</Button>
-            </Link>
-          </div>
-        )}
+        <ConnectButton
+          status={status}
+          disabled={hasAccess && (!effectiveNodeId || (!canConnect && status === 'disconnected'))}
+          onToggle={onToggle}
+        />
+
+        {!hasAccess && <Text tone="muted">{t('gateHint')}</Text>}
 
         {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
 

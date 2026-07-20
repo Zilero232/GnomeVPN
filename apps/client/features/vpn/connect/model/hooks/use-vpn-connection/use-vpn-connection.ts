@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { match } from 'ts-pattern';
 
@@ -9,6 +9,7 @@ import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
   getKillSwitch,
+  getLastNodeId,
   logger,
   notify,
   setLastNodeId,
@@ -17,6 +18,7 @@ import {
   type VpnEvent,
   vpnConnect,
   vpnDisconnect,
+  vpnStatus,
 } from '@/shared/lib';
 
 import type { VpnConnectionStatus, VpnTraffic } from './use-vpn-connection.types';
@@ -110,6 +112,31 @@ export const useVpnConnection = () => {
       .with({ type: 'connecting' }, { type: 'handshake' }, async () => {})
       .exhaustive();
   };
+
+  useEffect(() => {
+    let isStale = false;
+
+    const adopt = async () => {
+      const [current, lastNodeId] = await Promise.all([vpnStatus(), getLastNodeId()]);
+
+      if (isStale || current !== 'connected') {
+        return;
+      }
+
+      setStatus('connected');
+      setActiveNodeId(lastNodeId);
+
+      wasConnectedRef.current = true;
+    };
+
+    adopt().catch((error: unknown) => {
+      logger.warn(`could not read tunnel status: ${String(error)}`);
+    });
+
+    return () => {
+      isStale = true;
+    };
+  }, []);
 
   const connect = async (nodeId: string, country = '', isAutomatic = false) => {
     const generation = ++generationRef.current;

@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { getAutoConnect, getLastNodeId, logger, wasManuallyDisconnected } from '@/shared/lib';
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
+
+let hasAttempted = false;
 
 export const useAutoConnect = ({
   nodes,
@@ -13,10 +15,8 @@ export const useAutoConnect = ({
   isReady,
   connect,
 }: UseAutoConnectParams): void => {
-  const attemptedRef = useRef(false);
-
   useEffect(() => {
-    if (attemptedRef.current || !isReady || !hasAccess || isConnected || nodes.length === 0) {
+    if (hasAttempted || !isReady || !hasAccess || isConnected || nodes.length === 0) {
       return;
     }
 
@@ -27,7 +27,7 @@ export const useAutoConnect = ({
       ]);
 
       if (!isEnabled || wasDisconnectedByUser) {
-        attemptedRef.current = true;
+        hasAttempted = true;
 
         return;
       }
@@ -39,12 +39,12 @@ export const useAutoConnect = ({
 
       if (!target) {
         logger.warn('autoconnect: no reachable node available');
-        attemptedRef.current = true;
+        hasAttempted = true;
 
         return;
       }
 
-      attemptedRef.current = true;
+      hasAttempted = true;
       logger.info(`autoconnect: connecting to ${target.country}`);
 
       await connect(target.id, target.country, true);
