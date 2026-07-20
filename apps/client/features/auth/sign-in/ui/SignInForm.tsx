@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useFieldError } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
 import { type SignInValues, signInSchema, useSignIn } from '../model/use-sign-in';
 
@@ -14,6 +15,7 @@ const DEFAULT_VALUES: SignInValues = { email: '', password: '' };
 
 export const SignInForm = () => {
   const t = useTranslations('auth');
+  const fieldError = useFieldError();
   const { isPending, mutate } = useSignIn();
 
   const {
@@ -33,12 +35,12 @@ export const SignInForm = () => {
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField error={errors.email?.message} htmlFor="signin-email" label={t('fields.email')}>
+      <FormField error={fieldError(errors.email)} htmlFor="signin-email" label={t('fields.email')}>
         <Input autoComplete="email" id="signin-email" type="email" {...register('email')} />
       </FormField>
 
       <FormField
-        error={errors.password?.message}
+        error={fieldError(errors.password)}
         htmlFor="signin-password"
         label={t('fields.password')}
       >

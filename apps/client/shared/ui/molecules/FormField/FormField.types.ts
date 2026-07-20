@@ -5,5 +5,7 @@ export type FormFieldProps = {
   children: ReactNode;
   error?: ReactNode;
   htmlFor: string;
+  /** Keeps the row height fixed by taking the error message out of flow. */
+  hasFloatingError?: boolean;
   className?: string;
 };

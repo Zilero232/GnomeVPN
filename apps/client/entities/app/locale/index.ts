@@ -1,1 +1,1 @@
-export { useErrorMessage, useLocale } from './model/hooks';
+export { useErrorMessage, useFieldError, useLocale } from './model/hooks';

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { useFieldError } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
 import { type SignUpValues, signUpSchema, useSignUp } from '../model/use-sign-up';
 
@@ -19,6 +20,7 @@ const DEFAULT_VALUES: SignUpValues = {
 
 export const SignUpForm = () => {
   const t = useTranslations('auth');
+  const fieldError = useFieldError();
   const { isPending, mutate } = useSignUp();
 
   const {
@@ -38,16 +40,16 @@ export const SignUpForm = () => {
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField error={errors.name?.message} htmlFor="signup-name" label={t('fields.name')}>
+      <FormField error={fieldError(errors.name)} htmlFor="signup-name" label={t('fields.name')}>
         <Input autoComplete="name" id="signup-name" {...register('name')} />
       </FormField>
 
-      <FormField error={errors.email?.message} htmlFor="signup-email" label={t('fields.email')}>
+      <FormField error={fieldError(errors.email)} htmlFor="signup-email" label={t('fields.email')}>
         <Input autoComplete="email" id="signup-email" type="email" {...register('email')} />
       </FormField>
 
       <FormField
-        error={errors.password?.message}
+        error={fieldError(errors.password)}
         htmlFor="signup-password"
         label={t('fields.password')}
       >
@@ -55,7 +57,7 @@ export const SignUpForm = () => {
       </FormField>
 
       <FormField
-        error={errors.confirmPassword?.message}
+        error={fieldError(errors.confirmPassword)}
         htmlFor="signup-confirm"
         label={t('fields.confirmPassword')}
       >

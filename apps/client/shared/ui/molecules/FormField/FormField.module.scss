@@ -3,3 +3,16 @@
   flex-direction: column;
   gap: 6px;
 }
+
+// Reserves the error's line so a form row keeps its height whether or not the
+// message is showing, instead of shifting its neighbours when it appears.
+.floatingError {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.floatingError .error {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
