@@ -1,12 +1,13 @@
 export const ROUTES = {
   landing: '/',
   auth: '/auth',
+  resetPassword: '/reset-password',
   account: '/account',
   app: '/app',
 } as const;
 
 const KNOWN_ROUTES: string[] = Object.values(ROUTES);
-const PUBLIC_ROUTES: string[] = [ROUTES.landing, ROUTES.auth];
+const PUBLIC_ROUTES: string[] = [ROUTES.landing, ROUTES.auth, ROUTES.resetPassword];
 const GUEST_ONLY_ROUTES: string[] = [ROUTES.auth];
 
 export const isKnownRoute = (pathname: string): boolean => {
