@@ -1,7 +1,7 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 
 import { AppForbiddenException } from '../../../common/exceptions';
-import { WEBHOOK_ALLOWED_PREFIXES } from '../config';
+import { isAllowedWebhookIp } from '../lib';
 
 @Injectable()
 export class WebhookIpGuard implements CanActivate {
@@ -10,11 +10,9 @@ export class WebhookIpGuard implements CanActivate {
       .switchToHttp()
       .getRequest<{ ip?: string; socket?: { remoteAddress?: string } }>();
 
-    const ip = (request.ip ?? request.socket?.remoteAddress ?? '').replace('::ffff:', '');
-    const isAllowed =
-      ip.length > 0 && WEBHOOK_ALLOWED_PREFIXES.some((prefix) => ip.startsWith(prefix));
+    const ip = request.ip ?? request.socket?.remoteAddress ?? '';
 
-    if (!isAllowed) {
+    if (!isAllowedWebhookIp(ip)) {
       throw new AppForbiddenException('WEBHOOK_INVALID', 'Webhook source not allowed');
     }
 

@@ -1,1 +1,1 @@
-export { WEBHOOK_ALLOWED_PREFIXES } from './billing.config';
+export { WEBHOOK_ALLOWED_CIDRS } from './billing.config';
