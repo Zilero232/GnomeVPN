@@ -9,7 +9,7 @@
 !macro NSIS_HOOK_POSTINSTALL
   ; install идемпотентен: при обновлении переписывает конфигурацию существующей
   ; службы, при первой установке создаёт новую.
-  nsExec::ExecToLog '"$INSTDIR\resources\gnomevpn-service.exe" install'
+  nsExec::ExecToLog '"$INSTDIR\gnomevpn-service.exe" install'
   Pop $0
 
   ${If} $0 != 0
@@ -19,7 +19,7 @@
 !macroend
 
 !macro NSIS_HOOK_PREUNINSTALL
-  nsExec::ExecToLog '"$INSTDIR\resources\gnomevpn-service.exe" uninstall'
+  nsExec::ExecToLog '"$INSTDIR\gnomevpn-service.exe" uninstall'
   Pop $0
 
   nsExec::ExecToLog 'sc.exe delete GnomeVPNService'
