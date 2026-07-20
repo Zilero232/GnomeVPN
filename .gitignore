@@ -7,6 +7,6 @@ target/
 *.log
 .env
 .env.local
-apps/server/scripts/nodes.json
+apps/server/nodes.json
 apps/tauri/gen/
 .codebase-memory/

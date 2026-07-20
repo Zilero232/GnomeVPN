@@ -71,6 +71,11 @@ services:
       - ./.env
     expose:
       - '4000'
+    volumes:
+      # Provisioning input, mounted read-only: holds root SSH passwords for the
+      # VPN nodes, so it is gitignored and never baked into the image. Only read
+      # by `bun provision`, never by the running API.
+      - ./nodes.json:/app/apps/server/nodes.json:ro
     networks:
       - gnomevpn
     healthcheck:

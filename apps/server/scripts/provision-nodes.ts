@@ -16,7 +16,7 @@ import type { PrismaLike } from './lib/upsert-node';
 const prisma = basePrisma as unknown as PrismaLike;
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
-const NODES_CONFIG_PATH = resolve(HERE, 'nodes.json');
+const NODES_CONFIG_PATH = resolve(HERE, '..', 'nodes.json');
 const WG_EASY_COMPOSE_PATH = resolve(
   HERE,
   '..',
@@ -28,11 +28,7 @@ const WG_EASY_COMPOSE_PATH = resolve(
 );
 const SERVER_ENV_PATH = resolve(HERE, '..', '.env');
 
-const BACKEND_IP_FLAG = '--backend-ip=';
 const WG_KEY_PREFIX = 'WG_KEY_';
-
-const parseBackendIp = (argv: string[]): string | undefined =>
-  argv.find((arg) => arg.startsWith(BACKEND_IP_FLAG))?.slice(BACKEND_IP_FLAG.length);
 
 const healthCheck = async (opts: { baseUrl: string; apiKey: string }): Promise<boolean> =>
   new WgEasyClient(opts).health();
@@ -64,7 +60,7 @@ const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
   }
 };
 
-const provisionAll = async (backendIp: string | undefined): Promise<ProvisionResult[]> => {
+const provisionAll = async (): Promise<ProvisionResult[]> => {
   const nodes = await loadNodesConfig(NODES_CONFIG_PATH);
   const wgEasyComposeContent = await readFile(WG_EASY_COMPOSE_PATH, 'utf8');
 
@@ -74,7 +70,6 @@ const provisionAll = async (backendIp: string | undefined): Promise<ProvisionRes
     process.stdout.write(`Provisioning ${node.country} (${node.host})...\n`);
 
     const result = await provisionHost(node, {
-      backendIp,
       serverEnvPath: SERVER_ENV_PATH,
       wgEasyComposeContent,
       healthCheck,
@@ -94,15 +89,7 @@ const provisionAll = async (backendIp: string | undefined): Promise<ProvisionRes
 };
 
 const main = async (): Promise<void> => {
-  const backendIp = parseBackendIp(process.argv.slice(2));
-
-  if (!backendIp) {
-    process.stdout.write(
-      'Warning: --backend-ip was not provided. The wg-easy REST port will be opened to all sources on every node.\n',
-    );
-  }
-
-  const results = await provisionAll(backendIp);
+  const results = await provisionAll();
 
   process.stdout.write('\nSummary:\n');
   process.stdout.write(`${results.map(formatResultLine).join('\n')}\n`);
