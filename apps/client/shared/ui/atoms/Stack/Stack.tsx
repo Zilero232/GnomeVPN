@@ -1,6 +1,4 @@
-import { clsx } from 'clsx';
-
-import s from './Stack.module.scss';
+import { stack } from './Stack.variants';
 
 import type { StackProps } from './Stack.types';
 
@@ -11,7 +9,7 @@ export const Stack = ({
   children,
   ...props
 }: StackProps) => (
-  <Tag className={clsx(s.root, s[gap], className)} {...props}>
+  <Tag className={stack({ gap, class: className })} {...props}>
     {children}
   </Tag>
 );

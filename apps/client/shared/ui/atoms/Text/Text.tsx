@@ -1,6 +1,4 @@
-import { clsx } from 'clsx';
-
-import s from './Text.module.scss';
+import { text } from './Text.variants';
 
 import type { TextProps } from './Text.types';
 
@@ -12,16 +10,7 @@ export const Text = ({
   children,
   ...props
 }: TextProps) => (
-  <p
-    className={clsx(
-      s.root,
-      s[size],
-      tone !== 'default' && s[tone],
-      align === 'center' && s.center,
-      className,
-    )}
-    {...props}
-  >
+  <p className={text({ size, tone, align, class: className })} {...props}>
     {children}
   </p>
 );

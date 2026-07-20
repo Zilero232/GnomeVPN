@@ -1,4 +1,5 @@
 export {
+  Badge,
   BrandMark,
   Button,
   Input,
@@ -17,11 +18,13 @@ export {
   DialogTitle,
   DialogTrigger,
   FormField,
+  SelectableCard,
   SubmitButton,
 } from './molecules';
 export { StatusScreen } from './organisms';
 
 export type {
+  BadgeProps,
   BrandMarkProps,
   ButtonProps,
   InputProps,
@@ -32,5 +35,5 @@ export type {
   SwitchProps,
   TextProps,
 } from './atoms';
-export type { FormFieldProps, SubmitButtonProps } from './molecules';
+export type { FormFieldProps, SelectableCardProps, SubmitButtonProps } from './molecules';
 export type { StatusScreenProps } from './organisms';

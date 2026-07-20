@@ -1,3 +1,4 @@
+export { Badge } from './Badge';
 export { BrandMark } from './BrandMark';
 export { Button } from './Button';
 export { Input } from './Input';
@@ -8,6 +9,7 @@ export { Stack } from './Stack';
 export { Switch } from './Switch';
 export { Text } from './Text';
 
+export type { BadgeProps } from './Badge';
 export type { BrandMarkProps } from './BrandMark';
 export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';

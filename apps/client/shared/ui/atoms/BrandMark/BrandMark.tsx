@@ -1,6 +1,5 @@
-import { clsx } from 'clsx';
-
 import { SITE } from '@/shared/config';
+import { brandMark } from './BrandMark.variants';
 
 import s from './BrandMark.module.scss';
 
@@ -14,7 +13,7 @@ export const BrandMark = ({
   labelClassName,
   className,
 }: BrandMarkProps) => (
-  <span className={clsx(s.root, s[size], tone === 'muted' && s.muted, className)}>
+  <span className={brandMark({ size, tone, class: className })}>
     {/** biome-ignore lint/performance/noImgElement: an inline SVG needs no next/image pipeline, and the app is a static export */}
     <img
       alt=""

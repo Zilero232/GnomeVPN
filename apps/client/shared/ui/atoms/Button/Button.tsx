@@ -1,6 +1,4 @@
-import { clsx } from 'clsx';
-
-import s from './Button.module.scss';
+import { button } from './Button.variants';
 
 import type { ButtonProps } from './Button.types';
 
@@ -12,7 +10,7 @@ export const Button = ({
   children,
   ...props
 }: ButtonProps) => (
-  <button className={clsx(s.root, s[variant], s[size], className)} type={type} {...props}>
+  <button className={button({ variant, size, class: className })} type={type} {...props}>
     {children}
   </button>
 );

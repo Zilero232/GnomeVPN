@@ -1,0 +1,42 @@
+.root {
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  border: 1px solid var(--color-border-bright);
+  text-align: left;
+  background-color: var(--color-surface-raised);
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-bright));
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.selected {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface-raised));
+}
+
+.sm {
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.md {
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.lg {
+  padding: 16px 18px;
+  border-radius: 14px;
+}
