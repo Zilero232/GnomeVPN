@@ -10,13 +10,13 @@ Guidance for the API. Extends the root [../../CLAUDE.md](../../CLAUDE.md); those
 src/
 ├── modules/         # one folder per domain
 │   ├── auth/        # better-auth module wiring
-│   ├── billing/     # YooKassa checkout and webhooks — guards/
+│   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
 │   ├── health/      # /health — also probes the database
-│   ├── nodes/       # public node list with health status — lib/
-│   ├── release/     # latest desktop release, proxied from GitHub
-│   ├── scheduler/   # cron jobs — jobs/
+│   ├── nodes/       # public node list with health status — config/ lib/
+│   ├── release/     # latest desktop release, proxied from GitHub — config/
+│   ├── scheduler/   # cron jobs — config/ jobs/
 │   ├── subscription/# guards/
-│   └── tunnel/      # issues WireGuard configs
+│   └── tunnel/      # tunnel sessions and downloadable configs — config/ lib/
 ├── lib/             # external integrations: auth, wg-easy, yookassa
 ├── core/            # Prisma service
 ├── common/          # exceptions, filters, decorators
@@ -25,7 +25,24 @@ src/
 
 ## Module convention
 
-A module is `x.module.ts` + `x.controller.ts` + `x.service.ts`, plus `dto/`, `guards/`, `lib/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in the service.
+A module is `x.module.ts` + `x.controller.ts` + `x.service.ts`, plus `dto/`, `guards/`, `lib/`, `config/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in the service.
+
+**Nothing but the class lives in a service or controller file.** Constants, lookup tables and pure functions go elsewhere, so the file reads as behaviour rather than a mix of data and logic:
+
+| What | Where |
+| --- | --- |
+| Constants, timeouts, lookup tables | `config/x.config.ts` |
+| Pure functions | `lib/` |
+| Types | `x.types.ts` |
+
+```ts
+// no — a service file holding data
+const CACHE_TTL_MS = 10 * 60_000;
+const EXTENSION_TO_PLATFORM = { exe: 'windows' };
+
+// yes
+import { CACHE_TTL_MS, EXTENSION_TO_PLATFORM } from './config';
+```
 
 Every module has an `index.ts` — its public API. **Import from the barrel across module boundaries**, never reach into another module's files:
 

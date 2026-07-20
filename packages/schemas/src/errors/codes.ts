@@ -15,5 +15,5 @@ export const apiErrorCodeSchema = z.enum([
 
   'NODE_NOT_FOUND',
   'NODE_UNAVAILABLE',
-  'TUNNEL_FAILED',
+  'CONFIG_LIMIT_REACHED',
 ]);

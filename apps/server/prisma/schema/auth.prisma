@@ -12,8 +12,8 @@ model User {
   sessions     Session[]
   accounts     Account[]
   payments     Payment[]
+  peers        Peer[]
   subscription Subscription?
-  activePeer   ActivePeer?
 
   @@map("user")
 }

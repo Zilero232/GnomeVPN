@@ -1,4 +1,12 @@
 {
+  "validation": {
+    "nameRequired": "Enter a device name",
+    "nameMin": "At least 2 characters",
+    "nameMax": "Keep it under 32 characters",
+    "emailInvalid": "Enter a valid email",
+    "passwordMin": "At least 8 characters",
+    "passwordsMismatch": "Passwords do not match"
+  },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong. Please try again later.",
     "VALIDATION_FAILED": "Check the fields and try again.",
@@ -12,7 +20,7 @@
     "WEBHOOK_INVALID": "Invalid request signature.",
     "NODE_NOT_FOUND": "Country not found.",
     "NODE_UNAVAILABLE": "The node is not responding — try another country.",
-    "TUNNEL_FAILED": "The tunnel could not be established."
+    "CONFIG_LIMIT_REACHED": "Device limit reached — remove one first."
   },
   "common": {
     "brand": "GnomeVPN",
@@ -40,8 +48,8 @@
       "step1Body": "Card payment via YooKassa. From {price} ₽ per month, cancel in one click, no hidden charges.",
       "step2Title": "Pick a country",
       "step2Body": "Every node is a separate server with its own WireGuard. Switch on the fly.",
-      "step3Title": "Hit Connect",
-      "step3Body": "The app brings the tunnel up locally. Keys are generated for you and live until you disconnect."
+      "step3Title": "Connect",
+      "step3Body": "Through our app in one tap. Or download a config and open it in any WireGuard client: Windows, macOS, Linux, iOS, Android."
     },
     "pricing": {
       "title": "Pricing",
@@ -67,7 +75,7 @@
       "q2": "What happens when I cancel?",
       "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
       "q3": "Which devices are supported?",
-      "a3": "Windows for now. macOS and Linux need their own privileged helper, and mobile needs a separate build per platform — both are planned.",
+      "a3": "Anything that runs WireGuard: macOS, Linux, iOS, Android — through a config downloaded from your account. Our own app is Windows-only for now, but it is not required.",
       "q4": "Why so cheap?",
       "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
     },
@@ -124,6 +132,20 @@
       "save": "−{percent}%",
       "pay": "Pay {price} ₽"
     }
+  },
+  "configs": {
+    "title": "WireGuard configs",
+    "hint": "The file works in any WireGuard client: phone, laptop, router. Up to {limit} devices, revoked when the subscription ends.",
+    "lockedHint": "Configs come with a subscription — start one above and the files unlock.",
+    "loading": "Loading…",
+    "empty": "No countries available",
+    "nameLabel": "Device",
+    "countryLabel": "Country",
+    "namePlaceholder": "Phone",
+    "limitReached": "You have reached the {limit} device limit — remove one to add another.",
+    "download": "Download",
+    "redownload": "Download again",
+    "revoke": "Remove"
   },
   "desktopOnly": {
     "title": "Connect from the app",

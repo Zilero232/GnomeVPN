@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
+import { ConfigList } from '@/features/vpn/download-config';
 import { Text } from '@/shared/ui';
 import { AccountNav, SubscriptionCard } from './components';
 
@@ -13,6 +14,7 @@ import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
+  const tConfigs = useTranslations('configs');
   const { email } = useCurrentUser();
   const { subscription, isLoading } = useSubscriptionStatus();
 
@@ -32,6 +34,11 @@ export const AccountPage = () => {
       <div className={s.card}>
         <SubscriptionCard isLoading={isLoading} subscription={subscription} />
       </div>
+
+      <section className={s.card}>
+        <h2 className={s.sectionTitle}>{tConfigs('title')}</h2>
+        <ConfigList />
+      </section>
 
       <footer className={s.footer}>
         <button

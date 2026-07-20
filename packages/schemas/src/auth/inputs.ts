@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-const emailSchema = z.string().trim().toLowerCase().pipe(z.email('Неверный email'));
-const passwordSchema = z.string().min(8, 'Минимум 8 символов');
-const nameSchema = z.string().trim().min(2, 'Минимум 2 символа').max(32, 'Максимум 32 символа');
+const emailSchema = z.string().trim().toLowerCase().pipe(z.email('validation.emailInvalid'));
+const passwordSchema = z.string().min(8, 'validation.passwordMin');
+const nameSchema = z.string().trim().min(2, 'validation.nameMin').max(32, 'validation.nameMax');
 
 export const signInSchema = z.object({
   email: emailSchema,
@@ -17,6 +17,6 @@ export const signUpSchema = z
     confirmPassword: z.string(),
   })
   .refine((values) => values.password === values.confirmPassword, {
-    message: 'Пароли не совпадают',
+    message: 'validation.passwordsMismatch',
     path: ['confirmPassword'],
   });

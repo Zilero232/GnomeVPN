@@ -1,3 +1,10 @@
+import type { Release } from '@gnomevpn/schemas';
+
+export type CachedRelease = {
+  value: Release;
+  expiresAt: number;
+};
+
 export type GithubAsset = {
   name: string;
   size: number;

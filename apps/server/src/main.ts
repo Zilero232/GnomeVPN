@@ -13,7 +13,11 @@ const env = validateEnv(process.env);
 const app = await NestFactory.create(AppModule, { bodyParser: false });
 
 app.use(helmet({ contentSecurityPolicy: false }));
-app.enableCors({ origin: allowedOrigins, credentials: true, exposedHeaders: ['set-auth-token'] });
+app.enableCors({
+  origin: allowedOrigins,
+  credentials: true,
+  exposedHeaders: ['set-auth-token', 'content-disposition'],
+});
 app.use(json());
 app.useGlobalPipes(new ZodValidationPipe());
 app.enableShutdownHooks();

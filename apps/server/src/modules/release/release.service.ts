@@ -1,26 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
+import { describeError } from '../../common/lib';
+import {
+  CACHE_TTL_MS,
+  EXTENSION_TO_PLATFORM,
+  GITHUB_RELEASE_URL,
+  GITHUB_TIMEOUT_MS,
+} from './config';
 
 import type { Release, ReleaseAsset, ReleasePlatform } from '@gnomevpn/schemas';
-import type { GithubRelease } from './release.types';
-
-const GITHUB_RELEASE_URL = 'https://api.github.com/repos/Zilero232/GnomeVPN/releases/latest';
-
-// GitHub allows 60 unauthenticated requests per hour per IP. Every landing
-// visitor would otherwise spend one, so the answer is cached here.
-const CACHE_TTL_MS = 10 * 60_000;
-
-const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
-  exe: 'windows',
-  msi: 'windows',
-};
+import type { CachedRelease, GithubRelease } from './release.types';
 
 @Injectable()
 export class ReleaseService {
   private readonly logger = new Logger(ReleaseService.name);
 
-  private cached: { value: Release; expiresAt: number } | null = null;
+  private cached: CachedRelease | null = null;
 
   private detectPlatform(name: string): ReleasePlatform | null {
     const extension = name.toLowerCase().split('.').pop();
@@ -35,7 +31,6 @@ export class ReleaseService {
     for (const asset of data.assets) {
       const platform = this.detectPlatform(asset.name);
 
-      // One entry per platform: a release carries several Linux packages.
       if (!platform || seen.has(platform)) {
         continue;
       }
@@ -67,10 +62,10 @@ export class ReleaseService {
     try {
       response = await fetch(GITHUB_RELEASE_URL, {
         headers: { Accept: 'application/vnd.github+json' },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
       });
     } catch (error) {
-      this.logger.warn(`GitHub releases unreachable: ${String(error)}`);
+      this.logger.warn(`GitHub releases unreachable: ${describeError(error)}`);
 
       throw new AppServiceUnavailableException('INTERNAL_ERROR', 'Release info unavailable');
     }

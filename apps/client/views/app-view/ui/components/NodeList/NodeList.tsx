@@ -5,6 +5,8 @@ import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
+import { CountryFlag } from '@/shared/ui';
+
 import s from './NodeList.module.scss';
 
 import type { NodeListProps } from './NodeList.types';
@@ -59,7 +61,7 @@ export const NodeList = ({
               <motion.span className={s.marker} layoutId="node-marker" />
             )}
 
-            <span className={s.flag}>{node.flagEmoji}</span>
+            <CountryFlag countryCode={node.countryCode} />
             <span className={s.country}>{node.country}</span>
 
             <span className={clsx(s.status, s[node.status])} title={t(STATUS_LABEL[node.status])}>

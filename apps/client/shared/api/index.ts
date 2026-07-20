@@ -15,7 +15,12 @@ export {
   disconnectTunnel,
   getLatestRelease,
   getSubscriptionStatus,
+  issueConfig,
+  listConfigs,
   listNodes,
   resumeAutoRenew,
+  revokeConfig,
   unbindCard,
 } from './vpn/vpn';
+
+export type { ConfigDownload } from './vpn/vpn.types';
