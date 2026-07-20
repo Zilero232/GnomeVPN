@@ -3,15 +3,14 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
-import { CheckoutButton, useCancelAutoRenew } from '@/features/billing/checkout';
-import { Button, Text } from '@/shared/ui';
+import { AutoRenewControl, PlanPicker } from '@/features/billing/checkout';
+import { Text } from '@/shared/ui';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
 
 export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardProps) => {
   const t = useTranslations('account');
   const locale = useLocale();
-  const cancel = useCancelAutoRenew();
 
   const formatDate = (iso: string): string => {
     return new Date(iso).toLocaleDateString(locale, {
@@ -29,21 +28,19 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
       <>
         <Text tone="success">{t('active')}</Text>
 
+        {subscription && (
+          <Text size="xs" tone="muted">
+            {t(`plans.${subscription.plan}`)}
+          </Text>
+        )}
+
         {subscription?.currentPeriodEnd && (
           <Text size="xs" tone="muted">
             {t('activeUntil', { date: formatDate(subscription.currentPeriodEnd) })}
           </Text>
         )}
 
-        {subscription?.cancelAtPeriodEnd ? (
-          <Text size="xs" tone="muted">
-            {t('autoRenewOff')}
-          </Text>
-        ) : (
-          <Button disabled={cancel.isPending} variant="ghost" onClick={() => cancel.mutate()}>
-            {t('cancelAutoRenew')}
-          </Button>
-        )}
+        {subscription && <AutoRenewControl subscription={subscription} />}
       </>
     ))
     .otherwise(() => (
@@ -52,7 +49,7 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
         <Text size="xs" tone="muted">
           {t('pitch')}
         </Text>
-        <CheckoutButton />
+        <PlanPicker />
       </>
     ));
 };

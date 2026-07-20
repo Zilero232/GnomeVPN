@@ -1,18 +1,14 @@
 'use client';
 
+import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
 import { Button } from '@/shared/ui';
+import { HERO_METRICS } from '../../../config';
 
 import s from './Hero.module.scss';
-
-const METRICS = [
-  { value: 'WireGuard', key: 'protocol' },
-  { value: '100 ₽', key: 'price' },
-  { value: 'ChaCha20', key: 'cipher' },
-] as const;
 
 export const Hero = () => {
   const t = useTranslations('landing');
@@ -40,7 +36,7 @@ export const Hero = () => {
 
       <div className={s.actions}>
         <Link href={ROUTES.account}>
-          <Button size="md">{t('cta')}</Button>
+          <Button size="md">{t('cta', { price: LOWEST_MONTHLY_RUB })}</Button>
         </Link>
         <Link href="#how">
           <Button size="md" variant="ghost">
@@ -50,7 +46,7 @@ export const Hero = () => {
       </div>
 
       <div className={s.meta}>
-        {METRICS.map((metric) => (
+        {HERO_METRICS.map((metric) => (
           <div className={s.metaItem} key={metric.key}>
             <span className={s.metaValue}>{metric.value}</span>
             <span className={s.metaLabel}>{t(`metrics.${metric.key}`)}</span>

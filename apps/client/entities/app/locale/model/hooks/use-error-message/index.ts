@@ -1,2 +1,1 @@
 export { useErrorMessage } from './use-error-message';
-export { useLocale } from './use-locale';

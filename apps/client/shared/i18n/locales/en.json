@@ -1,4 +1,19 @@
 {
+  "errors": {
+    "INTERNAL_ERROR": "Something went wrong. Please try again later.",
+    "VALIDATION_FAILED": "Check the fields and try again.",
+    "UNAUTHORIZED": "Sign in to continue.",
+    "FORBIDDEN": "You do not have access to this action.",
+    "PAYMENT_REQUIRED": "An active subscription is required.",
+    "PAYMENT_FAILED": "The payment could not be created. Please try again.",
+    "PLAN_CHANGE_LOCKED": "You can switch plans once the current period ends.",
+    "RECURRING_UNAVAILABLE": "Automatic payments are temporarily unavailable.",
+    "PAYMENT_METHOD_MISSING": "No card on file — add one first.",
+    "WEBHOOK_INVALID": "Invalid request signature.",
+    "NODE_NOT_FOUND": "Country not found.",
+    "NODE_UNAVAILABLE": "The node is not responding — try another country.",
+    "TUNNEL_FAILED": "The tunnel could not be established."
+  },
   "common": {
     "brand": "GnomeVPN",
     "loading": "Loading…",
@@ -11,7 +26,7 @@
     "titleLine2": "that is",
     "titleAccent": "yours",
     "lead": "GnomeVPN brings up a WireGuard tunnel to a node in another country in one tap. No provider accounts, no logs, no ads. Just a clean channel.",
-    "cta": "Start for 100 ₽",
+    "cta": "Start for {price} ₽",
     "ctaSecondary": "How it works",
     "account": "Account",
     "metrics": {
@@ -22,7 +37,7 @@
     "how": {
       "title": "How it works",
       "step1Title": "Subscribe",
-      "step1Body": "Card payment via YooKassa. 100 ₽ per month, cancel in one click, no hidden charges.",
+      "step1Body": "Card payment via YooKassa. From {price} ₽ per month, cancel in one click, no hidden charges.",
       "step2Title": "Pick a country",
       "step2Body": "Every node is a separate server with its own WireGuard. Switch on the fly.",
       "step3Title": "Hit Connect",
@@ -30,7 +45,15 @@
     },
     "pricing": {
       "title": "Pricing",
+      "amount": "{price} ₽",
       "period": "/ month",
+      "perMonth": "{price} ₽ per month",
+      "save": "−{percent}%",
+      "plans": {
+        "monthly": "1 month",
+        "halfYearly": "6 months",
+        "yearly": "12 months"
+      },
       "cta": "Subscribe",
       "feature1": "Every country, no extra fees",
       "feature2": "Unlimited traffic",
@@ -85,9 +108,22 @@
     "activeUntil": "Valid until {date}",
     "autoRenewOff": "Auto-renewal is off",
     "cancelAutoRenew": "Turn off auto-renewal",
+    "resumeAutoRenew": "Turn on auto-renewal",
+    "noPaymentMethod": "No card on file — auto-renewal is unavailable",
+    "bindCard": "Add a card",
+    "cardBound": "Card on file",
+    "unbindCard": "Remove",
     "inactive": "No active subscription",
-    "pitch": "100 ₽ per month, access to every country",
-    "pay": "Pay 100 ₽"
+    "pitch": "Access to every country, cancel in one click",
+    "plans": {
+      "monthly": "1 month",
+      "halfYearly": "6 months",
+      "yearly": "12 months",
+      "perMonth": "{price} ₽ per month",
+      "price": "{price} ₽",
+      "save": "−{percent}%",
+      "pay": "Pay {price} ₽"
+    }
   },
   "desktopOnly": {
     "title": "Connect from the app",

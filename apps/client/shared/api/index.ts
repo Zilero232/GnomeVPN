@@ -8,6 +8,7 @@ export {
 export { ApiError, api, apiErrorCode, toApiError } from './http';
 export { queryClient } from './query-client';
 export {
+  bindCard,
   cancelAutoRenew,
   connectTunnel,
   createCheckout,
@@ -15,4 +16,6 @@ export {
   getLatestRelease,
   getSubscriptionStatus,
   listNodes,
+  resumeAutoRenew,
+  unbindCard,
 } from './vpn/vpn';

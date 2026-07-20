@@ -1,0 +1,18 @@
+.card {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.unbind {
+  padding: 0;
+  border: none;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: none;
+
+  &:hover:not(:disabled) {
+    color: var(--color-danger);
+    background: none;
+  }
+}

@@ -1,0 +1,39 @@
+.root {
+  width: 100%;
+}
+
+.list {
+  width: 100%;
+}
+
+.card {
+  justify-content: space-between;
+}
+
+.body {
+  flex: 1;
+  gap: 2px;
+}
+
+.submit {
+  justify-content: center;
+  width: 100%;
+}
+
+.head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.term {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.price {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}

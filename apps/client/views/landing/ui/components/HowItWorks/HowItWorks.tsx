@@ -1,21 +1,22 @@
 'use client';
 
+import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
 import { useTranslations } from 'next-intl';
 
-import s from './HowItWorks.module.scss';
+import { HOW_IT_WORKS_STEPS } from '../../../config';
 
-const STEPS = ['step1', 'step2', 'step3'] as const;
+import s from './HowItWorks.module.scss';
 
 export const HowItWorks = () => {
   const t = useTranslations('landing.how');
 
   return (
     <div className={s.grid}>
-      {STEPS.map((step, index) => (
+      {HOW_IT_WORKS_STEPS.map((step, index) => (
         <article className={s.step} key={step}>
           <span className={s.index}>0{index + 1}</span>
           <h3 className={s.title}>{t(`${step}Title`)}</h3>
-          <p className={s.body}>{t(`${step}Body`)}</p>
+          <p className={s.body}>{t(`${step}Body`, { price: LOWEST_MONTHLY_RUB })}</p>
         </article>
       ))}
     </div>

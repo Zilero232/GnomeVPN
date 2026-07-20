@@ -1,3 +1,3 @@
-export { useStartupSettings } from './model';
+export { useStartupSettings } from './model/hooks';
 
-export type { UseStartupSettings } from './model';
+export type { UseStartupSettings } from './model/hooks';
