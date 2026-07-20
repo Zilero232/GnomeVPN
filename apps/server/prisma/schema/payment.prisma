@@ -5,15 +5,22 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id                String        @id @default(dbgenerated("gen_random_uuid()"))
-  userId            String        @map("user_id")
-  yookassaPaymentId String        @unique @map("yookassa_payment_id")
-  amount            Decimal       @map("amount") @db.Decimal(10, 2)
-  status            PaymentStatus @default(pending)
-  isRecurring       Boolean       @default(false) @map("is_recurring")
-  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String @id @default(dbgenerated("gen_random_uuid()"))
+  userId            String @map("user_id")
+  yookassaPaymentId String @unique @map("yookassa_payment_id")
+
+  amount      Decimal          @map("amount") @db.Decimal(10, 2)
+  status      PaymentStatus    @default(pending)
+  // The webhook arrives long after checkout and must extend the period by the
+  // span that was paid for, so the plan travels with the payment.
+  plan        SubscriptionPlan @default(monthly)
+  isRecurring Boolean          @default(false) @map("is_recurring")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, isRecurring, status, createdAt])
   @@map("payment")
 }

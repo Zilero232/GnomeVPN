@@ -68,6 +68,19 @@ throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wg-easy node unrea
 
 The client matches on the code, so the message is free text but the code is a contract.
 
+## Billing
+
+Prices live in `PLANS` ([`packages/schemas`](../../packages/schemas)), not in the environment: the server charges from that list and the landing page renders from it, so an advertised price cannot drift from a billed one.
+
+Two flags decide what auto-renewal does, and they are not the same thing:
+
+- **`YOOKASSA_RECURRING`** — whether the shop *can* charge recurrently at all. YooKassa enables this per shop by hand, on request to support; there is no dashboard toggle. Until they do, `save_payment_method` and `POST /v3/payment_methods` both answer `forbidden`, so checkout fails outright. It defaults to `false`.
+- **`subscription.cancelAtPeriodEnd`** — whether *this user* wants renewal. Theirs to flip.
+
+Renewal also needs a card on file (`yookassaPaymentMethodId`). Without one the job has nothing to charge, so `resumeAutoRenew` refuses rather than promising a renewal that never happens — the client offers `bindCard` instead.
+
+Webhooks are the only thing that activates a subscription; the browser returning to `YOOKASSA_RETURN_URL` proves nothing. `handleWebhook` never trusts the request body either — it re-reads the payment or payment method from the API, because a webhook is just JSON somebody posted. It answers `200` even when it does nothing: any other status makes YooKassa retry for a day.
+
 ## Cron jobs
 
 `modules/scheduler` runs four: node health, peer garbage collection, expired access, recurring charges.

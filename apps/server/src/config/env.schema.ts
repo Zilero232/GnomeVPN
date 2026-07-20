@@ -11,7 +11,10 @@ export const envSchema = z.object({
   YOOKASSA_SHOP_ID: z.string().default(''),
   YOOKASSA_SECRET_KEY: z.string().default(''),
   YOOKASSA_RETURN_URL: z.url().default('http://localhost:3000/account'),
-  SUBSCRIPTION_PRICE_RUB: z.coerce.number().default(100),
+  YOOKASSA_RECURRING: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export type Env = z.infer<typeof envSchema>;

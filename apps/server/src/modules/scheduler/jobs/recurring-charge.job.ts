@@ -1,26 +1,74 @@
 import { randomUUID } from 'node:crypto';
-import { Injectable } from '@nestjs/common';
+import { findPlan } from '@gnomevpn/schemas';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { addHours } from 'date-fns';
+import { addHours, subHours } from 'date-fns';
 
 import { AppConfigService } from '../../../config/config.module';
 import { PrismaService } from '../../../core';
-import { YooKassaClient } from '../../../lib';
+import { makeYooKassaClient, YooKassaClient } from '../../../lib';
+import { describeRenewal } from '../../billing';
+
+import type { DueSubscription } from './jobs.types';
 
 const RENEW_WINDOW_HOURS = 24;
-const DESCRIPTION = 'Продление подписки GnomeVPN';
+
+const IN_FLIGHT_WINDOW_HOURS = 24;
 
 @Injectable()
 export class RecurringChargeJob {
+  private readonly logger = new Logger(RecurringChargeJob.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
   ) {}
 
-  makeClient(): YooKassaClient {
-    return new YooKassaClient({
-      shopId: this.config.get('YOOKASSA_SHOP_ID'),
-      secretKey: this.config.get('YOOKASSA_SECRET_KEY'),
+  private makeClient(): YooKassaClient {
+    return makeYooKassaClient(this.config);
+  }
+
+  private async hasChargeInFlight(userId: string): Promise<boolean> {
+    const pending = await this.prisma.payment.findFirst({
+      where: {
+        userId,
+        isRecurring: true,
+        status: 'pending',
+        createdAt: { gt: subHours(new Date(), IN_FLIGHT_WINDOW_HOURS) },
+      },
+      select: { id: true },
+    });
+
+    return pending !== null;
+  }
+
+  private async charge(subscription: DueSubscription): Promise<void> {
+    if (!subscription.yookassaPaymentMethodId) {
+      return;
+    }
+
+    if (await this.hasChargeInFlight(subscription.userId)) {
+      return;
+    }
+
+    const plan = findPlan(subscription.plan);
+
+    const payment = await this.makeClient().chargeRecurring({
+      amountRub: plan.priceRub,
+      description: describeRenewal(plan),
+      paymentMethodId: subscription.yookassaPaymentMethodId,
+      idempotenceKey: randomUUID(),
+    });
+
+    await this.prisma.payment.create({
+      data: {
+        userId: subscription.userId,
+        yookassaPaymentId: payment.id,
+        amount: plan.priceRub,
+        status: 'pending',
+        isRecurring: true,
+        plan: plan.id,
+      },
     });
   }
 
@@ -32,38 +80,14 @@ export class RecurringChargeJob {
         cancelAtPeriodEnd: false,
         currentPeriodEnd: { lt: addHours(new Date(), RENEW_WINDOW_HOURS) },
       },
-      select: { userId: true, yookassaPaymentMethodId: true },
+      select: { userId: true, yookassaPaymentMethodId: true, plan: true },
     });
 
-    const price = this.config.get('SUBSCRIPTION_PRICE_RUB');
-
     for (const subscription of due) {
-      if (!subscription.yookassaPaymentMethodId) {
-        continue;
-      }
-
       try {
-        const payment = await this.makeClient().chargeRecurring({
-          amountRub: price,
-          description: DESCRIPTION,
-          paymentMethodId: subscription.yookassaPaymentMethodId,
-          idempotenceKey: randomUUID(),
-        });
-
-        await this.prisma.payment.create({
-          data: {
-            userId: subscription.userId,
-            yookassaPaymentId: payment.id,
-            amount: price,
-            status: 'pending',
-            isRecurring: true,
-          },
-        });
-      } catch {
-        await this.prisma.subscription.update({
-          where: { userId: subscription.userId },
-          data: { status: 'expired' },
-        });
+        await this.charge(subscription);
+      } catch (error) {
+        this.logger.warn(`Recurring charge failed for ${subscription.userId}: ${String(error)}`);
       }
     }
   }

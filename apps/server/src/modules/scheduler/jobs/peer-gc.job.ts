@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { isBefore, subMilliseconds } from 'date-fns';
 
+import { resolveNodeApiKey } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { WgEasyClient } from '../../../lib';
 
@@ -8,28 +10,31 @@ import type { PeerRow } from './jobs.types';
 
 const STALE_MS = 5 * 60_000;
 
+// A peer that has never handshaked is not idle — the user may have fetched the
+// config and not brought the tunnel up yet. Collecting it at STALE_MS revokes a
+// config the client still believes is valid, and it fails with no error.
+const NEVER_CONNECTED_GRACE_MS = 60 * 60_000;
+
 @Injectable()
 export class PeerGcJob {
+  private readonly logger = new Logger(PeerGcJob.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
-  makeClient(baseUrl: string, apiKey: string): WgEasyClient {
-    return new WgEasyClient({ baseUrl, apiKey });
-  }
-
   private isStale(createdAt: Date, handshake: Date | null): boolean {
-    const last = handshake ?? createdAt;
+    if (!handshake) {
+      return isBefore(createdAt, subMilliseconds(new Date(), NEVER_CONNECTED_GRACE_MS));
+    }
 
-    return Date.now() - last.getTime() > STALE_MS;
+    return isBefore(handshake, subMilliseconds(new Date(), STALE_MS));
   }
 
   private async collect(peer: PeerRow): Promise<void> {
-    const apiKey = process.env[peer.node.wgEasyApiKeyRef];
+    const wg = new WgEasyClient({
+      baseUrl: peer.node.wgEasyUrl,
+      apiKey: resolveNodeApiKey(peer.node.wgEasyApiKeyRef),
+    });
 
-    if (!apiKey) {
-      return;
-    }
-
-    const wg = this.makeClient(peer.node.wgEasyUrl, apiKey);
     const handshake = await wg.getClientHandshake(peer.wgEasyClientId);
 
     if (!this.isStale(peer.createdAt, handshake)) {
@@ -59,6 +64,12 @@ export class PeerGcJob {
       },
     });
 
-    await Promise.allSettled(peers.map((peer) => this.collect(peer)));
+    const results = await Promise.allSettled(peers.map((peer) => this.collect(peer)));
+
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        this.logger.warn(`Peer collection failed: ${String(result.reason)}`);
+      }
+    }
   }
 }

@@ -1,14 +1,17 @@
+import { describeCard } from './lib';
+import { API_URL, CURRENCY } from './yookassa.constants';
+
 import type {
+  BindPaymentMethodInput,
   ChargeRecurringInput,
   CreatePaymentInput,
   CreatePaymentResult,
   PaymentInfo,
+  PaymentMethodInfo,
+  PaymentMethodResponse,
   PaymentResponse,
   YooKassaClientOptions,
 } from './yookassa.types';
-
-const API_URL = 'https://api.yookassa.ru/v3';
-const CURRENCY = 'RUB';
 
 export class YooKassaClient {
   private readonly shopId: string;
@@ -36,11 +39,7 @@ export class YooKassaClient {
     return { value: rub.toFixed(2), currency: CURRENCY };
   }
 
-  private async request(
-    path: string,
-    init: RequestInit,
-    idempotenceKey?: string,
-  ): Promise<PaymentResponse> {
+  private async request<T>(path: string, init: RequestInit, idempotenceKey?: string): Promise<T> {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: this.headers(idempotenceKey),
@@ -52,18 +51,18 @@ export class YooKassaClient {
       throw new Error(`yookassa ${path} failed: ${res.status} ${detail}`);
     }
 
-    return (await res.json()) as PaymentResponse;
+    return (await res.json()) as T;
   }
 
   async createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult> {
-    const payload = await this.request(
+    const payload = await this.request<PaymentResponse>(
       '/payments',
       {
         method: 'POST',
         body: JSON.stringify({
+          capture: true,
           amount: this.amount(input.amountRub),
           description: input.description,
-          capture: true,
           save_payment_method: input.savePaymentMethod,
           confirmation: { type: 'redirect', return_url: input.returnUrl },
         }),
@@ -79,7 +78,7 @@ export class YooKassaClient {
   }
 
   async chargeRecurring(input: ChargeRecurringInput): Promise<CreatePaymentResult> {
-    const payload = await this.request(
+    const payload = await this.request<PaymentResponse>(
       '/payments',
       {
         method: 'POST',
@@ -101,12 +100,49 @@ export class YooKassaClient {
   }
 
   async getPayment(paymentId: string): Promise<PaymentInfo> {
-    const payload = await this.request(`/payments/${paymentId}`, { method: 'GET' });
+    const payload = await this.request<PaymentResponse>(`/payments/${paymentId}`, {
+      method: 'GET',
+    });
 
     return {
       id: payload.id,
       status: payload.status,
       paymentMethodId: payload.payment_method?.id ?? null,
+      paymentMethodTitle: describeCard(payload.payment_method?.card, payload.payment_method?.title),
     };
+  }
+
+  private toPaymentMethodInfo(payload: PaymentMethodResponse): PaymentMethodInfo {
+    return {
+      id: payload.id,
+      status: payload.status,
+      title: describeCard(payload.card, payload.title),
+      confirmationUrl: payload.confirmation?.confirmation_url ?? null,
+    };
+  }
+
+  async bindPaymentMethod(input: BindPaymentMethodInput): Promise<PaymentMethodInfo> {
+    const payload = await this.request<PaymentMethodResponse>(
+      '/payment_methods',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'bank_card',
+          confirmation: { type: 'redirect', return_url: input.returnUrl },
+        }),
+      },
+      input.idempotenceKey,
+    );
+
+    return this.toPaymentMethodInfo(payload);
+  }
+
+  async getPaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
+    const payload = await this.request<PaymentMethodResponse>(
+      `/payment_methods/${paymentMethodId}`,
+      { method: 'GET' },
+    );
+
+    return this.toPaymentMethodInfo(payload);
   }
 }

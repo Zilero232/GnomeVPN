@@ -1,15 +1,16 @@
 import { randomUUID } from 'node:crypto';
+import { findPlan } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
-import { addMonths, isAfter } from 'date-fns';
 
 import { AppBadRequestException } from '../../common/exceptions';
+import { isPeriodActive, nextPeriodEnd } from '../../common/lib';
 import { AppConfigService } from '../../config/config.module';
 import { PrismaService } from '../../core';
-import { YooKassaClient } from '../../lib';
+import { makeYooKassaClient, YooKassaClient } from '../../lib';
+import { describePlan } from './lib';
 
-import type { CheckoutResult, WebhookEvent } from '@gnomevpn/schemas';
-
-const DESCRIPTION = 'Подписка GnomeVPN на 1 месяц';
+import type { BindCardResult, CheckoutResult, PlanId, WebhookEvent } from '@gnomevpn/schemas';
+import type { ActivateInput, AttachMethodInput } from './billing.types';
 
 @Injectable()
 export class BillingService {
@@ -18,93 +19,260 @@ export class BillingService {
     private readonly config: AppConfigService,
   ) {}
 
-  makeClient(): YooKassaClient {
-    return new YooKassaClient({
-      shopId: this.config.get('YOOKASSA_SHOP_ID'),
-      secretKey: this.config.get('YOOKASSA_SECRET_KEY'),
+  private makeClient(): YooKassaClient {
+    return makeYooKassaClient(this.config);
+  }
+
+  private isRecurringEnabled(): boolean {
+    return this.config.get('YOOKASSA_RECURRING');
+  }
+
+  async createCheckout(userId: string, planId: PlanId): Promise<CheckoutResult> {
+    const plan = findPlan(planId);
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { plan: true, status: true, currentPeriodEnd: true },
     });
-  }
 
-  private priceRub(): number {
-    return this.config.get('SUBSCRIPTION_PRICE_RUB');
-  }
-
-  async createCheckout(userId: string): Promise<CheckoutResult> {
-    const price = this.priceRub();
+    if (
+      subscription?.status === 'active' &&
+      isPeriodActive(subscription.currentPeriodEnd) &&
+      subscription.plan !== plan.id
+    ) {
+      throw new AppBadRequestException(
+        'PLAN_CHANGE_LOCKED',
+        'Plan cannot change while the current period runs',
+      );
+    }
 
     const payment = await this.makeClient().createPayment({
-      amountRub: price,
-      description: DESCRIPTION,
+      amountRub: plan.priceRub,
+      description: describePlan(plan),
       returnUrl: this.config.get('YOOKASSA_RETURN_URL'),
       idempotenceKey: randomUUID(),
-      savePaymentMethod: true,
+      savePaymentMethod: this.isRecurringEnabled(),
     });
 
     await this.prisma.payment.create({
       data: {
         userId,
         yookassaPaymentId: payment.id,
-        amount: price,
+        amount: plan.priceRub,
         status: 'pending',
         isRecurring: false,
+        plan: plan.id,
       },
     });
 
     if (!payment.confirmationUrl) {
-      throw new AppBadRequestException('PAYMENT_FAILED', 'Не удалось создать платёж');
+      throw new AppBadRequestException('PAYMENT_FAILED', 'YooKassa returned no confirmation URL');
     }
 
     return { confirmationUrl: payment.confirmationUrl };
   }
 
-  private async activate(userId: string, paymentMethodId: string | null): Promise<void> {
+  private async activate({ userId, planId, method }: ActivateInput): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { currentPeriodEnd: true },
+      select: {
+        plan: true,
+        currentPeriodEnd: true,
+        cancelAtPeriodEnd: true,
+        yookassaPaymentMethodId: true,
+      },
     });
 
-    const now = new Date();
-    const current = subscription?.currentPeriodEnd;
-    const base = current && isAfter(current, now) ? current : now;
+    const plan = findPlan(planId);
+    const currentPeriodEnd = subscription?.currentPeriodEnd;
+    const isStillActive = isPeriodActive(currentPeriodEnd);
 
-    await this.prisma.subscription.update({
+    const hasMethod = Boolean(method?.id ?? subscription?.yookassaPaymentMethodId);
+    const cancelAtPeriodEnd =
+      !this.isRecurringEnabled() || !hasMethod || (subscription?.cancelAtPeriodEnd ?? false);
+
+    const data = {
+      status: 'active' as const,
+      plan: isStillActive ? (subscription?.plan ?? plan.id) : plan.id,
+      currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
+      cancelAtPeriodEnd,
+      ...(method?.id
+        ? { yookassaPaymentMethodId: method.id, paymentMethodTitle: method.title }
+        : {}),
+    };
+
+    // Upsert, not update: the row is created by a better-auth hook, and if that
+    // ever missed, a paid webhook would fail here with the payment already
+    // marked succeeded — money taken, access never granted, no retry.
+    await this.prisma.subscription.upsert({
       where: { userId },
-      data: {
-        status: 'active',
-        currentPeriodEnd: addMonths(base, 1),
-        ...(paymentMethodId ? { yookassaPaymentMethodId: paymentMethodId } : {}),
-      },
+      create: { userId, ...data },
+      update: data,
     });
   }
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
-    const row = await this.prisma.payment.findUnique({
-      where: { yookassaPaymentId: event.object.id },
-      select: { id: true, userId: true, status: true },
-    });
+    if (event.event === 'payment_method.active') {
+      await this.handlePaymentMethodActive(event.object.id);
 
-    if (!row || row.status === 'succeeded') {
       return;
     }
 
-    const payment = await this.makeClient().getPayment(event.object.id);
+    await this.handlePaymentEvent(event.object.id);
+  }
+
+  private async handlePaymentEvent(paymentId: string): Promise<void> {
+    const row = await this.prisma.payment.findUnique({
+      where: { yookassaPaymentId: paymentId },
+      select: { id: true, userId: true, status: true, plan: true },
+    });
+
+    if (row?.status !== 'pending') {
+      return;
+    }
+
+    const payment = await this.makeClient().getPayment(paymentId);
+
+    if (payment.status === 'canceled') {
+      await this.prisma.payment.update({
+        where: { id: row.id },
+        data: { status: 'canceled' },
+      });
+
+      return;
+    }
 
     if (payment.status !== 'succeeded') {
       return;
     }
 
-    await this.prisma.payment.update({
-      where: { id: row.id },
+    const claimed = await this.prisma.payment.updateMany({
+      where: { id: row.id, status: 'pending' },
       data: { status: 'succeeded' },
     });
 
-    await this.activate(row.userId, payment.paymentMethodId);
+    if (claimed.count === 0) {
+      return;
+    }
+
+    await this.activate({
+      userId: row.userId,
+      planId: row.plan,
+      method: payment.paymentMethodId
+        ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
+        : null,
+    });
+  }
+
+  private async setAutoRenew(userId: string, isEnabled: boolean): Promise<void> {
+    await this.prisma.subscription.update({
+      where: { userId },
+      data: { cancelAtPeriodEnd: !isEnabled },
+    });
   }
 
   async cancelAutoRenew(userId: string): Promise<void> {
+    await this.setAutoRenew(userId, false);
+  }
+
+  async resumeAutoRenew(userId: string): Promise<void> {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { yookassaPaymentMethodId: true },
+    });
+
+    if (!subscription?.yookassaPaymentMethodId) {
+      throw new AppBadRequestException('PAYMENT_METHOD_MISSING', 'No saved payment method');
+    }
+
+    await this.setAutoRenew(userId, true);
+  }
+
+  async bindCard(userId: string): Promise<BindCardResult> {
+    if (!this.isRecurringEnabled()) {
+      throw new AppBadRequestException(
+        'RECURRING_UNAVAILABLE',
+        'Recurring payments are not enabled for this shop',
+      );
+    }
+
+    const method = await this.makeClient().bindPaymentMethod({
+      returnUrl: this.config.get('YOOKASSA_RETURN_URL'),
+      idempotenceKey: randomUUID(),
+    });
+
+    if (method.status === 'active') {
+      await this.attachPaymentMethod({
+        userId,
+        paymentMethodId: method.id,
+        title: method.title,
+      });
+
+      return { confirmationUrl: null, isActive: true };
+    }
+
     await this.prisma.subscription.update({
       where: { userId },
-      data: { cancelAtPeriodEnd: true },
+      data: { pendingPaymentMethodId: method.id },
+    });
+
+    return { confirmationUrl: method.confirmationUrl, isActive: false };
+  }
+
+  private async attachPaymentMethod({
+    userId,
+    paymentMethodId,
+    title,
+  }: AttachMethodInput): Promise<void> {
+    await this.prisma.subscription.update({
+      where: { userId },
+      data: {
+        yookassaPaymentMethodId: paymentMethodId,
+        paymentMethodTitle: title,
+        pendingPaymentMethodId: null,
+        cancelAtPeriodEnd: false,
+      },
+    });
+  }
+
+  // YooKassa has no endpoint to revoke a saved method, so this only stops us
+  // from using it: the token stays alive on their side.
+  async unbindCard(userId: string): Promise<void> {
+    await this.prisma.subscription.update({
+      where: { userId },
+      data: {
+        yookassaPaymentMethodId: null,
+        paymentMethodTitle: null,
+        pendingPaymentMethodId: null,
+        cancelAtPeriodEnd: true,
+      },
+    });
+  }
+
+  private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { pendingPaymentMethodId: paymentMethodId },
+      select: { userId: true },
+    });
+
+    if (!subscription) {
+      return;
+    }
+
+    const method = await this.makeClient().getPaymentMethod(paymentMethodId);
+
+    if (method.status !== 'active') {
+      await this.prisma.subscription.update({
+        where: { userId: subscription.userId },
+        data: { pendingPaymentMethodId: null },
+      });
+
+      return;
+    }
+
+    await this.attachPaymentMethod({
+      userId: subscription.userId,
+      paymentMethodId,
+      title: method.title,
     });
   }
 }

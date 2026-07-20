@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
+import { resolveNodeApiKey } from '../../common/lib';
 import { PrismaService } from '../../core';
 import { WgEasyClient } from '../../lib';
 import { NodesService } from '../nodes';
@@ -12,29 +13,39 @@ const KEEPALIVE = 25;
 
 @Injectable()
 export class TunnelService {
+  private readonly logger = new Logger(TunnelService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly nodes: NodesService,
   ) {}
 
-  makeWgClient(baseUrl: string, apiKey: string): WgEasyClient {
-    return new WgEasyClient({ baseUrl, apiKey });
+  private makeWgClient(baseUrl: string, apiKeyRef: string): WgEasyClient {
+    return new WgEasyClient({ baseUrl, apiKey: resolveNodeApiKey(apiKeyRef) });
   }
 
-  private resolveApiKey(ref: string): string {
-    const key = process.env[ref];
+  // Best effort: a node that is unreachable or missing its key must not fail
+  // the caller, or a country switch would break on the node being left behind.
+  private async releasePeer(nodeId: string, wgEasyClientId: string): Promise<void> {
+    const node = await this.prisma.node.findUnique({
+      where: { id: nodeId },
+      select: { wgEasyUrl: true, wgEasyApiKeyRef: true },
+    });
 
-    if (!key) {
-      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node credentials missing');
+    if (!node) {
+      return;
     }
 
-    return key;
+    try {
+      await this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef).deleteClient(wgEasyClientId);
+    } catch (error) {
+      this.logger.warn(`Failed to release peer ${wgEasyClientId}: ${String(error)}`);
+    }
   }
 
   async connect(userId: string, nodeId: string): Promise<TunnelConfig> {
     const node = await this.nodes.getNodeForConnect(nodeId);
-    const apiKey = this.resolveApiKey(node.wgEasyApiKeyRef);
-    const wg = this.makeWgClient(node.wgEasyUrl, apiKey);
+    const wg = this.makeWgClient(node.wgEasyUrl, node.wgEasyApiKeyRef);
 
     const existing = await this.prisma.activePeer.findUnique({ where: { userId } });
 
@@ -46,21 +57,9 @@ export class TunnelService {
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wg-easy node unreachable');
     }
 
-    if (existing) {
-      const oldNode = await this.prisma.node.findUnique({
-        where: { id: existing.nodeId },
-        select: { wgEasyUrl: true, wgEasyApiKeyRef: true },
-      });
-
-      if (oldNode) {
-        const oldWg = this.makeWgClient(
-          oldNode.wgEasyUrl,
-          this.resolveApiKey(oldNode.wgEasyApiKeyRef),
-        );
-        await oldWg.deleteClient(existing.wgEasyClientId).catch(() => undefined);
-      }
-    }
-
+    // The row is claimed before the old peer is removed: if this fails the user
+    // keeps a working tunnel, and the new client is rolled back. Removing first
+    // would leave them with nothing.
     try {
       await this.prisma.activePeer.upsert({
         where: { userId },
@@ -79,6 +78,10 @@ export class TunnelService {
     } catch (error) {
       await wg.deleteClient(created.clientId).catch(() => undefined);
       throw error;
+    }
+
+    if (existing) {
+      await this.releasePeer(existing.nodeId, existing.wgEasyClientId);
     }
 
     return {
@@ -100,15 +103,7 @@ export class TunnelService {
       return;
     }
 
-    const node = await this.prisma.node.findUnique({
-      where: { id: existing.nodeId },
-      select: { wgEasyUrl: true, wgEasyApiKeyRef: true },
-    });
-
-    if (node) {
-      const wg = this.makeWgClient(node.wgEasyUrl, this.resolveApiKey(node.wgEasyApiKeyRef));
-      await wg.deleteClient(existing.wgEasyClientId).catch(() => undefined);
-    }
+    await this.releasePeer(existing.nodeId, existing.wgEasyClientId);
 
     await this.prisma.activePeer.delete({ where: { userId } });
   }

@@ -1,4 +1,4 @@
-import { parseIniValue } from './wg-easy-ini';
+import { parseIniValue } from './lib';
 
 import type { CreateClientResult, WgEasyClientOptions, WgEasyClientRow } from './wg-easy.types';
 
@@ -89,10 +89,13 @@ export class WgEasyClient {
     }
   }
 
+  // /api/release answers 200 without auth, so it proves only that something is
+  // listening. Listing clients exercises the peer subsystem the tunnel needs.
   async health(): Promise<boolean> {
     try {
-      const res = await fetch(`${this.baseUrl}/api/release`, { headers: this.headers() });
-      return res.ok;
+      await this.listClients();
+
+      return true;
     } catch {
       return false;
     }

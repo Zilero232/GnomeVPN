@@ -1,17 +1,22 @@
 model Node {
-  id             String   @id @default(dbgenerated("gen_random_uuid()"))
-  country        String
-  countryCode    String   @map("country_code")
-  flagEmoji      String   @map("flag_emoji")
-  city           String?
-  wgEasyUrl      String   @map("wg_easy_url")
-  wgEasyApiKeyRef String  @map("wg_easy_api_key_ref")
-  publicEndpoint String   @map("public_endpoint")
-  enabled        Boolean  @default(true)
-  sortOrder      Int      @default(0) @map("sort_order")
-  lastHealthyAt  DateTime? @map("last_healthy_at") @db.Timestamptz(3)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  activePeers    ActivePeer[]
+  id String @id @default(dbgenerated("gen_random_uuid()"))
+
+  country     String
+  countryCode String  @map("country_code")
+  flagEmoji   String  @map("flag_emoji")
+  city        String?
+
+  publicEndpoint  String @map("public_endpoint")
+  wgEasyUrl       String @map("wg_easy_url")
+  wgEasyApiKeyRef String @map("wg_easy_api_key_ref")
+
+  enabled       Boolean   @default(true)
+  sortOrder     Int       @default(0) @map("sort_order")
+  lastHealthyAt DateTime? @map("last_healthy_at") @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  activePeers ActivePeer[]
 
   @@map("node")
 }

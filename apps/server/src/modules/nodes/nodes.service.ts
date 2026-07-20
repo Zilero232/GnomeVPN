@@ -53,23 +53,14 @@ export class NodesService {
       throw new AppNotFoundException('NODE_NOT_FOUND', 'Node not found');
     }
 
+    // Degraded means the node has not answered a probe in minutes. Handing it
+    // out produces a connect that fails at wg-easy with no useful message.
     if (
-      resolveNodeStatus({ enabled: node.enabled, lastHealthyAt: node.lastHealthyAt }) === 'offline'
+      resolveNodeStatus({ enabled: node.enabled, lastHealthyAt: node.lastHealthyAt }) !== 'online'
     ) {
-      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is offline');
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is not healthy');
     }
 
     return node;
-  }
-
-  async markHealth(nodeId: string, isHealthy: boolean): Promise<void> {
-    if (!isHealthy) {
-      return;
-    }
-
-    await this.prisma.node.update({
-      where: { id: nodeId },
-      data: { lastHealthyAt: new Date() },
-    });
   }
 }

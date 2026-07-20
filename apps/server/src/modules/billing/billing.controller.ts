@@ -1,10 +1,15 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
-import { Public } from '@thallesp/nestjs-better-auth';
+import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUser } from '../../common/decorators';
 import { BillingService } from './billing.service';
-import { CheckoutResultDto, WebhookEventDto } from './dto/billing.dto';
+import {
+  BindCardResultDto,
+  CheckoutResultDto,
+  CreateCheckoutDto,
+  WebhookEventDto,
+} from './dto/billing.dto';
 import { WebhookIpGuard } from './guards';
 
 @Controller('billing')
@@ -13,8 +18,8 @@ export class BillingController {
 
   @Post('checkout')
   @ZodResponse({ type: CheckoutResultDto })
-  createCheckout(@CurrentUser() userId: string) {
-    return this.billing.createCheckout(userId);
+  createCheckout(@Body() body: CreateCheckoutDto, @CurrentUser() userId: string) {
+    return this.billing.createCheckout(userId, body.planId);
   }
 
   @Post('cancel')
@@ -23,7 +28,25 @@ export class BillingController {
     return this.billing.cancelAutoRenew(userId);
   }
 
-  @Public()
+  @Post('resume')
+  @HttpCode(204)
+  resumeAutoRenew(@CurrentUser() userId: string) {
+    return this.billing.resumeAutoRenew(userId);
+  }
+
+  @Post('bind-card')
+  @ZodResponse({ type: BindCardResultDto })
+  bindCard(@CurrentUser() userId: string) {
+    return this.billing.bindCard(userId);
+  }
+
+  @Post('unbind-card')
+  @HttpCode(204)
+  unbindCard(@CurrentUser() userId: string) {
+    return this.billing.unbindCard(userId);
+  }
+
+  @AllowAnonymous()
   @UseGuards(WebhookIpGuard)
   @Post('webhook')
   @HttpCode(200)

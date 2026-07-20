@@ -1,31 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
+import { resolveNodeApiKey } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { WgEasyClient } from '../../../lib';
 
+import type { ProbeNodeRow } from './jobs.types';
+
 @Injectable()
 export class NodeHealthJob {
+  private readonly logger = new Logger(NodeHealthJob.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
-  makeClient(baseUrl: string, apiKey: string): WgEasyClient {
-    return new WgEasyClient({ baseUrl, apiKey });
-  }
+  private async probe(node: ProbeNodeRow): Promise<void> {
+    const wg = new WgEasyClient({
+      baseUrl: node.wgEasyUrl,
+      apiKey: resolveNodeApiKey(node.wgEasyApiKeyRef),
+    });
 
-  private async probe(node: {
-    id: string;
-    wgEasyUrl: string;
-    wgEasyApiKeyRef: string;
-  }): Promise<void> {
-    const apiKey = process.env[node.wgEasyApiKeyRef];
-
-    if (!apiKey) {
-      return;
-    }
-
-    const isHealthy = await this.makeClient(node.wgEasyUrl, apiKey).health();
-
-    if (!isHealthy) {
+    if (!(await wg.health())) {
       return;
     }
 
@@ -42,6 +36,12 @@ export class NodeHealthJob {
       select: { id: true, wgEasyUrl: true, wgEasyApiKeyRef: true },
     });
 
-    await Promise.allSettled(nodes.map((node) => this.probe(node)));
+    const results = await Promise.allSettled(nodes.map((node) => this.probe(node)));
+
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        this.logger.warn(`Node probe failed: ${String(result.reason)}`);
+      }
+    }
   }
 }

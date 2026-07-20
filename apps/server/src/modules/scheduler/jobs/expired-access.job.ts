@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { filter, map, pipe } from 'remeda';
 
+import { isPeriodActive } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { TunnelService } from '../../tunnel';
 
@@ -16,11 +18,7 @@ export class ExpiredAccessJob {
   private hasAccess(row: PeerAccessRow): boolean {
     const subscription = row.user.subscription;
 
-    if (subscription?.status !== 'active' || !subscription.currentPeriodEnd) {
-      return false;
-    }
-
-    return subscription.currentPeriodEnd.getTime() > Date.now();
+    return subscription?.status === 'active' && isPeriodActive(subscription.currentPeriodEnd);
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
@@ -36,8 +34,12 @@ export class ExpiredAccessJob {
       },
     });
 
-    const expired = peers.filter((peer) => !this.hasAccess(peer));
-
-    await Promise.allSettled(expired.map((peer) => this.tunnel.disconnect(peer.userId)));
+    await Promise.allSettled(
+      pipe(
+        peers,
+        filter((peer) => !this.hasAccess(peer)),
+        map((peer) => this.tunnel.disconnect(peer.userId)),
+      ),
+    );
   }
 }

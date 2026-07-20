@@ -3,11 +3,20 @@ export type YooKassaClientOptions = {
   secretKey: string;
 };
 
+export type CardData = {
+  last4?: string;
+  card_type?: string;
+};
+
 export type PaymentResponse = {
   id: string;
   status: string;
   confirmation?: { confirmation_url?: string };
-  payment_method?: { id?: string };
+  payment_method?: {
+    id?: string;
+    title?: string;
+    card?: CardData;
+  };
 };
 
 export type CreatePaymentInput = {
@@ -35,4 +44,27 @@ export type PaymentInfo = {
   id: string;
   status: string;
   paymentMethodId: string | null;
+  paymentMethodTitle: string | null;
+};
+
+export type BindPaymentMethodInput = {
+  returnUrl: string;
+  idempotenceKey: string;
+};
+
+export type PaymentMethodStatus = 'pending' | 'active' | 'inactive';
+
+export type PaymentMethodInfo = {
+  id: string;
+  status: PaymentMethodStatus;
+  title: string | null;
+  confirmationUrl: string | null;
+};
+
+export type PaymentMethodResponse = {
+  id: string;
+  status: PaymentMethodStatus;
+  title?: string;
+  card?: CardData;
+  confirmation?: { confirmation_url?: string };
 };

@@ -1,13 +1,16 @@
 model ActivePeer {
-  id             String   @id @default(dbgenerated("gen_random_uuid()"))
-  userId         String   @unique @map("user_id")
-  nodeId         String   @map("node_id")
-  wgEasyClientId String   @map("wg_easy_client_id")
-  assignedIp     String   @map("assigned_ip")
+  id     String @id @default(dbgenerated("gen_random_uuid()"))
+  userId String @unique @map("user_id")
+  nodeId String @map("node_id")
+
+  wgEasyClientId  String    @map("wg_easy_client_id")
+  assignedIp      String    @map("assigned_ip")
   lastHandshakeAt DateTime? @map("last_handshake_at") @db.Timestamptz(3)
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  node           Node     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@map("active_peer")
 }
