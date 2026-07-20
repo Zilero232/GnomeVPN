@@ -1,1 +1,1 @@
-export { useCurrentUser } from './model/hooks';
+export { useChangeEmail, useChangePassword, useCurrentUser, useUpdateName } from './model/hooks';

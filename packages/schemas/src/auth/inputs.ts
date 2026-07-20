@@ -20,3 +20,36 @@ export const signUpSchema = z
     message: 'validation.passwordsMismatch',
     path: ['confirmPassword'],
   });
+
+export const updateNameSchema = z.object({
+  name: nameSchema,
+});
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'validation.passwordsMismatch',
+    path: ['confirmPassword'],
+  });
+
+export const changeEmailSchema = z.object({
+  newEmail: emailSchema,
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'validation.required'),
+    newPassword: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'validation.passwordsMismatch',
+    path: ['confirmPassword'],
+  });

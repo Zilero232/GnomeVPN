@@ -7,10 +7,12 @@ import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
 import { ConfigList } from '@/features/vpn/download-config';
-import { Text } from '@/shared/ui';
-import { AccountNav, SubscriptionCard } from './components';
+import { Tabs, Text } from '@/shared/ui';
+import { AccountNav, ProfileCard, SubscriptionCard } from './components';
 
 import s from './AccountPage.module.scss';
+
+import type { TabItem } from '@/shared/ui';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
@@ -19,6 +21,24 @@ export const AccountPage = () => {
   const { subscription, isLoading } = useSubscriptionStatus();
 
   const signOut = useSignOut();
+
+  const tabs: TabItem[] = [
+    {
+      value: 'subscription',
+      label: t('tabs.subscription'),
+      content: <SubscriptionCard isLoading={isLoading} subscription={subscription} />,
+    },
+    {
+      value: 'configs',
+      label: tConfigs('title'),
+      content: <ConfigList />,
+    },
+    {
+      value: 'profile',
+      label: t('profile.title'),
+      content: <ProfileCard />,
+    },
+  ];
 
   return (
     <main className={s.root}>
@@ -31,14 +51,7 @@ export const AccountPage = () => {
         </Text>
       </header>
 
-      <div className={s.card}>
-        <SubscriptionCard isLoading={isLoading} subscription={subscription} />
-      </div>
-
-      <section className={s.card}>
-        <h2 className={s.sectionTitle}>{tConfigs('title')}</h2>
-        <ConfigList />
-      </section>
+      <Tabs items={tabs} panelClassName={s.card} />
 
       <footer className={s.footer}>
         <button
