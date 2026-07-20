@@ -4,5 +4,5 @@ import { apiErrorCodeSchema } from './codes';
 
 export const apiErrorSchema = z.object({
   error: z.string(),
-  code: apiErrorCodeSchema,
+  code: apiErrorCodeSchema.catch('INTERNAL_ERROR'),
 });

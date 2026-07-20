@@ -1,6 +1,11 @@
 import type { z } from 'zod';
-import type { webhookEventSchema } from './inputs';
-import type { checkoutResultSchema } from './outputs';
+import type { createCheckoutSchema, webhookEventSchema } from './inputs';
+import type { bindCardResultSchema, checkoutResultSchema } from './outputs';
+import type { planIdSchema, planSchema } from './plans';
 
 export type WebhookEvent = z.infer<typeof webhookEventSchema>;
 export type CheckoutResult = z.infer<typeof checkoutResultSchema>;
+export type BindCardResult = z.infer<typeof bindCardResultSchema>;
+export type CreateCheckoutInput = z.infer<typeof createCheckoutSchema>;
+export type PlanId = z.infer<typeof planIdSchema>;
+export type Plan = z.infer<typeof planSchema>;
