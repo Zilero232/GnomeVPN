@@ -62,7 +62,10 @@ The repo has no `unsafe` blocks. Keep it that way.
 
 ## Style
 
-- No comments unless the *why* is genuinely non-obvious — and then in English
+- **No comments.** The code is expected to read on its own.
+- **Two or more parameters → one object.** `connect({ nodeId, country })`, never
+  `connect(nodeId, country)`. The shape lives in a sibling `*.types.ts` as
+  `<Fn>Input`, so a call site never has to guess argument order.
 - No tests in this repo (removed deliberately); verify by building and running
 - Everything user-visible goes through i18n, both `en.json` and `ru.json`
 - Import order: node → external → workspace → `@/` → relative → types last

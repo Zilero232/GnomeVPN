@@ -73,7 +73,7 @@ Docker Compose, Caddy, PostgreSQL and a provisioning script for the VPN nodes.
 
 **Live stats** — uptime and traffic counters
 
-**Signed updates** — delivered from GitHub releases
+**Signed updates** — proxied through the API, signature verified on the client
 
 </td>
 </tr>

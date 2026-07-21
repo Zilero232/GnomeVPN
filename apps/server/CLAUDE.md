@@ -13,7 +13,7 @@ src/
 │   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
 │   ├── health/      # /health — also probes the database
 │   ├── nodes/       # public node list with health status — config/ lib/
-│   ├── release/     # latest desktop release, proxied from GitHub — config/
+│   ├── release/     # desktop release + updater manifest, proxied from GitHub — config/ lib/
 │   ├── scheduler/   # cron jobs — config/ jobs/
 │   ├── subscription/# guards/
 │   └── tunnel/      # tunnel sessions and downloadable configs — config/ lib/

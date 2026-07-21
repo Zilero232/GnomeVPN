@@ -31,6 +31,14 @@ Every Tauri plugin call needs an entry in `capabilities/default.json`. Without o
 
 When adding a plugin: add the dependency, register it in `lib.rs`, **and** add its permission.
 
+## Commands are a two-sided contract
+
+The `invoke_handler` list in `lib.rs` is mirrored by `RustCommands` in [`apps/client/shared/lib/ipc/ipc.types.ts`](../client/shared/lib/ipc/ipc.types.ts), which is the only place the client is allowed to name a command. Adding a command on one side and not the other compiles fine and fails at runtime, so change both together.
+
+## Updater artifacts
+
+`bundle.createUpdaterArtifacts` must stay `true`. It is what produces the `.sig` files and `latest.json`; without it a release ships only the raw installers, the updater has no manifest to read, and auto-update silently stops working. Release `v0.1.1` shipped that way — the flag was added in `v0.1.2`.
+
 ## Platform config
 
 `tauri.conf.json` is shared. Windows-only resources — `wintun.dll` and the service binary — live in `tauri.windows.conf.json`, which Tauri merges only for Windows targets. Listing them in the base config breaks the Linux and macOS builds.
