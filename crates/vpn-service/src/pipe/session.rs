@@ -38,11 +38,10 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
 
         Request::Connect {
             config,
-            kill_switch,
             auto_reconnect,
         } => match supervisor.begin(&config) {
             Ok(()) => {
-                supervisor.set_options(kill_switch, auto_reconnect);
+                supervisor.set_options(auto_reconnect);
 
                 Action::StartTunnel(Response::Ok, config)
             }

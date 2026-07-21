@@ -5,6 +5,7 @@
     "sshPassword": "REPLACE_ME",
     "country": "Germany",
     "countryCode": "DE",
-    "city": "Frankfurt"
+    "city": "Frankfurt",
+    "realityServerName": "www.microsoft.com"
   }
 ]

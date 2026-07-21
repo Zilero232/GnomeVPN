@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const releasePlatformSchema = z.enum(['windows']);
+export const releasePlatformSchema = z.enum(['windows', 'android']);
 
 export const releaseAssetSchema = z.object({
   platform: releasePlatformSchema,

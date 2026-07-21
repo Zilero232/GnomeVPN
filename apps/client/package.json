@@ -14,6 +14,7 @@
     "@base-ui-components/react": "^1.0.0-rc.0",
     "@gnomevpn/schemas": "workspace:*",
     "@hookform/resolvers": "^5.4.0",
+    "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
     "@siberiacancode/reactuse": "^1.0.10",
     "@tanstack/react-query": "^5.101.2",
     "@tauri-apps/api": "^2.11.1",
@@ -52,7 +53,7 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "sass": "^1.101.0",
+    "sass-embedded": "^1.100.0",
     "typescript": "~6.0.3"
   }
 }

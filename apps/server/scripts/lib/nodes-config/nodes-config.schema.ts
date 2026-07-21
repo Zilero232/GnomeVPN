@@ -7,6 +7,7 @@ export const nodeConfigSchema = z.object({
   country: z.string().min(1),
   countryCode: z.string().length(2),
   city: z.string().min(1).optional(),
+  realityServerName: z.string().min(1).default('www.microsoft.com'),
 });
 
 export const nodesConfigSchema = z.array(nodeConfigSchema);

@@ -2,7 +2,7 @@ import type { UpsertNodeArgs, UpsertNodeResult } from './upsert-node.types';
 
 export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<UpsertNodeResult> => {
   const existing = await prisma.node.findFirst({
-    where: { wireguardEndpoint: input.wireguardEndpoint },
+    where: { host: input.host },
   });
 
   if (existing) {
@@ -12,8 +12,12 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
         country: input.country,
         countryCode: input.countryCode,
         city: input.city,
-        wgEasyUrl: input.wgEasyUrl,
-        wgEasyApiKeyEnvVar: input.wgEasyApiKeyEnvVar,
+        port: input.port,
+        realityServerName: input.realityServerName,
+        realityPublicKey: input.realityPublicKey,
+        realityShortId: input.realityShortId,
+        apiUrl: input.apiUrl,
+        apiTokenEnvVar: input.apiTokenEnvVar,
         isAvailable: true,
       },
     });
@@ -26,9 +30,13 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
       country: input.country,
       countryCode: input.countryCode,
       city: input.city,
-      wireguardEndpoint: input.wireguardEndpoint,
-      wgEasyUrl: input.wgEasyUrl,
-      wgEasyApiKeyEnvVar: input.wgEasyApiKeyEnvVar,
+      host: input.host,
+      port: input.port,
+      realityServerName: input.realityServerName,
+      realityPublicKey: input.realityPublicKey,
+      realityShortId: input.realityShortId,
+      apiUrl: input.apiUrl,
+      apiTokenEnvVar: input.apiTokenEnvVar,
       isAvailable: true,
     },
   });

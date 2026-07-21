@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -5,7 +7,8 @@
   max-width: 760px;
   min-height: var(--viewport-height);
   margin: 0 auto;
-  padding: 40px 24px 32px;
+
+  @include safe-padding(40px, 24px, 32px);
 }
 
 .footer {

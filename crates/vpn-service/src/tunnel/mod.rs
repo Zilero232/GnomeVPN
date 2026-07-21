@@ -1,7 +1,8 @@
 pub mod engine;
-pub mod killswitch;
 pub mod route;
 pub mod supervisor;
+pub mod tunio;
+pub mod xray;
 
 use std::sync::Arc;
 
@@ -15,17 +16,6 @@ const MIN_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 const MAX_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(30);
 const MAX_RETRIES: usize = 5;
 
-fn endpoint_ip(config: &TunnelConfig) -> Option<std::net::IpAddr> {
-    use std::net::ToSocketAddrs;
-
-    config
-        .endpoint
-        .to_socket_addrs()
-        .ok()?
-        .next()
-        .map(|addr| addr.ip())
-}
-
 pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig) {
     let Some(stop) = supervisor.take_stop_receiver() else {
         log::error!("spawn called without a reserved tunnel slot");
@@ -36,14 +26,6 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
         let emitter = Arc::clone(&supervisor);
         let emit: Arc<dyn Fn(TunnelEvent) + Send + Sync> =
             Arc::new(move |event| emitter.publish(event));
-
-        if supervisor.kill_switch_enabled() {
-            if let Some(ip) = endpoint_ip(&config) {
-                if let Err(error) = killswitch::engage(ip) {
-                    log::error!("kill switch failed to engage: {error}");
-                }
-            }
-        }
 
         let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
 
@@ -99,21 +81,18 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
             }
         }
 
-        killswitch::disengage();
         supervisor.finish();
     });
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum TunnelError {
-    #[error("invalid base64 key: {0}")]
-    KeyDecode(String),
-    #[error("invalid key length")]
-    KeyLength,
     #[error("invalid endpoint: {0}")]
     Endpoint(String),
     #[error("tun device error: {0}")]
     Tun(String),
+    #[error("xray error: {0}")]
+    Xray(String),
     #[error("io error: {0}")]
     Io(String),
 }

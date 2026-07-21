@@ -4,7 +4,8 @@ import { subHours } from 'date-fns';
 import { map, pipe, unique } from 'remeda';
 
 import { PrismaService } from '../../../../core';
-import { TunnelService } from '../../../tunnel';
+import { ConfigsService } from '../../../configs';
+import { SessionsService } from '../../../sessions';
 import { CONFIG_GRACE_HOURS } from '../../config';
 import { lapsedBefore } from '../../lib';
 
@@ -14,7 +15,8 @@ export class ExpiredAccessJob {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly tunnel: TunnelService,
+    private readonly sessions: SessionsService,
+    private readonly configs: ConfigsService,
   ) {}
 
   private async revokeExpiredSessions(): Promise<string[]> {
@@ -23,9 +25,13 @@ export class ExpiredAccessJob {
       select: { userId: true },
     });
 
-    const expired = map(peers, (peer) => peer.userId);
+    const expired = pipe(
+      peers,
+      map((peer) => peer.userId),
+      unique(),
+    );
 
-    await Promise.allSettled(expired.map((userId) => this.tunnel.disconnect(userId)));
+    await Promise.allSettled(expired.map((userId) => this.sessions.disconnectAll(userId)));
 
     return expired;
   }
@@ -45,7 +51,7 @@ export class ExpiredAccessJob {
       unique(),
     );
 
-    await Promise.allSettled(expired.map((userId) => this.tunnel.revokeAllConfigs(userId)));
+    await Promise.allSettled(expired.map((userId) => this.configs.revokeAll(userId)));
 
     return expired;
   }

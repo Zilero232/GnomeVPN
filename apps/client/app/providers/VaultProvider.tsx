@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { restoreTokenFromVault } from '@/shared/api';
 import { initAutoStartDefault, isTauriDesktop } from '@/shared/lib';
+import { AppSplash } from '@/shared/ui';
 
 import type { ReactNode } from 'react';
 
@@ -25,7 +26,7 @@ export const VaultProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   if (isBlocking) {
-    return null;
+    return <AppSplash />;
   }
 
   return children;

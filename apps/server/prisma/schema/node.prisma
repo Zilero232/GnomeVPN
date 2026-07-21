@@ -5,9 +5,15 @@ model Node {
   countryCode String  @map("country_code")
   city        String?
 
-  wireguardEndpoint  String @map("wireguard_endpoint")
-  wgEasyUrl          String @map("wg_easy_url")
-  wgEasyApiKeyEnvVar String @map("wg_easy_api_key_env_var")
+  host String
+  port Int    @default(443)
+
+  realityServerName String @map("reality_server_name")
+  realityPublicKey  String @map("reality_public_key")
+  realityShortId    String @map("reality_short_id")
+
+  apiUrl          String @map("api_url")
+  apiTokenEnvVar  String @map("api_token_env_var")
 
   isAvailable   Boolean   @default(true) @map("is_available")
   displayOrder  Int       @default(0) @map("display_order")

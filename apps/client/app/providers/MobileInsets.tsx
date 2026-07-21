@@ -1,0 +1,54 @@
+'use client';
+
+import { useEffect } from 'react';
+
+import { isTauriMobile } from '@/shared/lib';
+
+const TOP_VAR = '--safe-area-inset-top';
+const BOTTOM_VAR = '--safe-area-inset-bottom';
+
+const syncInsets = async (): Promise<void> => {
+  const api = await import('@saurl/tauri-plugin-safe-area-insets-css-api');
+  const [top, bottom] = await Promise.all([api.getTopInset(), api.getBottomInset()]);
+
+  const root = document.documentElement;
+
+  if (top?.inset != null) {
+    root.style.setProperty(TOP_VAR, `${top.inset}px`);
+  }
+
+  if (bottom?.inset != null) {
+    root.style.setProperty(BOTTOM_VAR, `${bottom.inset}px`);
+  }
+};
+
+export const MobileInsets = () => {
+  useEffect(() => {
+    if (!isTauriMobile()) {
+      return;
+    }
+
+    const apply = () => {
+      syncInsets().catch(() => {});
+    };
+
+    apply();
+
+    const viewport = window.visualViewport;
+
+    viewport?.addEventListener('resize', apply);
+    window.addEventListener('resize', apply);
+
+    return () => {
+      viewport?.removeEventListener('resize', apply);
+      window.removeEventListener('resize', apply);
+
+      const root = document.documentElement;
+
+      root.style.removeProperty(TOP_VAR);
+      root.style.removeProperty(BOTTOM_VAR);
+    };
+  }, []);
+
+  return null;
+};

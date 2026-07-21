@@ -5,31 +5,28 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TunnelConfig {
-    pub private_key: String,
-    pub address: String,
-    pub dns: String,
-    pub server_public_key: String,
+    pub server: String,
+    pub port: u16,
+    pub user_id: String,
+    pub server_name: String,
+    pub public_key: String,
     #[serde(default)]
-    pub preshared_key: Option<String>,
-    pub endpoint: String,
-    pub allowed_ips: Vec<String>,
-    pub persistent_keepalive: u16,
+    pub short_id: Option<String>,
+    pub fingerprint: String,
+    pub dns: Vec<String>,
 }
 
 impl fmt::Debug for TunnelConfig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TunnelConfig")
-            .field("private_key", &"[redacted]")
-            .field("address", &self.address)
+            .field("server", &self.server)
+            .field("port", &self.port)
+            .field("user_id", &"[redacted]")
+            .field("server_name", &self.server_name)
+            .field("public_key", &self.public_key)
+            .field("short_id", &self.short_id.as_ref().map(|_| "[redacted]"))
+            .field("fingerprint", &self.fingerprint)
             .field("dns", &self.dns)
-            .field("server_public_key", &self.server_public_key)
-            .field(
-                "preshared_key",
-                &self.preshared_key.as_ref().map(|_| "[redacted]"),
-            )
-            .field("endpoint", &self.endpoint)
-            .field("allowed_ips", &self.allowed_ips)
-            .field("persistent_keepalive", &self.persistent_keepalive)
             .finish()
     }
 }
@@ -39,8 +36,6 @@ impl fmt::Debug for TunnelConfig {
 pub enum Request {
     Connect {
         config: Box<TunnelConfig>,
-        #[serde(default)]
-        kill_switch: bool,
         #[serde(default = "default_true")]
         auto_reconnect: bool,
     },

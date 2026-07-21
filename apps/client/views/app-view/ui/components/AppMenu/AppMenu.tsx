@@ -25,11 +25,9 @@ export const AppMenu = () => {
   const {
     autoStart,
     autoConnect,
-    killSwitch,
     autoReconnect,
     toggleAutoStart,
     toggleAutoConnect,
-    toggleKillSwitch,
     toggleAutoReconnect,
   } = useStartupSettings();
 
@@ -82,13 +80,6 @@ export const AppMenu = () => {
               label={tray('autoConnect')}
               trailing={<Switch isChecked={autoConnect} />}
               onClick={() => toggleAutoConnect(!autoConnect)}
-            />
-
-            <MenuItem
-              isPressed={killSwitch}
-              label={tray('killSwitch')}
-              trailing={<Switch isChecked={killSwitch} />}
-              onClick={() => toggleKillSwitch(!killSwitch)}
             />
 
             <MenuItem

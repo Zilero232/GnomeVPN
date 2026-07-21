@@ -11,7 +11,13 @@ export type ProvisionResult = {
   error?: string;
 };
 
-export type WgEasyHealthCheck = (opts: { baseUrl: string; apiKey: string }) => Promise<boolean>;
+export type PanelHealthCheck = (opts: { baseUrl: string; token: string }) => Promise<boolean>;
+
+export type EnsureInboundFn = (opts: {
+  baseUrl: string;
+  token: string;
+  inbound: Record<string, unknown>;
+}) => Promise<void>;
 
 export type UpsertNodeFn = (args: {
   prisma: PrismaLike;
@@ -20,38 +26,26 @@ export type UpsertNodeFn = (args: {
 
 export type ProvisionHostOptions = {
   serverEnvPath: string;
-  wgEasyComposeContent: string;
+  xrayComposeContent: string;
   createSshClient?: () => SshClient;
-  healthCheck: WgEasyHealthCheck;
+  healthCheck: PanelHealthCheck;
+  ensureInbound: EnsureInboundFn;
   upsertNode: UpsertNodeFn;
   basePrisma: PrismaLike;
   healthCheckTimeoutMs?: number;
   healthCheckIntervalMs?: number;
 };
 
-export type { UpsertNodeInput, UpsertNodeResult };
-
-export type WaitForHealthyInput = {
-  check: () => Promise<boolean>;
-  timeoutMs: number;
-  intervalMs: number;
-};
-
-export type ShipComposeStackInput = {
-  ssh: SshClient;
-  config: NodeConfig;
-  composeContent: string;
-  passwordHash: string;
-};
-
-export type RegisterPanelPasswordInput = {
+export type RememberNodeSecretsInput = {
   serverEnvPath: string;
   countryCode: string;
-  password: string;
-  isNew: boolean;
+  apiToken: string;
+  panelPassword: string;
 };
 
 export type ProvisionHostInput = {
   config: NodeConfig;
   options: ProvisionHostOptions;
 };
+
+export type { UpsertNodeInput, UpsertNodeResult };

@@ -1,0 +1,22 @@
+{
+  "identifier": "app.gnomevpn.mobile",
+  "productName": "GnomeVPN",
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "android": {
+      "minSdkVersion": 24
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "GnomeVPN",
+        "url": "/app",
+        "visible": true,
+        "resizable": true,
+        "decorations": true
+      }
+    ]
+  }
+}

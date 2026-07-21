@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 export const tunnelConfigSchema = z.object({
-  privateKey: z.string().min(1),
-  address: z.string().min(1),
-  dns: z.string().min(1),
-  serverPublicKey: z.string().min(1),
-  presharedKey: z.string().min(1).nullable().default(null),
-  endpoint: z.string().min(1),
-  allowedIps: z.array(z.string().min(1)),
-  persistentKeepalive: z.number().int().nonnegative(),
+  server: z.string().min(1),
+  port: z.number().int().positive(),
+  userId: z.uuid(),
+  serverName: z.string().min(1),
+  publicKey: z.string().min(1),
+  shortId: z.string().nullable().default(null),
+  fingerprint: z.string().min(1),
+  dns: z.array(z.string().min(1)),
 });
 
 export const downloadedConfigSchema = z.object({

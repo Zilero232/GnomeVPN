@@ -1,9 +1,12 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: var(--viewport-height);
-  padding: 26px 24px 36px;
+
+  @include safe-padding(26px, 24px, 36px);
 }
 
 .body {

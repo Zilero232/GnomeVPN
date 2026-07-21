@@ -1,12 +1,19 @@
+#[cfg(mobile)]
+pub mod mobile_vpn;
+#[cfg(target_os = "windows")]
 pub mod service;
 pub mod vault;
+#[cfg(target_os = "windows")]
 pub mod vpn;
 
 use tauri::Manager;
 
+#[cfg(target_os = "windows")]
 use service::commands::service_repair;
 use vault::{vault_clear_token, vault_read_token, vault_save_token};
+#[cfg(target_os = "windows")]
 use vpn::commands::{vpn_connect, vpn_disconnect, vpn_service_available, vpn_status};
+#[cfg(target_os = "windows")]
 use vpn::state::VpnState;
 
 const AUTOSTART_FLAG: &str = "--autostart";
@@ -19,11 +26,7 @@ fn started_by_autostart() -> bool {
 pub fn run() {
     let builder = tauri::Builder::default();
 
-    // On Windows a deep link opened while the app already runs starts a second
-    // instance; single-instance (with the deep-link feature) routes its argv to
-    // the plugin, which fires on_open_url in the primary instance. We only need
-    // to surface the window — the webview handles the navigation.
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.unminimize();
@@ -32,16 +35,21 @@ pub fn run() {
         }
     }));
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
 
-    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_autostart::init(
         tauri_plugin_autostart::MacosLauncher::LaunchAgent,
         Some(vec!["--autostart"]),
     ));
 
-    builder
+    #[cfg(mobile)]
+    let builder = builder
+        .plugin(tauri_plugin_safe_area_insets_css::init())
+        .plugin(mobile_vpn::plugin::init());
+
+    let builder = builder
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)
@@ -57,7 +65,10 @@ pub fn run() {
                 .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
                 .build(),
         )
-        .plugin(tauri_plugin_os::init())
+        .plugin({
+            log::info!("registering tauri_plugin_os");
+            tauri_plugin_os::init()
+        })
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_notification::init())
@@ -69,7 +80,9 @@ pub fn run() {
             let handle = app.handle().clone();
             app.deep_link().on_open_url(move |_event| {
                 if let Some(window) = handle.get_webview_window("main") {
+                    #[cfg(desktop)]
                     let _ = window.unminimize();
+
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
@@ -83,7 +96,10 @@ pub fn run() {
             }
 
             Ok(())
-        })
+        });
+
+    #[cfg(target_os = "windows")]
+    let builder = builder
         .manage(VpnState::default())
         .invoke_handler(tauri::generate_handler![
             vpn_connect,
@@ -94,7 +110,29 @@ pub fn run() {
             vault_save_token,
             vault_read_token,
             vault_clear_token
-        ])
+        ]);
+
+    #[cfg(mobile)]
+    let builder = builder
+        .manage(mobile_vpn::state::MobileVpnState::default())
+        .invoke_handler(tauri::generate_handler![
+            mobile_vpn::commands::vpn_connect,
+            mobile_vpn::commands::vpn_disconnect,
+            mobile_vpn::commands::vpn_status,
+            mobile_vpn::commands::vpn_service_available,
+            vault_save_token,
+            vault_read_token,
+            vault_clear_token
+        ]);
+
+    #[cfg(not(any(target_os = "windows", mobile)))]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        vault_save_token,
+        vault_read_token,
+        vault_clear_token
+    ]);
+
+    builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

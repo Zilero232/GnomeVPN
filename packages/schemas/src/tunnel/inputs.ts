@@ -2,6 +2,11 @@ import { z } from 'zod';
 
 export const connectInputSchema = z.object({
   nodeId: z.uuid(),
+  deviceId: z.uuid(),
+});
+
+export const disconnectInputSchema = z.object({
+  deviceId: z.uuid(),
 });
 
 export const issueConfigSchema = z.object({

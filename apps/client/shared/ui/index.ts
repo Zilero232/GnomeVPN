@@ -13,6 +13,7 @@ export {
   Text,
 } from './atoms';
 export {
+  AppSplash,
   Dialog,
   DialogContent,
   DialogDescription,

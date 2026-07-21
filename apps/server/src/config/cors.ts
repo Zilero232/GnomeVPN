@@ -1,5 +1,21 @@
+import { filter, map, pipe } from 'remeda';
+
 import { validateEnv } from './env.schema';
 
 const env = validateEnv(process.env);
 
-export const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
+const TAURI_ORIGINS = [
+  'tauri://localhost',
+  'http://tauri.localhost',
+  'https://tauri.localhost',
+  'http://localhost',
+  'https://localhost',
+];
+
+const webOrigins = pipe(
+  env.CORS_ORIGINS.split(','),
+  map((origin) => origin.trim()),
+  filter((origin) => origin.length > 0),
+);
+
+export const allowedOrigins = [...webOrigins, ...TAURI_ORIGINS];

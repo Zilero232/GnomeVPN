@@ -8,7 +8,6 @@ import type { VpnConnectInput } from './vpn-bridge.types';
 export const vpnConnect = async ({
   config,
   onEvent,
-  killSwitch,
   autoReconnect,
 }: VpnConnectInput): Promise<void> => {
   const channel = new Channel<TunnelEvent>();
@@ -16,7 +15,7 @@ export const vpnConnect = async ({
 
   await callRust({
     command: 'vpn_connect',
-    args: { config, onEvent: channel, killSwitch, autoReconnect },
+    args: { config, onEvent: channel, autoReconnect },
     fallback: null,
   });
 };

@@ -4,7 +4,8 @@ import { isBefore, subMilliseconds } from 'date-fns';
 
 import { describeError, resolveNodeApiKey } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { WgEasyClient } from '../../../../lib';
+import { XrayClient } from '../../../../lib';
+import { peerClientName } from '../../../peers';
 import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
 
 import type { PeerRow } from './peer-gc.job.types';
@@ -15,34 +16,44 @@ export class PeerGcJob {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private isStale(createdAt: Date, handshake: Date | null): boolean {
-    if (!handshake) {
+  private isStale({ createdAt, lastActiveAt }: PeerRow): boolean {
+    if (!lastActiveAt) {
       return isBefore(createdAt, subMilliseconds(new Date(), NEVER_CONNECTED_GRACE_MS));
     }
 
-    return isBefore(handshake, subMilliseconds(new Date(), STALE_MS));
+    return isBefore(lastActiveAt, subMilliseconds(new Date(), STALE_MS));
   }
 
   private async collect(peer: PeerRow): Promise<void> {
-    const wg = new WgEasyClient({
-      baseUrl: peer.node.wgEasyUrl,
-      apiKey: resolveNodeApiKey(peer.node.wgEasyApiKeyEnvVar),
+    const xray = new XrayClient({
+      baseUrl: peer.node.apiUrl,
+      token: resolveNodeApiKey(peer.node.apiTokenEnvVar),
     });
 
-    const handshake = await wg.getClientHandshake(peer.wgEasyClientId);
+    const email = peerClientName({
+      userId: peer.userId,
+      kind: 'session',
+      name: peer.name ?? undefined,
+    });
 
-    if (!this.isStale(peer.createdAt, handshake)) {
-      if (handshake && handshake.getTime() !== peer.lastHandshakeAt?.getTime()) {
-        await this.prisma.peer.updateMany({
-          where: { id: peer.id },
-          data: { lastHandshakeAt: handshake },
-        });
-      }
+    const traffic = await xray.getClientTraffic(email);
+
+    const hasMoved = traffic !== null && BigInt(traffic) > peer.trafficBytes;
+
+    if (hasMoved) {
+      await this.prisma.peer.updateMany({
+        where: { id: peer.id },
+        data: { trafficBytes: BigInt(traffic), lastActiveAt: new Date() },
+      });
 
       return;
     }
 
-    await wg.deleteClient(peer.wgEasyClientId).catch(() => undefined);
+    if (!this.isStale(peer)) {
+      return;
+    }
+
+    await xray.deleteClient(email).catch(() => undefined);
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
   }
@@ -53,10 +64,12 @@ export class PeerGcJob {
       where: { kind: 'session' },
       select: {
         id: true,
-        wgEasyClientId: true,
+        userId: true,
+        name: true,
         createdAt: true,
-        lastHandshakeAt: true,
-        node: { select: { wgEasyUrl: true, wgEasyApiKeyEnvVar: true } },
+        trafficBytes: true,
+        lastActiveAt: true,
+        node: { select: { apiUrl: true, apiTokenEnvVar: true } },
       },
     });
 

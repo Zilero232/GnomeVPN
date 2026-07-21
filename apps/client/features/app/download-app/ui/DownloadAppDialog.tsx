@@ -1,6 +1,5 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { DOWNLOAD_PLATFORMS, useRelease } from '@/entities/app/release';
@@ -62,15 +61,6 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
 
             <div className={s.meta}>
               <span>{t('version', { version: release.version })}</span>
-              <a
-                className={s.link}
-                href={release.htmlUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                {t('releaseNotes')}
-                <ExternalLink size={12} />
-              </a>
             </div>
           </>
         )}

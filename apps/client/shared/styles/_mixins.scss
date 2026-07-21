@@ -6,6 +6,11 @@
   gap: $gap;
 }
 
+@mixin safe-padding($top, $right: $top, $bottom: $top, $left: $right) {
+  padding: max(#{$top}, var(--safe-area-top)) max(#{$right}, var(--safe-area-right))
+    max(#{$bottom}, var(--safe-area-bottom)) max(#{$left}, var(--safe-area-left));
+}
+
 @mixin surface-card {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

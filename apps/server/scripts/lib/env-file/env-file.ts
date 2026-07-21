@@ -45,6 +45,28 @@ export const appendEnvLine = async ({
   await appendFile(filePath, `${separator}${key}=${value}\n`);
 };
 
+export const upsertEnvLine = async ({
+  filePath,
+  key,
+  value,
+}: AppendEnvLineInput): Promise<void> => {
+  const raw = await read(filePath);
+
+  if (findValue(raw, key) === null) {
+    const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
+
+    await appendFile(filePath, `${separator}${key}=${value}\n`);
+
+    return;
+  }
+
+  const lines = raw
+    .split('\n')
+    .map((line) => (line.trimEnd().startsWith(`${key}=`) ? `${key}=${value}` : line));
+
+  await writeFile(filePath, lines.join('\n'), 'utf8');
+};
+
 export const pruneEnvKeys = async ({
   filePath,
   prefix,

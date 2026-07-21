@@ -5,6 +5,8 @@ import type {
   BindCardResult,
   CheckoutClient,
   CheckoutResult,
+  ConnectRequest,
+  DisconnectRequest,
   DownloadedConfig,
   IssueConfigRequest,
   Node,
@@ -20,13 +22,16 @@ export const listNodes = async (): Promise<Node[]> => {
   return data;
 };
 
-export const connectTunnel = async (nodeId: string): Promise<TunnelConfig> => {
-  const { data } = await api.post('/tunnel/connect', { nodeId });
+export const connectTunnel = async ({
+  nodeId,
+  deviceId,
+}: ConnectRequest): Promise<TunnelConfig> => {
+  const { data } = await api.post('/tunnel/connect', { nodeId, deviceId });
   return data;
 };
 
-export const disconnectTunnel = async (): Promise<void> => {
-  await api.post('/tunnel/disconnect');
+export const disconnectTunnel = async ({ deviceId }: DisconnectRequest): Promise<void> => {
+  await api.post('/tunnel/disconnect', { deviceId });
 };
 
 export const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
