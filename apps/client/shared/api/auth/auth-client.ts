@@ -1,17 +1,9 @@
-import { invoke, isTauri } from '@tauri-apps/api/core';
 import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
+import { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
 
 const STORAGE_KEY = 'gnomevpn.auth-token';
-
-const mirrorToVault = (command: string, args?: Record<string, unknown>) => {
-  if (!isTauri()) {
-    return;
-  }
-
-  invoke(command, args).catch(() => {});
-};
 
 export const getAuthToken = () => {
   if (typeof window === 'undefined') {
@@ -27,7 +19,7 @@ export const saveAuthToken = (token: string | null) => {
   }
 
   window.localStorage.setItem(STORAGE_KEY, token);
-  mirrorToVault('vault_save_token', { token });
+  saveTokenToVault(token).catch(() => {});
 };
 
 export const clearToken = () => {
@@ -36,11 +28,11 @@ export const clearToken = () => {
   }
 
   window.localStorage.removeItem(STORAGE_KEY);
-  mirrorToVault('vault_clear_token');
+  clearTokenFromVault().catch(() => {});
 };
 
 export const restoreTokenFromVault = async (): Promise<boolean> => {
-  if (typeof window === 'undefined' || !isTauri()) {
+  if (typeof window === 'undefined') {
     return false;
   }
 
@@ -49,7 +41,7 @@ export const restoreTokenFromVault = async (): Promise<boolean> => {
   }
 
   try {
-    const token = await invoke<string | null>('vault_read_token');
+    const token = await readTokenFromVault();
 
     if (!token) {
       return false;

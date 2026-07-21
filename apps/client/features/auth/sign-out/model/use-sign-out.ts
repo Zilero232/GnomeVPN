@@ -14,7 +14,7 @@ export const useSignOut = () => {
         cleanup.push(vpnDisconnect());
       }
 
-      await settleAll('sign-out cleanup', cleanup);
+      await settleAll({ label: 'sign-out cleanup', tasks: cleanup });
 
       await authClient.signOut();
 

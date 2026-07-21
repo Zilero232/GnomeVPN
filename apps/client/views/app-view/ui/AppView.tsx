@@ -5,7 +5,6 @@ import { UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
@@ -17,6 +16,7 @@ import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { showMainWindow } from '@/shared/lib';
 import { Text } from '@/shared/ui';
+import { useNodeSelection } from '../model/hooks';
 import { AppMenu, NodeList, TunnelStats } from './components';
 
 import s from './AppView.module.scss';
@@ -29,13 +29,9 @@ export const AppView = () => {
   const { status, activeNodeId, traffic, connectedAt, connect, disconnect } =
     useVpnConnectionContext();
 
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const selection = useNodeSelection({ nodes, activeNodeId });
 
-  const firstReachableId = nodes.find((node) => node.status !== 'offline')?.id ?? null;
-  const effectiveNodeId = activeNodeId ?? selectedNodeId ?? firstReachableId;
   const isOnline = status === 'connected';
-  const activeNode = nodes.find((node) => node.id === effectiveNodeId);
-  const canConnect = activeNode?.status !== undefined && activeNode.status !== 'offline';
 
   const onToggle = async () => {
     if (status === 'connected') {
@@ -50,30 +46,29 @@ export const AppView = () => {
       return;
     }
 
-    if (!effectiveNodeId || !canConnect) {
+    if (!selection.nodeId || !selection.isReachable) {
       return;
     }
 
-    await connect(effectiveNodeId, activeNode?.country ?? '');
+    await connect({ nodeId: selection.nodeId, country: selection.country });
+  };
+
+  const releaseOnQuit = async () => {
+    await disconnect({ isAutomatic: true });
   };
 
   useTraySetup({
     isConnected: isOnline,
-    country: activeNode?.country ?? '',
+    country: selection.country,
     onToggle,
     onOpenAccount: async () => {
       await showMainWindow();
       router.push(ROUTES.account);
     },
+    onBeforeQuit: releaseOnQuit,
   });
 
-  useCloseOnWindowEvent({
-    onBeforeQuit: async () => {
-      if (status !== 'disconnected') {
-        await disconnect({ isAutomatic: true });
-      }
-    },
-  });
+  useCloseOnWindowEvent({ onBeforeQuit: releaseOnQuit });
 
   return (
     <main className={s.root}>
@@ -99,7 +94,10 @@ export const AppView = () => {
 
         <ConnectButton
           status={status}
-          disabled={hasAccess && (!effectiveNodeId || (!canConnect && status === 'disconnected'))}
+          disabled={
+            hasAccess &&
+            (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))
+          }
           onToggle={onToggle}
         />
 
@@ -108,12 +106,12 @@ export const AppView = () => {
         {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
 
         <NodeList
-          activeNodeId={effectiveNodeId}
+          activeNodeId={selection.nodeId}
           isError={isError}
           isLoading={isLoading}
           isLocked={status !== 'disconnected'}
           nodes={nodes}
-          onSelect={setSelectedNodeId}
+          onSelect={selection.select}
         />
       </div>
 

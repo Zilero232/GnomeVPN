@@ -2,7 +2,13 @@
 
 import { useEffect } from 'react';
 
-import { getAutoConnect, getLastNodeId, logger, wasManuallyDisconnected } from '@/shared/lib';
+import {
+  getAutoConnect,
+  getLastNodeId,
+  isVpnServiceAvailable,
+  logger,
+  wasManuallyDisconnected,
+} from '@/shared/lib';
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
 
@@ -32,6 +38,12 @@ export const useAutoConnect = ({
         return;
       }
 
+      if (!(await isVpnServiceAvailable())) {
+        logger.warn('autoconnect: service unavailable, skipping');
+
+        return;
+      }
+
       const lastNodeId = await getLastNodeId();
       const target =
         nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ??
@@ -47,7 +59,7 @@ export const useAutoConnect = ({
       hasAttempted = true;
       logger.info(`autoconnect: connecting to ${target.country}`);
 
-      await connect(target.id, target.country, true);
+      await connect({ nodeId: target.id, country: target.country, isAutomatic: true });
     };
 
     run().catch((error: unknown) => {

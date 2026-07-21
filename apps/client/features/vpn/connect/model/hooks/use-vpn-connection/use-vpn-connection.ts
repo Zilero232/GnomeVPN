@@ -1,144 +1,69 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { toast } from 'sonner';
-import { match } from 'ts-pattern';
 
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
   getKillSwitch,
-  getLastNodeId,
   logger,
-  notify,
-  setLastNodeId,
   setManuallyDisconnected,
   settleAll,
-  type VpnEvent,
   vpnConnect,
   vpnDisconnect,
-  vpnStatus,
 } from '@/shared/lib';
+import { useAdoptTunnel } from '../use-adopt-tunnel';
+import { useConnectWatchdog } from '../use-connect-watchdog';
+import { useTunnelEvents } from '../use-tunnel-events';
+import { useTunnelNotifications } from '../use-tunnel-notifications';
+import { useTunnelState } from '../use-tunnel-state';
 
-import type { VpnConnectionStatus, VpnTraffic } from './use-vpn-connection.types';
-
-const EMPTY_TRAFFIC: VpnTraffic = { rx: 0, tx: 0 };
-
-const CONNECT_TIMEOUT_MS = 15_000;
+import type { ConnectInput } from './use-vpn-connection.types';
 
 export const useVpnConnection = () => {
   const t = useTranslations('notifications');
 
-  const [status, setStatus] = useState<VpnConnectionStatus>('disconnected');
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
-  const [traffic, setTraffic] = useState<VpnTraffic>(EMPTY_TRAFFIC);
-  const [connectedAt, setConnectedAt] = useState<Date | null>(null);
+  const tunnel = useTunnelState();
+  const watchdog = useConnectWatchdog();
+  const { notifyError } = useTunnelNotifications();
 
   const generationRef = useRef(0);
-  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wasConnectedRef = useRef(false);
   const countryRef = useRef('');
   const nodeIdRef = useRef<string | null>(null);
 
-  const clearWatchdog = () => {
-    if (watchdogRef.current) {
-      clearTimeout(watchdogRef.current);
-      watchdogRef.current = null;
-    }
+  const teardown = async () => {
+    watchdog.clear();
+
+    await settleAll({ label: 'tunnel cleanup', tasks: [disconnectTunnel(), vpnDisconnect()] });
+
+    tunnel.reset();
   };
 
-  const releaseTunnel = async () => {
-    await settleAll('tunnel cleanup', [disconnectTunnel(), vpnDisconnect()]);
-  };
+  const events = useTunnelEvents({
+    isCurrent: (generation) => generation === generationRef.current,
+    onConnected: () => {
+      watchdog.clear();
+      tunnel.markConnected();
+    },
+    onClosed: () => {
+      watchdog.clear();
+      tunnel.reset();
+    },
+    onTraffic: tunnel.setTraffic,
+    countryRef,
+    nodeIdRef,
+  });
 
-  const resetConnection = () => {
-    setStatus('disconnected');
-    setActiveNodeId(null);
-    setTraffic(EMPTY_TRAFFIC);
-    setConnectedAt(null);
-  };
+  useAdoptTunnel({
+    onAdopted: (nodeId) => {
+      tunnel.markAdopted(nodeId);
+      events.markConnected();
+    },
+  });
 
-  const onEvent = async (generation: number, event: VpnEvent) => {
-    if (generation !== generationRef.current) {
-      return;
-    }
-
-    await match(event)
-      .with({ type: 'connected' }, async () => {
-        clearWatchdog();
-        setStatus('connected');
-        setConnectedAt(new Date());
-        wasConnectedRef.current = true;
-
-        if (nodeIdRef.current) {
-          await setLastNodeId(nodeIdRef.current);
-        }
-
-        await notify({
-          title: t('connectedTitle'),
-          body: t('connectedBody', { country: countryRef.current }),
-          tone: 'success',
-        });
-      })
-      .with({ type: 'disconnected' }, async () => {
-        clearWatchdog();
-        resetConnection();
-
-        if (!wasConnectedRef.current) {
-          return;
-        }
-
-        wasConnectedRef.current = false;
-
-        await notify({ title: t('disconnectedTitle'), body: t('disconnectedBody') });
-      })
-      .with({ type: 'error' }, async ({ message }) => {
-        clearWatchdog();
-        resetConnection();
-        toast.error(message);
-
-        if (!wasConnectedRef.current) {
-          return;
-        }
-
-        wasConnectedRef.current = false;
-
-        await notify({ title: t('errorTitle'), body: message, tone: 'error' });
-      })
-      .with({ type: 'bytesUpdate' }, async ({ rx, tx }) => {
-        setTraffic({ rx, tx });
-      })
-      .with({ type: 'connecting' }, { type: 'handshake' }, async () => {})
-      .exhaustive();
-  };
-
-  useEffect(() => {
-    let isStale = false;
-
-    const adopt = async () => {
-      const [current, lastNodeId] = await Promise.all([vpnStatus(), getLastNodeId()]);
-
-      if (isStale || current !== 'connected') {
-        return;
-      }
-
-      setStatus('connected');
-      setActiveNodeId(lastNodeId);
-
-      wasConnectedRef.current = true;
-    };
-
-    adopt().catch((error: unknown) => {
-      logger.warn(`could not read tunnel status: ${String(error)}`);
-    });
-
-    return () => {
-      isStale = true;
-    };
-  }, []);
-
-  const connect = async (nodeId: string, country = '', isAutomatic = false) => {
+  const connect = async ({ nodeId, country = '', isAutomatic = false }: ConnectInput) => {
     const generation = ++generationRef.current;
 
     countryRef.current = country;
@@ -148,21 +73,18 @@ export const useVpnConnection = () => {
       await setManuallyDisconnected(false);
     }
 
-    setStatus('connecting');
-    setActiveNodeId(nodeId);
+    tunnel.markConnecting(nodeId);
 
-    watchdogRef.current = setTimeout(async () => {
-      if (generation !== generationRef.current) {
-        return;
-      }
+    watchdog.start({
+      onTimeout: async () => {
+        if (generation !== generationRef.current) {
+          return;
+        }
 
-      watchdogRef.current = null;
-
-      await releaseTunnel();
-
-      resetConnection();
-      toast.error(t('connectFailed'));
-    }, CONNECT_TIMEOUT_MS);
+        await teardown();
+        toast.error(t('connectFailed'));
+      },
+    });
 
     try {
       const [config, killSwitch, autoReconnect] = await Promise.all([
@@ -171,23 +93,22 @@ export const useVpnConnection = () => {
         getAutoReconnect(),
       ]);
 
-      await vpnConnect(
+      await vpnConnect({
         config,
-        async (event) => {
-          await onEvent(generation, event);
+        killSwitch,
+        autoReconnect,
+        onEvent: (event) => {
+          events.handleEvent({ generation, event }).catch((error: unknown) => {
+            logger.error(`tunnel event failed: ${String(error)}`);
+          });
         },
-        { killSwitch, autoReconnect },
-      );
+      });
     } catch (error) {
       if (generation !== generationRef.current) {
         return;
       }
 
-      clearWatchdog();
-
-      await releaseTunnel();
-
-      resetConnection();
+      await teardown();
 
       const code = apiErrorCode(error);
       const message = code === 'PAYMENT_REQUIRED' ? t('subscriptionRequired') : t('connectFailed');
@@ -195,23 +116,26 @@ export const useVpnConnection = () => {
       logger.error(`vpn connect failed [${code}]: ${String(error)}`);
 
       toast.error(message);
-
-      await notify({ title: t('errorTitle'), body: message, tone: 'error' });
+      await notifyError(message);
     }
   };
 
   const disconnect = async ({ isAutomatic = false } = {}) => {
     generationRef.current += 1;
-    clearWatchdog();
 
     if (!isAutomatic) {
       await setManuallyDisconnected(true);
     }
 
-    await releaseTunnel();
-
-    resetConnection();
+    await teardown();
   };
 
-  return { status, activeNodeId, traffic, connectedAt, connect, disconnect };
+  return {
+    status: tunnel.status,
+    activeNodeId: tunnel.activeNodeId,
+    traffic: tunnel.traffic,
+    connectedAt: tunnel.connectedAt,
+    connect,
+    disconnect,
+  };
 };

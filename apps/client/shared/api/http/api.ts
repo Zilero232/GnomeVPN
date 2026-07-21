@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { env } from '@/shared/config';
-import { getAuthToken } from '../auth/auth-client';
+import { getAuthToken, saveAuthToken } from '../auth/auth-client';
 import { toApiError } from './api-error';
 
 export const api = axios.create({ baseURL: env.NEXT_PUBLIC_API_URL });
@@ -27,6 +27,12 @@ const readErrorBody = async (data: unknown): Promise<unknown> => {
     return null;
   }
 };
+
+api.interceptors.response.use((response) => {
+  saveAuthToken(response.headers['set-auth-token'] ?? null);
+
+  return response;
+});
 
 api.interceptors.response.use(undefined, async (error) => {
   if (axios.isAxiosError(error)) {
