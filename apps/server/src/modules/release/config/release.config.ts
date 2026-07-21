@@ -18,7 +18,4 @@ export const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
 
 export const PLATFORM_EXTENSION_PRIORITY = ['exe', 'msi'];
 
-export const UPDATER_ARCHIVE_SUFFIX = '.nsis.zip';
-export const UPDATER_SIGNATURE_SUFFIX = '.nsis.zip.sig';
-
-export const UPDATER_TARGET = 'windows-x86_64';
+export const UPDATER_MANIFEST_NAME = 'latest.json';

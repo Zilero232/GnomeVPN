@@ -8,9 +8,9 @@ import {
   GITHUB_RELEASE_URL,
   GITHUB_TIMEOUT_MS,
   githubAssetUrl,
-  UPDATER_TARGET,
+  UPDATER_MANIFEST_NAME,
 } from './config';
-import { findUpdaterAssets, pickInstallers } from './lib';
+import { findManifestAsset, pickInstallers, rewriteManifestUrls } from './lib';
 
 import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
 import type { CachedRelease, GithubRelease, UpdaterManifest } from './release.types';
@@ -112,7 +112,7 @@ export class ReleaseService {
     return location;
   }
 
-  private async fetchSignature(assetId: number): Promise<string> {
+  private async fetchAssetBody(assetId: number): Promise<string> {
     const url = await this.resolveAssetUrl(assetId);
 
     let response: Response;
@@ -122,42 +122,44 @@ export class ReleaseService {
         signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
       });
     } catch (error) {
-      this.logger.warn(`Signature ${assetId} unreachable: ${describeError(error)}`);
+      this.logger.warn(`Asset ${assetId} unreachable: ${describeError(error)}`);
 
       throw this.unavailable();
     }
 
     if (!response.ok) {
-      this.logger.warn(`Signature ${assetId} answered ${response.status}`);
+      this.logger.warn(`Asset ${assetId} answered ${response.status}`);
 
       throw this.unavailable();
     }
 
-    return (await response.text()).trim();
+    return response.text();
   }
 
   async getUpdaterManifest(): Promise<UpdaterManifest> {
     const release = await this.fetchLatest();
-    const updater = findUpdaterAssets(release.assets);
+    const asset = findManifestAsset(release.assets);
 
-    if (!updater) {
-      this.logger.warn(`Release ${release.tag_name} ships no updater artifacts`);
+    if (!asset) {
+      this.logger.warn(`Release ${release.tag_name} ships no ${UPDATER_MANIFEST_NAME}`);
 
       throw this.unavailable();
     }
 
-    const apiUrl = this.config.get('API_URL');
+    let manifest: UpdaterManifest;
 
-    return {
-      version: release.tag_name.replace(/^v/, ''),
-      notes: release.body ?? '',
-      pub_date: release.published_at,
-      platforms: {
-        [UPDATER_TARGET]: {
-          signature: await this.fetchSignature(updater.signature.id),
-          url: `${apiUrl}/release/download/${updater.archive.id}`,
-        },
-      },
-    };
+    try {
+      manifest = JSON.parse(await this.fetchAssetBody(asset.id)) as UpdaterManifest;
+    } catch (error) {
+      this.logger.warn(`Malformed ${UPDATER_MANIFEST_NAME}: ${describeError(error)}`);
+
+      throw this.unavailable();
+    }
+
+    return rewriteManifestUrls({
+      manifest,
+      assets: release.assets,
+      apiUrl: this.config.get('API_URL'),
+    });
   }
 }

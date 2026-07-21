@@ -1,15 +1,33 @@
-import { UPDATER_ARCHIVE_SUFFIX, UPDATER_SIGNATURE_SUFFIX } from '../config';
+import { isNonNullish, last, mapValues, pickBy, pipe } from 'remeda';
 
-import type { GithubAsset } from '../release.types';
+import { UPDATER_MANIFEST_NAME } from '../config';
 
-export type UpdaterAssets = {
-  archive: GithubAsset;
-  signature: GithubAsset;
+import type { GithubAsset, UpdaterManifest } from '../release.types';
+import type { ProxiedUrlInput, RewriteManifestUrlsInput } from './updater-assets.types';
+
+export const findManifestAsset = (assets: GithubAsset[]): GithubAsset | null =>
+  assets.find((asset) => asset.name === UPDATER_MANIFEST_NAME) ?? null;
+
+const proxiedUrl = ({ assets, apiUrl, githubUrl }: ProxiedUrlInput): string | null => {
+  const fileName = last(githubUrl.split('/'));
+  const asset = assets.find((candidate) => candidate.name === fileName);
+
+  return asset ? `${apiUrl}/release/download/${asset.id}` : null;
 };
 
-export const findUpdaterAssets = (assets: GithubAsset[]): UpdaterAssets | null => {
-  const archive = assets.find((asset) => asset.name.endsWith(UPDATER_ARCHIVE_SUFFIX));
-  const signature = assets.find((asset) => asset.name.endsWith(UPDATER_SIGNATURE_SUFFIX));
+export const rewriteManifestUrls = ({
+  manifest,
+  assets,
+  apiUrl,
+}: RewriteManifestUrlsInput): UpdaterManifest => ({
+  ...manifest,
+  platforms: pipe(
+    manifest.platforms,
+    mapValues((platform) => {
+      const url = proxiedUrl({ assets, apiUrl, githubUrl: platform.url });
 
-  return archive && signature ? { archive, signature } : null;
-};
+      return url ? { ...platform, url } : null;
+    }),
+    pickBy(isNonNullish),
+  ),
+});
