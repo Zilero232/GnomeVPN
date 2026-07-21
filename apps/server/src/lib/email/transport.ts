@@ -2,6 +2,7 @@ import { render } from '@react-email/render';
 import nodemailer from 'nodemailer';
 
 import { validateEnv } from '../../config/env.schema';
+import { SMTP_TIMEOUTS } from './email.constants';
 
 import type { SendEmailParams } from './email.types';
 
@@ -14,6 +15,7 @@ const transporter = nodemailer.createTransport({
   port: env.SMTP_PORT,
   secure: env.SMTP_SECURE,
   auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD },
+  ...SMTP_TIMEOUTS,
 });
 
 export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promise<void> => {

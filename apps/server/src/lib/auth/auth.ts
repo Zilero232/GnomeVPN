@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { bearer } from 'better-auth/plugins';
@@ -10,6 +11,7 @@ import { ChangeEmail, ResetPassword, sendEmail, VerifyEmail } from '../email';
 import { withClientCallback } from './auth-callback-url';
 
 const env = validateEnv(process.env);
+const logger = new Logger('Auth');
 
 export const auth = betterAuth({
   basePath: '/auth',
@@ -32,10 +34,12 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'Подтвердите почту GnomeVPN',
         react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') }),
+      }).catch((error) => {
+        logger.error(`verification email to ${user.email} failed`, error);
       });
     },
   },
