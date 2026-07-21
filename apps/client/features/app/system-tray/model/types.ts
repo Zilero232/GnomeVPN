@@ -7,6 +7,7 @@ export type TrayMenuLabels = {
 export type TrayMenuActions = {
   onToggle: () => Promise<void>;
   onOpenAccount: () => Promise<void>;
+  onBeforeQuit: () => Promise<void>;
 };
 
 export type TraySetupInput = TrayMenuActions & {

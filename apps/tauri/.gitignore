@@ -6,7 +6,9 @@
 /gen/
 
 # Generated from apps/client/public/brand/logo-mark.svg via `bun run icon` (see icon.manifest.json)
-/icons/
+/icons/*
+# Tray state icons are authored, not generated — `tauri icon` never writes here
+!/icons/tray/
 
 # Downloaded manually, see bin/README.md — required for the TUN device on Windows
 /bin/wintun.dll

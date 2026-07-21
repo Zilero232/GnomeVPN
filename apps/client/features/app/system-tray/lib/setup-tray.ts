@@ -1,28 +1,23 @@
-import { defaultWindowIcon } from '@tauri-apps/api/app';
 import { TrayIcon } from '@tauri-apps/api/tray';
 
 import { toggleMainWindow } from '@/shared/lib';
-import { TRAY_ID } from '../config/menu-ids';
+import { TRAY_ICON, TRAY_ID } from '../config';
 
-import type { Menu } from '@tauri-apps/api/menu';
+import type { SetupTrayInput } from './setup-tray.types';
 
-type SetupTrayArgs = {
-  tooltip: string;
-  menu: Menu;
-};
+const iconFor = (isConnected: boolean): string =>
+  isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected;
 
-export const setupTray = async ({ tooltip, menu }: SetupTrayArgs) => {
+export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) => {
   const existing = await TrayIcon.getById(TRAY_ID);
 
   if (existing) {
     await existing.close();
   }
 
-  const icon = await defaultWindowIcon();
-
   const tray = await TrayIcon.new({
     id: TRAY_ID,
-    icon: icon ?? undefined,
+    icon: iconFor(isConnected),
     tooltip,
     menu,
     menuOnLeftClick: false,
@@ -36,6 +31,9 @@ export const setupTray = async ({ tooltip, menu }: SetupTrayArgs) => {
   return {
     setTooltip: async (value: string) => {
       await tray.setTooltip(value);
+    },
+    setConnected: async (value: boolean) => {
+      await tray.setIcon(iconFor(value));
     },
     dispose: async () => {
       await tray.close();

@@ -16,6 +16,9 @@
     MessageBox MB_ICONEXCLAMATION|MB_OK \
       "Не удалось установить службу GnomeVPN (код $0).$\n$\nПриложение установлено, но подключение работать не будет. Попробуйте переустановить от имени администратора."
   ${EndIf}
+
+  WriteRegStr HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "DisplayName" "GnomeVPN"
+  WriteRegStr HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "IconUri" "$INSTDIR\GnomeVPN.exe,0"
 !macroend
 
 !macro NSIS_HOOK_PREUNINSTALL
@@ -27,4 +30,5 @@
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL
+  DeleteRegKey HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop"
 !macroend

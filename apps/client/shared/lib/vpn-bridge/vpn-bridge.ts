@@ -1,68 +1,32 @@
-import { Channel, invoke, isTauri } from '@tauri-apps/api/core';
+import { Channel } from '@tauri-apps/api/core';
 
-import type { TunnelConfig } from '@gnomevpn/schemas';
+import { callRust } from '../ipc';
 
-export type VpnEvent =
-  | { type: 'connecting' }
-  | { type: 'handshake' }
-  | { type: 'connected'; assignedIp: string }
-  | { type: 'bytesUpdate'; rx: number; tx: number }
-  | { type: 'disconnected' }
-  | { type: 'error'; message: string };
+import type { TunnelEvent } from '../ipc';
+import type { VpnConnectInput } from './vpn-bridge.types';
 
-export type VpnConnectOptions = {
-  killSwitch: boolean;
-  autoReconnect: boolean;
-};
-
-export const vpnConnect = async (
-  config: TunnelConfig,
-  onEvent: (event: VpnEvent) => void,
-  options: VpnConnectOptions,
-): Promise<void> => {
-  if (!isTauri()) {
-    throw new Error('VPN is only available in the desktop app');
-  }
-
-  const channel = new Channel<VpnEvent>();
+export const vpnConnect = async ({
+  config,
+  onEvent,
+  killSwitch,
+  autoReconnect,
+}: VpnConnectInput): Promise<void> => {
+  const channel = new Channel<TunnelEvent>();
   channel.onmessage = onEvent;
 
-  await invoke('vpn_connect', {
-    config,
-    onEvent: channel,
-    killSwitch: options.killSwitch,
-    autoReconnect: options.autoReconnect,
+  await callRust({
+    command: 'vpn_connect',
+    args: { config, onEvent: channel, killSwitch, autoReconnect },
+    fallback: null,
   });
 };
 
 export const vpnDisconnect = async (): Promise<void> => {
-  if (!isTauri()) {
-    return;
-  }
-
-  await invoke('vpn_disconnect');
+  await callRust({ command: 'vpn_disconnect', fallback: null });
 };
 
-export const vpnStatus = async (): Promise<string> => {
-  if (!isTauri()) {
-    return 'disconnected';
-  }
+export const vpnStatus = async (): Promise<string> =>
+  callRust({ command: 'vpn_status', fallback: 'disconnected' });
 
-  return invoke<string>('vpn_status');
-};
-
-export const isVpnServiceAvailable = async (): Promise<boolean> => {
-  if (!isTauri()) {
-    return false;
-  }
-
-  return invoke<boolean>('vpn_service_available');
-};
-
-export const repairVpnService = async (): Promise<void> => {
-  if (!isTauri()) {
-    return;
-  }
-
-  await invoke('service_repair');
-};
+export const isVpnServiceAvailable = async (): Promise<boolean> =>
+  callRust({ command: 'vpn_service_available', fallback: false });

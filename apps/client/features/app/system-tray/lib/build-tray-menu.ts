@@ -36,6 +36,12 @@ export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuAct
     text: labels.quit,
     action: async () => {
       try {
+        await actions.onBeforeQuit();
+      } catch (error) {
+        logger.warn(`tray quit cleanup failed: ${String(error)}`);
+      }
+
+      try {
         await exit(0);
       } catch (error) {
         logger.warn(`tray quit failed: ${String(error)}`);

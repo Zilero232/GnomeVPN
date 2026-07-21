@@ -1,6 +1,8 @@
 import { logger } from '../logger';
 
-export const settleAll = async (label: string, tasks: Promise<unknown>[]): Promise<void> => {
+import type { SettleAllInput } from './settle.types';
+
+export const settleAll = async ({ label, tasks }: SettleAllInput): Promise<void> => {
   const results = await Promise.allSettled(tasks);
 
   for (const result of results) {

@@ -9,6 +9,12 @@ use vault::{vault_clear_token, vault_read_token, vault_save_token};
 use vpn::commands::{vpn_connect, vpn_disconnect, vpn_service_available, vpn_status};
 use vpn::state::VpnState;
 
+const AUTOSTART_FLAG: &str = "--autostart";
+
+fn started_by_autostart() -> bool {
+    std::env::args().any(|arg| arg == AUTOSTART_FLAG)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default();
@@ -68,6 +74,13 @@ pub fn run() {
                     let _ = window.set_focus();
                 }
             });
+
+            if !started_by_autostart() {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
 
             Ok(())
         })
