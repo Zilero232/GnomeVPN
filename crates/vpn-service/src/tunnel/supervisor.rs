@@ -20,6 +20,7 @@ struct Runtime {
     pending_stop_rx: Option<oneshot::Receiver<()>>,
     kill_switch: bool,
     auto_reconnect: bool,
+    clients: usize,
 }
 
 pub struct Supervisor {
@@ -44,9 +45,25 @@ impl Supervisor {
                 pending_stop_rx: None,
                 kill_switch: false,
                 auto_reconnect: true,
+                clients: 0,
             })),
             events,
         }
+    }
+
+    pub fn client_connected(&self) {
+        self.runtime.lock().clients += 1;
+    }
+
+    pub fn client_disconnected(&self) -> bool {
+        let mut runtime = self.runtime.lock();
+        runtime.clients = runtime.clients.saturating_sub(1);
+
+        runtime.clients == 0
+    }
+
+    pub fn has_clients(&self) -> bool {
+        self.runtime.lock().clients > 0
     }
 
     pub fn status(&self) -> TunnelStatus {

@@ -81,6 +81,8 @@ fn run_pipe_server() {
         }
     };
 
+    crate::tunnel::killswitch::disengage();
+
     let supervisor = Arc::new(Supervisor::new());
 
     if let Err(error) = server::serve(supervisor, runtime.handle().clone()) {
