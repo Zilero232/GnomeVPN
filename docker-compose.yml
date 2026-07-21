@@ -43,10 +43,13 @@ services:
     # The postgres entrypoint reads POSTGRES_* directly from the env file.
     env_file:
       - ./.env
-    # Not published: the database is reachable only inside the compose network.
-    # Use an SSH tunnel for external clients instead of opening 5432.
-    expose:
-      - '5432'
+    # Bound to loopback, never to 0.0.0.0: the server reaches Postgres over the
+    # compose network, and an external client tunnels in over SSH:
+    #   ssh -L 5433:localhost:5433 <vps>
+    # Publishing this on a public interface would not be covered by UFW — Docker
+    # writes its rules into FORWARD, so the port would stay open to the internet.
+    ports:
+      - '127.0.0.1:5433:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
