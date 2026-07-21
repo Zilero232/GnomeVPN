@@ -7,9 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import androidx.annotation.RequiresApi
 
-@RequiresApi(Build.VERSION_CODES.N)
 class VpnTileService : TileService() {
     override fun onStartListening() {
         super.onStartListening()
@@ -56,10 +54,6 @@ class VpnTileService : TileService() {
 
     companion object {
         fun requestUpdate(context: Context) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                return
-            }
-
             requestListeningState(context, ComponentName(context, VpnTileService::class.java))
         }
     }

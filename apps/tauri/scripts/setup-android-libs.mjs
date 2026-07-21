@@ -64,17 +64,13 @@ const patchManifest = () => {
   const path = join(appMain, 'AndroidManifest.xml');
   const source = readFileSync(path, 'utf8');
 
-  if (source.includes('GnomeVpnService')) {
-    return false;
-  }
-
   const permissions = [
     '<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
     '<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
     '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
   ].join('\n    ');
 
-  const service = [
+  const vpnService = [
     '<service',
     '            android:name=".GnomeVpnService"',
     '            android:exported="false"',
@@ -87,8 +83,10 @@ const patchManifest = () => {
     '                <action android:name="android.net.VpnService" />',
     '            </intent-filter>',
     '        </service>',
-    '',
-    '        <service',
+  ].join('\n');
+
+  const tileService = [
+    '<service',
     '            android:name=".VpnTileService"',
     '            android:exported="true"',
     '            android:icon="@mipmap/ic_launcher"',
@@ -102,13 +100,44 @@ const patchManifest = () => {
 
   // xray is an executable, not a library: Android only runs it from disk, and
   // with extractNativeLibs=false it stays compressed inside the APK.
-  const patched = source
-    .replace(
-      '<uses-permission android:name="android.permission.INTERNET" />',
-      `<uses-permission android:name="android.permission.INTERNET" />\n    ${permissions}`,
-    )
-    .replace('    <application', '    <application\n        android:extractNativeLibs="true"')
-    .replace('    </application>', `        ${service}\n    </application>`);
+  const steps = [
+    {
+      has: 'FOREGROUND_SERVICE_SPECIAL_USE',
+      find: '<uses-permission android:name="android.permission.INTERNET" />',
+      put: `<uses-permission android:name="android.permission.INTERNET" />\n    ${permissions}`,
+    },
+    {
+      has: 'extractNativeLibs',
+      find: '    <application',
+      put: '    <application\n        android:extractNativeLibs="true"',
+    },
+    {
+      has: 'GnomeVpnService',
+      find: '    </application>',
+      put: `        ${vpnService}\n    </application>`,
+    },
+    {
+      has: 'VpnTileService',
+      find: '    </application>',
+      put: `        ${tileService}\n    </application>`,
+    },
+  ];
+
+  const applied = [];
+
+  const patched = steps.reduce((xml, step) => {
+    if (xml.includes(step.has)) {
+      return xml;
+    }
+
+    applied.push(step.has);
+
+    return xml.replace(step.find, step.put);
+  }, source);
+
+  if (applied.length === 0) {
+    return false;
+  }
 
   writeFileSync(path, patched, 'utf8');
 
