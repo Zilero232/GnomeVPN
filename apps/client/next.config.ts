@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   reactStrictMode: false,
   images: { unoptimized: true },
-  sassOptions: { loadPaths: [clientRoot] },
+  sassOptions: { implementation: 'sass-embedded', loadPaths: [clientRoot] },
   turbopack: { resolveAlias: { '@': clientRoot } },
 };
 
