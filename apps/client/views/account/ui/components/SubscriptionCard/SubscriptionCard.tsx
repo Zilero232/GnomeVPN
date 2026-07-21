@@ -6,6 +6,8 @@ import { match } from 'ts-pattern';
 import { AutoRenewControl, PlanPicker } from '@/features/billing/checkout';
 import { Text } from '@/shared/ui';
 
+import s from './SubscriptionCard.module.scss';
+
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
 
 export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardProps) => {
@@ -26,30 +28,42 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
     .with({ isLoading: true }, () => <Text tone="muted">{t('loading')}</Text>)
     .with({ isActive: true }, () => (
       <>
-        <Text tone="success">{t('active')}</Text>
+        <span className={s.status}>
+          <span className={s.dot} />
+          {t('active')}
+        </span>
 
-        {subscription && (
-          <Text size="xs" tone="muted">
-            {t(`plans.${subscription.plan}`)}
-          </Text>
-        )}
+        <dl className={s.meta}>
+          {subscription && (
+            <>
+              <dt className={s.label}>{t('planLabel')}</dt>
+              <dd className={s.value}>{t(`plans.${subscription.plan}`)}</dd>
+            </>
+          )}
 
-        {subscription?.currentPeriodEnd && (
-          <Text size="xs" tone="muted">
-            {t('activeUntil', { date: formatDate(subscription.currentPeriodEnd) })}
-          </Text>
-        )}
+          {subscription?.currentPeriodEnd && (
+            <>
+              <dt className={s.label}>{t('untilLabel')}</dt>
+              <dd className={s.value}>{formatDate(subscription.currentPeriodEnd)}</dd>
+            </>
+          )}
+        </dl>
 
         {subscription && <AutoRenewControl subscription={subscription} />}
       </>
     ))
     .otherwise(() => (
       <>
-        <Text>{t('inactive')}</Text>
-        <Text size="xs" tone="muted">
-          {t('pitch')}
-        </Text>
-        <PlanPicker />
+        <div className={s.pitch}>
+          <Text>{t('inactive')}</Text>
+          <Text size="xs" tone="muted">
+            {t('pitch')}
+          </Text>
+        </div>
+
+        <div className={s.picker}>
+          <PlanPicker />
+        </div>
       </>
     ));
 };
