@@ -100,10 +100,7 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
 
     @Command
     fun stop(invoke: Invoke) {
-        activity.startService(
-            Intent(activity, GnomeVpnService::class.java).setAction(GnomeVpnService.ACTION_STOP),
-        )
-
+        activity.stopService(Intent(activity, GnomeVpnService::class.java))
         invoke.resolve()
     }
 }

@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "tauri": "tauri",
-    "icon": "tauri icon icon.manifest.json -o icons",
+    "icon": "tauri icon icon.manifest.json -o icons && node ./scripts/android-foreground.mjs",
     "predev": "bun run kill && node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs && bun run icon",
     "dev": "tauri dev",
     "prebuild": "node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs --release && bun run icon",

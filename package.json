@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -13,10 +13,10 @@
     "dev:server": "bun --filter @gnomevpn/server dev",
     "dev:client": "bun --filter @gnomevpn/client dev",
     "dev:infra": "docker compose -f docker-compose.dev.yml up -d",
-    "tauri:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel dev",
+    "tauri:dev": "bun --filter '@gnomevpn/server' dev --filter '@gnomevpn/tauri' --parallel dev",
     "tauri:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri build",
     "android:init": "bun --filter @gnomevpn/tauri android:init",
-    "android:dev": "bun --filter @gnomevpn/tauri android:dev",
+    "android:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel android:dev",
     "android:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri android:build",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -39,6 +39,7 @@
     "husky": "^9.1.7",
     "kill-port": "^2.0.1",
     "lint-staged": "^17.1.0",
+    "sharp": "^0.35.3",
     "stylelint": "17.14.0",
     "stylelint-config-clean-order": "10.0.0",
     "stylelint-config-standard-scss": "17.0.0",

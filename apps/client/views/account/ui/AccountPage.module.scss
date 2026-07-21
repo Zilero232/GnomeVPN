@@ -94,6 +94,11 @@
 @media (width <= 560px) {
   .root {
     gap: 16px;
-    padding: 24px 16px;
+
+    @include safe-padding(24px, 16px);
+  }
+
+  .card {
+    padding: 22px 18px;
   }
 }

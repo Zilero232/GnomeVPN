@@ -7,7 +7,7 @@ use gnomevpn_ipc::{build_xray_config, SocksCredentials, TunnelConfig};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
-use tun2proxy::{ArgProxy, Args, CancellationToken, ProxyType, UserKey};
+use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 
 use super::plugin::VpnPlugin;
 use super::MobileVpnError;
@@ -15,6 +15,7 @@ use super::MobileVpnError;
 const MTU: u16 = 1420;
 const BINARY_NAME: &str = "libxray.so";
 const CONFIG_NAME: &str = "xray-config.json";
+const LOG_NAME: &str = "xray.log";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 
@@ -94,12 +95,19 @@ pub async fn spawn_xray<R: Runtime>(
         .await
         .map_err(|error| MobileVpnError::Xray(format!("cannot write the xray config: {error}")))?;
 
+    let log = std::fs::File::create(dir.join(LOG_NAME))
+        .map_err(|error| MobileVpnError::Xray(format!("cannot open the xray log: {error}")))?;
+
+    let errors = log
+        .try_clone()
+        .map_err(|error| MobileVpnError::Xray(error.to_string()))?;
+
     let child = Command::new(&binary)
         .arg("run")
         .arg("-c")
         .arg(&config_path)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(Stdio::from(log))
+        .stderr(Stdio::from(errors))
         .spawn()
         .map_err(|error| MobileVpnError::Xray(format!("cannot start xray: {error}")))?;
 
@@ -140,7 +148,8 @@ pub fn proxy_args(socks: SocketAddr, credentials: &SocksCredentials, dns: &[Stri
         addr: socks,
         credentials: Some(UserKey::new(&credentials.user, &credentials.password)),
     })
-    .setup(false);
+    .setup(false)
+    .dns(ArgDns::Virtual);
 
     if let Some(server) = dns.iter().find_map(|entry| entry.parse().ok()) {
         args.dns_addr(server);

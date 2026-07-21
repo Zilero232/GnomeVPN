@@ -87,6 +87,17 @@ const patchManifest = () => {
     '                <action android:name="android.net.VpnService" />',
     '            </intent-filter>',
     '        </service>',
+    '',
+    '        <service',
+    '            android:name=".VpnTileService"',
+    '            android:exported="true"',
+    '            android:icon="@mipmap/ic_launcher"',
+    '            android:label="@string/app_name"',
+    '            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">',
+    '            <intent-filter>',
+    '                <action android:name="android.service.quicksettings.action.QS_TILE" />',
+    '            </intent-filter>',
+    '        </service>',
   ].join('\n');
 
   // xray is an executable, not a library: Android only runs it from disk, and

@@ -66,6 +66,7 @@ class GnomeVpnService : VpnService() {
         descriptor = opened
         startForeground(NOTIFICATION_ID, buildNotification())
         publish(opened.fd)
+        VpnTileService.requestUpdate(this)
 
         Log.i(TAG, "tunnel is up, fd=${opened.fd}")
     }
@@ -106,6 +107,7 @@ class GnomeVpnService : VpnService() {
         descriptor?.close()
         descriptor = null
         publish(NO_DESCRIPTOR)
+        VpnTileService.requestUpdate(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -184,5 +186,7 @@ class GnomeVpnService : VpnService() {
                 }
             }
         }
+
+        fun isRunning(): Boolean = currentFd != NO_DESCRIPTOR
     }
 }

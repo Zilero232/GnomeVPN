@@ -9,7 +9,7 @@ import { VpnConnectionContext } from './vpn-connection-context';
 import type { ReactNode } from 'react';
 
 export const VpnConnectionProvider = ({ children }: { children: ReactNode }) => {
-  const { isDesktopApp } = usePlatform();
+  const { isNativeApp } = usePlatform();
 
   const connection = useVpnConnection();
   const { nodes, isLoading, isError } = useNodes();
@@ -19,7 +19,7 @@ export const VpnConnectionProvider = ({ children }: { children: ReactNode }) => 
     nodes,
     hasAccess,
     isConnected: connection.status !== 'disconnected',
-    isReady: isDesktopApp && !isLoading && !isError,
+    isReady: isNativeApp && !isLoading && !isError,
     connect: connection.connect,
   });
 

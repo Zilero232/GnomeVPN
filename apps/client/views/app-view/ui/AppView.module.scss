@@ -7,6 +7,10 @@
   min-height: var(--viewport-height);
 
   @include safe-padding(26px, 24px, 36px);
+
+  @media (width <= 560px) {
+    @include safe-padding(26px, 14px, 36px);
+  }
 }
 
 .body {
@@ -26,7 +30,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 340px;
+  max-width: 460px;
 }
 
 .headRight {

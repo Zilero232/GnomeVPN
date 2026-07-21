@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>GnomeVPN</title>
+
+  <path d="M128 26 68 116h120L128 26Z" fill="#35F0A0" />
+  <path d="M128 26 100 68l32 48h56L128 26Z" fill="#1A8F5E" />
+
+  <path
+    d="M78 128h100c4 0 6 3 6 7 0 46-25 91-56 91s-56-45-56-91c0-4 2-7 6-7Z"
+    fill="#E6F0EC"
+  />
+
+  <circle cx="106" cy="152" r="8" fill="#070B0A" />
+  <circle cx="150" cy="152" r="8" fill="#070B0A" />
+
+  <ellipse cx="128" cy="176" rx="20" ry="16" fill="#F5B98E" />
+
+  <rect x="58" y="110" width="140" height="22" rx="11" fill="#E6F0EC" />
+
+  <circle cx="128" cy="26" r="14" fill="#E6F0EC" />
+</svg>

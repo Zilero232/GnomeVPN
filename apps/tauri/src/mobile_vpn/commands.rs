@@ -41,13 +41,13 @@ pub async fn vpn_connect<R: Runtime>(
     let cancellation = CancellationToken::new();
     state.arm(cancellation.clone());
 
-    let _ = on_event.send(TunnelEvent::Connected {
-        assigned_ip: TUN_ADDRESS.into(),
-    });
-
     let handle = app.clone();
 
     tauri::async_runtime::spawn(async move {
+        let _ = on_event.send(TunnelEvent::Connected {
+            assigned_ip: TUN_ADDRESS.into(),
+        });
+
         if let Err(error) = run_tun2proxy(args, fd, cancellation).await {
             log::error!("android tunnel stopped: {error}");
             let _ = on_event.send(TunnelEvent::Error {

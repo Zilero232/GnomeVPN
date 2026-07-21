@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { usePlatform } from '@/entities/app/platform';
 import { CheckUpdateButton } from '@/features/app/check-update';
 import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
@@ -21,6 +22,7 @@ export const AppMenu = () => {
   const t = useTranslations('app');
   const tray = useTranslations('tray');
 
+  const { isDesktopApp } = usePlatform();
   const { closeToTray, setCloseToTray } = useCloseToTray();
   const {
     autoStart,
@@ -55,25 +57,29 @@ export const AppMenu = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div className={s.menu} {...MENU_MOTION}>
-            <motion.div variants={MENU_ITEM_MOTION}>
-              <CheckUpdateButton />
-            </motion.div>
+            {isDesktopApp && (
+              <>
+                <motion.div variants={MENU_ITEM_MOTION}>
+                  <CheckUpdateButton />
+                </motion.div>
 
-            <div className={s.divider} />
+                <div className={s.divider} />
 
-            <MenuItem
-              isPressed={closeToTray}
-              label={tray('closeToTray')}
-              trailing={<Switch isChecked={closeToTray} />}
-              onClick={() => setCloseToTray(!closeToTray)}
-            />
+                <MenuItem
+                  isPressed={closeToTray}
+                  label={tray('closeToTray')}
+                  trailing={<Switch isChecked={closeToTray} />}
+                  onClick={() => setCloseToTray(!closeToTray)}
+                />
 
-            <MenuItem
-              isPressed={autoStart}
-              label={tray('autoStart')}
-              trailing={<Switch isChecked={autoStart} />}
-              onClick={() => toggleAutoStart(!autoStart)}
-            />
+                <MenuItem
+                  isPressed={autoStart}
+                  label={tray('autoStart')}
+                  trailing={<Switch isChecked={autoStart} />}
+                  onClick={() => toggleAutoStart(!autoStart)}
+                />
+              </>
+            )}
 
             <MenuItem
               isPressed={autoConnect}
