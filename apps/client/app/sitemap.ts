@@ -7,6 +7,7 @@ export const dynamic = 'force-static';
 const sitemap = (): MetadataRoute.Sitemap => [
   {
     url: SITE.url,
+    lastModified: new Date(),
     changeFrequency: 'weekly',
     priority: 1,
   },

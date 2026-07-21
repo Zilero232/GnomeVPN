@@ -8,7 +8,7 @@ const robots = (): MetadataRoute.Robots => ({
   rules: {
     userAgent: '*',
     allow: '/',
-    disallow: ['/app', '/account', '/auth'],
+    disallow: ['/app', '/account', '/auth', '/reset-password'],
   },
   sitemap: `${SITE.url}/sitemap.xml`,
 });

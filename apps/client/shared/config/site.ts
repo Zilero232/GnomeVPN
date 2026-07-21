@@ -4,6 +4,7 @@ export const SITE = {
   title: 'GnomeVPN — VPN без логов за 100 ₽ в месяц',
   description:
     'WireGuard-туннель до узла в другой стране одним нажатием. Без логов подключений, без рекламы, без ограничений трафика. 100 ₽ в месяц, отмена в один клик.',
+  ogImage: '/brand/og.png',
   locale: 'ru_RU',
   lang: 'ru-RU',
   themeColor: {

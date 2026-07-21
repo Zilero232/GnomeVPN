@@ -1,4 +1,4 @@
-import { SITE } from '@/shared/config';
+import { env, SITE } from '@/shared/config';
 
 import type { Metadata, Viewport } from 'next';
 
@@ -21,7 +21,6 @@ export const defaultMetadata: Metadata = {
   },
   alternates: {
     canonical: '/',
-    languages: { 'ru-RU': '/', 'x-default': '/' },
   },
   openGraph: {
     type: 'website',
@@ -30,11 +29,17 @@ export const defaultMetadata: Metadata = {
     siteName: SITE.name,
     title: SITE.title,
     description: SITE.description,
+    images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }],
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE.title,
     description: SITE.description,
+    images: [SITE.ogImage],
+  },
+  verification: {
+    ...(env.NEXT_PUBLIC_GOOGLE_VERIFICATION ? { google: env.NEXT_PUBLIC_GOOGLE_VERIFICATION } : {}),
+    ...(env.NEXT_PUBLIC_YANDEX_VERIFICATION ? { yandex: env.NEXT_PUBLIC_YANDEX_VERIFICATION } : {}),
   },
   robots: {
     index: true,

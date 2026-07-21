@@ -10,22 +10,25 @@ export const createPageMetadata = ({
   index = true,
   follow = true,
 }: PageMetadataInput): Metadata => {
-  const ogTitle = `${title} · ${SITE.name}`;
+  const ogTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
+  const images = [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }];
 
   return {
     title,
     description,
-    alternates: { canonical: path },
+    ...(index ? { alternates: { canonical: path } } : {}),
     robots: { index, follow },
     openGraph: {
       title: ogTitle,
       description,
       url: path,
       type: 'website',
+      images,
     },
     twitter: {
       title: ogTitle,
       description,
+      images: [SITE.ogImage],
     },
   };
 };
