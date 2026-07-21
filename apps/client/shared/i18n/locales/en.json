@@ -224,7 +224,6 @@
     "availableTitle": "Update available",
     "availableDescription": "Version {version} is ready to install.",
     "currentVersion": "Currently on {version}",
-    "whatsNew": "What's new",
     "install": "Update",
     "installing": "Installing…",
     "downloading": "Downloading…",

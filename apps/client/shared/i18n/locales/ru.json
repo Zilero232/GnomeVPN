@@ -224,7 +224,6 @@
     "availableTitle": "Доступно обновление",
     "availableDescription": "Версия {version} готова к установке.",
     "currentVersion": "Сейчас установлена {version}",
-    "whatsNew": "Что нового",
     "install": "Обновить",
     "installing": "Устанавливаем…",
     "downloading": "Загружаем…",

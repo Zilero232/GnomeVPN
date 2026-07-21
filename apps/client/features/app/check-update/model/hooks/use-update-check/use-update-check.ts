@@ -20,7 +20,7 @@ export const useUpdateCheck = (enabled = true) =>
 
       const update = await check();
 
-      return update ? { version: update.version, notes: update.body ?? null } : null;
+      return update ? { version: update.version } : null;
     },
     enabled,
     retry: false,

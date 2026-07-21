@@ -53,13 +53,6 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
           <span>{t('currentVersion', { version: env.NEXT_PUBLIC_APP_VERSION })}</span>
         </div>
 
-        {update.notes && (
-          <div className={s.notes}>
-            <span className={s.notesTitle}>{t('whatsNew')}</span>
-            <p className={s.notesBody}>{update.notes}</p>
-          </div>
-        )}
-
         {isPending && (
           <div className={s.progress}>
             <div className={s.progressHead}>
