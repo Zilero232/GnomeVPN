@@ -92,10 +92,13 @@ EMAIL_FROM=GnomeVPN <noreply@gnomevpn.ru>
 # Куда ведут ссылки из писем.
 CLIENT_URL=https://gnomevpn.ru
 
-# Имя переменной берётся из колонки node.wg_easy_api_key_env_var — по одной на узел.
-# Проверить, какие нужны: SELECT country, wg_easy_api_key_env_var FROM node;
-WG_KEY_DE=<пароль панели wg-easy на узле>
 ```
+
+Ключи узлов сюда не пишутся. `bun provision` складывает их в отдельный файл
+`.env.nodes` рядом с `docker-compose.yml` — по паре на узел: `XRAY_KEY_<код
+страны>` (имя из колонки `node.api_token_env_var`) и `XRAY_PANEL_<код страны>`.
+Контейнер подхватывает оба файла, так что `.env` остаётся рукописным.
+Проверить, какие переменные нужны: `SELECT country, api_token_env_var FROM node;`
 
 Цены тарифов в `.env` не задаются — они живут в `PLANS` (`packages/schemas`),
 откуда их читает и сервер при списании, и лендинг при отрисовке.

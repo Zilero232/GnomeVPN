@@ -3,7 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { describeError, resolveNodeApiKey } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { WgEasyClient } from '../../../../lib';
+import { XrayClient } from '../../../../lib';
 
 import type { ProbeNodeRow } from './node-health.job.types';
 
@@ -14,12 +14,12 @@ export class NodeHealthJob {
   constructor(private readonly prisma: PrismaService) {}
 
   private async probe(node: ProbeNodeRow): Promise<void> {
-    const wg = new WgEasyClient({
-      baseUrl: node.wgEasyUrl,
-      apiKey: resolveNodeApiKey(node.wgEasyApiKeyEnvVar),
+    const xray = new XrayClient({
+      baseUrl: node.apiUrl,
+      token: resolveNodeApiKey(node.apiTokenEnvVar),
     });
 
-    if (!(await wg.health())) {
+    if (!(await xray.health())) {
       return;
     }
 
@@ -33,7 +33,7 @@ export class NodeHealthJob {
   async run(): Promise<void> {
     const nodes = await this.prisma.node.findMany({
       where: { isAvailable: true },
-      select: { id: true, wgEasyUrl: true, wgEasyApiKeyEnvVar: true },
+      select: { id: true, apiUrl: true, apiTokenEnvVar: true },
     });
 
     const results = await Promise.allSettled(nodes.map((node) => this.probe(node)));

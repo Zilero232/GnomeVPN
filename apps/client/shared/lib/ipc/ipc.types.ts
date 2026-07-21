@@ -9,17 +9,11 @@ export type TunnelEvent =
   | { type: 'disconnected' }
   | { type: 'error'; message: string };
 
-/**
- * Every command exposed by the Rust side, mirroring the invoke_handler list in
- * apps/tauri/src/lib.rs. Adding a command here without adding it there fails at
- * runtime, so the two lists are meant to be read side by side.
- */
 export type RustCommands = {
   vpn_connect: {
     args: {
       config: TunnelConfig;
       onEvent: Channel<TunnelEvent>;
-      killSwitch: boolean;
       autoReconnect: boolean;
     };
     result: null;

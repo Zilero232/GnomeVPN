@@ -8,22 +8,22 @@
     "packages/*"
   ],
   "scripts": {
+    "prepare": "husky",
     "dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/client' --parallel dev",
     "dev:server": "bun --filter @gnomevpn/server dev",
     "dev:client": "bun --filter @gnomevpn/client dev",
     "dev:infra": "docker compose -f docker-compose.dev.yml up -d",
     "tauri:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel dev",
     "tauri:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri build",
+    "android:init": "bun --filter @gnomevpn/tauri android:init",
+    "android:dev": "bun --filter @gnomevpn/tauri android:dev",
+    "android:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri android:build",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
-    "provision:nodes": "bun --env-file apps/server/.env apps/server/scripts/provision-nodes.ts",
-    "release:patch": "npm version patch --no-git-tag-version",
-    "release:minor": "npm version minor --no-git-tag-version",
-    "release:major": "npm version major --no-git-tag-version",
-    "prepare": "husky"
+    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
+    "provision:nodes": "bun --env-file apps/server/.env --env-file apps/server/.env.nodes apps/server/scripts/provision-nodes.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

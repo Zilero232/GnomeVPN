@@ -10,8 +10,8 @@ const KEYS = {
   autoConnect: 'autoConnect',
   lastNodeId: 'lastNodeId',
   autoStartInitialized: 'autoStartInitialized',
-  killSwitch: 'killSwitch',
   autoReconnect: 'autoReconnect',
+  deviceId: 'deviceId',
   manuallyDisconnected: 'manuallyDisconnected',
 } as const;
 
@@ -57,9 +57,9 @@ export const getAutoConnect = async (): Promise<boolean> => read(KEYS.autoConnec
 export const setAutoConnect = async (value: boolean): Promise<void> =>
   write(KEYS.autoConnect, value);
 
-export const getKillSwitch = async (): Promise<boolean> => read(KEYS.killSwitch, false);
+export const getDeviceId = async (): Promise<string | null> => read(KEYS.deviceId, null);
 
-export const setKillSwitch = async (value: boolean): Promise<void> => write(KEYS.killSwitch, value);
+export const setDeviceId = async (value: string): Promise<void> => write(KEYS.deviceId, value);
 
 export const getAutoReconnect = async (): Promise<boolean> => read(KEYS.autoReconnect, true);
 

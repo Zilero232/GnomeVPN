@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { findPlan } from '@gnomevpn/schemas';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { AppBadRequestException } from '../../common/exceptions';
-import { isPeriodActive, nextPeriodEnd } from '../../common/lib';
+import { describeError, isPeriodActive, nextPeriodEnd } from '../../common/lib';
 import { AppConfigService } from '../../config/config.module';
 import { PrismaService } from '../../core';
-import { makeYooKassaClient, YooKassaClient } from '../../lib';
+import { YooKassaClient } from '../../lib';
 import { describePlan } from './lib';
 
 import type {
@@ -16,18 +16,22 @@ import type {
   PlanId,
   WebhookEvent,
 } from '@gnomevpn/schemas';
-import type { ActivateInput, AttachMethodInput, AutoRenewInput } from './billing.types';
+import type {
+  ActivateInput,
+  AttachMethodInput,
+  AutoRenewInput,
+  RecordPaymentInput,
+} from './billing.types';
 
 @Injectable()
 export class BillingService {
+  private readonly logger = new Logger(BillingService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
+    private readonly yookassa: YooKassaClient,
   ) {}
-
-  private makeClient(): YooKassaClient {
-    return makeYooKassaClient(this.config);
-  }
 
   private isRecurringEnabled(): boolean {
     return this.config.get('YOOKASSA_RECURRING');
@@ -57,7 +61,7 @@ export class BillingService {
       );
     }
 
-    const payment = await this.makeClient().createPayment({
+    const payment = await this.yookassa.createPayment({
       amountRub: plan.priceRub,
       description: describePlan(plan),
       returnUrl: this.returnUrlFor(client),
@@ -65,22 +69,36 @@ export class BillingService {
       savePaymentMethod: this.isRecurringEnabled(),
     });
 
-    await this.prisma.payment.create({
-      data: {
-        userId,
-        yookassaPaymentId: payment.id,
-        amount: plan.priceRub,
-        status: 'pending',
-        isAutoCharge: false,
-        plan: plan.id,
-      },
-    });
-
     if (!payment.confirmationUrl) {
       throw new AppBadRequestException('PAYMENT_FAILED', 'YooKassa returned no confirmation URL');
     }
 
+    await this.recordPendingPayment({
+      userId,
+      paymentId: payment.id,
+      plan,
+      isAutoCharge: false,
+    });
+
     return { confirmationUrl: payment.confirmationUrl };
+  }
+
+  async recordPendingPayment({
+    userId,
+    paymentId,
+    plan,
+    isAutoCharge,
+  }: RecordPaymentInput): Promise<void> {
+    await this.prisma.payment.create({
+      data: {
+        userId,
+        yookassaPaymentId: paymentId,
+        amount: plan.priceRub,
+        status: 'pending',
+        isAutoCharge,
+        plan: plan.id,
+      },
+    });
   }
 
   private resolveAutoRenew({ hasMethod, wasCancelled }: AutoRenewInput): boolean {
@@ -124,14 +142,20 @@ export class BillingService {
     });
   }
 
+  // Any status other than 2xx makes YooKassa retry for a day, so a failure here
+  // is logged and swallowed rather than surfaced.
   async handleWebhook(event: WebhookEvent): Promise<void> {
-    if (event.event === 'payment_method.active') {
-      await this.handlePaymentMethodActive(event.object.id);
+    try {
+      if (event.event === 'payment_method.active') {
+        await this.handlePaymentMethodActive(event.object.id);
 
-      return;
+        return;
+      }
+
+      await this.handlePaymentEvent(event.object.id);
+    } catch (error) {
+      this.logger.error(`webhook ${event.event} failed: ${describeError(error)}`);
     }
-
-    await this.handlePaymentEvent(event.object.id);
   }
 
   private async handlePaymentEvent(paymentId: string): Promise<void> {
@@ -140,11 +164,19 @@ export class BillingService {
       select: { id: true, userId: true, status: true, plan: true },
     });
 
-    if (row?.status !== 'pending') {
+    if (!row) {
+      this.logger.warn(`webhook for an unknown payment ${paymentId}`);
+
       return;
     }
 
-    const payment = await this.makeClient().getPayment(paymentId);
+    if (row.status !== 'pending') {
+      this.logger.debug(`payment ${paymentId} is already ${row.status}`);
+
+      return;
+    }
+
+    const payment = await this.yookassa.getPayment(paymentId);
 
     if (payment.status === 'canceled') {
       await this.prisma.payment.update({
@@ -152,10 +184,14 @@ export class BillingService {
         data: { status: 'canceled' },
       });
 
+      this.logger.log(`payment ${paymentId} was canceled`);
+
       return;
     }
 
     if (payment.status !== 'succeeded') {
+      this.logger.debug(`payment ${paymentId} is still ${payment.status}`);
+
       return;
     }
 
@@ -165,6 +201,8 @@ export class BillingService {
     });
 
     if (claimed.count === 0) {
+      this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
+
       return;
     }
 
@@ -209,7 +247,7 @@ export class BillingService {
       );
     }
 
-    const method = await this.makeClient().bindPaymentMethod({
+    const method = await this.yookassa.bindPaymentMethod({
       returnUrl: this.returnUrlFor(client),
       idempotenceKey: randomUUID(),
     });
@@ -270,7 +308,7 @@ export class BillingService {
       return;
     }
 
-    const method = await this.makeClient().getPaymentMethod(paymentMethodId);
+    const method = await this.yookassa.getPaymentMethod(paymentMethodId);
 
     if (method.status !== 'active') {
       await this.prisma.subscription.update({

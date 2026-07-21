@@ -34,15 +34,14 @@ impl ServiceClient {
 
         let mut client = Self { stream };
 
-        match client.request(Request::Hello {
-            protocol_version: PROTOCOL_VERSION,
-        })? {
-            Response::Hello { .. } => Ok(client),
-            Response::Error { message } => Err(ClientError::Refused(message)),
-            other => Err(ClientError::Protocol(format!(
-                "unexpected reply: {other:?}"
-            ))),
-        }
+        client.expect(
+            Request::Hello {
+                protocol_version: PROTOCOL_VERSION,
+            },
+            |response| matches!(response, Response::Hello { .. }).then_some(()),
+        )?;
+
+        Ok(client)
     }
 
     fn request(&mut self, request: Request) -> Result<Response, ClientError> {
@@ -54,43 +53,47 @@ impl ServiceClient {
         read_frame(&mut reader).map_err(|e| ClientError::Protocol(e.to_string()))
     }
 
+    fn expect<T>(
+        &mut self,
+        request: Request,
+        accept: impl Fn(Response) -> Option<T>,
+    ) -> Result<T, ClientError> {
+        let response = self.request(request)?;
+
+        if let Response::Error { message } = response {
+            return Err(ClientError::Refused(message));
+        }
+
+        let unexpected = format!("unexpected reply: {response:?}");
+
+        accept(response).ok_or(ClientError::Protocol(unexpected))
+    }
+
     pub fn connect_tunnel(
         &mut self,
         config: TunnelConfig,
-        kill_switch: bool,
         auto_reconnect: bool,
     ) -> Result<(), ClientError> {
-        match self.request(Request::Connect {
-            config: Box::new(config),
-            kill_switch,
-            auto_reconnect,
-        })? {
-            Response::Ok => Ok(()),
-            Response::Error { message } => Err(ClientError::Refused(message)),
-            other => Err(ClientError::Protocol(format!(
-                "unexpected reply: {other:?}"
-            ))),
-        }
+        self.expect(
+            Request::Connect {
+                config: Box::new(config),
+                auto_reconnect,
+            },
+            |response| matches!(response, Response::Ok).then_some(()),
+        )
     }
 
     pub fn disconnect_tunnel(&mut self) -> Result<(), ClientError> {
-        match self.request(Request::Disconnect)? {
-            Response::Ok => Ok(()),
-            Response::Error { message } => Err(ClientError::Refused(message)),
-            other => Err(ClientError::Protocol(format!(
-                "unexpected reply: {other:?}"
-            ))),
-        }
+        self.expect(Request::Disconnect, |response| {
+            matches!(response, Response::Ok).then_some(())
+        })
     }
 
     pub fn status(&mut self) -> Result<TunnelStatus, ClientError> {
-        match self.request(Request::Status)? {
-            Response::Status { status } => Ok(status),
-            Response::Error { message } => Err(ClientError::Refused(message)),
-            other => Err(ClientError::Protocol(format!(
-                "unexpected reply: {other:?}"
-            ))),
-        }
+        self.expect(Request::Status, |response| match response {
+            Response::Status { status } => Some(status),
+            _ => None,
+        })
     }
 
     pub fn pump_events(mut self, on_event: Arc<dyn Fn(TunnelEvent) + Send + Sync>) {

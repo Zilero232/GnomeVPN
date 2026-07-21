@@ -9,6 +9,7 @@ import { AuthProvider } from './AuthProvider';
 import { DesktopShell } from './DesktopShell';
 import { DismissToastOnClick } from './DismissToastOnClick';
 import { I18nProvider } from './I18nProvider';
+import { MobileInsets } from './MobileInsets';
 import { VaultProvider } from './VaultProvider';
 
 import type { ReactNode } from 'react';
@@ -37,6 +38,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
         </VaultProvider>
       </DesktopShell>
 
+      <MobileInsets />
       <DismissToastOnClick />
 
       <Toaster

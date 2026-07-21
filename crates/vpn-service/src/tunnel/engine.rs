@@ -1,21 +1,79 @@
-use std::net::ToSocketAddrs;
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
+use std::net::SocketAddr;
 use std::sync::Arc;
 
-use boringtun::noise::{Tunn, TunnResult};
-use tokio::net::UdpSocket;
 use tokio::sync::oneshot;
-use tokio::time::{interval, Duration};
+use tokio::time::{interval, timeout, Duration};
+use tun2proxy::{ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 
-use base64::{engine::general_purpose::STANDARD, Engine};
 use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
-use x25519_dalek::{PublicKey, StaticSecret};
 
 use super::route;
+use super::tunio::TunIo;
+use super::xray::{self, Credentials, Xray};
 use super::TunnelError;
 
-const MAX_PACKET: usize = 65535;
 const TUNNEL_NAME: &str = "gnomevpn0";
-const TICKS_PER_SECOND: u32 = 4;
+const TUNNEL_ADDRESS: Ipv4Addr = Ipv4Addr::new(10, 8, 0, 2);
+const TUNNEL_GATEWAY: Ipv4Addr = Ipv4Addr::new(10, 8, 0, 1);
+const TUNNEL_PREFIX: u8 = 24;
+const MTU: u16 = 1420;
+
+const READY_TIMEOUT: Duration = Duration::from_secs(15);
+const READY_INTERVAL: Duration = Duration::from_millis(200);
+const WATCH_INTERVAL: Duration = Duration::from_secs(1);
+
+async fn wait_until_ready(socks: SocketAddr, xray: &mut Xray) -> Result<(), TunnelError> {
+    let mut ticker = interval(READY_INTERVAL);
+
+    let probe = async {
+        loop {
+            ticker.tick().await;
+
+            if let Some(reason) = xray.has_exited() {
+                return Err(TunnelError::Xray(reason));
+            }
+
+            if tokio::net::TcpStream::connect(socks).await.is_ok() {
+                return Ok(());
+            }
+        }
+    };
+
+    timeout(READY_TIMEOUT, probe)
+        .await
+        .map_err(|_| TunnelError::Xray("xray did not open its inbound in time".into()))?
+}
+
+fn resolve_server(config: &TunnelConfig) -> Result<IpAddr, TunnelError> {
+    use std::net::ToSocketAddrs;
+
+    (config.server.as_str(), config.port)
+        .to_socket_addrs()
+        .map_err(|error| TunnelError::Endpoint(error.to_string()))?
+        .next()
+        .map(|addr| addr.ip())
+        .ok_or_else(|| TunnelError::Endpoint(format!("cannot resolve {}", config.server)))
+}
+
+fn proxy_args(socks: SocketAddr, credentials: &Credentials, dns: &[String]) -> Args {
+    let mut args = Args::default();
+
+    args.proxy(ArgProxy {
+        proxy_type: ProxyType::Socks5,
+        addr: socks,
+        credentials: Some(UserKey::new(&credentials.user, &credentials.password)),
+    })
+    .tun(TUNNEL_NAME.to_string())
+    .setup(false);
+
+    if let Some(server) = dns.iter().find_map(|entry| entry.parse::<IpAddr>().ok()) {
+        args.dns_addr(server);
+    }
+
+    args
+}
 
 pub async fn run_tunnel(
     config: TunnelConfig,
@@ -24,193 +82,87 @@ pub async fn run_tunnel(
 ) -> Result<(), TunnelError> {
     emit(TunnelEvent::Connecting);
 
-    let (static_private, server_public) = parse_keys(&config)?;
-    let keepalive = if config.persistent_keepalive == 0 {
-        None
-    } else {
-        Some(config.persistent_keepalive)
+    let server = resolve_server(&config)?;
+
+    let (mut process, credentials) = xray::spawn(&config).await?;
+    let socks = process.socks_addr();
+
+    if let Err(error) = wait_until_ready(socks, &mut process).await {
+        process.stop().await;
+
+        return Err(error);
+    }
+
+    let _ = route::remove_default_route(TUNNEL_NAME, server);
+
+    let device = match tun_rs::DeviceBuilder::new()
+        .name(TUNNEL_NAME)
+        .ipv4(TUNNEL_ADDRESS, TUNNEL_PREFIX, None)
+        .mtu(MTU)
+        .build_async()
+    {
+        Ok(device) => device,
+        Err(error) => {
+            process.stop().await;
+
+            return Err(TunnelError::Tun(error.to_string()));
+        }
     };
 
-    let preshared = parse_preshared_key(&config)?;
+    if let Err(error) = route::apply_default_route(TUNNEL_NAME, server, IpAddr::V4(TUNNEL_GATEWAY))
+    {
+        process.stop().await;
 
-    if preshared.is_some() {
-        log::info!("tunnel uses a preshared key");
+        return Err(TunnelError::Io(format!("route: {error}")));
     }
 
-    let mut tunn = Tunn::new(static_private, server_public, preshared, keepalive, 0, None);
+    let args = proxy_args(socks, &credentials, &config.dns);
+    let cancellation = CancellationToken::new();
+    let (io, traffic) = TunIo::new(device);
 
-    let mut work = vec![0u8; MAX_PACKET];
+    let mut proxy = Box::pin(tun2proxy::run(io, MTU, args, cancellation.clone()));
 
-    let endpoint = config
-        .endpoint
-        .to_socket_addrs()
-        .map_err(|e| TunnelError::Endpoint(e.to_string()))?
-        .next()
-        .ok_or_else(|| TunnelError::Endpoint("no address".into()))?;
+    emit(TunnelEvent::Connected {
+        assigned_ip: TUNNEL_ADDRESS.to_string(),
+    });
 
-    let socket = UdpSocket::bind("0.0.0.0:0")
-        .await
-        .map_err(|e| TunnelError::Io(e.to_string()))?;
-    socket
-        .connect(endpoint)
-        .await
-        .map_err(|e| TunnelError::Io(e.to_string()))?;
-
-    if let TunnResult::WriteToNetwork(b) = tunn.encapsulate(&[], &mut work) {
-        let _ = socket.send(b).await;
-    }
-
-    let (address, prefix) = parse_cidr(&config.address)?;
-    let gateway = tunnel_gateway(address, prefix);
-
-    let _ = route::remove_default_route(TUNNEL_NAME, endpoint.ip());
-
-    let dev = tun_rs::DeviceBuilder::new()
-        .name(TUNNEL_NAME)
-        .ipv4(address, prefix, None)
-        .mtu(1420)
-        .build_async()
-        .map_err(|e| TunnelError::Tun(e.to_string()))?;
-
-    route::apply_default_route(TUNNEL_NAME, endpoint.ip(), std::net::IpAddr::V4(gateway))
-        .map_err(|e| TunnelError::Io(format!("route: {e}")))?;
-
-    let mut tun_buf = vec![0u8; MAX_PACKET];
-    let mut udp_buf = vec![0u8; MAX_PACKET];
-    let mut timer = interval(Duration::from_millis(250));
-    let mut connected = false;
-    let mut ticks_without_handshake: u32 = 0;
-    let mut ticks: u32 = 0;
+    let mut watch = interval(WATCH_INTERVAL);
 
     let result = loop {
         tokio::select! {
-            _ = &mut stop => break Ok(()),
+            _ = &mut stop => {
+                cancellation.cancel();
+                let _ = proxy.await;
 
-            r = dev.recv(&mut tun_buf) => {
-                let n = match r {
-                    Ok(n) => n,
-                    Err(e) => break Err(TunnelError::Tun(e.to_string())),
-                };
-                match tunn.encapsulate(&tun_buf[..n], &mut work) {
-                    TunnResult::WriteToNetwork(b) => { let _ = socket.send(b).await; }
-                    TunnResult::Err(e) => break Err(TunnelError::Io(format!("encap: {e:?}"))),
-                    _ => {}
-                }
+                break Ok(());
             }
 
-            r = socket.recv(&mut udp_buf) => {
-                let n = match r {
-                    Ok(n) => n,
-                    Err(e) => break Err(TunnelError::Io(e.to_string())),
+            finished = &mut proxy => {
+                break match finished {
+                    Ok(_) => Ok(()),
+                    Err(error) => Err(TunnelError::Io(error.to_string())),
                 };
-                let mut datagram = &udp_buf[..n];
-                loop {
-                    match tunn.decapsulate(None, datagram, &mut work) {
-                        TunnResult::WriteToNetwork(b) => {
-                            let _ = socket.send(b).await;
-                            datagram = &[];
-                            continue;
-                        }
-                        TunnResult::WriteToTunnelV4(b, _) | TunnResult::WriteToTunnelV6(b, _) => {
-                            let _ = dev.send(b).await;
-                        }
-                        TunnResult::Err(e) => {
-                            log::warn!("decapsulate rejected a packet: {e:?}");
-                        }
-                        TunnResult::Done => {}
-                    }
-                    break;
-                }
             }
 
-            _ = timer.tick() => {
-                if let TunnResult::WriteToNetwork(b) = tunn.update_timers(&mut work) {
-                    let _ = socket.send(b).await;
+            _ = watch.tick() => {
+                if let Some(reason) = process.has_exited() {
+                    cancellation.cancel();
+                    let _ = proxy.await;
+
+                    break Err(TunnelError::Xray(reason));
                 }
 
-                if !connected {
-                    ticks_without_handshake += 1;
-
-                    if tunn.stats().0.is_some() {
-                        connected = true;
-                        log::info!("tunnel handshake complete");
-                        emit(TunnelEvent::Connected { assigned_ip: config.address.clone() });
-                    } else if ticks_without_handshake.is_multiple_of(20) {
-                        let (_, tx, rx, _, _) = tunn.stats();
-                        log::warn!(
-                            "no handshake after {}s (tx {tx} B, rx {rx} B) — check UDP 51820 to {endpoint}",
-                            ticks_without_handshake / 4
-                        );
-                    }
-                }
-
-                ticks += 1;
-
-                if connected && ticks.is_multiple_of(TICKS_PER_SECOND) {
-                    let (_, tx, rx, _, _) = tunn.stats();
-
-                    emit(TunnelEvent::BytesUpdate { rx: rx as u64, tx: tx as u64 });
-                }
+                emit(TunnelEvent::BytesUpdate {
+                    rx: traffic.rx(),
+                    tx: traffic.tx(),
+                });
             }
         }
     };
 
-    let _ = route::remove_default_route(TUNNEL_NAME, endpoint.ip());
+    let _ = route::remove_default_route(TUNNEL_NAME, server);
+    process.stop().await;
     emit(TunnelEvent::Disconnected);
+
     result
-}
-
-fn parse_cidr(value: &str) -> Result<(std::net::Ipv4Addr, u8), TunnelError> {
-    let mut parts = value.split('/');
-    let ip: std::net::Ipv4Addr = parts
-        .next()
-        .unwrap_or(value)
-        .parse()
-        .map_err(|_| TunnelError::Endpoint(format!("bad address {value}")))?;
-
-    let prefix = match parts.next() {
-        Some(raw) => raw
-            .parse::<u8>()
-            .map_err(|_| TunnelError::Endpoint(format!("bad prefix {value}")))?,
-        None => 32,
-    };
-
-    if prefix > 32 {
-        return Err(TunnelError::Endpoint(format!("bad prefix {value}")));
-    }
-
-    Ok((ip, prefix))
-}
-
-fn tunnel_gateway(address: std::net::Ipv4Addr, prefix: u8) -> std::net::Ipv4Addr {
-    if prefix >= 31 {
-        return address;
-    }
-
-    let mask = u32::MAX << (32 - prefix);
-    let network = u32::from(address) & mask;
-
-    std::net::Ipv4Addr::from(network + 1)
-}
-
-pub fn parse_keys(config: &TunnelConfig) -> Result<(StaticSecret, PublicKey), TunnelError> {
-    let priv_bytes = decode_key(&config.private_key)?;
-    let pub_bytes = decode_key(&config.server_public_key)?;
-
-    Ok((StaticSecret::from(priv_bytes), PublicKey::from(pub_bytes)))
-}
-
-pub fn parse_preshared_key(config: &TunnelConfig) -> Result<Option<[u8; 32]>, TunnelError> {
-    match config.preshared_key.as_deref() {
-        Some(value) if !value.trim().is_empty() => Ok(Some(decode_key(value)?)),
-        _ => Ok(None),
-    }
-}
-
-fn decode_key(value: &str) -> Result<[u8; 32], TunnelError> {
-    let raw = STANDARD
-        .decode(value.trim())
-        .map_err(|e| TunnelError::KeyDecode(e.to_string()))?;
-
-    raw.try_into().map_err(|_| TunnelError::KeyLength)
 }

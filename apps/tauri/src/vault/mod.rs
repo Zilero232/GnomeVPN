@@ -1,4 +1,6 @@
+#[cfg(target_os = "windows")]
 const SERVICE: &str = "GnomeVPN";
+#[cfg(target_os = "windows")]
 const ACCOUNT: &str = "session-token";
 
 #[derive(Debug, thiserror::Error)]

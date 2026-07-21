@@ -11,13 +11,15 @@ src/
 ├── modules/         # one folder per domain
 │   ├── auth/        # better-auth module wiring
 │   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
+│   ├── configs/     # downloadable VLESS configs — config/ dto/ lib/
 │   ├── health/      # /health — also probes the database
 │   ├── nodes/       # public node list with health status — config/ lib/
+│   ├── peers/       # xray clients shared by sessions and configs — config/ lib/
 │   ├── release/     # desktop release + updater manifest, proxied from GitHub — config/ lib/
 │   ├── scheduler/   # cron jobs — config/ jobs/
-│   ├── subscription/# guards/
-│   └── tunnel/      # tunnel sessions and downloadable configs — config/ lib/
-├── lib/             # external integrations: auth, wg-easy, yookassa
+│   ├── sessions/    # live tunnels, one slot per device — config/ dto/
+│   └── subscription/# guards/
+├── lib/             # external integrations: auth, xray, yookassa
 ├── core/            # Prisma service
 ├── common/          # exceptions, filters, decorators
 └── config/          # env schema (Zod)
@@ -32,8 +34,11 @@ A module is `x.module.ts` + `x.controller.ts` + `x.service.ts`, plus `dto/`, `gu
 | What | Where |
 | --- | --- |
 | Constants, timeouts, lookup tables | `config/x.config.ts` |
-| Pure functions | `lib/` |
-| Types | `x.types.ts` |
+| Pure functions | `lib/<name>/` — one folder per function, with its own `index.ts` and `<name>.types.ts` |
+| Types | `x.types.ts` next to the file that owns them |
+
+`lib/` is never a pile of loose files: each helper gets a folder, so its types
+sit beside it and the barrel re-exports both.
 
 ```ts
 // no — a service file holding data
@@ -67,20 +72,20 @@ The schema itself belongs in [`packages/schemas`](../../packages/schemas) — th
 
 `config/env.schema.ts` validates on boot and **throws** on a missing variable. That is deliberate: a server that starts without `DATABASE_URL` fails later, in a harder-to-read way.
 
-Node panel passwords are the exception. The `node` table stores the *name* of an env var (`wgEasyApiKeyEnvVar`), never the password:
+Node panel passwords are the exception. The `node` table stores the *name* of an env var (`apiTokenEnvVar`), never the password:
 
 ```ts
-const key = process.env[node.wgEasyApiKeyEnvVar];
+const key = process.env[node.apiTokenEnvVar];
 ```
 
-So credentials stay out of the database, and adding a country means adding one `WG_KEY_XX` to `.env`.
+So credentials stay out of the database. `bun provision` writes those lines itself, into **`.env.nodes`** — a separate gitignored file holding `XRAY_KEY_<CC>` and `XRAY_PANEL_<CC>` per node. The server loads it alongside `.env`, which keeps the hand-written file hand-written and the generated secrets out of it.
 
 ## Errors
 
 Throw the app exceptions from `common/exceptions` with a code from `@gnomevpn/schemas`:
 
 ```ts
-throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wg-easy node unreachable');
+throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
 ```
 
 The client matches on the code, so the message is free text but the code is a contract.
@@ -98,11 +103,44 @@ Renewal also needs a card on file (`savedCardId`). Without one the job has nothi
 
 Webhooks are the only thing that activates a subscription; the browser returning to `YOOKASSA_RETURN_URL` proves nothing. `handleWebhook` never trusts the request body either — it re-reads the payment or payment method from the API, because a webhook is just JSON somebody posted. It answers `200` even when it does nothing: any other status makes YooKassa retry for a day.
 
+## Three modules, one xray client
+
+`peers` owns everything that talks to the node's panel — creating a client,
+releasing it, building the tunnel config. `sessions` and `configs` sit on top and
+never touch `XrayClient` directly, which is why the same "create → persist →
+roll back on failure" dance is written once instead of twice.
+
+## Session slots
+
+A subscription covers `SESSION_LIMIT` (2) live tunnels at once, so a phone and a
+desktop can both stay connected. The client sends a `deviceId` it generates once
+and keeps in `plugin-store`; that id becomes the peer's `name`, which makes the
+xray client email unique per device (`app-<userId>-<deviceId>`).
+
+Reconnecting from a known device reuses its slot. A third device evicts the least
+recently used one rather than being refused — `freeSlot` orders by
+`lastActiveAt` and frees space *before* the new client is created.
+
+Order matters: `createClient` deletes any client with the same email first,
+because the panel rejects duplicates. Releasing the old peer *after* creating the
+new one would delete the client that was just handed out — that bug cost a
+"NODE_UNAVAILABLE" that had nothing to do with the node being down.
+
 ## Cron jobs
 
 `modules/scheduler` runs four: node health, peer garbage collection, expired access, recurring charges.
 
 Use a raw cron string when the interval has no `CronExpression` constant. Inventing one that doesn't exist crashes the server at boot, and only at boot — nothing catches it earlier.
+
+## Provisioning nodes
+
+`bun provision` reads `apps/server/nodes.json` (gitignored — it holds root SSH passwords) and sets each host up over SSH: install Docker, ship the Xray compose stack, open 443, configure the panel, register the node.
+
+Reality keys are generated **per node, on every run** — `scripts/lib/reality-keys` derives an x25519 pair from `node:crypto`. Re-provisioning therefore rotates the key, and `upsertNode` has to write the new public key back; leaving a stale one in the database silently breaks every client of that node.
+
+The same rotation is why `ensureInbound` **updates** an existing inbound instead of leaving it alone. Creating it only when absent looks harmless and is not: the second run writes fresh keys to the database while the node keeps the first pair, so the client is handed a `shortId` the node never accepts and every handshake fails — with a panel that still answers `200` and a node that looks healthy.
+
+The donor host (`realityServerName`) defaults to `www.microsoft.com`. Pick one that answers TLS 1.3 over HTTP/2 *without redirecting* — `dl.google.com` and `www.nvidia.com` both 30x and are unsuitable despite being widely recommended.
 
 ## Prisma
 

@@ -1,102 +1,38 @@
-import { appendEnvLine, hasEnvKey } from '../env-file';
-import { hashPanelPassword, resolvePanelPassword } from '../panel-password';
+import pWaitFor from 'p-wait-for';
+
+import { upsertEnvLine } from '../env-file';
+import { nodeKeyName, panelPasswordName, resolveNodeCredentials } from '../node-credentials';
+import { buildRealityInbound, LISTEN_PORT, PANEL_PATH, PANEL_PORT } from '../reality-inbound';
+import { generateRealityKeys, generateShortId } from '../reality-keys';
+import { configurePanel, ensureDocker, openTunnelPort, shipStack } from '../remote-setup';
 import { SshClient } from '../ssh-client';
+import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
 import type {
   ProvisionHostInput,
   ProvisionResult,
-  RegisterPanelPasswordInput,
-  ShipComposeStackInput,
-  WaitForHealthyInput,
+  RememberNodeSecretsInput,
 } from './provision-host.types';
 
-const REMOTE_DIR = '/opt/gnomevpn-wg-easy';
-const WIREGUARD_PORT = 51820;
-const PANEL_PORT = 51821;
-const HEALTH_CHECK_TIMEOUT_MS = 60_000;
-const HEALTH_CHECK_INTERVAL_MS = 2_000;
+const panelUrl = (host: string): string => `http://${host}:${PANEL_PORT}/${PANEL_PATH}`;
 
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-const waitForHealthy = async ({
-  check,
-  timeoutMs,
-  intervalMs,
-}: WaitForHealthyInput): Promise<boolean> => {
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline) {
-    if (await check()) {
-      return true;
-    }
-
-    await sleep(intervalMs);
-  }
-
-  return false;
-};
-
-const ensureDocker = async (ssh: SshClient): Promise<void> => {
-  const dockerCheck = await ssh.exec('docker --version');
-
-  if (dockerCheck.exitCode !== 0) {
-    await ssh.exec('curl -fsSL https://get.docker.com | sh');
-  }
-};
-
-const KERNEL_MODULES = ['iptable_nat', 'wireguard'];
-
-const ensureKernelModules = async (ssh: SshClient): Promise<void> => {
-  for (const module of KERNEL_MODULES) {
-    await ssh.exec(`modprobe ${module}`);
-  }
-
-  await ssh.exec(
-    `mkdir -p /etc/modules-load.d && printf '%s\\n' ${KERNEL_MODULES.join(' ')} > /etc/modules-load.d/gnomevpn-wg-easy.conf`,
-  );
-};
-
-const shipComposeStack = async ({
-  ssh,
-  config,
-  composeContent,
-  passwordHash,
-}: ShipComposeStackInput): Promise<void> => {
-  await ssh.exec(`mkdir -p ${REMOTE_DIR}`);
-
-  await ssh.putFile(composeContent, `${REMOTE_DIR}/docker-compose.yml`);
-  await ssh.putFile(
-    `WG_HOST=${config.host}\nWG_EASY_PASSWORD_HASH=${passwordHash}\n`,
-    `${REMOTE_DIR}/.env`,
-  );
-};
-
-const configureFirewall = async (ssh: SshClient): Promise<void> => {
-  const ufwCheck = await ssh.exec('command -v ufw');
-
-  if (ufwCheck.exitCode !== 0) {
-    return;
-  }
-
-  await ssh.exec(`ufw allow ${WIREGUARD_PORT}/udp`);
-  await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
-};
-
-const registerPanelPassword = async ({
+const rememberNodeSecrets = async ({
   serverEnvPath,
   countryCode,
-  password,
-  isNew,
-}: RegisterPanelPasswordInput): Promise<void> => {
-  if (!isNew) {
-    return;
-  }
+  apiToken,
+  panelPassword,
+}: RememberNodeSecretsInput): Promise<void> => {
+  await upsertEnvLine({
+    filePath: serverEnvPath,
+    key: panelPasswordName(countryCode),
+    value: panelPassword,
+  });
 
-  if (await hasEnvKey({ filePath: serverEnvPath, key: `WG_KEY_${countryCode}` })) {
-    return;
-  }
-
-  await appendEnvLine({ filePath: serverEnvPath, key: `WG_KEY_${countryCode}`, value: password });
+  await upsertEnvLine({
+    filePath: serverEnvPath,
+    key: nodeKeyName(countryCode),
+    value: apiToken,
+  });
 };
 
 export const provisionHost = async ({
@@ -104,6 +40,7 @@ export const provisionHost = async ({
   options: opts,
 }: ProvisionHostInput): Promise<ProvisionResult> => {
   const ssh = (opts.createSshClient ?? (() => new SshClient()))();
+  const outcome = { host: config.host, country: config.country };
 
   try {
     await ssh.connect({
@@ -112,68 +49,67 @@ export const provisionHost = async ({
       password: config.sshPassword,
     });
 
-    await ensureDocker(ssh);
-    await ensureKernelModules(ssh);
-
-    const { password, isNew } = await resolvePanelPassword({
+    const { password } = await resolveNodeCredentials({
       envFilePath: opts.serverEnvPath,
       countryCode: config.countryCode,
     });
-    const passwordHash = await hashPanelPassword(password);
 
-    await shipComposeStack({
-      ssh,
-      config,
-      composeContent: opts.wgEasyComposeContent,
-      passwordHash,
-    });
-    await configureFirewall(ssh);
-    await ssh.exec(`cd ${REMOTE_DIR} && docker compose up -d`);
+    const keys = generateRealityKeys();
+    const shortId = generateShortId();
 
-    const healthy = await waitForHealthy({
-      check: () =>
-        opts.healthCheck({ baseUrl: `http://${config.host}:${PANEL_PORT}`, apiKey: password }),
-      timeoutMs: opts.healthCheckTimeoutMs ?? HEALTH_CHECK_TIMEOUT_MS,
-      intervalMs: opts.healthCheckIntervalMs ?? HEALTH_CHECK_INTERVAL_MS,
-    });
+    await ensureDocker(ssh);
+    await openTunnelPort(ssh);
+    await shipStack({ ssh, composeContent: opts.xrayComposeContent });
 
-    if (!healthy) {
-      return {
-        host: config.host,
-        country: config.country,
-        status: 'failed',
-        error: 'wg-easy health check did not succeed within the timeout',
-      };
+    const token = await configurePanel({ ssh, password });
+    const apiUrl = panelUrl(config.host);
+
+    try {
+      await pWaitFor(() => opts.healthCheck({ baseUrl: apiUrl, token }), {
+        timeout: opts.healthCheckTimeoutMs ?? HEALTH_TIMEOUT_MS,
+        interval: opts.healthCheckIntervalMs ?? HEALTH_INTERVAL_MS,
+      });
+    } catch {
+      return { ...outcome, status: 'failed', error: 'the panel never answered the api' };
     }
 
-    await registerPanelPassword({
-      serverEnvPath: opts.serverEnvPath,
-      countryCode: config.countryCode,
-      password,
-      isNew,
+    await opts.ensureInbound({
+      baseUrl: apiUrl,
+      token,
+      inbound: buildRealityInbound({
+        privateKey: keys.privateKey,
+        shortId,
+        donorHost: config.realityServerName,
+      }),
     });
 
-    const upsertResult = await opts.upsertNode({
+    await rememberNodeSecrets({
+      serverEnvPath: opts.serverEnvPath,
+      countryCode: config.countryCode,
+      apiToken: token,
+      panelPassword: password,
+    });
+
+    const { wasExisting } = await opts.upsertNode({
       prisma: opts.basePrisma,
       input: {
         country: config.country,
         countryCode: config.countryCode,
         city: config.city,
-        wireguardEndpoint: `${config.host}:${WIREGUARD_PORT}`,
-        wgEasyUrl: `http://${config.host}:${PANEL_PORT}`,
-        wgEasyApiKeyEnvVar: `WG_KEY_${config.countryCode}`,
+        host: config.host,
+        port: LISTEN_PORT,
+        realityServerName: config.realityServerName,
+        realityPublicKey: keys.publicKey,
+        realityShortId: shortId,
+        apiUrl,
+        apiTokenEnvVar: nodeKeyName(config.countryCode),
       },
     });
 
-    return {
-      host: config.host,
-      country: config.country,
-      status: upsertResult.wasExisting ? 'updated' : 'provisioned',
-    };
+    return { ...outcome, status: wasExisting ? 'updated' : 'provisioned' };
   } catch (error) {
     return {
-      host: config.host,
-      country: config.country,
+      ...outcome,
       status: 'failed',
       error: error instanceof Error ? error.message : String(error),
     };

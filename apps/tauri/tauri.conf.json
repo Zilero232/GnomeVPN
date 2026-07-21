@@ -39,28 +39,13 @@
       "icons/tray/connected.png": "icons/tray/connected.png",
       "icons/tray/disconnected.png": "icons/tray/disconnected.png"
     },
-    "shortDescription": "GnomeVPN desktop client",
-    "longDescription": "GnomeVPN — WireGuard VPN desktop client built with Tauri 2.",
-    "windows": {
-      "nsis": {
-        "installerHooks": "installer/hooks.nsh",
-        "installMode": "perMachine"
-      }
-    }
+    "shortDescription": "GnomeVPN client",
+    "longDescription": "GnomeVPN — VLESS + XTLS-Reality VPN client built with Tauri 2."
   },
   "plugins": {
     "deep-link": {
       "desktop": {
         "schemes": ["gnomevpn"]
-      }
-    },
-    "updater": {
-      "active": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI3RTVCNzZCNTQ2NkVCQTkKUldTcDYyWlVhN2ZsdDVDV2puRUt2Uk5DT0xYSHh0SG9reEZ2R2VteENkZEQ2SWNQN2FJUUpISnIK",
-      "endpoints": ["https://api.gnomevpn.ru/release/updater"],
-      "dialog": false,
-      "windows": {
-        "installMode": "passive"
       }
     }
   }

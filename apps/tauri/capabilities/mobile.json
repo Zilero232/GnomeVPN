@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/mobile-schema.json",
+  "identifier": "mobile",
+  "description": "Display cutout insets — Android only",
+  "windows": ["main"],
+  "platforms": ["android", "iOS"],
+  "permissions": ["safe-area-insets-css:default"]
+}

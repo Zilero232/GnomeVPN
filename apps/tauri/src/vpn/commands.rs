@@ -11,7 +11,6 @@ use super::state::VpnState;
 pub async fn vpn_connect(
     config: TunnelConfig,
     on_event: Channel<TunnelEvent>,
-    kill_switch: Option<bool>,
     auto_reconnect: Option<bool>,
     state: State<'_, VpnState>,
 ) -> Result<(), ClientError> {
@@ -25,11 +24,7 @@ pub async fn vpn_connect(
     std::thread::spawn(move || events.pump_events(emit));
 
     let mut client = ServiceClient::connect()?;
-    client.connect_tunnel(
-        config,
-        kill_switch.unwrap_or(false),
-        auto_reconnect.unwrap_or(true),
-    )?;
+    client.connect_tunnel(config, auto_reconnect.unwrap_or(true))?;
 
     state.replace_connection(client);
 

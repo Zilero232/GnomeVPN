@@ -1,3 +1,4 @@
+export { AppSplash } from './AppSplash';
 export {
   Dialog,
   DialogContent,

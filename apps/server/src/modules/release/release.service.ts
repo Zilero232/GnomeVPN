@@ -3,14 +3,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { describeError } from '../../common/lib';
 import { AppConfigService } from '../../config/config.module';
+import { CACHE_TTL_MS, GITHUB_RELEASE_URL, githubAssetUrl, UPDATER_MANIFEST_NAME } from './config';
 import {
-  CACHE_TTL_MS,
-  GITHUB_RELEASE_URL,
-  GITHUB_TIMEOUT_MS,
-  githubAssetUrl,
-  UPDATER_MANIFEST_NAME,
-} from './config';
-import { findManifestAsset, pickInstallers, rewriteManifestUrls } from './lib';
+  findManifestAsset,
+  githubFetch,
+  githubReleaseSchema,
+  pickInstallers,
+  rewriteManifestUrls,
+  updaterManifestSchema,
+} from './lib';
 
 import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
 import type { CachedRelease, GithubRelease, UpdaterManifest } from './release.types';
@@ -29,7 +30,9 @@ export class ReleaseService {
     return token ? { Accept: accept, Authorization: `Bearer ${token}` } : { Accept: accept };
   }
 
-  private unavailable(): AppServiceUnavailableException {
+  private unavailable(reason: string): AppServiceUnavailableException {
+    this.logger.warn(reason);
+
     return new AppServiceUnavailableException('INTERNAL_ERROR', 'Release info unavailable');
   }
 
@@ -51,35 +54,42 @@ export class ReleaseService {
     };
   }
 
+  // The cache holds the in-flight promise, not the value: ten simultaneous
+  // requests on a cold cache would otherwise each hit GitHub.
   private async fetchLatest(): Promise<GithubRelease> {
     if (this.cached && this.cached.expiresAt > Date.now()) {
       return this.cached.value;
     }
 
-    let response: Response;
+    const pending = this.loadLatest();
+
+    this.cached = { value: pending, expiresAt: Date.now() + CACHE_TTL_MS };
 
     try {
-      response = await fetch(GITHUB_RELEASE_URL, {
-        headers: this.githubHeaders('application/vnd.github+json'),
-        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
-      });
+      return await pending;
     } catch (error) {
-      this.logger.warn(`GitHub releases unreachable: ${describeError(error)}`);
+      this.cached = null;
 
-      throw this.unavailable();
+      throw error;
+    }
+  }
+
+  private async loadLatest(): Promise<GithubRelease> {
+    const response = await githubFetch({
+      url: GITHUB_RELEASE_URL,
+      headers: this.githubHeaders('application/vnd.github+json'),
+      describe: 'GitHub releases',
+    }).catch((error: unknown) => {
+      throw this.unavailable(describeError(error));
+    });
+
+    const parsed = githubReleaseSchema.safeParse(await response.json());
+
+    if (!parsed.success) {
+      throw this.unavailable(`GitHub returned an unexpected release: ${parsed.error.message}`);
     }
 
-    if (!response.ok) {
-      this.logger.warn(`GitHub responded with ${response.status}`);
-
-      throw this.unavailable();
-    }
-
-    const release = (await response.json()) as GithubRelease;
-
-    this.cached = { value: release, expiresAt: Date.now() + CACHE_TTL_MS };
-
-    return release;
+    return parsed.data;
   }
 
   async getLatest(): Promise<Release> {
@@ -87,51 +97,33 @@ export class ReleaseService {
   }
 
   async resolveAssetUrl(assetId: number): Promise<string> {
-    let response: Response;
-
-    try {
-      response = await fetch(githubAssetUrl(assetId), {
-        headers: this.githubHeaders('application/octet-stream'),
-        redirect: 'manual',
-        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
-      });
-    } catch (error) {
-      this.logger.warn(`GitHub asset ${assetId} unreachable: ${describeError(error)}`);
-
-      throw this.unavailable();
-    }
+    const response = await githubFetch({
+      url: githubAssetUrl(assetId),
+      headers: this.githubHeaders('application/octet-stream'),
+      redirect: 'manual',
+      describe: `GitHub asset ${assetId}`,
+    }).catch((error: unknown) => {
+      throw this.unavailable(describeError(error));
+    });
 
     const location = response.headers.get('location');
 
     if (!location) {
-      this.logger.warn(`GitHub asset ${assetId} answered ${response.status} without a redirect`);
-
-      throw this.unavailable();
+      throw this.unavailable(
+        `GitHub asset ${assetId} answered ${response.status} without a redirect`,
+      );
     }
 
     return location;
   }
 
   private async fetchAssetBody(assetId: number): Promise<string> {
-    const url = await this.resolveAssetUrl(assetId);
-
-    let response: Response;
-
-    try {
-      response = await fetch(url, {
-        signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
-      });
-    } catch (error) {
-      this.logger.warn(`Asset ${assetId} unreachable: ${describeError(error)}`);
-
-      throw this.unavailable();
-    }
-
-    if (!response.ok) {
-      this.logger.warn(`Asset ${assetId} answered ${response.status}`);
-
-      throw this.unavailable();
-    }
+    const response = await githubFetch({
+      url: await this.resolveAssetUrl(assetId),
+      describe: `Asset ${assetId}`,
+    }).catch((error: unknown) => {
+      throw this.unavailable(describeError(error));
+    });
 
     return response.text();
   }
@@ -141,23 +133,18 @@ export class ReleaseService {
     const asset = findManifestAsset(release.assets);
 
     if (!asset) {
-      this.logger.warn(`Release ${release.tag_name} ships no ${UPDATER_MANIFEST_NAME}`);
-
-      throw this.unavailable();
+      throw this.unavailable(`Release ${release.tag_name} ships no ${UPDATER_MANIFEST_NAME}`);
     }
 
-    let manifest: UpdaterManifest;
+    const body = await this.fetchAssetBody(asset.id);
+    const parsed = updaterManifestSchema.safeParse(JSON.parse(body));
 
-    try {
-      manifest = JSON.parse(await this.fetchAssetBody(asset.id)) as UpdaterManifest;
-    } catch (error) {
-      this.logger.warn(`Malformed ${UPDATER_MANIFEST_NAME}: ${describeError(error)}`);
-
-      throw this.unavailable();
+    if (!parsed.success) {
+      throw this.unavailable(`Malformed ${UPDATER_MANIFEST_NAME}: ${parsed.error.message}`);
     }
 
     return rewriteManifestUrls({
-      manifest,
+      manifest: parsed.data,
       assets: release.assets,
       apiUrl: this.config.get('API_URL'),
     });

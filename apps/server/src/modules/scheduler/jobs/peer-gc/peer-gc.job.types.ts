@@ -1,7 +1,9 @@
 export type PeerRow = {
   id: string;
-  wgEasyClientId: string;
+  userId: string;
+  name: string | null;
   createdAt: Date;
-  lastHandshakeAt: Date | null;
-  node: { wgEasyUrl: string; wgEasyApiKeyEnvVar: string };
+  trafficBytes: bigint;
+  lastActiveAt: Date | null;
+  node: { apiUrl: string; apiTokenEnvVar: string };
 };

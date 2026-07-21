@@ -5,13 +5,13 @@
 <h1 align="center">GnomeVPN</h1>
 
 <p align="center">
-  <strong>A WireGuard tunnel in one tap — no logs, no ads, no provider account.</strong><br/>
+  <strong>A tunnel in one tap — no logs, no ads, no provider account.</strong><br/>
   Next.js client · Tauri desktop shell · NestJS API · Self-hosted nodes
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/runtime-Bun-fbf0df?style=for-the-badge&logo=bun&logoColor=000" alt="Bun" />
-  <img src="https://img.shields.io/badge/protocol-WireGuard-88171a?style=for-the-badge&logo=wireguard&logoColor=fff" alt="WireGuard" />
+  <img src="https://img.shields.io/badge/protocol-VLESS%20%2B%20Reality-35f0a0?style=for-the-badge&logoColor=fff" alt="VLESS + Reality" />
   <img src="https://img.shields.io/badge/desktop-Tauri%202-24c8db?style=for-the-badge&logo=tauri&logoColor=fff" alt="Tauri" />
   <img src="https://img.shields.io/badge/status-in%20development-f59e0b?style=for-the-badge" alt="Status" />
 </p>
@@ -20,7 +20,9 @@
 
 ## What is GnomeVPN?
 
-A commercial VPN service built on **WireGuard**. Subscribe, pick a country, press connect — the desktop app raises the tunnel locally and keys are generated per session.
+A commercial VPN service built on **VLESS + XTLS-Reality**. Subscribe, pick a country, press connect — the app raises the tunnel locally and credentials are issued per session.
+
+Reality completes a genuine TLS handshake proxied to a real third-party site, so the traffic on 443/TCP looks like ordinary HTTPS rather than a VPN. That matters where WireGuard's fixed-size UDP handshake is fingerprinted and dropped.
 
 <table>
 <tr>
@@ -56,9 +58,7 @@ Docker Compose, Caddy, PostgreSQL and a provisioning script for the VPN nodes.
 <tr>
 <td>
 
-**WireGuard tunnel** — userspace via boringtun, no kernel driver required
-
-**Kill switch** — firewall rules cut traffic if the tunnel drops
+**Reality tunnel** — indistinguishable from HTTPS on 443/TCP
 
 **Auto-reconnect** — exponential backoff after a dropped link
 
@@ -91,11 +91,11 @@ The desktop app is split in two processes. Everything that needs administrator r
 │ (no rights)  │ ◄────────────── │ (LocalSystem)      │
 │ UI, tray     │     events      │ wintun, routes, DNS│
 └──────────────┘                 └─────────┬──────────┘
-                                           │ WireGuard
+                                           │ VLESS + Reality (443/TCP)
                                            ▼
                                   ┌────────────────┐
                                   │ VPN node (VPS) │
-                                  │ wg-easy        │
+                                  │ Xray + 3x-ui   │
                                   └────────────────┘
 ```
 
@@ -109,7 +109,7 @@ The service validates every request it receives: any local process can open the 
 |---|---|
 | Web client | Next.js 16, React 19, FSD architecture |
 | Desktop | Tauri 2, Rust |
-| Tunnel | boringtun (WireGuard), tun-rs |
+| Tunnel | Xray-core (VLESS + XTLS-Reality), wintun |
 | API | NestJS on Bun, Prisma 7, better-auth |
 | Database | PostgreSQL |
 | Shared types | Zod schemas in `packages/schemas` |
@@ -127,7 +127,7 @@ apps/
 └── tauri/           # Desktop shell — talks to the service
 crates/
 ├── vpn-ipc/         # Wire protocol shared by the shell and the service
-└── vpn-service/     # Privileged Windows service: tunnel, routes, kill switch
+└── vpn-service/     # Privileged Windows service: tunnel, routes, DNS
 packages/schemas/    # Zod schemas (@gnomevpn/schemas)
 infra/
 ├── caddy/           # TLS, reverse proxy
@@ -158,13 +158,15 @@ On Windows the desktop app needs `wintun.dll` — see [apps/tauri/bin/README.md]
 
 ## VPN nodes
 
-Adding a country is one command. It installs Docker, brings up wg-easy, opens the firewall and registers the node in the database:
+Adding a country is one command. It installs Docker, brings up Xray, generates a fresh Reality key pair, opens 443 and registers the node in the database:
 
 ```bash
 bun run provision:nodes
 ```
 
-Node list lives in `apps/server/scripts/nodes.json`. Provisioning is run by hand from a machine that can reach the nodes over SSH — it is not part of CI.
+Node list lives in `apps/server/nodes.json` — gitignored, since it holds root SSH passwords. Provisioning is run by hand from a machine that can reach the nodes over SSH; it is not part of CI.
+
+Each node carries a `realityServerName`: the site Reality impersonates. It has to answer TLS 1.3 over HTTP/2 without redirecting, so popular suggestions like `dl.google.com` do not actually work.
 
 <br/>
 
@@ -192,6 +194,6 @@ Full walkthrough — domain, secrets, `.env`, first launch — in **[DEPLOY.md](
 
 ## Status
 
-In development. Working: tunnel, subscriptions, node health, autostart, kill switch, auto-updates.
+In development. Working: tunnel, subscriptions, node health, autostart, auto-updates.
 
 Windows only for now — the tunnel runs in a LocalSystem service, and macOS/Linux would each need their own privileged helper. Also not there yet: mobile apps, per-app split tunneling (needs a signed kernel driver), DPI evasion.

@@ -1,15 +1,16 @@
 'use client';
 
 import { usePlatform } from '@/entities/app/platform';
+import { AppSplash } from '@/shared/ui';
 import { DesktopOnlyView } from '@/views/desktop-only';
 import { AppView } from './AppView';
 
 export const AppGate = () => {
-  const { isDesktopApp, isReady } = usePlatform();
+  const { isNativeApp, isReady } = usePlatform();
 
   if (!isReady) {
-    return null;
+    return <AppSplash />;
   }
 
-  return isDesktopApp ? <AppView /> : <DesktopOnlyView />;
+  return isNativeApp ? <AppView /> : <DesktopOnlyView />;
 };

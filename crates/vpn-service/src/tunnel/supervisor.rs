@@ -18,7 +18,6 @@ struct Runtime {
     status: TunnelStatus,
     stop: Option<oneshot::Sender<()>>,
     pending_stop_rx: Option<oneshot::Receiver<()>>,
-    kill_switch: bool,
     auto_reconnect: bool,
     clients: usize,
 }
@@ -43,7 +42,6 @@ impl Supervisor {
                 status: TunnelStatus::Disconnected,
                 stop: None,
                 pending_stop_rx: None,
-                kill_switch: false,
                 auto_reconnect: true,
                 clients: 0,
             })),
@@ -70,18 +68,12 @@ impl Supervisor {
         self.runtime.lock().status
     }
 
-    pub fn kill_switch_enabled(&self) -> bool {
-        self.runtime.lock().kill_switch
-    }
-
     pub fn auto_reconnect_enabled(&self) -> bool {
         self.runtime.lock().auto_reconnect
     }
 
-    pub fn set_options(&self, kill_switch: bool, auto_reconnect: bool) {
-        let mut runtime = self.runtime.lock();
-        runtime.kill_switch = kill_switch;
-        runtime.auto_reconnect = auto_reconnect;
+    pub fn set_options(&self, auto_reconnect: bool) {
+        self.runtime.lock().auto_reconnect = auto_reconnect;
     }
 
     pub fn subscribe(&self) -> broadcast::Receiver<TunnelEvent> {

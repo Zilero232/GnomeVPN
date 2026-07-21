@@ -48,8 +48,31 @@ jobs:
             echo "should_release=true" >> "$GITHUB_OUTPUT"
           fi
 
-  build-desktop:
+  # Creating the draft release up front lets the desktop and Android builds run
+  # in parallel and upload into it, instead of one waiting on the other.
+  create-release:
     needs: resolve-version
+    if: needs.resolve-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.resolve-version.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "GnomeVPN v${VERSION}" \
+            --draft \
+            --notes "GnomeVPN v${VERSION}
+
+          **Windows** — \`.exe\` installer (installs the tunnel service, auto-update enabled)
+          **Android** — \`.apk\` for manual install"
+
+  build-desktop:
+    needs: [resolve-version, create-release]
     if: needs.resolve-version.outputs.should_release == 'true'
     permissions:
       contents: write
@@ -89,6 +112,15 @@ jobs:
           unzip -q wintun.zip
           cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun.dll
 
+      # Xray-core runs the VLESS/Reality tunnel as a child of the service. Like
+      # wintun it is not committed, so the installer bundles a copy fetched here.
+      - name: Fetch xray
+        shell: bash
+        run: |
+          curl -fsSL https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-windows-64.zip -o xray.zip
+          unzip -q xray.zip -d xray
+          cp xray/xray.exe apps/tauri/bin/xray.exe
+
       # The privileged service is a separate binary that the NSIS hooks install.
       - name: Build tunnel service
         working-directory: apps/tauri
@@ -98,6 +130,8 @@ jobs:
         working-directory: apps/tauri
         run: bunx tauri icon icon.manifest.json -o icons
 
+      # The release already exists as a draft, so this uploads into it.
+      # releaseDraft must keep matching that status or the action refuses.
       - name: Build & upload desktop app
         uses: tauri-apps/tauri-action@v0
         env:
@@ -107,10 +141,158 @@ jobs:
           projectPath: apps/tauri
           tagName: v${{ needs.resolve-version.outputs.version }}
           releaseName: GnomeVPN v${{ needs.resolve-version.outputs.version }}
-          releaseBody: |
-            GnomeVPN v${{ needs.resolve-version.outputs.version }}
-
-            **Windows** — `.exe` installer (installs the tunnel service, auto-update enabled)
           releaseDraft: true
           prerelease: false
+
+  build-android:
+    needs: [resolve-version, create-release]
+    if: needs.resolve-version.outputs.should_release == 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Require Android signing secrets
+        run: |
+          if [ -z "${{ secrets.ANDROID_KEY_ALIAS }}" ] || [ -z "${{ secrets.ANDROID_KEY_PASSWORD }}" ] || [ -z "${{ secrets.ANDROID_KEY_BASE64 }}" ]; then
+            echo "Set ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD and ANDROID_KEY_BASE64 in repository secrets."
+            exit 1
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.1
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          link-to-sdk: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/tauri -> target
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma client
+        working-directory: apps/server
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
+        run: bunx prisma generate
+
+      - name: Apply app icons
+        working-directory: apps/tauri
+        run: bunx tauri icon icon.manifest.json -o icons
+
+      # Xray-core runs the tunnel on Android too. It is 36 MB per ABI and, like
+      # the Windows build, is fetched rather than committed. It ships as
+      # libxray.so because Android only executes files from jniLibs.
+      - name: Fetch xray for Android
+        shell: bash
+        run: |
+          for abi in arm64-v8a amd64; do
+            curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-android-${abi}.zip" -o "xray-${abi}.zip"
+            unzip -q "xray-${abi}.zip" -d "xray-${abi}"
+          done
+          mkdir -p apps/tauri/android/libs/arm64-v8a apps/tauri/android/libs/x86_64
+          cp xray-arm64-v8a/xray apps/tauri/android/libs/arm64-v8a/libxray.so
+          cp xray-amd64/xray apps/tauri/android/libs/x86_64/libxray.so
+
+      # gen/android is gitignored, so the Gradle project is created here on
+      # every run and the signing config is patched into the generated file.
+      - name: Init Android project
+        working-directory: apps/tauri
+        env:
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: bunx tauri android init
+
+      # tauri android init overwrites gen/android, so the VpnService sources,
+      # libxray.so and the manifest entries are re-applied afterwards.
+      - name: Apply Android overlay
+        working-directory: apps/tauri
+        run: node ./scripts/setup-android-libs.mjs
+
+      - name: Configure release signing
+        working-directory: apps/tauri/gen/android
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+        run: |
+          keystore="${RUNNER_TEMP}/gnomevpn.keystore"
+          echo "${ANDROID_KEY_BASE64}" | base64 -d > "$keystore"
+          {
+            echo "keyAlias=${ANDROID_KEY_ALIAS}"
+            echo "password=${ANDROID_KEY_PASSWORD}"
+            echo "storeFile=${keystore}"
+          } > keystore.properties
+
+          gradle=app/build.gradle.kts
+
+          if ! grep -q "import java.io.FileInputStream" "$gradle"; then
+            sed -i 's/^import java.util.Properties$/import java.io.FileInputStream\nimport java.util.Properties/' "$gradle"
+          fi
+
+          if ! grep -q "signingConfigs" "$gradle"; then
+            sed -i "/^    buildTypes {/e cat ${GITHUB_WORKSPACE}/apps/tauri/scripts/android-signing.kts" "$gradle"
+          fi
+
+          if ! grep -q 'signingConfig = signingConfigs.getByName("release")' "$gradle"; then
+            sed -i '/getByName("release") {/a\            signingConfig = signingConfigs.getByName("release")' "$gradle"
+          fi
+
+      - name: Build APK
+        working-directory: apps/tauri
+        env:
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: bunx tauri android build --apk
+
+      - name: Collect APK
+        env:
+          VERSION: ${{ needs.resolve-version.outputs.version }}
+        run: |
+          apk="$(find apps/tauri/gen/android -type f -name '*universal*release*.apk' -print -quit)"
+
+          if [ -z "$apk" ]; then
+            apk="$(find apps/tauri/gen/android -type f -name '*release*.apk' -print -quit)"
+          fi
+
+          if [ -z "$apk" ]; then
+            echo "No release APK was produced"
+            exit 1
+          fi
+
+          mkdir -p android-artifacts
+          cp "$apk" "android-artifacts/GnomeVPN_${VERSION}_android.apk"
+
+      # An unsigned APK installs nowhere, and the failure only shows up on a
+      # user's phone, so the signature is checked before the upload.
+      - name: Verify signature
+        run: |
+          build_tools="$(ls "${ANDROID_HOME}/build-tools" | sort -V | tail -1)"
+          "${ANDROID_HOME}/build-tools/${build_tools}/apksigner" verify --verbose android-artifacts/*.apk
+
+      - name: Upload APK to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "v${{ needs.resolve-version.outputs.version }}" android-artifacts/*.apk --clobber
 

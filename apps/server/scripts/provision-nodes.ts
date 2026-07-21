@@ -4,8 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { isNonNullish, prop } from 'remeda';
 
 import { basePrisma } from '../src/core';
-import { WgEasyClient } from '../src/lib/wg-easy';
+import { XrayClient } from '../src/lib/xray';
 import { pruneEnvKeys } from './lib/env-file';
+import {
+  NODE_KEY_PREFIX,
+  nodeKeyName,
+  PANEL_PASSWORD_PREFIX,
+  panelPasswordName,
+} from './lib/node-credentials';
 import { loadNodesConfig } from './lib/nodes-config';
 import { provisionHost } from './lib/provision-host';
 import { upsertNode } from './lib/upsert-node';
@@ -17,21 +23,31 @@ const prisma = basePrisma as unknown as PrismaLike;
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const NODES_CONFIG_PATH = resolve(HERE, '..', 'nodes.json');
-const WG_EASY_COMPOSE_PATH = resolve(
-  HERE,
-  '..',
-  '..',
-  '..',
-  'infra',
-  'wg-easy',
-  'docker-compose.yml',
-);
-const SERVER_ENV_PATH = resolve(HERE, '..', '.env');
+const XRAY_COMPOSE_PATH = resolve(HERE, '..', '..', '..', 'infra', 'xray', 'docker-compose.yml');
+const SERVER_ENV_PATH = resolve(HERE, '..', '.env.nodes');
 
-const WG_KEY_PREFIX = 'WG_KEY_';
+const healthCheck = async (opts: { baseUrl: string; token: string }): Promise<boolean> =>
+  new XrayClient(opts).isReachable();
 
-const healthCheck = async (opts: { baseUrl: string; apiKey: string }): Promise<boolean> =>
-  new WgEasyClient(opts).health();
+const ensureInbound = async ({
+  baseUrl,
+  token,
+  inbound,
+}: {
+  baseUrl: string;
+  token: string;
+  inbound: Record<string, unknown>;
+}): Promise<void> => {
+  const xray = new XrayClient({ baseUrl, token });
+
+  if (await xray.hasInbound()) {
+    await xray.updateInbound(inbound);
+
+    return;
+  }
+
+  await xray.createInbound(inbound);
+};
 
 const formatResultLine = (result: ProvisionResult): string => {
   const suffix = isNonNullish(result.error) ? ` (${result.error})` : '';
@@ -42,12 +58,20 @@ const formatResultLine = (result: ProvisionResult): string => {
 const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
   const removedKeys = await pruneEnvKeys({
     filePath: SERVER_ENV_PATH,
-    prefix: WG_KEY_PREFIX,
-    keep: countryCodes.map((code) => `${WG_KEY_PREFIX}${code}`),
+    prefix: NODE_KEY_PREFIX,
+    keep: countryCodes.map(nodeKeyName),
   });
 
-  if (removedKeys.length > 0) {
-    process.stdout.write(`Removed stale keys: ${removedKeys.join(', ')}\n`);
+  const removedPasswords = await pruneEnvKeys({
+    filePath: SERVER_ENV_PATH,
+    prefix: PANEL_PASSWORD_PREFIX,
+    keep: countryCodes.map(panelPasswordName),
+  });
+
+  const removed = [...removedKeys, ...removedPasswords];
+
+  if (removed.length > 0) {
+    process.stdout.write(`Removed stale keys: ${removed.join(', ')}\n`);
   }
 
   const disabled = await basePrisma.node.updateMany({
@@ -62,7 +86,7 @@ const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
 
 const provisionAll = async (): Promise<ProvisionResult[]> => {
   const nodes = await loadNodesConfig(NODES_CONFIG_PATH);
-  const wgEasyComposeContent = await readFile(WG_EASY_COMPOSE_PATH, 'utf8');
+  const xrayComposeContent = await readFile(XRAY_COMPOSE_PATH, 'utf8');
 
   const results: ProvisionResult[] = [];
 
@@ -73,8 +97,9 @@ const provisionAll = async (): Promise<ProvisionResult[]> => {
       config: node,
       options: {
         serverEnvPath: SERVER_ENV_PATH,
-        wgEasyComposeContent,
+        xrayComposeContent,
         healthCheck,
+        ensureInbound,
         upsertNode,
         basePrisma: prisma,
       },

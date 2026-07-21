@@ -13,6 +13,13 @@
 # Downloaded manually, see bin/README.md — required for the TUN device on Windows
 /bin/wintun.dll
 
+# Downloaded manually, see bin/README.md — runs the VLESS/Reality tunnel
+/bin/xray.exe
+
+# Same tunnel core built for Android, see android/README.md — 36 MB per ABI,
+# fetched rather than committed for the same reason as bin/xray.exe
+/android/libs/*/libxray.so
+
 # Release signing (never commit)
 *.keystore
 keystore.properties

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
-  getKillSwitch,
+  getDeviceId,
   logger,
   setManuallyDisconnected,
   settleAll,
@@ -36,7 +36,12 @@ export const useVpnConnection = () => {
   const teardown = async () => {
     watchdog.clear();
 
-    await settleAll({ label: 'tunnel cleanup', tasks: [disconnectTunnel(), vpnDisconnect()] });
+    const deviceId = await getDeviceId();
+
+    await settleAll({
+      label: 'tunnel cleanup',
+      tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()],
+    });
 
     tunnel.reset();
   };
@@ -87,15 +92,13 @@ export const useVpnConnection = () => {
     });
 
     try {
-      const [config, killSwitch, autoReconnect] = await Promise.all([
-        connectTunnel(nodeId),
-        getKillSwitch(),
+      const [config, autoReconnect] = await Promise.all([
+        getDeviceId().then((deviceId) => connectTunnel({ nodeId, deviceId })),
         getAutoReconnect(),
       ]);
 
       await vpnConnect({
         config,
-        killSwitch,
         autoReconnect,
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {

@@ -4,6 +4,5 @@ import type { TunnelEvent } from '../ipc';
 export type VpnConnectInput = {
   config: TunnelConfig;
   onEvent: (event: TunnelEvent) => void;
-  killSwitch: boolean;
   autoReconnect: boolean;
 };

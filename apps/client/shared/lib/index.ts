@@ -1,18 +1,17 @@
 export {
   getAutoConnect,
   getAutoReconnect,
-  getKillSwitch,
   getLastNodeId,
   initAutoStartDefault,
   isAutoStartEnabled,
   setAutoConnect,
   setAutoReconnect,
   setAutoStart,
-  setKillSwitch,
   setLastNodeId,
   setManuallyDisconnected,
   wasManuallyDisconnected,
 } from './app-settings';
+export { getDeviceId } from './device-id';
 export { callRust } from './ipc';
 export { logger } from './logger';
 export { notify } from './notifications';

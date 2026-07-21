@@ -11,16 +11,17 @@ model Peer {
   kind PeerKind
   name String?
 
-  wgEasyClientId String @map("wg_easy_client_id")
+  xrayUserId String @map("xray_user_id")
 
-  lastHandshakeAt DateTime? @map("last_handshake_at") @db.Timestamptz(3)
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  trafficBytes BigInt    @default(0) @map("traffic_bytes")
+  lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, kind, name])
   @@index([userId])
-  @@index([kind, lastHandshakeAt])
+  @@index([kind, lastActiveAt])
   @@map("peer")
 }

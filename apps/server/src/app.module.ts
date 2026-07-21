@@ -7,12 +7,14 @@ import { AppConfigModule } from './config/config.module';
 import { PrismaModule } from './core';
 import { AuthModule } from './modules/auth';
 import { BillingModule } from './modules/billing';
+import { ConfigsModule } from './modules/configs';
 import { HealthModule } from './modules/health';
 import { NodesModule } from './modules/nodes';
+import { PeersModule } from './modules/peers';
 import { ReleaseModule } from './modules/release';
 import { SchedulerModule } from './modules/scheduler';
+import { SessionsModule } from './modules/sessions';
 import { SubscriptionModule } from './modules/subscription';
-import { TunnelModule } from './modules/tunnel';
 
 @Module({
   imports: [
@@ -25,7 +27,9 @@ import { TunnelModule } from './modules/tunnel';
     BillingModule,
     NodesModule,
     ReleaseModule,
-    TunnelModule,
+    PeersModule,
+    SessionsModule,
+    ConfigsModule,
     SchedulerModule,
   ],
   providers: [

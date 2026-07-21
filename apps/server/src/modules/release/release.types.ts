@@ -14,7 +14,7 @@ export type GithubRelease = {
 };
 
 export type CachedRelease = {
-  value: GithubRelease;
+  value: Promise<GithubRelease>;
   expiresAt: number;
 };
 

@@ -3,12 +3,12 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient, clearToken, disconnectTunnel, queryClient } from '@/shared/api';
-import { isTauriDesktop, settleAll, vpnDisconnect } from '@/shared/lib';
+import { getDeviceId, isTauriDesktop, settleAll, vpnDisconnect } from '@/shared/lib';
 
 export const useSignOut = () => {
   return useMutation({
     mutationFn: async () => {
-      const cleanup = [disconnectTunnel()];
+      const cleanup = [getDeviceId().then((deviceId) => disconnectTunnel({ deviceId }))];
 
       if (isTauriDesktop()) {
         cleanup.push(vpnDisconnect());

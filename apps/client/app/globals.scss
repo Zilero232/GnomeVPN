@@ -24,7 +24,15 @@
   --radius-lg: 18px;
 
   --titlebar-height: 0px;
-  --viewport-height: calc(100vh - var(--titlebar-height));
+
+  --safe-area-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-area-left: env(safe-area-inset-left, 0px);
+
+  --viewport-height: calc(
+    100dvh - var(--titlebar-height) - var(--safe-area-top) - var(--safe-area-bottom)
+  );
 }
 
 :root[data-desktop-app='true'] {
@@ -83,6 +91,7 @@ body > * {
 }
 
 .gnomevpn-toaster {
+  top: calc(var(--safe-area-top) + 10px) !important;
   width: min(100vw - 24px, 380px) !important;
   max-width: calc(100vw - 24px) !important;
 }
@@ -92,5 +101,5 @@ body > * {
 }
 
 :root[data-desktop-app='true'] .gnomevpn-toaster {
-  top: calc(var(--titlebar-height) + 10px) !important;
+  top: calc(var(--titlebar-height) + var(--safe-area-top) + 10px) !important;
 }

@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -5,8 +7,9 @@
   align-items: center;
   justify-content: center;
   min-height: var(--viewport-height);
-  padding: 24px;
   text-align: center;
+
+  @include safe-padding(24px);
 }
 
 .icon {
