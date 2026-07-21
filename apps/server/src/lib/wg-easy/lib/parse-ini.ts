@@ -1,4 +1,6 @@
-export const parseIniValue = (config: string, section: string, key: string): string | null => {
+import type { ParseIniValueInput } from './parse-ini.types';
+
+export const parseIniValue = ({ config, section, key }: ParseIniValueInput): string | null => {
   const lines = config.split('\n').map((line) => line.trim());
   const start = lines.findIndex((line) => line.toLowerCase() === `[${section.toLowerCase()}]`);
 

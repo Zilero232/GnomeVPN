@@ -1,8 +1,8 @@
 import slugify from '@sindresorhus/slugify';
 
-import type { RenderConfigInput } from './config-file.types';
+import type { ConfigFileNameInput, RenderConfigInput } from './config-file.types';
 
-export const configFileName = (countryCode: string, deviceName?: string): string =>
+export const configFileName = ({ countryCode, deviceName }: ConfigFileNameInput): string =>
   ['GnomeVPN', slugify(countryCode).toUpperCase(), deviceName ? slugify(deviceName) : '']
     .filter(Boolean)
     .join('-');

@@ -108,7 +108,10 @@ export class YooKassaClient {
       id: payload.id,
       status: payload.status,
       paymentMethodId: payload.payment_method?.id ?? null,
-      paymentMethodTitle: describeCard(payload.payment_method?.card, payload.payment_method?.title),
+      paymentMethodTitle: describeCard({
+        card: payload.payment_method?.card,
+        title: payload.payment_method?.title,
+      }),
     };
   }
 
@@ -116,7 +119,7 @@ export class YooKassaClient {
     return {
       id: payload.id,
       status: payload.status,
-      title: describeCard(payload.card, payload.title),
+      title: describeCard({ card: payload.card, title: payload.title }),
       confirmationUrl: payload.confirmation?.confirmation_url ?? null,
     };
   }

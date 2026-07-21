@@ -1,6 +1,6 @@
-import type { CardData } from '../yookassa.types';
+import type { DescribeCardInput } from './describe-card.types';
 
-export const describeCard = (card?: CardData, title?: string): string | null => {
+export const describeCard = ({ card, title }: DescribeCardInput): string | null => {
   if (!card?.last4) {
     return title ?? null;
   }

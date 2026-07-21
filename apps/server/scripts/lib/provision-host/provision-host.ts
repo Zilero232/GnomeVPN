@@ -2,8 +2,13 @@ import { appendEnvLine, hasEnvKey } from '../env-file';
 import { hashPanelPassword, resolvePanelPassword } from '../panel-password';
 import { SshClient } from '../ssh-client';
 
-import type { NodeConfig } from '../nodes-config';
-import type { ProvisionHostOptions, ProvisionResult } from './provision-host.types';
+import type {
+  ProvisionHostInput,
+  ProvisionResult,
+  RegisterPanelPasswordInput,
+  ShipComposeStackInput,
+  WaitForHealthyInput,
+} from './provision-host.types';
 
 const REMOTE_DIR = '/opt/gnomevpn-wg-easy';
 const WIREGUARD_PORT = 51820;
@@ -13,11 +18,11 @@ const HEALTH_CHECK_INTERVAL_MS = 2_000;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-const waitForHealthy = async (
-  check: () => Promise<boolean>,
-  timeoutMs: number,
-  intervalMs: number,
-): Promise<boolean> => {
+const waitForHealthy = async ({
+  check,
+  timeoutMs,
+  intervalMs,
+}: WaitForHealthyInput): Promise<boolean> => {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -51,12 +56,12 @@ const ensureKernelModules = async (ssh: SshClient): Promise<void> => {
   );
 };
 
-const shipComposeStack = async (
-  ssh: SshClient,
-  config: NodeConfig,
-  composeContent: string,
-  passwordHash: string,
-): Promise<void> => {
+const shipComposeStack = async ({
+  ssh,
+  config,
+  composeContent,
+  passwordHash,
+}: ShipComposeStackInput): Promise<void> => {
   await ssh.exec(`mkdir -p ${REMOTE_DIR}`);
 
   await ssh.putFile(composeContent, `${REMOTE_DIR}/docker-compose.yml`);
@@ -77,27 +82,27 @@ const configureFirewall = async (ssh: SshClient): Promise<void> => {
   await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
 };
 
-const registerPanelPassword = async (
-  serverEnvPath: string,
-  countryCode: string,
-  password: string,
-  isNew: boolean,
-): Promise<void> => {
+const registerPanelPassword = async ({
+  serverEnvPath,
+  countryCode,
+  password,
+  isNew,
+}: RegisterPanelPasswordInput): Promise<void> => {
   if (!isNew) {
     return;
   }
 
-  if (await hasEnvKey(serverEnvPath, `WG_KEY_${countryCode}`)) {
+  if (await hasEnvKey({ filePath: serverEnvPath, key: `WG_KEY_${countryCode}` })) {
     return;
   }
 
-  await appendEnvLine(serverEnvPath, `WG_KEY_${countryCode}`, password);
+  await appendEnvLine({ filePath: serverEnvPath, key: `WG_KEY_${countryCode}`, value: password });
 };
 
-export const provisionHost = async (
-  config: NodeConfig,
-  opts: ProvisionHostOptions,
-): Promise<ProvisionResult> => {
+export const provisionHost = async ({
+  config,
+  options: opts,
+}: ProvisionHostInput): Promise<ProvisionResult> => {
   const ssh = (opts.createSshClient ?? (() => new SshClient()))();
 
   try {
@@ -110,18 +115,27 @@ export const provisionHost = async (
     await ensureDocker(ssh);
     await ensureKernelModules(ssh);
 
-    const { password, isNew } = await resolvePanelPassword(opts.serverEnvPath, config.countryCode);
+    const { password, isNew } = await resolvePanelPassword({
+      envFilePath: opts.serverEnvPath,
+      countryCode: config.countryCode,
+    });
     const passwordHash = await hashPanelPassword(password);
 
-    await shipComposeStack(ssh, config, opts.wgEasyComposeContent, passwordHash);
+    await shipComposeStack({
+      ssh,
+      config,
+      composeContent: opts.wgEasyComposeContent,
+      passwordHash,
+    });
     await configureFirewall(ssh);
     await ssh.exec(`cd ${REMOTE_DIR} && docker compose up -d`);
 
-    const healthy = await waitForHealthy(
-      () => opts.healthCheck({ baseUrl: `http://${config.host}:${PANEL_PORT}`, apiKey: password }),
-      opts.healthCheckTimeoutMs ?? HEALTH_CHECK_TIMEOUT_MS,
-      opts.healthCheckIntervalMs ?? HEALTH_CHECK_INTERVAL_MS,
-    );
+    const healthy = await waitForHealthy({
+      check: () =>
+        opts.healthCheck({ baseUrl: `http://${config.host}:${PANEL_PORT}`, apiKey: password }),
+      timeoutMs: opts.healthCheckTimeoutMs ?? HEALTH_CHECK_TIMEOUT_MS,
+      intervalMs: opts.healthCheckIntervalMs ?? HEALTH_CHECK_INTERVAL_MS,
+    });
 
     if (!healthy) {
       return {
@@ -132,15 +146,23 @@ export const provisionHost = async (
       };
     }
 
-    await registerPanelPassword(opts.serverEnvPath, config.countryCode, password, isNew);
-
-    const upsertResult = await opts.upsertNode(opts.basePrisma, {
-      country: config.country,
+    await registerPanelPassword({
+      serverEnvPath: opts.serverEnvPath,
       countryCode: config.countryCode,
-      city: config.city,
-      wireguardEndpoint: `${config.host}:${WIREGUARD_PORT}`,
-      wgEasyUrl: `http://${config.host}:${PANEL_PORT}`,
-      wgEasyApiKeyEnvVar: `WG_KEY_${config.countryCode}`,
+      password,
+      isNew,
+    });
+
+    const upsertResult = await opts.upsertNode({
+      prisma: opts.basePrisma,
+      input: {
+        country: config.country,
+        countryCode: config.countryCode,
+        city: config.city,
+        wireguardEndpoint: `${config.host}:${WIREGUARD_PORT}`,
+        wgEasyUrl: `http://${config.host}:${PANEL_PORT}`,
+        wgEasyApiKeyEnvVar: `WG_KEY_${config.countryCode}`,
+      },
     });
 
     return {

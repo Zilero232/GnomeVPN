@@ -172,7 +172,7 @@ export class TunnelService {
     }
 
     return {
-      fileName: `${configFileName(node.countryCode, name)}.conf`,
+      fileName: `${configFileName({ countryCode: node.countryCode, deviceName: name })}.conf`,
       content: renderConfigFile({
         deviceName: name,
         country: node.country,

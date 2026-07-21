@@ -21,3 +21,8 @@ export type UpsertNodeResult = {
   id: string;
   wasExisting: boolean;
 };
+
+export type UpsertNodeArgs = {
+  prisma: PrismaLike;
+  input: UpsertNodeInput;
+};

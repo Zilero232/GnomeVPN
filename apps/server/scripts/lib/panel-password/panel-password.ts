@@ -3,18 +3,18 @@ import { hash } from 'bcryptjs';
 
 import { hasEnvKey, readEnvValue } from '../env-file';
 
-import type { ResolvedPanelPassword } from './panel-password.types';
+import type { ResolvedPanelPassword, ResolvePanelPasswordInput } from './panel-password.types';
 
 const BCRYPT_COST = 12;
 
-export const resolvePanelPassword = async (
-  envFilePath: string,
-  countryCode: string,
-): Promise<ResolvedPanelPassword> => {
+export const resolvePanelPassword = async ({
+  envFilePath,
+  countryCode,
+}: ResolvePanelPasswordInput): Promise<ResolvedPanelPassword> => {
   const key = `WG_KEY_${countryCode}`;
 
-  if (await hasEnvKey(envFilePath, key)) {
-    const password = await readEnvValue(envFilePath, key);
+  if (await hasEnvKey({ filePath: envFilePath, key })) {
+    const password = await readEnvValue({ filePath: envFilePath, key });
 
     return { password: password as string, isNew: false };
   }

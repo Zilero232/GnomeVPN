@@ -40,11 +40,11 @@ const formatResultLine = (result: ProvisionResult): string => {
 };
 
 const pruneRemovedNodes = async (countryCodes: string[]): Promise<void> => {
-  const removedKeys = await pruneEnvKeys(
-    SERVER_ENV_PATH,
-    WG_KEY_PREFIX,
-    countryCodes.map((code) => `${WG_KEY_PREFIX}${code}`),
-  );
+  const removedKeys = await pruneEnvKeys({
+    filePath: SERVER_ENV_PATH,
+    prefix: WG_KEY_PREFIX,
+    keep: countryCodes.map((code) => `${WG_KEY_PREFIX}${code}`),
+  });
 
   if (removedKeys.length > 0) {
     process.stdout.write(`Removed stale keys: ${removedKeys.join(', ')}\n`);
@@ -69,12 +69,15 @@ const provisionAll = async (): Promise<ProvisionResult[]> => {
   for (const node of nodes) {
     process.stdout.write(`Provisioning ${node.country} (${node.host})...\n`);
 
-    const result = await provisionHost(node, {
-      serverEnvPath: SERVER_ENV_PATH,
-      wgEasyComposeContent,
-      healthCheck,
-      upsertNode,
-      basePrisma: prisma,
+    const result = await provisionHost({
+      config: node,
+      options: {
+        serverEnvPath: SERVER_ENV_PATH,
+        wgEasyComposeContent,
+        healthCheck,
+        upsertNode,
+        basePrisma: prisma,
+      },
     });
 
     results.push(result);

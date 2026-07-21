@@ -5,3 +5,8 @@ export type RenderConfigInput = {
   deviceName: string;
   country: string;
 };
+
+export type ConfigFileNameInput = {
+  countryCode: string;
+  deviceName?: string;
+};

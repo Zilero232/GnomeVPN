@@ -55,11 +55,11 @@ export class WgEasyClient {
     }
 
     const config = await this.getConfiguration(created.id);
-    const privateKey = parseIniValue(config, 'Interface', 'PrivateKey');
-    const address = parseIniValue(config, 'Interface', 'Address');
-    const dns = parseIniValue(config, 'Interface', 'DNS');
-    const serverPublicKey = parseIniValue(config, 'Peer', 'PublicKey');
-    const presharedKey = parseIniValue(config, 'Peer', 'PresharedKey');
+    const privateKey = parseIniValue({ config, section: 'Interface', key: 'PrivateKey' });
+    const address = parseIniValue({ config, section: 'Interface', key: 'Address' });
+    const dns = parseIniValue({ config, section: 'Interface', key: 'DNS' });
+    const serverPublicKey = parseIniValue({ config, section: 'Peer', key: 'PublicKey' });
+    const presharedKey = parseIniValue({ config, section: 'Peer', key: 'PresharedKey' });
 
     if (!privateKey || !address || !dns || !serverPublicKey) {
       throw new Error('wg-easy createClient failed: incomplete configuration');

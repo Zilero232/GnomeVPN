@@ -1,9 +1,6 @@
-import type { PrismaLike, UpsertNodeInput, UpsertNodeResult } from './upsert-node.types';
+import type { UpsertNodeArgs, UpsertNodeResult } from './upsert-node.types';
 
-export const upsertNode = async (
-  prisma: PrismaLike,
-  input: UpsertNodeInput,
-): Promise<UpsertNodeResult> => {
+export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<UpsertNodeResult> => {
   const existing = await prisma.node.findFirst({
     where: { wireguardEndpoint: input.wireguardEndpoint },
   });

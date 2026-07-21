@@ -1,5 +1,7 @@
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 
+import type { AppendEnvLineInput, EnvKeyInput, PruneEnvKeysInput } from './env-file.types';
+
 const read = async (filePath: string): Promise<string> => {
   try {
     return await readFile(filePath, 'utf8');
@@ -21,17 +23,17 @@ const findValue = (raw: string, key: string): string | null => {
   return line?.slice(key.length + 1) || null;
 };
 
-export const hasEnvKey = async (filePath: string, key: string): Promise<boolean> =>
+export const hasEnvKey = async ({ filePath, key }: EnvKeyInput): Promise<boolean> =>
   findValue(await read(filePath), key) !== null;
 
-export const readEnvValue = async (filePath: string, key: string): Promise<string | null> =>
+export const readEnvValue = async ({ filePath, key }: EnvKeyInput): Promise<string | null> =>
   findValue(await read(filePath), key);
 
-export const appendEnvLine = async (
-  filePath: string,
-  key: string,
-  value: string,
-): Promise<void> => {
+export const appendEnvLine = async ({
+  filePath,
+  key,
+  value,
+}: AppendEnvLineInput): Promise<void> => {
   const raw = await read(filePath);
 
   if (findValue(raw, key) !== null) {
@@ -43,11 +45,11 @@ export const appendEnvLine = async (
   await appendFile(filePath, `${separator}${key}=${value}\n`);
 };
 
-export const pruneEnvKeys = async (
-  filePath: string,
-  prefix: string,
-  keep: string[],
-): Promise<string[]> => {
+export const pruneEnvKeys = async ({
+  filePath,
+  prefix,
+  keep,
+}: PruneEnvKeysInput): Promise<string[]> => {
   const raw = await read(filePath);
 
   if (raw.length === 0) {
