@@ -38,7 +38,7 @@ COPY apps/server ./apps/server
 
 # `bun provision` ships this compose file to every VPN node over SSH, so the
 # template has to travel with the image that runs the script.
-COPY infra/wg-easy/docker-compose.yml ./infra/wg-easy/docker-compose.yml
+COPY infra/xray/docker-compose.yml ./infra/xray/docker-compose.yml
 
 WORKDIR /app/apps/server
 
