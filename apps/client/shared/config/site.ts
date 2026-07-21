@@ -1,9 +1,8 @@
 export const SITE = {
   url: 'https://gnomevpn.ru',
   name: 'GnomeVPN',
-  title: 'GnomeVPN — VPN без логов за 100 ₽ в месяц',
-  description:
-    'WireGuard-туннель до узла в другой стране одним нажатием. Без логов подключений, без рекламы, без ограничений трафика. 100 ₽ в месяц, отмена в один клик.',
+  title: 'GnomeVPN',
+  description: 'Личный кабинет GnomeVPN.',
   ogImage: '/brand/og.png',
   locale: 'ru_RU',
   lang: 'ru-RU',
@@ -11,24 +10,9 @@ export const SITE = {
     light: '#070b0a',
     dark: '#070b0a',
   },
-  keywords: [
-    'GnomeVPN',
-    'VPN',
-    'ВПН',
-    'WireGuard',
-    'VPN без логов',
-    'быстрый VPN',
-    'VPN для Windows',
-    'VPN для macOS',
-    'VPN подписка',
-    'обход блокировок',
-    'приватный VPN',
-    'дешёвый VPN',
-  ],
   en: {
-    title: 'GnomeVPN — a no-logs VPN for 100 ₽ a month',
-    description:
-      'A WireGuard tunnel to a node in another country in one tap. No connection logs, no ads, no traffic caps. 100 ₽ a month, cancel in one click.',
+    title: 'GnomeVPN',
+    description: 'GnomeVPN account.',
     locale: 'en_US',
     lang: 'en-US',
   },

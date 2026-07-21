@@ -1,4 +1,4 @@
-import { env, SITE } from '@/shared/config';
+import { SITE } from '@/shared/config';
 
 import type { Metadata, Viewport } from 'next';
 
@@ -11,8 +11,6 @@ export const defaultMetadata: Metadata = {
   description: SITE.description,
   applicationName: SITE.name,
   referrer: 'origin-when-cross-origin',
-  keywords: [...SITE.keywords],
-  category: 'utilities',
   formatDetection: { email: false, address: false, telephone: false },
   icons: {
     icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
@@ -37,19 +35,14 @@ export const defaultMetadata: Metadata = {
     description: SITE.description,
     images: [SITE.ogImage],
   },
-  verification: {
-    ...(env.NEXT_PUBLIC_GOOGLE_VERIFICATION ? { google: env.NEXT_PUBLIC_GOOGLE_VERIFICATION } : {}),
-    ...(env.NEXT_PUBLIC_YANDEX_VERIFICATION ? { yandex: env.NEXT_PUBLIC_YANDEX_VERIFICATION } : {}),
-  },
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
+    nocache: true,
     googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
+      index: false,
+      follow: false,
+      noimageindex: true,
     },
   },
 };

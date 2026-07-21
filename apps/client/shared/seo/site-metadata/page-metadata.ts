@@ -7,8 +7,8 @@ export const createPageMetadata = ({
   title,
   description,
   path,
-  index = true,
-  follow = true,
+  index = false,
+  follow = false,
 }: PageMetadataInput): Metadata => {
   const ogTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
   const images = [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }];
