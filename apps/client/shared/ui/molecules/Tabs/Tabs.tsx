@@ -20,7 +20,11 @@ export const Tabs = ({ items, defaultValue, className, panelClassName }: TabsPro
     </BaseTabs.List>
 
     {items.map((item) => (
-      <BaseTabs.Panel className={clsx(s.panel, panelClassName)} key={item.value} value={item.value}>
+      <BaseTabs.Panel
+        className={clsx(s.panel, !item.isBare && panelClassName)}
+        key={item.value}
+        value={item.value}
+      >
         {item.content}
       </BaseTabs.Panel>
     ))}

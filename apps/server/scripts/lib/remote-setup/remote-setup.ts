@@ -2,7 +2,7 @@ import pWaitFor from 'p-wait-for';
 import { quote } from 'shell-quote';
 
 import { PANEL_USERNAME } from '../../../src/lib/xray';
-import { LISTEN_PORT, PANEL_PATH, PANEL_PORT } from '../reality-inbound';
+import { LISTEN_PORT, PANEL_PORT } from '../reality-inbound';
 import {
   CONTAINER_NAME,
   DOCKER_INSTALL_URL,
@@ -12,7 +12,7 @@ import {
 } from './remote-setup.constants';
 
 import type { SshClient } from '../ssh-client';
-import type { ConfigurePanelInput, ShipStackInput } from './remote-setup.types';
+import type { ConfigurePanelInput, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
 
 export const ensureDocker = async (ssh: SshClient): Promise<void> => {
   const installed = await ssh.exec('docker --version');
@@ -39,11 +39,11 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
   await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
 };
 
-const waitForPanel = async (ssh: SshClient): Promise<void> => {
+const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void> => {
   const isUp = async (): Promise<boolean> => {
     try {
       const result = await ssh.exec(
-        `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PANEL_PORT}/${PANEL_PATH}/`,
+        `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PANEL_PORT}/${panelPath}/`,
       );
 
       return result.stdout.trim() === '200';
@@ -62,13 +62,17 @@ const waitForPanel = async (ssh: SshClient): Promise<void> => {
   }
 };
 
-export const configurePanel = async ({ ssh, password }: ConfigurePanelInput): Promise<string> => {
+export const configurePanel = async ({
+  ssh,
+  password,
+  panelPath,
+}: ConfigurePanelInput): Promise<string> => {
   await ssh.exec(
-    `docker exec ${CONTAINER_NAME} /app/x-ui setting -username ${PANEL_USERNAME} -password ${quote([password])} -port ${PANEL_PORT} -webBasePath ${PANEL_PATH}`,
+    `docker exec ${CONTAINER_NAME} /app/x-ui setting -username ${PANEL_USERNAME} -password ${quote([password])} -port ${PANEL_PORT} -webBasePath ${panelPath}`,
   );
 
   await ssh.exec(`docker restart ${CONTAINER_NAME}`);
-  await waitForPanel(ssh);
+  await waitForPanel({ ssh, panelPath });
 
   const result = await ssh.exec(`docker exec ${CONTAINER_NAME} /app/x-ui setting -getApiToken`);
 

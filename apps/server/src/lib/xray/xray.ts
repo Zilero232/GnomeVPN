@@ -1,5 +1,5 @@
 import { currentClients, panelApi } from './lib';
-import { CLIENT_FLOW, INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
+import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
 
 import type ThreeXUI from '3xui-api-client';
 import type { ModernClient } from '3xui-api-client';
@@ -112,7 +112,6 @@ export class XrayClient {
           uuid: this.panel.generateUUID(),
           email,
           enable: true,
-          flow: CLIENT_FLOW,
           limitIp: UNLIMITED,
           totalGB: UNLIMITED,
           expiryTime: UNLIMITED,

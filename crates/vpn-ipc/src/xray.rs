@@ -4,7 +4,9 @@ use serde_json::json;
 
 use crate::types::TunnelConfig;
 
-pub const CLIENT_FLOW: &str = "xtls-rprx-vision";
+pub const XHTTP_PATH: &str = "/";
+
+pub const XHTTP_MODE: &str = "auto";
 
 pub struct SocksCredentials {
     pub user: String,
@@ -63,13 +65,16 @@ pub fn build_xray_config(
                     "users": [{
                         "id": config.user_id,
                         "encryption": "none",
-                        "flow": CLIENT_FLOW,
                     }],
                 }],
             },
             "streamSettings": {
-                "network": "tcp",
+                "network": "xhttp",
                 "security": "reality",
+                "xhttpSettings": {
+                    "path": XHTTP_PATH,
+                    "mode": XHTTP_MODE,
+                },
                 "realitySettings": reality,
             },
         }],

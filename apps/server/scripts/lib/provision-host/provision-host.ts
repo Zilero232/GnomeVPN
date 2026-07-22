@@ -1,14 +1,13 @@
 import pWaitFor from 'p-wait-for';
 
-import { upsertEnvLine } from '../env-file';
-import { nodeKeyName, panelPasswordName, resolveNodeCredentials } from '../node-credentials';
+import { upsertEnvGroup } from '../env-file';
 import {
-  buildRealityInbound,
-  DONOR_HOST,
-  LISTEN_PORT,
-  PANEL_PATH,
-  PANEL_PORT,
-} from '../reality-inbound';
+  nodeKeyName,
+  panelPasswordName,
+  panelPathName,
+  resolveNodeCredentials,
+} from '../node-credentials';
+import { buildRealityInbound, DONOR_HOST, LISTEN_PORT, PANEL_PORT } from '../reality-inbound';
 import { generateRealityKeys, generateShortId } from '../reality-keys';
 import { configurePanel, ensureDocker, openTunnelPort, shipStack } from '../remote-setup';
 import { SshClient } from '../ssh-client';
@@ -17,33 +16,33 @@ import { ensureInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
 import type {
+  PanelUrlInput,
   ProvisionHostInput,
   ProvisionResult,
   RememberNodeSecretsInput,
+  WaitForPanelInput,
 } from './provision-host.types';
 
-const panelUrl = (host: string): string => `http://${host}:${PANEL_PORT}/${PANEL_PATH}`;
+const panelUrl = ({ host, panelPath }: PanelUrlInput): string =>
+  `http://${host}:${PANEL_PORT}/${panelPath}`;
 
 const rememberNodeSecrets = async ({
   serverEnvPath,
   countryCode,
   apiToken,
   panelPassword,
-}: RememberNodeSecretsInput): Promise<void> => {
-  await upsertEnvLine({
+  panelPath,
+}: RememberNodeSecretsInput): Promise<void> =>
+  upsertEnvGroup({
     filePath: serverEnvPath,
-    key: panelPasswordName(countryCode),
-    value: panelPassword,
+    entries: [
+      { key: panelPathName(countryCode), value: panelPath },
+      { key: panelPasswordName(countryCode), value: panelPassword },
+      { key: nodeKeyName(countryCode), value: apiToken },
+    ],
   });
 
-  await upsertEnvLine({
-    filePath: serverEnvPath,
-    key: nodeKeyName(countryCode),
-    value: apiToken,
-  });
-};
-
-const waitForPanel = async (credentials: { baseUrl: string; token: string }): Promise<boolean> => {
+const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> => {
   try {
     await pWaitFor(() => isPanelReachable(credentials), {
       timeout: HEALTH_TIMEOUT_MS,
@@ -72,7 +71,7 @@ export const provisionHost = async ({
       password: config.sshPassword,
     });
 
-    const { password } = await resolveNodeCredentials({
+    const { password, panelPath } = await resolveNodeCredentials({
       envFilePath: serverEnvPath,
       countryCode: config.countryCode,
     });
@@ -84,8 +83,8 @@ export const provisionHost = async ({
     await openTunnelPort(ssh);
     await shipStack({ ssh, composeContent: xrayComposeContent });
 
-    const token = await configurePanel({ ssh, password });
-    const baseUrl = panelUrl(config.host);
+    const token = await configurePanel({ ssh, password, panelPath });
+    const baseUrl = panelUrl({ host: config.host, panelPath });
 
     if (!(await waitForPanel({ baseUrl, token }))) {
       return { ...outcome, status: 'failed', error: 'the panel never answered the api' };
@@ -102,6 +101,7 @@ export const provisionHost = async ({
       countryCode: config.countryCode,
       apiToken: token,
       panelPassword: password,
+      panelPath,
     });
 
     const { wasExisting } = await upsertNode({

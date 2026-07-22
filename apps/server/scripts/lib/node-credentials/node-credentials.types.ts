@@ -1,5 +1,6 @@
 export type NodeCredentials = {
   password: string;
+  panelPath: string;
 };
 
 export type ResolveNodeCredentialsInput = {

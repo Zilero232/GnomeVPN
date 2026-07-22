@@ -7,33 +7,30 @@
   align-items: center;
   min-height: var(--viewport-height);
 
-  @include safe-padding(26px, 24px, 36px);
+  @include safe-padding(16px, 24px, 18px);
 
   @media (width <= 560px) {
-    @include safe-padding(26px, 14px, 36px);
+    @include safe-padding(16px, 14px, 18px);
   }
 }
 
 .body {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  gap: 44px;
+  gap: 22px;
   align-items: center;
-  justify-content: center;
   width: 100%;
-  padding: 32px 0;
+  padding: 34px 0 0;
 }
 
-// The stats panel only exists while connected, and `.body` is centred, so
-// letting it appear would shift everything above it up by its own height.
-// Holding the space keeps the button still across a connect.
+// The stats panel only exists while connected. Holding its space keeps the
+// layout still across a connect instead of growing by its height.
 .stats {
   display: flex;
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  min-height: 132px;
+  min-height: 116px;
 }
 
 .head {

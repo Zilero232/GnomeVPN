@@ -182,6 +182,7 @@
     "revoke": "Удалить",
     "downloaded": "{fileName} сохранён в загрузки",
     "downloadedHint": "Откройте его и вставьте ссылку в VLESS-клиент",
+    "issued": "Ваши конфигурации",
     "copy": "Скопировать ссылку",
     "copied": "Ссылка скопирована",
     "copiedHint": "Вставьте её в v2rayNG, Hiddify или Streisand"

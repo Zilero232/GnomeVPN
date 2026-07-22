@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import { nodesConfigSchema } from './nodes-config.schema';
 
-import type { NodeConfig } from './nodes-config.types';
+import type { NodeConfigIssues } from './nodes-config.types';
 
-const formatIssues = (issues: { path: PropertyKey[]; message: string }[]): string =>
+const formatIssues = (issues: NodeConfigIssues): string =>
   issues
     .map(
       (issue) =>

@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use std::process::Stdio;
 
 use gnomevpn_ipc::{build_xray_config, SocksCredentials, TunnelConfig};
-
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};

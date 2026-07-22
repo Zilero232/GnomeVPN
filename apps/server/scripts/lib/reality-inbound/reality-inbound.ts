@@ -4,6 +4,8 @@ import {
   INBOUND_TAG,
   LISTEN_PORT,
   SNIFF_PROTOCOLS,
+  XHTTP_MODE,
+  XHTTP_PATH,
 } from './reality-inbound.constants';
 
 import type { BuildInboundInput } from './reality-inbound.types';
@@ -21,8 +23,12 @@ export const buildRealityInbound = ({
     decryption: 'none',
   },
   streamSettings: {
-    network: 'tcp',
+    network: 'xhttp',
     security: 'reality',
+    xhttpSettings: {
+      path: XHTTP_PATH,
+      mode: XHTTP_MODE,
+    },
     realitySettings: {
       show: false,
       dest: `${DONOR_HOST}:${DONOR_PORT}`,

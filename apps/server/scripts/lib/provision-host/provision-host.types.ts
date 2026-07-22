@@ -22,4 +22,15 @@ export type RememberNodeSecretsInput = {
   countryCode: string;
   apiToken: string;
   panelPassword: string;
+  panelPath: string;
+};
+
+export type PanelUrlInput = {
+  host: string;
+  panelPath: string;
+};
+
+export type WaitForPanelInput = {
+  baseUrl: string;
+  token: string;
 };

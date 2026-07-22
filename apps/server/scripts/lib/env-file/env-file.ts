@@ -1,6 +1,12 @@
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 
-import type { AppendEnvLineInput, EnvKeyInput, PruneEnvKeysInput } from './env-file.types';
+import type {
+  AppendEnvLineInput,
+  EnvKeyInput,
+  FindValueInput,
+  PruneEnvKeysInput,
+  UpsertEnvGroupInput,
+} from './env-file.types';
 
 const read = async (filePath: string): Promise<string> => {
   try {
@@ -14,7 +20,7 @@ const read = async (filePath: string): Promise<string> => {
   }
 };
 
-const findValue = (raw: string, key: string): string | null => {
+const findValue = ({ raw, key }: FindValueInput): string | null => {
   const line = raw
     .split('\n')
     .map((entry) => entry.trimEnd())
@@ -23,26 +29,29 @@ const findValue = (raw: string, key: string): string | null => {
   return line?.slice(key.length + 1) || null;
 };
 
+const append = async ({ filePath, key, value }: AppendEnvLineInput): Promise<void> => {
+  const raw = await read(filePath);
+  const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
+
+  await appendFile(filePath, `${separator}${key}=${value}\n`);
+};
+
 export const hasEnvKey = async ({ filePath, key }: EnvKeyInput): Promise<boolean> =>
-  findValue(await read(filePath), key) !== null;
+  findValue({ raw: await read(filePath), key }) !== null;
 
 export const readEnvValue = async ({ filePath, key }: EnvKeyInput): Promise<string | null> =>
-  findValue(await read(filePath), key);
+  findValue({ raw: await read(filePath), key });
 
 export const appendEnvLine = async ({
   filePath,
   key,
   value,
 }: AppendEnvLineInput): Promise<void> => {
-  const raw = await read(filePath);
-
-  if (findValue(raw, key) !== null) {
+  if (findValue({ raw: await read(filePath), key }) !== null) {
     throw new Error(`Refusing to append ${key}: it already exists in ${filePath}`);
   }
 
-  const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
-
-  await appendFile(filePath, `${separator}${key}=${value}\n`);
+  await append({ filePath, key, value });
 };
 
 export const upsertEnvLine = async ({
@@ -52,10 +61,8 @@ export const upsertEnvLine = async ({
 }: AppendEnvLineInput): Promise<void> => {
   const raw = await read(filePath);
 
-  if (findValue(raw, key) === null) {
-    const separator = raw.length > 0 && !raw.endsWith('\n') ? '\n' : '';
-
-    await appendFile(filePath, `${separator}${key}=${value}\n`);
+  if (findValue({ raw, key }) === null) {
+    await append({ filePath, key, value });
 
     return;
   }
@@ -65,6 +72,23 @@ export const upsertEnvLine = async ({
     .map((line) => (line.trimEnd().startsWith(`${key}=`) ? `${key}=${value}` : line));
 
   await writeFile(filePath, lines.join('\n'), 'utf8');
+};
+
+export const upsertEnvGroup = async ({ filePath, entries }: UpsertEnvGroupInput): Promise<void> => {
+  const raw = await read(filePath);
+  const keys = new Set(entries.map((entry) => entry.key));
+
+  const kept = raw
+    .split('\n')
+    .filter((line) => !keys.has(line.trimEnd().split('=')[0]))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const group = entries.map(({ key, value }) => `${key}=${value}`).join('\n');
+  const body = kept.length > 0 ? `${kept}\n\n${group}\n` : `${group}\n`;
+
+  await writeFile(filePath, body, 'utf8');
 };
 
 export const pruneEnvKeys = async ({

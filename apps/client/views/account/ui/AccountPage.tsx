@@ -32,6 +32,7 @@ export const AccountPage = () => {
       value: 'configs',
       label: tConfigs('title'),
       content: <ConfigList />,
+      isBare: true,
     },
     {
       value: 'profile',

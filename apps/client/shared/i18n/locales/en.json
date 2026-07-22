@@ -182,6 +182,7 @@
     "revoke": "Remove",
     "downloaded": "{fileName} saved to your downloads",
     "downloadedHint": "Open it and paste the link into your VLESS client",
+    "issued": "Your configs",
     "copy": "Copy link",
     "copied": "Link copied",
     "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand"

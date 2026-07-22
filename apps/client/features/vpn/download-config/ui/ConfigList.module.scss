@@ -1,0 +1,66 @@
+// The form issues configs, the list shows the ones already issued. They are
+// separate concerns, so the list is its own panel rather than a section inside
+// the card that creates them.
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent-dim), transparent);
+}
+
+.panelHead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.counter {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (width <= 560px) {
+  .panel {
+    padding: 22px 18px;
+  }
+}

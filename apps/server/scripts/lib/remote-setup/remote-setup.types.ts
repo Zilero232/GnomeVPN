@@ -8,4 +8,10 @@ export type ShipStackInput = {
 export type ConfigurePanelInput = {
   ssh: SshClient;
   password: string;
+  panelPath: string;
+};
+
+export type WaitForPanelInput = {
+  ssh: SshClient;
+  panelPath: string;
 };

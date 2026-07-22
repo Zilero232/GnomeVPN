@@ -1,6 +1,6 @@
 import slugify from '@sindresorhus/slugify';
 
-import { CLIENT_FLOW } from '../../../../lib/xray';
+import { XHTTP_MODE, XHTTP_PATH } from '../../config';
 
 import type { ConfigFileNameInput, RenderConfigInput } from './config-file.types';
 
@@ -11,12 +11,13 @@ export const configFileName = ({ countryCode, deviceName }: ConfigFileNameInput)
 
 export const renderConfigFile = ({ config, deviceName, country }: RenderConfigInput): string => {
   const params = new URLSearchParams({
-    type: 'tcp',
+    type: 'xhttp',
     security: 'reality',
+    path: XHTTP_PATH,
+    mode: XHTTP_MODE,
     sni: config.serverName,
     fp: config.fingerprint,
     pbk: config.publicKey,
-    flow: CLIENT_FLOW,
     ...(config.shortId ? { sid: config.shortId } : {}),
   });
 

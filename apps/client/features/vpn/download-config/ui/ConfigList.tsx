@@ -1,5 +1,6 @@
 'use client';
 
+import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
@@ -8,6 +9,8 @@ import { Stack, Text } from '@/shared/ui';
 import { CONFIG_LIMIT } from '../config';
 import { useConfigs, useCopyConfig, useIssueConfig, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigRow } from './components';
+
+import s from './ConfigList.module.scss';
 
 import type { ConfigListProps } from './ConfigList.types';
 
@@ -24,42 +27,56 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const isPending = issue.isPending || copy.isPending || revoke.isPending;
   const isFull = configs.length >= CONFIG_LIMIT;
 
-  if (isLoadingNodes || isLoadingConfigs) {
-    return <Text tone="muted">{t('loading')}</Text>;
-  }
-
-  if (nodes.length === 0) {
-    return <Text tone="muted">{t('empty')}</Text>;
+  if (isLoadingNodes || isLoadingConfigs || nodes.length === 0) {
+    return (
+      <section className={clsx(s.panel, className)}>
+        <Text tone="muted">{isLoadingNodes || isLoadingConfigs ? t('loading') : t('empty')}</Text>
+      </section>
+    );
   }
 
   return (
-    <Stack className={className} gap="md">
-      <Text size="xs" tone="muted">
-        {hasAccess ? t('hint', { limit: CONFIG_LIMIT }) : t('lockedHint')}
-      </Text>
+    <div className={clsx(s.root, className)}>
+      <section className={s.panel}>
+        <Stack gap="md">
+          <Text size="xs" tone="muted">
+            {hasAccess ? t('hint', { limit: CONFIG_LIMIT }) : t('lockedHint')}
+          </Text>
 
-      {hasAccess && <AddConfigForm isDisabled={isPending || isFull} nodes={nodes} />}
+          {hasAccess && <AddConfigForm isDisabled={isPending || isFull} nodes={nodes} />}
 
-      {isFull && (
-        <Text size="xs" tone="muted">
-          {t('limitReached', { limit: CONFIG_LIMIT })}
-        </Text>
-      )}
+          {isFull && (
+            <Text size="xs" tone="muted">
+              {t('limitReached', { limit: CONFIG_LIMIT })}
+            </Text>
+          )}
+        </Stack>
+      </section>
 
       {configs.length > 0 && (
-        <Stack gap="sm">
-          {configs.map((config) => (
-            <ConfigRow
-              config={config}
-              isPending={isPending}
-              key={config.id}
-              onCopy={() => copy.mutate({ nodeId: config.nodeId, name: config.name })}
-              onRedownload={() => issue.mutate({ nodeId: config.nodeId, name: config.name })}
-              onRevoke={() => revoke.mutate(config.id)}
-            />
-          ))}
-        </Stack>
+        <section className={s.panel}>
+          <header className={s.panelHead}>
+            <h3 className={s.panelTitle}>{t('issued')}</h3>
+
+            <span className={s.counter}>
+              {configs.length} / {CONFIG_LIMIT}
+            </span>
+          </header>
+
+          <div className={s.rows}>
+            {configs.map((config) => (
+              <ConfigRow
+                config={config}
+                isPending={isPending}
+                key={config.id}
+                onCopy={() => copy.mutate({ nodeId: config.nodeId, name: config.name })}
+                onRedownload={() => issue.mutate({ nodeId: config.nodeId, name: config.name })}
+                onRevoke={() => revoke.mutate(config.id)}
+              />
+            ))}
+          </div>
+        </section>
       )}
-    </Stack>
+    </div>
   );
 };

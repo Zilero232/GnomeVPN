@@ -1,3 +1,16 @@
-export { appendEnvLine, hasEnvKey, pruneEnvKeys, readEnvValue, upsertEnvLine } from './env-file';
+export {
+  appendEnvLine,
+  hasEnvKey,
+  pruneEnvKeys,
+  readEnvValue,
+  upsertEnvGroup,
+  upsertEnvLine,
+} from './env-file';
 
-export type { AppendEnvLineInput, EnvKeyInput, PruneEnvKeysInput } from './env-file.types';
+export type {
+  AppendEnvLineInput,
+  EnvEntry,
+  EnvKeyInput,
+  PruneEnvKeysInput,
+  UpsertEnvGroupInput,
+} from './env-file.types';

@@ -3,7 +3,6 @@ export {
   DONOR_HOST,
   INBOUND_TAG,
   LISTEN_PORT,
-  PANEL_PATH,
   PANEL_PORT,
 } from './reality-inbound.constants';
 
