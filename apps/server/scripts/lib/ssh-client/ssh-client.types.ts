@@ -1,7 +1,8 @@
 export type SshConnectOptions = {
   host: string;
   username: string;
-  password: string;
+  password?: string;
+  privateKeyPath?: string;
 };
 
 export type SshExecResult = {

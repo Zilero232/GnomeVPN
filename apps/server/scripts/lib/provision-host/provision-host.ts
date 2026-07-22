@@ -6,6 +6,8 @@ import { buildRealityInbound, LISTEN_PORT, PANEL_PATH, PANEL_PORT } from '../rea
 import { generateRealityKeys, generateShortId } from '../reality-keys';
 import { configurePanel, ensureDocker, openTunnelPort, shipStack } from '../remote-setup';
 import { SshClient } from '../ssh-client';
+import { upsertNode } from '../upsert-node';
+import { ensureInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
 import type {
@@ -35,11 +37,26 @@ const rememberNodeSecrets = async ({
   });
 };
 
+const waitForPanel = async (credentials: { baseUrl: string; token: string }): Promise<boolean> => {
+  try {
+    await pWaitFor(() => isPanelReachable(credentials), {
+      timeout: HEALTH_TIMEOUT_MS,
+      interval: HEALTH_INTERVAL_MS,
+    });
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const provisionHost = async ({
   config,
-  options: opts,
+  prisma,
+  serverEnvPath,
+  xrayComposeContent,
 }: ProvisionHostInput): Promise<ProvisionResult> => {
-  const ssh = (opts.createSshClient ?? (() => new SshClient()))();
+  const ssh = new SshClient();
   const outcome = { host: config.host, country: config.country };
 
   try {
@@ -50,7 +67,7 @@ export const provisionHost = async ({
     });
 
     const { password } = await resolveNodeCredentials({
-      envFilePath: opts.serverEnvPath,
+      envFilePath: serverEnvPath,
       countryCode: config.countryCode,
     });
 
@@ -59,22 +76,17 @@ export const provisionHost = async ({
 
     await ensureDocker(ssh);
     await openTunnelPort(ssh);
-    await shipStack({ ssh, composeContent: opts.xrayComposeContent });
+    await shipStack({ ssh, composeContent: xrayComposeContent });
 
     const token = await configurePanel({ ssh, password });
-    const apiUrl = panelUrl(config.host);
+    const baseUrl = panelUrl(config.host);
 
-    try {
-      await pWaitFor(() => opts.healthCheck({ baseUrl: apiUrl, token }), {
-        timeout: opts.healthCheckTimeoutMs ?? HEALTH_TIMEOUT_MS,
-        interval: opts.healthCheckIntervalMs ?? HEALTH_INTERVAL_MS,
-      });
-    } catch {
+    if (!(await waitForPanel({ baseUrl, token }))) {
       return { ...outcome, status: 'failed', error: 'the panel never answered the api' };
     }
 
-    await opts.ensureInbound({
-      baseUrl: apiUrl,
+    await ensureInbound({
+      baseUrl,
       token,
       inbound: buildRealityInbound({
         privateKey: keys.privateKey,
@@ -84,14 +96,14 @@ export const provisionHost = async ({
     });
 
     await rememberNodeSecrets({
-      serverEnvPath: opts.serverEnvPath,
+      serverEnvPath,
       countryCode: config.countryCode,
       apiToken: token,
       panelPassword: password,
     });
 
-    const { wasExisting } = await opts.upsertNode({
-      prisma: opts.basePrisma,
+    const { wasExisting } = await upsertNode({
+      prisma,
       input: {
         country: config.country,
         countryCode: config.countryCode,
@@ -101,7 +113,7 @@ export const provisionHost = async ({
         realityServerName: config.realityServerName,
         realityPublicKey: keys.publicKey,
         realityShortId: shortId,
-        apiUrl,
+        apiUrl: baseUrl,
         apiTokenEnvVar: nodeKeyName(config.countryCode),
       },
     });

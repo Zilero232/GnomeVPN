@@ -1,4 +1,7 @@
 {
   "default": "../client/public/brand/logo-mark.svg",
-  "bg_color": "#070B0A"
+  "bg_color": "#070B0A",
+  "android_bg": "../client/public/brand/logo-mark-background.svg",
+  "android_fg": "../client/public/brand/logo-mark-foreground.svg",
+  "android_fg_scale": 62
 }

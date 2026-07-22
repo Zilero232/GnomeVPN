@@ -73,9 +73,7 @@ class GnomeVpnService : VpnService() {
 
     private fun buildNotification(): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-            manager.createNotificationChannel(
+            notificationManager().createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW),
             )
         }
@@ -104,18 +102,23 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun teardown() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_DETACH)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(false)
+        }
+
         descriptor?.close()
         descriptor = null
         publish(NO_DESCRIPTOR)
         VpnTileService.requestUpdate(this)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            @Suppress("DEPRECATION")
-            stopForeground(true)
-        }
+        notificationManager().cancel(NOTIFICATION_ID)
     }
+
+    private fun notificationManager(): NotificationManager =
+        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override fun onRevoke() {
         Log.w(TAG, "vpn permission revoked by the system")

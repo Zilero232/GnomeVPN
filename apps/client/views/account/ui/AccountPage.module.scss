@@ -5,10 +5,9 @@
   flex-direction: column;
   gap: 20px;
   max-width: 760px;
-  min-height: var(--viewport-height);
   margin: 0 auto;
 
-  @include safe-padding(40px, 24px, 32px);
+  @include safe-screen(40px, 24px, 32px);
 }
 
 .footer {
@@ -95,7 +94,7 @@
   .root {
     gap: 16px;
 
-    @include safe-padding(24px, 16px);
+    @include safe-screen(24px, 16px);
   }
 
   .card {

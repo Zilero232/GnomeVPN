@@ -1,12 +1,6 @@
-type NodeRow = { id: string };
+import type { basePrisma } from '../../../src/core';
 
-export type PrismaLike = {
-  node: {
-    findFirst: (args: { where: { host: string } }) => Promise<NodeRow | null>;
-    update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<NodeRow>;
-    create: (args: { data: Record<string, unknown> }) => Promise<NodeRow>;
-  };
-};
+export type PrismaLike = typeof basePrisma;
 
 export type UpsertNodeInput = {
   country: string;

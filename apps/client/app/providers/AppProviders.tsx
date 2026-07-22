@@ -10,6 +10,7 @@ import { DesktopShell } from './DesktopShell';
 import { DismissToastOnClick } from './DismissToastOnClick';
 import { I18nProvider } from './I18nProvider';
 import { MobileInsets } from './MobileInsets';
+import { TrayProvider } from './TrayProvider';
 import { VaultProvider } from './VaultProvider';
 
 import type { ReactNode } from 'react';
@@ -32,9 +33,11 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
     <I18nProvider>
       <DesktopShell>
         <VaultProvider>
-          <AuthProvider>
-            <VpnConnectionProvider>{children}</VpnConnectionProvider>
-          </AuthProvider>
+          <VpnConnectionProvider>
+            <TrayProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </TrayProvider>
+          </VpnConnectionProvider>
         </VaultProvider>
       </DesktopShell>
 

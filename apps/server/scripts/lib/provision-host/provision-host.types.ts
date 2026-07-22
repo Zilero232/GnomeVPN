@@ -1,6 +1,5 @@
 import type { NodeConfig } from '../nodes-config';
-import type { SshClient } from '../ssh-client';
-import type { PrismaLike, UpsertNodeInput, UpsertNodeResult } from '../upsert-node';
+import type { PrismaLike } from '../upsert-node';
 
 export type ProvisionStatus = 'provisioned' | 'updated' | 'failed';
 
@@ -11,29 +10,11 @@ export type ProvisionResult = {
   error?: string;
 };
 
-export type PanelHealthCheck = (opts: { baseUrl: string; token: string }) => Promise<boolean>;
-
-export type EnsureInboundFn = (opts: {
-  baseUrl: string;
-  token: string;
-  inbound: Record<string, unknown>;
-}) => Promise<void>;
-
-export type UpsertNodeFn = (args: {
+export type ProvisionHostInput = {
+  config: NodeConfig;
   prisma: PrismaLike;
-  input: UpsertNodeInput;
-}) => Promise<UpsertNodeResult>;
-
-export type ProvisionHostOptions = {
   serverEnvPath: string;
   xrayComposeContent: string;
-  createSshClient?: () => SshClient;
-  healthCheck: PanelHealthCheck;
-  ensureInbound: EnsureInboundFn;
-  upsertNode: UpsertNodeFn;
-  basePrisma: PrismaLike;
-  healthCheckTimeoutMs?: number;
-  healthCheckIntervalMs?: number;
 };
 
 export type RememberNodeSecretsInput = {
@@ -42,10 +23,3 @@ export type RememberNodeSecretsInput = {
   apiToken: string;
   panelPassword: string;
 };
-
-export type ProvisionHostInput = {
-  config: NodeConfig;
-  options: ProvisionHostOptions;
-};
-
-export type { UpsertNodeInput, UpsertNodeResult };

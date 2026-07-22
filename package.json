@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -13,7 +13,7 @@
     "dev:server": "bun --filter @gnomevpn/server dev",
     "dev:client": "bun --filter @gnomevpn/client dev",
     "dev:infra": "docker compose -f docker-compose.dev.yml up -d",
-    "tauri:dev": "bun --filter '@gnomevpn/server' dev --filter '@gnomevpn/tauri' --parallel dev",
+    "tauri:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel dev",
     "tauri:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri build",
     "android:init": "bun --filter @gnomevpn/tauri android:init",
     "android:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel android:dev",
@@ -28,6 +28,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "node-ssh": "^13.2.1",
+    "p-retry": "^8.0.0",
     "remeda": "^2.39.0",
     "ts-pattern": "^5.9.0"
   },

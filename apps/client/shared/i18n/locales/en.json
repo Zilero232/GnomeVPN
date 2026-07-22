@@ -168,7 +168,7 @@
     }
   },
   "configs": {
-    "title": "Configs for other devices",
+    "title": "Configs",
     "hint": "The link opens in any VLESS client — v2rayNG, Hiddify, Streisand. Up to {limit} devices, revoked when the subscription ends.",
     "lockedHint": "Configs come with a subscription — start one above and the files unlock.",
     "loading": "Loading…",
