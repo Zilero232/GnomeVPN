@@ -2,6 +2,7 @@ package app.gnomevpn.mobile
 
 import android.app.Activity
 import android.content.Intent
+import android.net.TrafficStats
 import android.net.VpnService
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.ActivityCallback
@@ -98,9 +99,24 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    // TrafficStats counts the whole app, and every socket the tunnel opens
+    // belongs to it, so the totals track the tunnel for as long as it runs.
+    @Command
+    fun traffic(invoke: Invoke) {
+        val uid = activity.applicationInfo.uid
+        val result = JSObject()
+
+        result.put("rx", TrafficStats.getUidRxBytes(uid).coerceAtLeast(0))
+        result.put("tx", TrafficStats.getUidTxBytes(uid).coerceAtLeast(0))
+        invoke.resolve(result)
+    }
+
     @Command
     fun stop(invoke: Invoke) {
-        activity.stopService(Intent(activity, GnomeVpnService::class.java))
+        val intent = Intent(activity, GnomeVpnService::class.java)
+            .setAction(GnomeVpnService.ACTION_STOP)
+
+        activity.startService(intent)
         invoke.resolve()
     }
 }

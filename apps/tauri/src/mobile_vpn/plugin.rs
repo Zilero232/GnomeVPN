@@ -32,6 +32,12 @@ struct NativeDirResult {
     path: String,
 }
 
+#[derive(Deserialize)]
+pub struct TrafficResult {
+    pub rx: u64,
+    pub tx: u64,
+}
+
 #[derive(Serialize)]
 struct Empty {}
 
@@ -69,6 +75,12 @@ impl<R: Runtime> VpnPlugin<R> {
             .map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
         Ok(result.fd)
+    }
+
+    pub fn traffic(&self) -> Result<TrafficResult, MobileVpnError> {
+        self.0
+            .run_mobile_plugin("traffic", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
     }
 
     pub fn stop(&self) -> Result<(), MobileVpnError> {

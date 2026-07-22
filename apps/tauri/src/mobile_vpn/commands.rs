@@ -3,6 +3,7 @@ use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime, State};
 use tun2proxy::CancellationToken;
 
+use super::counters::report;
 use super::engine::{proxy_args, run_tun2proxy, spawn_xray};
 use super::plugin::VpnPlugin;
 use super::state::MobileVpnState;
@@ -47,6 +48,12 @@ pub async fn vpn_connect<R: Runtime>(
         let _ = on_event.send(TunnelEvent::Connected {
             assigned_ip: TUN_ADDRESS.into(),
         });
+
+        tauri::async_runtime::spawn(report(
+            handle.clone(),
+            on_event.clone(),
+            cancellation.clone(),
+        ));
 
         if let Err(error) = run_tun2proxy(args, fd, cancellation).await {
             log::error!("android tunnel stopped: {error}");

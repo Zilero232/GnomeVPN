@@ -18,7 +18,8 @@ export type XrayClientTraffic = {
 export type XrayInbound = {
   id: number;
   enable: boolean;
-  settings: string;
+  remark: string;
+  settings: string | Record<string, unknown>;
 };
 
 export type XrayApiResponse<T> = {

@@ -13,9 +13,9 @@ export const ensureInbound = async ({
 
   if (await xray.hasInbound()) {
     await xray.updateInbound(inbound);
-
-    return;
+  } else {
+    await xray.createInbound(inbound);
   }
 
-  await xray.createInbound(inbound);
+  await xray.restartCore();
 };

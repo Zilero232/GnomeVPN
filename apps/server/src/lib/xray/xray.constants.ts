@@ -1,5 +1,3 @@
-export const INBOUND_ID = 1;
-
 export const PANEL_USERNAME = 'gnomevpn';
 
 export const INBOUND_REMARK = 'GnomeVPN Reality';

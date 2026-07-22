@@ -1,12 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import {
-  CLIENT_FLOW,
-  INBOUND_ID,
-  INBOUND_REMARK,
-  REQUEST_TIMEOUT_MS,
-  UNLIMITED,
-} from './xray.constants';
+import { currentClients } from './lib/current-clients';
+import { CLIENT_FLOW, INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
 
 import type {
   CreateClientResult,
@@ -44,20 +39,36 @@ export class XrayClient {
     return (await res.json()) as XrayApiResponse<T>;
   }
 
-  private async getInbound(): Promise<XrayInbound> {
-    const body = await this.request<XrayInbound>(`/panel/api/inbounds/get/${INBOUND_ID}`);
+  private async listInbounds(): Promise<XrayInbound[]> {
+    const body = await this.request<XrayInbound[]>('/panel/api/inbounds/list');
 
     if (!body.success) {
-      throw new Error(`xray getInbound rejected: ${body.msg}`);
+      throw new Error(`xray listInbounds rejected: ${body.msg}`);
     }
 
     return body.obj;
   }
 
-  async hasInbound(): Promise<boolean> {
-    const body = await this.request<XrayInbound[]>('/panel/api/inbounds/list');
+  private async findInbound(): Promise<XrayInbound | undefined> {
+    return (await this.listInbounds()).find((inbound) => inbound.remark === INBOUND_REMARK);
+  }
 
-    return body.success && body.obj.length > 0;
+  private async getInbound(): Promise<XrayInbound> {
+    const inbound = await this.findInbound();
+
+    if (!inbound) {
+      throw new Error(`xray getInbound failed: no inbound remarked ${INBOUND_REMARK}`);
+    }
+
+    return inbound;
+  }
+
+  private async inboundId(): Promise<number> {
+    return (await this.getInbound()).id;
+  }
+
+  async hasInbound(): Promise<boolean> {
+    return Boolean(await this.findInbound());
   }
 
   private inboundPayload(inbound: Record<string, unknown>): string {
@@ -83,9 +94,12 @@ export class XrayClient {
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
-    const body = await this.request(`/panel/api/inbounds/update/${INBOUND_ID}`, {
+    const current = await this.getInbound();
+    const settings = { ...(inbound.settings as object), clients: currentClients(current) };
+
+    const body = await this.request(`/panel/api/inbounds/update/${current.id}`, {
       method: 'POST',
-      body: this.inboundPayload(inbound),
+      body: this.inboundPayload({ ...inbound, settings }),
     });
 
     if (!body.success) {
@@ -112,7 +126,7 @@ export class XrayClient {
           expiryTime: UNLIMITED,
           tgId: UNLIMITED,
         },
-        inboundIds: [INBOUND_ID],
+        inboundIds: [await this.inboundId()],
       }),
     });
 
@@ -126,7 +140,25 @@ export class XrayClient {
       throw new Error(`xray createClient failed: ${email} is missing after creation`);
     }
 
+    await this.restartCore();
+
     return { xrayUserId: row.uuid, email };
+  }
+
+  // The panel stores a new client in its own database and leaves the running
+  // core on the config it started with, where "clients" is still null. Without
+  // this the node answers the TLS handshake and then rejects every vless
+  // session, so a tunnel connects and carries nothing.
+  //
+  // The restart drops every live session on the node, and the panel exposes no
+  // lighter way to make the core reread its config — `restartXrayService` is
+  // the only endpoint that applies one.
+  async restartCore(): Promise<void> {
+    const body = await this.request('/panel/api/server/restartXrayService', { method: 'POST' });
+
+    if (!body.success) {
+      throw new Error(`xray restartCore rejected: ${body.msg}`);
+    }
   }
 
   private async listClients(): Promise<XrayClientRow[]> {

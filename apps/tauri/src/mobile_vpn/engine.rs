@@ -149,7 +149,7 @@ pub fn proxy_args(socks: SocketAddr, credentials: &SocksCredentials, dns: &[Stri
         credentials: Some(UserKey::new(&credentials.user, &credentials.password)),
     })
     .setup(false)
-    .dns(ArgDns::Virtual);
+    .dns(ArgDns::OverTcp);
 
     if let Some(server) = dns.iter().find_map(|entry| entry.parse().ok()) {
         args.dns_addr(server);
@@ -163,7 +163,9 @@ pub async fn run_tun2proxy(
     fd: i32,
     cancellation: CancellationToken,
 ) -> Result<(), MobileVpnError> {
-    args.tun_fd(Some(fd)).close_fd_on_drop(true);
+    // The descriptor belongs to the Kotlin ParcelFileDescriptor, which closes it
+    // in teardown(). Closing it here too trips fdsan and aborts the process.
+    args.tun_fd(Some(fd)).close_fd_on_drop(false);
 
     tun2proxy::general_run_async(args, MTU, false, cancellation)
         .await

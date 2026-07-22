@@ -18,7 +18,10 @@ class VpnTileService : TileService() {
         super.onClick()
 
         if (GnomeVpnService.isRunning()) {
-            stopService(Intent(this, GnomeVpnService::class.java))
+            startService(
+                Intent(this, GnomeVpnService::class.java)
+                    .setAction(GnomeVpnService.ACTION_STOP),
+            )
             render()
 
             return
