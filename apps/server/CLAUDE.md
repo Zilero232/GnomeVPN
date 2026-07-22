@@ -140,7 +140,7 @@ Reality keys are generated **per node, on every run** — `scripts/lib/reality-k
 
 The same rotation is why `ensureInbound` **updates** an existing inbound instead of leaving it alone. Creating it only when absent looks harmless and is not: the second run writes fresh keys to the database while the node keeps the first pair, so the client is handed a `shortId` the node never accepts and every handshake fails — with a panel that still answers `200` and a node that looks healthy.
 
-The donor host (`realityServerName`) defaults to `www.microsoft.com`. Pick one that answers TLS 1.3 over HTTP/2 *without redirecting* — `dl.google.com` and `www.nvidia.com` both 30x and are unsuitable despite being widely recommended.
+The donor host is `DONOR_HOST` in `scripts/lib/reality-inbound` — one value for every node, since a per-node donor buys nothing and only invites a typo. Changing it means picking a host that answers TLS 1.3 over HTTP/2 *without redirecting*: `dl.google.com` and `www.nvidia.com` both 30x and are unsuitable despite being widely recommended.
 
 ## Prisma
 

@@ -2,7 +2,13 @@ import pWaitFor from 'p-wait-for';
 
 import { upsertEnvLine } from '../env-file';
 import { nodeKeyName, panelPasswordName, resolveNodeCredentials } from '../node-credentials';
-import { buildRealityInbound, LISTEN_PORT, PANEL_PATH, PANEL_PORT } from '../reality-inbound';
+import {
+  buildRealityInbound,
+  DONOR_HOST,
+  LISTEN_PORT,
+  PANEL_PATH,
+  PANEL_PORT,
+} from '../reality-inbound';
 import { generateRealityKeys, generateShortId } from '../reality-keys';
 import { configurePanel, ensureDocker, openTunnelPort, shipStack } from '../remote-setup';
 import { SshClient } from '../ssh-client';
@@ -88,11 +94,7 @@ export const provisionHost = async ({
     await ensureInbound({
       baseUrl,
       token,
-      inbound: buildRealityInbound({
-        privateKey: keys.privateKey,
-        shortId,
-        donorHost: config.realityServerName,
-      }),
+      inbound: buildRealityInbound({ privateKey: keys.privateKey, shortId }),
     });
 
     await rememberNodeSecrets({
@@ -110,7 +112,7 @@ export const provisionHost = async ({
         city: config.city,
         host: config.host,
         port: LISTEN_PORT,
-        realityServerName: config.realityServerName,
+        realityServerName: DONOR_HOST,
         realityPublicKey: keys.publicKey,
         realityShortId: shortId,
         apiUrl: baseUrl,

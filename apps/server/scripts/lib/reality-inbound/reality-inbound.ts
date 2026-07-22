@@ -1,11 +1,16 @@
-import { DONOR_PORT, INBOUND_TAG, LISTEN_PORT, SNIFF_PROTOCOLS } from './reality-inbound.constants';
+import {
+  DONOR_HOST,
+  DONOR_PORT,
+  INBOUND_TAG,
+  LISTEN_PORT,
+  SNIFF_PROTOCOLS,
+} from './reality-inbound.constants';
 
 import type { BuildInboundInput } from './reality-inbound.types';
 
 export const buildRealityInbound = ({
   privateKey,
   shortId,
-  donorHost,
 }: BuildInboundInput): Record<string, unknown> => ({
   tag: INBOUND_TAG,
   listen: null,
@@ -20,9 +25,9 @@ export const buildRealityInbound = ({
     security: 'reality',
     realitySettings: {
       show: false,
-      dest: `${donorHost}:${DONOR_PORT}`,
+      dest: `${DONOR_HOST}:${DONOR_PORT}`,
       xver: 0,
-      serverNames: [donorHost],
+      serverNames: [DONOR_HOST],
       privateKey,
       shortIds: [shortId],
     },

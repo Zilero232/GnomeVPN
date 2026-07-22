@@ -6,6 +6,8 @@ export const PANEL_PORT = 2053;
 
 export const PANEL_PATH = 'gnomevpn';
 
+export const DONOR_HOST = 'www.microsoft.com';
+
 export const DONOR_PORT = 443;
 
 export const SNIFF_PROTOCOLS = ['http', 'tls', 'quic'];
