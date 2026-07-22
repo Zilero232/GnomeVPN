@@ -10,6 +10,8 @@ import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import java.net.Inet4Address
+import java.net.InetAddress
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -25,9 +27,10 @@ class GnomeVpnService : VpnService() {
         }
 
         val dns = intent?.getStringArrayExtra(EXTRA_DNS)?.takeIf { it.isNotEmpty() } ?: DEFAULT_DNS
+        val server = intent?.getStringExtra(EXTRA_SERVER).orEmpty()
 
         return try {
-            startTunnel(dns)
+            startTunnel(dns, server)
             START_STICKY
         } catch (error: Throwable) {
             Log.e(TAG, "failed to start the tunnel", error)
@@ -38,16 +41,18 @@ class GnomeVpnService : VpnService() {
         }
     }
 
-    private fun startTunnel(dns: Array<String>) {
+    private fun startTunnel(dns: Array<String>, server: String) {
         val builder = Builder()
             .setSession(SESSION)
             .setMtu(MTU)
             .addAddress(TUN_ADDRESS, TUN_PREFIX)
-            .addRoute(ROUTE_LOWER_HALF, 1)
-            .addRoute(ROUTE_UPPER_HALF, 1)
 
-        for (server in dns) {
-            builder.addDnsServer(server)
+        for (route in routesExcluding(server)) {
+            builder.addRoute(route.first, route.second)
+        }
+
+        for (entry in dns) {
+            builder.addDnsServer(entry)
         }
 
         try {
@@ -71,6 +76,32 @@ class GnomeVpnService : VpnService() {
         Log.i(TAG, "tunnel is up, fd=${opened.fd}")
     }
 
+    // The half routes cover everything, the node included, so a packet destined
+    // for the node would be sent through the tunnel that node serves. Splitting
+    // the space around its address keeps xray reaching it over the real link.
+    private fun routesExcluding(server: String): List<Pair<String, Int>> {
+        val address = runCatching { InetAddress.getByName(server) }.getOrNull()
+
+        if (address !is Inet4Address) {
+            return listOf(ROUTE_LOWER_HALF to 1, ROUTE_UPPER_HALF to 1)
+        }
+
+        val target = address.address.fold(0L) { acc, byte -> (acc shl 8) or (byte.toLong() and 0xFF) }
+        val routes = mutableListOf<Pair<String, Int>>()
+
+        for (prefix in 32 downTo 1) {
+            val bit = 1L shl (32 - prefix)
+            val network = (target xor bit) and (-bit and 0xFFFFFFFFL)
+
+            routes.add(intToIp(network) to prefix)
+        }
+
+        return routes
+    }
+
+    private fun intToIp(value: Long): String =
+        "${(value shr 24) and 0xFF}.${(value shr 16) and 0xFF}.${(value shr 8) and 0xFF}.${value and 0xFF}"
+
     private fun buildNotification(): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationManager().createNotificationChannel(
@@ -78,10 +109,14 @@ class GnomeVpnService : VpnService() {
             )
         }
 
+        val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+
         val open = PendingIntent.getActivity(
             this,
             0,
-            packageManager.getLaunchIntentForPackage(packageName),
+            launch,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 

@@ -13,7 +13,6 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const overlay = join(here, '..', 'android');
 const libs = join(overlay, 'libs');
-const icons = join(here, '..', 'icons', 'android');
 const generated = join(here, '..', 'gen', 'android');
 const appMain = join(generated, 'app', 'src', 'main');
 
@@ -36,23 +35,6 @@ const copyLibs = () => {
   }
 
   return abis;
-};
-
-// `tauri icon` writes into icons/android, but Gradle reads res/ — and only
-// `tauri android init` ever bridges the two, so without this the APK keeps
-// whatever icons the project was first initialised with.
-const copyIcons = () => {
-  const folders = readdirSync(icons, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
-
-  for (const folder of folders) {
-    const to = join(appMain, 'res', folder);
-    mkdirSync(to, { recursive: true });
-    cpSync(join(icons, folder), to, { recursive: true });
-  }
-
-  return folders;
 };
 
 // Kotlin sources removed from the overlay have to disappear from the generated
@@ -163,11 +145,10 @@ const patchManifest = () => {
 };
 
 const abis = copyLibs();
-const iconFolders = copyIcons();
 const sources = copySources();
 const patched = patchManifest();
 
 // biome-ignore lint/suspicious/noConsole: standalone CLI script, console is the output channel
 console.log(
-  `[android] libs: ${abis.join(', ')} | icons: ${iconFolders.length} folder(s) | sources: ${sources.join(', ')} | manifest: ${patched ? 'patched' : 'already patched'}`,
+  `[android] libs: ${abis.join(', ')} | sources: ${sources.join(', ')} | manifest: ${patched ? 'patched' : 'already patched'}`,
 );

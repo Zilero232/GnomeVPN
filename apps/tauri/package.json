@@ -10,7 +10,7 @@
     "dev": "tauri dev",
     "prebuild": "node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs --release && bun run icon",
     "build": "tauri build",
-    "android:init": "bun run icon && bun --env-file .env tauri android init && node ./scripts/setup-android-libs.mjs",
+    "android:init": "bun --env-file .env tauri android init && bun run icon && node ./scripts/setup-android-libs.mjs",
     "android:dev": "bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android dev",
     "android:build": "bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android build --apk",
     "service:build": "node ./scripts/build-service.mjs",

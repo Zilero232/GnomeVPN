@@ -36,6 +36,7 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
   }
 
   await ssh.exec(`ufw allow ${LISTEN_PORT}/tcp`);
+  await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
 };
 
 const waitForPanel = async (ssh: SshClient): Promise<void> => {
