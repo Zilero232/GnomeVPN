@@ -83,6 +83,7 @@
       "name": "@gnomevpn/server",
       "version": "0.0.0",
       "dependencies": {
+        "3xui-api-client": "^3.1.2",
         "@gnomevpn/schemas": "workspace:*",
         "@nestjs/common": "11.1.28",
         "@nestjs/config": "4.0.4",
@@ -142,6 +143,8 @@
     },
   },
   "packages": {
+    "3xui-api-client": ["3xui-api-client@3.1.2", "", { "dependencies": { "axios": "^1.10.0" }, "os": [ "linux", "win32", "darwin", ] }, "sha512-1SQuJE14ig9dYv1EqOTvFbieSplXq6F1Rm28FJR4ZcPvKUbruF4a/tF09BEYmKF9dH0wG9aN5DLrhOdgsM/viQ=="],
+
     "@babel/code-frame": ["@babel/code-frame@7.29.7", "", { "dependencies": { "@babel/helper-validator-identifier": "^7.29.7", "js-tokens": "^4.0.0", "picocolors": "^1.1.1" } }, "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw=="],
 
     "@babel/generator": ["@babel/generator@7.29.7", "", { "dependencies": { "@babel/parser": "^7.29.7", "@babel/types": "^7.29.7", "@jridgewell/gen-mapping": "^0.3.12", "@jridgewell/trace-mapping": "^0.3.28", "jsesc": "^3.0.2" } }, "sha512-DkXD5OJQaAQIdZ1bt3UZdEnHAn9Imd3IVBdX03UFe+ony9Ojw5pzr9YVKGDY1jt+Gcn/FnGkNf8r+Vj5NOJWtQ=="],

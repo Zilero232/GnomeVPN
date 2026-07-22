@@ -1,6 +1,7 @@
 @use '@/shared/styles/mixins' as *;
 
 .root {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,6 +23,17 @@
   justify-content: center;
   width: 100%;
   padding: 32px 0;
+}
+
+// The stats panel only exists while connected, and `.body` is centred, so
+// letting it appear would shift everything above it up by its own height.
+// Holding the space keeps the button still across a connect.
+.stats {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 132px;
 }
 
 .head {

@@ -1,3 +1,5 @@
+import { pipe, sortBy, uniqueBy } from 'remeda';
+
 import { EXTENSION_TO_PLATFORM, PLATFORM_EXTENSION_PRIORITY } from '../../config';
 
 import type { ReleasePlatform } from '@gnomevpn/schemas';
@@ -15,22 +17,16 @@ const rank = (asset: GithubAsset): number => {
   return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 };
 
-export const pickInstallers = (assets: GithubAsset[]): PlatformAsset[] => {
-  const best = new Map<ReleasePlatform, GithubAsset>();
+// `sortBy` is stable and `uniqueBy` keeps the first of each group, so the best
+// ranked asset per platform survives and ties fall to the earlier asset — the
+// same outcome as comparing ranks pairwise.
+export const pickInstallers = (assets: GithubAsset[]): PlatformAsset[] =>
+  pipe(
+    assets.flatMap((asset) => {
+      const platform = detectPlatform(asset.name);
 
-  for (const asset of assets) {
-    const platform = detectPlatform(asset.name);
-
-    if (!platform) {
-      continue;
-    }
-
-    const current = best.get(platform);
-
-    if (!current || rank(asset) < rank(current)) {
-      best.set(platform, asset);
-    }
-  }
-
-  return [...best].map(([platform, asset]) => ({ platform, asset }));
-};
+      return platform ? [{ platform, asset }] : [];
+    }),
+    sortBy(({ asset }) => rank(asset)),
+    uniqueBy(({ platform }) => platform),
+  );

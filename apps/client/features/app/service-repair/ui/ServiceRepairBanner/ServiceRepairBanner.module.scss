@@ -1,16 +1,20 @@
+// The banner appears once the service is found missing, which can happen while
+// the window is already up. In the flow it would push the whole view down, so
+// it floats over the content instead.
 .root {
+  position: absolute;
+  z-index: 20;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
   padding: 16px;
   border: 1px solid color-mix(in srgb, var(--color-danger) 32%, transparent);
   border-radius: var(--radius-md);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-danger) 12%, transparent),
-    color-mix(in srgb, var(--color-danger) 5%, transparent)
-  );
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
 }
 
 .head {

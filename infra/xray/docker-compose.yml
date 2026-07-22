@@ -1,6 +1,12 @@
 services:
   xray:
-    image: ghcr.io/mhsanaei/3x-ui:latest
+    # Pinned, never `latest`: the image carries its own Xray-core, and the
+    # desktop and Android clients ship a build of the same project. A silent
+    # bump on the node moves the server side of the Reality handshake out from
+    # under clients that are still on the pinned version, and the tunnel then
+    # connects and carries nothing. Bump this together with XRAY_VERSION in
+    # .github/workflows/release-app.yml.
+    image: ghcr.io/mhsanaei/3x-ui:v3.5.0
     container_name: gnomevpn-xray
     restart: unless-stopped
     environment:

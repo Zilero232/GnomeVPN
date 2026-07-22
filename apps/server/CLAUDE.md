@@ -142,6 +142,8 @@ The same rotation is why `ensureInbound` **updates** an existing inbound instead
 
 The donor host is `DONOR_HOST` in `scripts/lib/reality-inbound` — one value for every node, since a per-node donor buys nothing and only invites a typo. Changing it means picking a host that answers TLS 1.3 over HTTP/2 *without redirecting*: `dl.google.com` and `www.nvidia.com` both 30x and are unsuitable despite being widely recommended.
 
+**Answering TLS 1.3 correctly is not sufficient.** `www.microsoft.com` passes every static check — TLS 1.3, HTTP/2, X25519, a valid certificate, `xray tls ping` reports a successful handshake — and still fails every REALITY handshake with `handshake did not complete successfully`. The node then completes TCP, serves the donor's real certificate on fallback, and carries no tunnel traffic, which looks like broken keys rather than a broken donor. The only trustworthy check is an end-to-end one: run a standalone REALITY server and client on the node itself and confirm a request returns the node's own IP.
+
 ## Prisma
 
 Schema is split across `prisma/schema/`. The generated client lands in `generated/` and is gitignored, so `prisma generate` must run before typecheck — CI does this explicitly.

@@ -12,6 +12,7 @@ import type {
   FindPeersInput,
   IssuePeerInput,
   PeerRef,
+  ReleaseManyResult,
 } from './peers.service.types';
 
 @Injectable()
@@ -59,6 +60,24 @@ export class PeersService {
 
       return false;
     }
+  }
+
+  // A row is only dropped once its client is gone from the node: deleting it
+  // regardless would strand the client there, holding a slot nothing can free.
+  // Released one at a time on purpose — the peers of one user can sit on the
+  // same node, and releasing in parallel would restart its core repeatedly.
+  async releaseMany(peers: PeerRef[]): Promise<ReleaseManyResult> {
+    const released: string[] = [];
+
+    for (const peer of peers) {
+      if (await this.release(peer)) {
+        released.push(peer.id);
+      }
+    }
+
+    await this.remove(released);
+
+    return { released: released.length, kept: peers.length - released.length };
   }
 
   async discard({ node, email }: DiscardPeerInput): Promise<void> {

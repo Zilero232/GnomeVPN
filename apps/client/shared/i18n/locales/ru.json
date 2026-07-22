@@ -179,7 +179,12 @@
     "limitReached": "Достигнут лимит в {limit} устройств — удалите ненужное, чтобы добавить новое.",
     "download": "Скачать",
     "redownload": "Скачать заново",
-    "revoke": "Удалить"
+    "revoke": "Удалить",
+    "downloaded": "{fileName} сохранён в загрузки",
+    "downloadedHint": "Откройте его и вставьте ссылку в VLESS-клиент",
+    "copy": "Скопировать ссылку",
+    "copied": "Ссылка скопирована",
+    "copiedHint": "Вставьте её в v2rayNG, Hiddify или Streisand"
   },
   "desktopOnly": {
     "title": "Подключение — в приложении",
@@ -260,12 +265,16 @@
     "nodeDegraded": "Нестабилен",
     "nodeOffline": "Недоступен",
     "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
+    "nodeLabel": "Страна",
+    "nodePlaceholder": "Выберите страну",
     "openAccount": "Аккаунт",
     "signOut": "Выйти",
     "menu": "Меню приложения",
     "uptime": "В сети",
-    "received": "Принято",
-    "sent": "Отправлено"
+    "received": "Получение",
+    "sent": "Передача",
+    "receivedTotal": "Всего получено",
+    "sentTotal": "Всего отправлено"
   },
   "downloadApp": {
     "title": "Скачать GnomeVPN",

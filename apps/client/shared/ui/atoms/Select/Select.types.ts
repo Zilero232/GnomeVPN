@@ -1,7 +1,10 @@
+import type { ReactNode } from 'react';
+
 export type SelectOption = {
   value: string;
-  label: string;
+  label: ReactNode;
   isDisabled?: boolean;
+  title?: string;
 };
 
 export type SelectProps = {

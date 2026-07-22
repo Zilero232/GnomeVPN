@@ -19,6 +19,13 @@ concurrency:
   group: release-app
   cancel-in-progress: false
 
+# The nodes run Xray-core inside the 3x-ui image, and both sides implement the
+# same Reality handshake. A client built against a different release than the
+# one the nodes run connects and then carries nothing, so this version and the
+# image tag in infra/xray/docker-compose.yml move together.
+env:
+  XRAY_VERSION: v26.7.11
+
 jobs:
   resolve-version:
     # workflow_run fires on failure too, so the conclusion is checked explicitly.
@@ -117,7 +124,7 @@ jobs:
       - name: Fetch xray
         shell: bash
         run: |
-          curl -fsSL https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-windows-64.zip -o xray.zip
+          curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-windows-64.zip" -o xray.zip
           unzip -q xray.zip -d xray
           cp xray/xray.exe apps/tauri/bin/xray.exe
 
@@ -203,7 +210,7 @@ jobs:
         shell: bash
         run: |
           for abi in arm64-v8a amd64; do
-            curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/v26.3.27/Xray-android-${abi}.zip" -o "xray-${abi}.zip"
+            curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-android-${abi}.zip" -o "xray-${abi}.zip"
             unzip -q "xray-${abi}.zip" -d "xray-${abi}"
           done
           mkdir -p apps/tauri/android/libs/arm64-v8a apps/tauri/android/libs/x86_64

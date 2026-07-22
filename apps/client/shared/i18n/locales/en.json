@@ -179,7 +179,12 @@
     "limitReached": "You have reached the {limit} device limit — remove one to add another.",
     "download": "Download",
     "redownload": "Download again",
-    "revoke": "Remove"
+    "revoke": "Remove",
+    "downloaded": "{fileName} saved to your downloads",
+    "downloadedHint": "Open it and paste the link into your VLESS client",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand"
   },
   "desktopOnly": {
     "title": "Connect from the app",
@@ -260,12 +265,16 @@
     "nodeDegraded": "Unstable",
     "nodeOffline": "Unavailable",
     "nodeOfflineHint": "This node is not responding — pick another country",
+    "nodeLabel": "Country",
+    "nodePlaceholder": "Pick a country",
     "openAccount": "Account",
     "signOut": "Sign out",
     "menu": "App menu",
     "uptime": "Uptime",
-    "received": "Received",
-    "sent": "Sent"
+    "received": "Download",
+    "sent": "Upload",
+    "receivedTotal": "Total in",
+    "sentTotal": "Total out"
   },
   "downloadApp": {
     "title": "Download GnomeVPN",

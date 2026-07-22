@@ -1,3 +1,3 @@
 export { AppMenu } from './AppMenu';
-export { NodeList } from './NodeList';
+export { NodePicker } from './NodePicker';
 export { TunnelStats } from './TunnelStats';

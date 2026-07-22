@@ -36,21 +36,11 @@ export class SessionsService {
     await this.releaseAll(sessions.slice(0, sessions.length - SESSION_LIMIT + 1));
   }
 
-  // A row is only dropped once its client is gone from the node: deleting it
-  // regardless would strand the client there, holding a slot nothing can free.
   private async releaseAll(peers: PeerRef[]): Promise<void> {
-    const released: string[] = [];
+    const { kept } = await this.peers.releaseMany(peers);
 
-    for (const peer of peers) {
-      if (await this.peers.release(peer)) {
-        released.push(peer.id);
-      }
-    }
-
-    await this.peers.remove(released);
-
-    if (released.length < peers.length) {
-      this.logger.warn(`Kept ${peers.length - released.length} session row(s): peers still live`);
+    if (kept > 0) {
+      this.logger.warn(`Kept ${kept} session row(s): peers still live`);
     }
   }
 

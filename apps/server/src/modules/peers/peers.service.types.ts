@@ -35,3 +35,8 @@ export type FindPeersInput = {
   kind: PeerKind;
   name?: string;
 };
+
+export type ReleaseManyResult = {
+  released: number;
+  kept: number;
+};

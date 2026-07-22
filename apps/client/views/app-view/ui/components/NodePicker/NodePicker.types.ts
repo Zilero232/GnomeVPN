@@ -1,6 +1,6 @@
 import type { Node } from '@gnomevpn/schemas';
 
-export type NodeListProps = {
+export type NodePickerProps = {
   nodes: Node[];
   activeNodeId: string | null;
   isLoading: boolean;

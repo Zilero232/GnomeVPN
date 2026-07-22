@@ -53,11 +53,6 @@ pub fn build_xray_config(
                     "pass": credentials.password,
                 }],
             },
-            "sniffing": {
-                "enabled": true,
-                "destOverride": ["http", "tls", "quic"],
-                "routeOnly": false,
-            },
         }],
         "outbounds": [{
             "protocol": "vless",

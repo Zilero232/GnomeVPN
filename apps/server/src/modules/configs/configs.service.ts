@@ -102,21 +102,10 @@ export class ConfigsService {
 
   async revokeAll(userId: string): Promise<void> {
     const rows = await this.peers.findRefs({ userId, kind: 'config' });
+    const { kept } = await this.peers.releaseMany(rows);
 
-    const released: string[] = [];
-
-    for (const row of rows) {
-      if (await this.peers.release(row)) {
-        released.push(row.id);
-      }
-    }
-
-    await this.peers.remove(released);
-
-    if (released.length < rows.length) {
-      this.logger.warn(
-        `Kept ${rows.length - released.length} config row(s) for ${userId}: peers still live`,
-      );
+    if (kept > 0) {
+      this.logger.warn(`Kept ${kept} config row(s) for ${userId}: peers still live`);
     }
   }
 }

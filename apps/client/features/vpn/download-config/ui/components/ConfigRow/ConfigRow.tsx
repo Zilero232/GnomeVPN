@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Trash2 } from 'lucide-react';
+import { Copy, Download, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button, CountryFlag, Text } from '@/shared/ui';
@@ -9,7 +9,13 @@ import s from './ConfigRow.module.scss';
 
 import type { ConfigRowProps } from './ConfigRow.types';
 
-export const ConfigRow = ({ config, isPending, onRedownload, onRevoke }: ConfigRowProps) => {
+export const ConfigRow = ({
+  config,
+  isPending,
+  onCopy,
+  onRedownload,
+  onRevoke,
+}: ConfigRowProps) => {
   const t = useTranslations('configs');
 
   return (
@@ -27,6 +33,16 @@ export const ConfigRow = ({ config, isPending, onRedownload, onRevoke }: ConfigR
       </div>
 
       <div className={s.actions}>
+        <Button
+          aria-label={t('copy')}
+          disabled={isPending}
+          size="icon"
+          variant="ghost"
+          onClick={onCopy}
+        >
+          <Copy aria-hidden size={15} />
+        </Button>
+
         <Button
           aria-label={t('redownload')}
           disabled={isPending}

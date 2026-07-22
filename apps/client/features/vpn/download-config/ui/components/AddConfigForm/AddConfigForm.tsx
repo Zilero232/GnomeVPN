@@ -4,6 +4,7 @@ import { issueConfigSchema } from '@gnomevpn/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 import { useFieldError } from '@/entities/app/locale';
 import { FormField, Input, Select, SubmitButton } from '@/shared/ui';
@@ -30,7 +31,15 @@ export const AddConfigForm = ({ nodes, isDisabled }: AddConfigFormProps) => {
     defaultValues: { name: '', nodeId: nodes[0]?.id ?? '' },
   });
 
-  const onSubmit = handleSubmit((values) => issue.mutate(values, { onSuccess: () => reset() }));
+  const onSubmit = handleSubmit((values) =>
+    issue.mutate(values, {
+      onSuccess: ({ fileName }) => {
+        reset();
+
+        toast.success(t('downloaded', { fileName }), { description: t('downloadedHint') });
+      },
+    }),
+  );
 
   return (
     <form className={s.form} onSubmit={onSubmit}>

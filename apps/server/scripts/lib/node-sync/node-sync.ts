@@ -66,6 +66,13 @@ const buildNodeSync = (nodes: SyncableNode[]): string => {
     'FROM incoming_node i',
     'WHERE NOT EXISTS (SELECT 1 FROM node n WHERE n.host = i.host);',
     '',
+    // Provisioning rotates the reality keys, so every client the nodes held is
+    // gone by the time this runs. A peer row that survives hands its owner a
+    // uuid the node no longer knows: the handshake still succeeds against the
+    // fresh key and every session is then rejected, which looks like a tunnel
+    // that connects and carries nothing.
+    'DELETE FROM peer;',
+    '',
     'COMMIT;',
   ].join('\n');
 };

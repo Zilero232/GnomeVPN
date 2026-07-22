@@ -15,7 +15,7 @@ import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Text } from '@/shared/ui';
 import { useNodeSelection } from '../model/hooks';
-import { AppMenu, NodeList, TunnelStats } from './components';
+import { AppMenu, NodePicker, TunnelStats } from './components';
 
 import s from './AppView.module.scss';
 
@@ -71,8 +71,6 @@ export const AppView = () => {
       </header>
 
       <div className={s.body}>
-        <ServiceRepairBanner />
-
         <ConnectButton
           status={status}
           disabled={
@@ -84,9 +82,7 @@ export const AppView = () => {
 
         {!hasAccess && <Text tone="muted">{t('gateHint')}</Text>}
 
-        {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
-
-        <NodeList
+        <NodePicker
           activeNodeId={selection.nodeId}
           isError={isError}
           isLoading={isLoading}
@@ -94,7 +90,13 @@ export const AppView = () => {
           nodes={nodes}
           onSelect={selection.select}
         />
+
+        <div className={s.stats}>
+          {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
+        </div>
       </div>
+
+      <ServiceRepairBanner />
 
       <UpdateGate />
     </main>

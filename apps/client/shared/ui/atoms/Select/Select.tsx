@@ -48,6 +48,7 @@ export const Select = ({
                   className={s.item}
                   disabled={option.isDisabled}
                   key={option.value}
+                  title={option.title}
                   value={option.value}
                 >
                   <BaseSelect.ItemText className={s.itemLabel}>{option.label}</BaseSelect.ItemText>

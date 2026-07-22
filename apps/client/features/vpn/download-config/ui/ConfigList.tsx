@@ -6,7 +6,7 @@ import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { Stack, Text } from '@/shared/ui';
 import { CONFIG_LIMIT } from '../config';
-import { useConfigs, useIssueConfig, useRevokeConfig } from '../model/hooks';
+import { useConfigs, useCopyConfig, useIssueConfig, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigRow } from './components';
 
 import type { ConfigListProps } from './ConfigList.types';
@@ -18,9 +18,10 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const { hasAccess } = useSubscriptionStatus();
 
   const issue = useIssueConfig();
+  const copy = useCopyConfig();
   const revoke = useRevokeConfig();
 
-  const isPending = issue.isPending || revoke.isPending;
+  const isPending = issue.isPending || copy.isPending || revoke.isPending;
   const isFull = configs.length >= CONFIG_LIMIT;
 
   if (isLoadingNodes || isLoadingConfigs) {
@@ -52,6 +53,7 @@ export const ConfigList = ({ className }: ConfigListProps) => {
               config={config}
               isPending={isPending}
               key={config.id}
+              onCopy={() => copy.mutate({ nodeId: config.nodeId, name: config.name })}
               onRedownload={() => issue.mutate({ nodeId: config.nodeId, name: config.name })}
               onRevoke={() => revoke.mutate(config.id)}
             />

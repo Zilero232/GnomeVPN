@@ -17,6 +17,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "3xui-api-client": "^3.1.2",
     "@gnomevpn/schemas": "workspace:*",
     "@nestjs/common": "11.1.28",
     "@nestjs/config": "4.0.4",
