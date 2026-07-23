@@ -1,6 +1,3 @@
-// The banner appears once the service is found missing, which can happen while
-// the window is already up. In the flow it would push the whole view down, so
-// it floats over the content instead.
 .root {
   position: absolute;
   z-index: 20;

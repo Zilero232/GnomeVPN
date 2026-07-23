@@ -1,7 +1,7 @@
 import { LOWEST_MONTHLY_RUB, PLANS } from '@gnomevpn/schemas';
 
 export const HERO_METRICS = [
-  { value: 'VLESS', key: 'protocol' },
+  { value: 'Hysteria2', key: 'protocol' },
   { value: `${LOWEST_MONTHLY_RUB} ₽`, key: 'price' },
   { value: 'TLS 1.3', key: 'cipher' },
 ] as const;

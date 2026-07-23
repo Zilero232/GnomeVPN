@@ -3,7 +3,7 @@ import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUser } from '../../common/decorators';
 import { SubscriptionStatusDto } from './dto/subscription.dto';
-import { SubscriptionService } from './subscription.service';
+import { SubscriptionService } from './services';
 
 @Controller('subscription')
 export class SubscriptionController {

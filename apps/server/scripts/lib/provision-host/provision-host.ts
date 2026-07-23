@@ -1,15 +1,26 @@
 import pWaitFor from 'p-wait-for';
 
 import { upsertEnvGroup } from '../env-file';
+import { generateAuth } from '../hysteria-auth';
+import {
+  buildHysteriaInbound,
+  LISTEN_PORT,
+  MASQUERADE_HOST,
+  PANEL_PORT,
+} from '../hysteria-inbound';
 import {
   nodeKeyName,
   panelPasswordName,
   panelPathName,
   resolveNodeCredentials,
 } from '../node-credentials';
-import { buildRealityInbound, DONOR_HOST, LISTEN_PORT, PANEL_PORT } from '../reality-inbound';
-import { generateRealityKeys, generateShortId } from '../reality-keys';
-import { configurePanel, ensureDocker, openTunnelPort, shipStack } from '../remote-setup';
+import {
+  configurePanel,
+  ensureCert,
+  ensureDocker,
+  openTunnelPort,
+  shipStack,
+} from '../remote-setup';
 import { SshClient } from '../ssh-client';
 import { upsertNode } from '../upsert-node';
 import { ensureInbound, isPanelReachable } from '../xray-panel';
@@ -76,8 +87,7 @@ export const provisionHost = async ({
       countryCode: config.countryCode,
     });
 
-    const keys = generateRealityKeys();
-    const shortId = generateShortId();
+    const auth = generateAuth();
 
     await ensureDocker(ssh);
     await openTunnelPort(ssh);
@@ -90,10 +100,12 @@ export const provisionHost = async ({
       return { ...outcome, status: 'failed', error: 'the panel never answered the api' };
     }
 
+    await ensureCert(ssh);
+
     await ensureInbound({
       baseUrl,
       token,
-      inbound: buildRealityInbound({ privateKey: keys.privateKey, shortId }),
+      inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST }),
     });
 
     await rememberNodeSecrets({
@@ -112,9 +124,8 @@ export const provisionHost = async ({
         city: config.city,
         host: config.host,
         port: LISTEN_PORT,
-        realityServerName: DONOR_HOST,
-        realityPublicKey: keys.publicKey,
-        realityShortId: shortId,
+        serverName: MASQUERADE_HOST,
+        auth,
         apiUrl: baseUrl,
         apiTokenEnvVar: nodeKeyName(config.countryCode),
       },

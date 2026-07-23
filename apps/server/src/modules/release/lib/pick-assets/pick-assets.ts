@@ -17,9 +17,6 @@ const rank = (asset: GithubAsset): number => {
   return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 };
 
-// `sortBy` is stable and `uniqueBy` keeps the first of each group, so the best
-// ranked asset per platform survives and ties fall to the earlier asset — the
-// same outcome as comparing ranks pairwise.
 export const pickInstallers = (assets: GithubAsset[]): PlatformAsset[] =>
   pipe(
     assets.flatMap((asset) => {

@@ -1,3 +1,3 @@
 export type XrayInboundSettings = {
-  clients?: unknown[];
+  clients?: ({ email?: string; auth?: string } | null)[];
 };

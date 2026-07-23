@@ -22,8 +22,6 @@ export const LandingHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
-  // An IntersectionObserver on a sentinel above the header avoids a scroll
-  // listener firing on every frame.
   useEffect(() => {
     const sentinel = sentinelRef.current;
 

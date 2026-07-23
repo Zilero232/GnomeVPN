@@ -1,11 +1,11 @@
 services:
   xray:
-    # Pinned, never `latest`: the image carries its own Xray-core, and the
-    # desktop and Android clients ship a build of the same project. A silent
-    # bump on the node moves the server side of the Reality handshake out from
-    # under clients that are still on the pinned version, and the tunnel then
-    # connects and carries nothing. Bump this together with XRAY_VERSION in
-    # .github/workflows/release-app.yml.
+    # Pinned, never `latest`: the panel image carries the Hysteria2 server
+    # implementation, and the desktop and Android clients ship a matching
+    # hysteria binary. A silent bump on the node can move the server side of the
+    # protocol out from under clients on the pinned version, and the tunnel then
+    # connects and carries nothing. Bump this together with the client hysteria
+    # binary in apps/tauri/bin and the android libs.
     image: ghcr.io/mhsanaei/3x-ui:v3.5.0
     container_name: gnomevpn-xray
     restart: unless-stopped

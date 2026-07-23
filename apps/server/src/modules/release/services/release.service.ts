@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { AppServiceUnavailableException } from '../../common/exceptions';
-import { describeError } from '../../common/lib';
-import { AppConfigService } from '../../config/config.module';
-import { CACHE_TTL_MS, GITHUB_RELEASE_URL, githubAssetUrl, UPDATER_MANIFEST_NAME } from './config';
+import { AppServiceUnavailableException } from '../../../common/exceptions';
+import { describeError } from '../../../common/lib';
+import { AppConfigService } from '../../../config/config.module';
+import { CACHE_TTL_MS, GITHUB_RELEASE_URL, githubAssetUrl, UPDATER_MANIFEST_NAME } from '../config';
 import {
   findManifestAsset,
   githubFetch,
@@ -11,10 +11,10 @@ import {
   pickInstallers,
   rewriteManifestUrls,
   updaterManifestSchema,
-} from './lib';
+} from '../lib';
 
 import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
-import type { CachedRelease, GithubRelease, UpdaterManifest } from './release.types';
+import type { CachedRelease, GithubRelease, UpdaterManifest } from '../release.types';
 
 @Injectable()
 export class ReleaseService {
@@ -54,8 +54,6 @@ export class ReleaseService {
     };
   }
 
-  // The cache holds the in-flight promise, not the value: ten simultaneous
-  // requests on a cold cache would otherwise each hit GitHub.
   private async fetchLatest(): Promise<GithubRelease> {
     if (this.cached && this.cached.expiresAt > Date.now()) {
       return this.cached.value;

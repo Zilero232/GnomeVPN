@@ -1,2 +1,2 @@
 export { NodesModule } from './nodes.module';
-export { NodesService } from './nodes.service';
+export { NodesService } from './services';

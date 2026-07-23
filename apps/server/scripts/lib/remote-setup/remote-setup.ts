@@ -2,7 +2,7 @@ import pWaitFor from 'p-wait-for';
 import { quote } from 'shell-quote';
 
 import { PANEL_USERNAME } from '../../../src/lib/xray';
-import { LISTEN_PORT, PANEL_PORT } from '../reality-inbound';
+import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
 import {
   CONTAINER_NAME,
   DOCKER_INSTALL_URL,
@@ -28,6 +28,14 @@ export const shipStack = async ({ ssh, composeContent }: ShipStackInput): Promis
   await ssh.exec(`cd ${REMOTE_DIR} && docker compose up -d`);
 };
 
+export const ensureCert = async (ssh: SshClient): Promise<void> => {
+  const dir = CERT_PATH.slice(0, CERT_PATH.lastIndexOf('/'));
+
+  await ssh.exec(
+    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && (test -f ${CERT_PATH} || openssl req -x509 -nodes -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -keyout ${KEY_PATH} -out ${CERT_PATH} -subj "/CN=${MASQUERADE_HOST}" -days 3650)'`,
+  );
+};
+
 export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
   const hasUfw = await ssh.exec('command -v ufw');
 
@@ -35,7 +43,7 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
     return;
   }
 
-  await ssh.exec(`ufw allow ${LISTEN_PORT}/tcp`);
+  await ssh.exec(`ufw allow ${LISTEN_PORT}/udp`);
   await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
 };
 

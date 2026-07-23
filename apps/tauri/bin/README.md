@@ -41,26 +41,29 @@ Linux и macOS в этом файле не нуждаются — TUN там в�
 Запускайте `bun run tauri:dev` из терминала, открытого от имени администратора.
 Устранение UAC на каждый Connect — задача Этапа 4 (привилегированный хелпер).
 
-## xray.exe
+## hysteria/hysteria.exe
 
-Ядро Xray — оно и держит туннель VLESS + XTLS-Reality. Служба поднимает его
-дочерним процессом с SOCKS-инбаундом на loopback и переливает туда трафик из
-TUN-адаптера. Без файла `vpn_connect` падает с `xray error: xray.exe not found
-next to the service`.
+Клиент Hysteria2 — держит туннель по QUIC/UDP. Служба поднимает его
+дочерним процессом (`hysteria client -c ...`) с SOCKS-инбаундом на loopback
+и переливает туда трафик из TUN-адаптера. Без файла `vpn_connect` падает с
+`hysteria error: hysteria.exe not found next to the service`.
 
-Своей реализации Reality в проекте нет намеренно: весь смысл протокола в том,
-что TLS-хендшейк неотличим от настоящего, а собственноручно написанный
-отличался бы — и стал бы ровно той сигнатурой, от которой Reality защищает.
+- **Версия:** 2.10.0, сборка windows-amd64
+- **Источник:** <https://github.com/apernet/hysteria/releases>
+- **Лицензия:** MIT
 
-- **Версия:** 26.3.27, сборка windows-64
-- **Источник:** <https://github.com/XTLS/Xray-core/releases>
-- **Лицензия:** MPL-2.0
+### Как обновить hysteria
 
-### Как обновить xray
-
-1. Скачать `Xray-windows-64.zip` из релизов XTLS/Xray-core
-2. Взять оттуда `xray.exe` и положить сюда
+1. Скачать `hysteria-windows-amd64.exe` из релизов apernet/hysteria
+2. Переименовать в `hysteria.exe` и положить в `hysteria/`
 3. Обновить версию в этом файле
 
 Кладётся рядом со службой тем же `tauri.windows.conf.json`, а для dev-запуска
 копируется в `target/debug/` скриптом `scripts/sync-bin.mjs`.
+
+## Структура папок
+
+Бинарники разложены по подпапкам источника (`hysteria/`, `wintun/`,
+`service/`), но при сборке и dev-запуске кладутся **плоско** рядом со службой —
+она ищет их в каталоге своего процесса. `service/gnomevpn-service.exe`
+собирается скриптом `scripts/build-service.mjs`.

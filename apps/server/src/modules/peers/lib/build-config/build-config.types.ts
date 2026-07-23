@@ -1,12 +1,10 @@
 export type TunnelNode = {
   host: string;
   port: number;
-  realityServerName: string;
-  realityPublicKey: string;
-  realityShortId: string;
+  serverName: string;
 };
 
 export type BuildConfigInput = {
   node: TunnelNode;
-  xrayUserId: string;
+  auth: string;
 };

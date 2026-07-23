@@ -4,20 +4,23 @@ import { ZodResponse } from 'nestjs-zod';
 import { CurrentUser } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import { CONFIG_FILE_CONTENT_TYPE } from './config';
-import { ConfigsService } from './configs.service';
 import { DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/configs.dto';
 import { contentDisposition } from './lib';
+import { ConfigAccessService, ConfigIssueService } from './services';
 
 import type { Response } from 'express';
 
 @Controller('configs')
 export class ConfigsController {
-  constructor(private readonly configs: ConfigsService) {}
+  constructor(
+    private readonly configIssue: ConfigIssueService,
+    private readonly configAccess: ConfigAccessService,
+  ) {}
 
   @Get()
   @ZodResponse({ type: [DownloadedConfigDto] })
   list(@CurrentUser() userId: string) {
-    return this.configs.list(userId);
+    return this.configIssue.list(userId);
   }
 
   @Post()
@@ -27,7 +30,7 @@ export class ConfigsController {
     @CurrentUser() userId: string,
     @Res() res: Response,
   ): Promise<void> {
-    const file = await this.configs.issue({ userId, nodeId: body.nodeId, name: body.name });
+    const file = await this.configIssue.issue({ userId, nodeId: body.nodeId, name: body.name });
 
     res
       .type(CONFIG_FILE_CONTENT_TYPE)
@@ -38,6 +41,6 @@ export class ConfigsController {
   @Delete()
   @HttpCode(204)
   async revoke(@Body() body: RevokeConfigDto, @CurrentUser() userId: string) {
-    await this.configs.revoke({ userId, id: body.id });
+    await this.configAccess.revoke({ userId, id: body.id });
   }
 }

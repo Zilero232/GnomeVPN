@@ -1,8 +1,8 @@
 pub mod engine;
+pub mod hysteria;
 pub mod route;
 pub mod supervisor;
 pub mod tunio;
-pub mod xray;
 
 use std::sync::Arc;
 
@@ -91,8 +91,8 @@ pub enum TunnelError {
     Endpoint(String),
     #[error("tun device error: {0}")]
     Tun(String),
-    #[error("xray error: {0}")]
-    Xray(String),
+    #[error("hysteria error: {0}")]
+    Hysteria(String),
     #[error("io error: {0}")]
     Io(String),
 }

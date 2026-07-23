@@ -1,10 +1,12 @@
-import { currentClients, panelApi } from './lib';
-import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
+import { randomBytes } from 'node:crypto';
+
+import { currentClients, panelApi, parseSettings, parseStreamSettings } from './lib';
+import { AUTH_BYTES, INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
 
 import type ThreeXUI from '3xui-api-client';
-import type { ModernClient } from '3xui-api-client';
 import type {
   CreateClientResult,
+  HysteriaClient,
   XrayApiResponse,
   XrayClientOptions,
   XrayInbound,
@@ -49,10 +51,6 @@ export class XrayClient {
     return inbound;
   }
 
-  private async inboundId(): Promise<number> {
-    return (await this.getInbound()).id;
-  }
-
   async hasInbound(): Promise<boolean> {
     return Boolean(await this.findInbound());
   }
@@ -79,7 +77,8 @@ export class XrayClient {
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
     const current = await this.getInbound();
-    const settings = { ...(inbound.settings as object), clients: currentClients(current) };
+    const clients = currentClients(current);
+    const settings = { ...(inbound.settings as object), clients };
 
     this.unwrap(
       (await this.panel.updateInbound(
@@ -90,74 +89,78 @@ export class XrayClient {
     );
   }
 
-  // Adding a client only reaches the running core through a restart, and that
-  // restart drops every live session on the node. Reconnecting therefore has to
-  // reuse the client the node already has: recreating it on each connect makes
-  // the two devices restart the core in turn, and neither ever gets a session
-  // that outlives the next reconnect.
-  async createClient(email: string): Promise<CreateClientResult> {
-    const existing = (await this.listClients()).find(
-      (client) => client.email === email && client.enable,
-    );
-
-    if (existing?.uuid) {
-      return { xrayUserId: existing.uuid, email };
-    }
-
-    await this.deleteClient(email);
+  private async writeClients(clients: HysteriaClient[]): Promise<void> {
+    const inbound = await this.getInbound();
+    const settings = { ...parseSettings(inbound), clients };
 
     this.unwrap(
-      await this.panel.addModernClient({
-        client: {
-          uuid: this.panel.generateUUID(),
-          email,
-          enable: true,
-          limitIp: UNLIMITED,
-          totalGB: UNLIMITED,
-          expiryTime: UNLIMITED,
-          tgId: UNLIMITED,
-        },
-        inboundIds: [await this.inboundId()],
-      }),
-      'createClient',
+      (await this.panel.updateInbound(
+        inbound.id,
+        this.inboundPayload({
+          port: inbound.port,
+          protocol: 'hysteria',
+          settings,
+          streamSettings: parseStreamSettings(inbound),
+          sniffing:
+            typeof inbound.sniffing === 'string'
+              ? JSON.parse(inbound.sniffing)
+              : (inbound.sniffing ?? {}),
+        }),
+      )) as XrayApiResponse<unknown>,
+      'updateInbound',
     );
-
-    const row = (await this.listClients()).find((client) => client.email === email);
-
-    if (!row?.uuid) {
-      throw new Error(`xray createClient failed: ${email} is missing after creation`);
-    }
-
-    await this.restartCore();
-
-    return { xrayUserId: row.uuid, email };
   }
 
-  // The panel stores a new client in its own database and leaves the running
-  // core on the config it started with, where "clients" is still null. Without
-  // this the node answers the TLS handshake and then rejects every vless
-  // session, so a tunnel connects and carries nothing.
-  //
-  // The restart drops every live session on the node, and the panel exposes no
-  // lighter way to make the core reread its config — `restartXrayService` is
-  // the only endpoint that applies one.
+  private newClient({ email, auth }: HysteriaClient): HysteriaClient {
+    return {
+      email,
+      auth,
+      enable: true,
+      limitIp: UNLIMITED,
+      totalGB: UNLIMITED,
+      expiryTime: UNLIMITED,
+      tgId: UNLIMITED,
+      reset: UNLIMITED,
+    };
+  }
+
+  async createClient(email: string): Promise<CreateClientResult> {
+    const clients = await this.listClients();
+    const existing = clients.find((client) => client.email === email);
+
+    if (existing) {
+      return { xrayUserId: existing.auth, email };
+    }
+
+    const auth = randomBytes(AUTH_BYTES).toString('hex');
+    await this.writeClients([...clients, this.newClient({ email, auth })]);
+    await this.restartCore();
+
+    return { xrayUserId: auth, email };
+  }
+
   async restartCore(): Promise<void> {
     this.unwrap((await this.panel.restartXrayService()) as XrayApiResponse<unknown>, 'restartCore');
   }
 
-  private async listClients(): Promise<ModernClient[]> {
-    return this.unwrap(
-      (await this.panel.getClients()) as XrayApiResponse<ModernClient[]>,
-      'listClients',
+  private async listClients(): Promise<HysteriaClient[]> {
+    const inbound = await this.getInbound();
+
+    return (parseSettings(inbound).clients ?? []).filter((client): client is HysteriaClient =>
+      Boolean(client?.auth && client?.email),
     );
   }
 
   async deleteClient(email: string): Promise<void> {
-    const body = await this.panel.deleteModernClient(email);
+    const clients = await this.listClients();
+    const kept = clients.filter((client) => client.email !== email);
 
-    if (!body.success && !body.msg.toLowerCase().includes('not found')) {
-      throw new Error(`xray deleteClient rejected: ${body.msg}`);
+    if (kept.length === clients.length) {
+      return;
     }
+
+    await this.writeClients(kept);
+    await this.restartCore();
   }
 
   async getClientTraffic(email: string): Promise<number | null> {

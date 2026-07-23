@@ -4,11 +4,11 @@ import { ZodResponse } from 'nestjs-zod';
 import { CurrentUser } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import { ConnectDto, DisconnectDto, TunnelConfigDto } from './dto/sessions.dto';
-import { SessionsService } from './sessions.service';
+import { SessionConnectService } from './services';
 
 @Controller('tunnel')
 export class SessionsController {
-  constructor(private readonly sessions: SessionsService) {}
+  constructor(private readonly sessions: SessionConnectService) {}
 
   @Post('connect')
   @UseGuards(SubscriptionGuard)

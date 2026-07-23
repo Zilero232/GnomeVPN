@@ -7,7 +7,7 @@ import { addHours, subHours } from 'date-fns';
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
-import { BillingService, describeRenewal } from '../../../billing';
+import { CheckoutService, describeRenewal } from '../../../billing';
 import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../../config';
 
 import type { DueSubscription } from './recurring-charge.job.types';
@@ -19,7 +19,7 @@ export class RecurringChargeJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
-    private readonly billing: BillingService,
+    private readonly checkout: CheckoutService,
   ) {}
 
   private async hasChargeInFlight(userId: string): Promise<boolean> {
@@ -54,7 +54,7 @@ export class RecurringChargeJob {
       idempotenceKey: randomUUID(),
     });
 
-    await this.billing.recordPendingPayment({
+    await this.checkout.recordPendingPayment({
       userId: subscription.userId,
       paymentId: payment.id,
       plan,

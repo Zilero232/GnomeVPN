@@ -59,7 +59,7 @@ if (statSync(built).mtimeMs < newestSourceMtime()) {
   fail(SERVICE_IS_RUNNING);
 }
 
-const target = join(here, '..', 'bin', 'gnomevpn-service.exe');
+const target = join(here, '..', 'bin', 'service', 'gnomevpn-service.exe');
 mkdirSync(dirname(target), { recursive: true });
 
 try {

@@ -1,6 +1,8 @@
 export const PANEL_USERNAME = 'gnomevpn';
 
-export const INBOUND_REMARK = 'GnomeVPN Reality';
+export const INBOUND_REMARK = 'GnomeVPN Hysteria2';
+
+export const AUTH_BYTES = 24;
 
 export const UNLIMITED = 0;
 

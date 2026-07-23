@@ -8,18 +8,23 @@ const workspaceTarget = join(here, '..', '..', 'target');
 const profiles = ['debug', 'release'];
 
 // Both are resolved from the service's own directory: wintun.dll through
-// LoadLibraryExW, xray.exe by spawning it as a child. Neither is found elsewhere.
-const files = ['wintun.dll', 'xray.exe'];
+// LoadLibraryExW, hysteria.exe by spawning it as a child. Neither is found
+// elsewhere, so they land flat next to the service in target/, whatever
+// subfolder they live in under bin/.
+const files = [
+  { from: join('wintun', 'wintun.dll'), name: 'wintun.dll' },
+  { from: join('hysteria', 'hysteria.exe'), name: 'hysteria.exe' },
+];
 
 if (process.platform !== 'win32') {
   process.exit(0);
 }
 
 for (const file of files) {
-  const source = join(binDir, file);
+  const source = join(binDir, file.from);
 
   if (!existsSync(source)) {
-    console.error(`[sync-bin] apps/tauri/bin/${file} not found — see bin/README.md`);
+    console.error(`[sync-bin] apps/tauri/bin/${file.from} not found — see bin/README.md`);
     process.exit(1);
   }
 
@@ -30,9 +35,11 @@ for (const file of files) {
       mkdirSync(dir, { recursive: true });
     }
 
-    copyFileSync(source, join(dir, file));
+    copyFileSync(source, join(dir, file.name));
   }
 }
 
 // biome-ignore lint/suspicious/noConsole: standalone CLI script, console is the output channel
-console.log(`[sync-bin] ${files.join(', ')} copied to target/debug and target/release`);
+console.log(
+  `[sync-bin] ${files.map((f) => f.name).join(', ')} copied to target/debug and target/release`,
+);

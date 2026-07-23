@@ -4,19 +4,28 @@ Guidance for Claude Code in this repo. Keep it short, link out for details.
 
 ## What this is
 
-GnomeVPN — a commercial VPN built on VLESS + XTLS-Reality. Bun-workspaces monorepo.
+GnomeVPN — a commercial VPN built on Hysteria2 (QUIC/UDP). Bun-workspaces monorepo.
 
 - **Web client**: Next.js 16 / React 19 (`apps/client/`)
 - **Desktop**: Tauri 2 shell (`apps/tauri/`) + a privileged Windows service (`crates/vpn-service/`)
 - **API**: NestJS on Bun + Prisma + Postgres, auth via better-auth (`apps/server/`)
-- **Tunnel**: Xray-core on the nodes, wintun adapter on Windows
+- **Tunnel**: Hysteria2 on the nodes (served by the 3x-ui panel), wintun adapter on Windows
 - **Shared types**: Zod schemas in `packages/schemas/` (`@gnomevpn/schemas`)
 
-## Why Reality and not WireGuard
+## Why Hysteria2 and not Reality
 
-WireGuard's handshake is a fixed 148-byte UDP packet, which DPI matches on sight — in Russia that means the tunnel simply fails for a large share of users. Reality completes a *real* TLS handshake proxied to a genuine third-party site, so traffic on 443/TCP is not distinguishable from ordinary HTTPS. Anything reaching the port without a valid key is forwarded to that site, so an active probe sees its real certificate.
+The project ran on VLESS + XTLS-Reality first. Measured on a Russian ISP in this
+repo's history: the TSPU actively fingerprints the REALITY handshake over *any*
+TCP port and kills the connection within minutes of real traffic — fresh ports
+work, "burnt" ports don't, and switching donor or transport doesn't help. UDP is
+not policed the same way (plain WireGuard on UDP/51820 passes on the same
+network), so the tunnel moved to Hysteria2: QUIC over UDP, which the TSPU lets
+through where it drops REALITY.
 
-The donor site is the `realityServerName` on each node. It must answer TLS 1.3 over HTTP/2 without redirecting, and it must not be blocked where the node lives.
+Hysteria2 masquerades as an HTTP/3 site (`masquerade: proxy` to `MASQUERADE_HOST`)
+and needs a TLS cert on the node — a self-signed cert generated per node, which
+clients accept because they run with `insecure: true`. Each client has its own
+`auth` password; that password is the tunnel credential, stored per peer.
 
 ## Layout
 
@@ -101,6 +110,7 @@ CI runs the same set — see `.github/workflows/check-code.yml`.
 - **`route delete 0.0.0.0`** wipes the physical default route and kills the user's internet. The tunnel uses half-routes (`0.0.0.0/1` + `128.0.0.0/1`) instead.
 - **A running service holds its own binary.** `cargo build` then silently keeps the old file — `scripts/build-service.mjs` checks for this.
 - **Health checks must probe an authenticated endpoint.** An unauthenticated 200 only proves something is listening, not that the tunnel subsystem works.
-- **Xray reports traffic counters, not handshakes.** A peer counts as alive only when its byte count *grows*; treating "has traffic" as "active now" means stale peers are never collected.
+- **A Hysteria2 client needs its full field set.** Writing `{email, auth}` alone leaves the panel storing the client but generating `clients: null` in the running core, so every connection fails auth with a 404. `enable/limitIp/totalGB/expiryTime/tgId/reset` must all be present — see `XrayClient.newClient`.
+- **The panel reports traffic counters, not handshakes.** A peer counts as alive only when its byte count *grows*; treating "has traffic" as "active now" means stale peers are never collected.
 - **Tauri plugins need an entry in `capabilities/`** or the call fails silently in the webview. Desktop-only and mobile-only permissions live in separate files — listing `updater` or `autostart` in the shared one breaks the Android build.
 - **`env(safe-area-inset-*)` is empty in the Android webview.** The values come from `tauri-plugin-safe-area-insets-css`, which `MobileInsets` writes into `--safe-area-inset-*`; the CSS variables fall back to `env()` for the browser.

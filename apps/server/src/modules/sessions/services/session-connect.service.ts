@@ -1,27 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../core';
-import { NodesService } from '../nodes';
-import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../peers';
-import { SESSION_LIMIT } from './config';
+import { PrismaService } from '../../../core';
+import { NodesService } from '../../nodes';
+import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../../peers';
+import { SESSION_LIMIT } from '../config';
+import { SessionAccessService } from './session-access.service';
 
 import type { TunnelConfig } from '@gnomevpn/schemas';
-import type { PeerRef } from '../peers';
-import type { ConnectSessionInput, DisconnectSessionInput } from './sessions.service.types';
+import type { ConnectSessionInput, DisconnectSessionInput } from '../sessions.service.types';
 
 @Injectable()
-export class SessionsService {
-  private readonly logger = new Logger(SessionsService.name);
-
+export class SessionConnectService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly nodes: NodesService,
     private readonly peers: PeersService,
+    private readonly access: SessionAccessService,
   ) {}
 
-  // A subscription covers SESSION_LIMIT devices at once. A known device reuses
-  // its slot; a new one past the limit evicts the least recently used, and the
-  // eviction happens before the new client exists so the two never collide.
   private async freeSlot({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
     const sessions = await this.prisma.peer.findMany({
       where: { userId, kind: 'session' },
@@ -33,15 +29,7 @@ export class SessionsService {
       return;
     }
 
-    await this.releaseAll(sessions.slice(0, sessions.length - SESSION_LIMIT + 1));
-  }
-
-  private async releaseAll(peers: PeerRef[]): Promise<void> {
-    const { kept } = await this.peers.releaseMany(peers);
-
-    if (kept > 0) {
-      this.logger.warn(`Kept ${kept} session row(s): peers still live`);
-    }
+    await this.access.releaseAll(sessions.slice(0, sessions.length - SESSION_LIMIT + 1));
   }
 
   async connect({ userId, nodeId, deviceId }: ConnectSessionInput): Promise<TunnelConfig> {
@@ -69,7 +57,7 @@ export class SessionsService {
       throw error;
     }
 
-    return buildTunnelConfig({ node, xrayUserId: created.xrayUserId });
+    return buildTunnelConfig({ node, auth: created.xrayUserId });
   }
 
   async disconnect({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
@@ -79,10 +67,6 @@ export class SessionsService {
       return;
     }
 
-    await this.releaseAll([session]);
-  }
-
-  async disconnectAll(userId: string): Promise<void> {
-    await this.releaseAll(await this.peers.findRefs({ userId, kind: 'session' }));
+    await this.access.releaseAll([session]);
   }
 }

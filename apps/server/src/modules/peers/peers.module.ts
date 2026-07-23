@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { PeersService } from './peers.service';
+import { PeersService } from './services';
 
 @Module({
   providers: [PeersService],

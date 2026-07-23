@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { AppServiceUnavailableException } from '../../common/exceptions';
-import { describeError, resolveNodeApiKey } from '../../common/lib';
-import { PrismaService } from '../../core';
-import { XrayClient } from '../../lib';
-import { PEER_REF_SELECT, peerClientName } from './lib';
+import { AppServiceUnavailableException } from '../../../common/exceptions';
+import { describeError, resolveNodeApiKey } from '../../../common/lib';
+import { PrismaService } from '../../../core';
+import { XrayClient } from '../../../lib';
+import { PEER_REF_SELECT, peerClientName } from '../lib';
 
 import type {
   CreatedPeer,
@@ -13,7 +13,7 @@ import type {
   IssuePeerInput,
   PeerRef,
   ReleaseManyResult,
-} from './peers.service.types';
+} from '../peers.service.types';
 
 @Injectable()
 export class PeersService {
@@ -62,10 +62,6 @@ export class PeersService {
     }
   }
 
-  // A row is only dropped once its client is gone from the node: deleting it
-  // regardless would strand the client there, holding a slot nothing can free.
-  // Released one at a time on purpose — the peers of one user can sit on the
-  // same node, and releasing in parallel would restart its core repeatedly.
   async releaseMany(peers: PeerRef[]): Promise<ReleaseManyResult> {
     const released: string[] = [];
 

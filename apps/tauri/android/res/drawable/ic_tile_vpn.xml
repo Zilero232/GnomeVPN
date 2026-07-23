@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  A quick settings tile is tinted by the system: it is drawn as a single-colour
-  silhouette, so the launcher icon renders as a white blob there. This traces
-  the gnome outline - hat, brim and beard - as one filled shape instead.
--->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="256"
-    android:viewportHeight="256">
+    android:viewportWidth="24"
+    android:viewportHeight="24">
 
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M128,40 L86,103 L170,103 Z" />
+        android:pathData="M12,1.5 L4.5,12.5 L19.5,12.5 Z" />
 
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M76,96 L180,96 A11,11 0 0,1 180,118 L76,118 A11,11 0 0,1 76,96 Z" />
+        android:pathData="M3.4,11 L20.6,11 A2,2 0 0,1 20.6,15 L3.4,15 A2,2 0 0,1 3.4,11 Z" />
 
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M90,124 L166,124 A5,5 0 0,1 171,129 C171,168 152,201 128,201 C104,201 85,168 85,129 A5,5 0 0,1 90,124 Z" />
+        android:pathData="M5,15.5 L19,15.5 A0.8,0.8 0 0,1 19.8,16.3 C19.8,19.9 16.4,22.5 12,22.5 C7.6,22.5 4.2,19.9 4.2,16.3 A0.8,0.8 0 0,1 5,15.5 Z" />
 
 </vector>

@@ -2,17 +2,9 @@ use std::net::IpAddr;
 
 use crate::types::TunnelConfig;
 
-const REALITY_KEY_LEN: usize = 43;
-
-const MAX_SHORT_ID_LEN: usize = 16;
-
 const MAX_HOST_LEN: usize = 253;
 
-const UUID_LEN: usize = 36;
-
-const FINGERPRINTS: [&str; 8] = [
-    "chrome", "firefox", "safari", "ios", "android", "edge", "360", "qq",
-];
+const MAX_AUTH_LEN: usize = 256;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ValidationError {
@@ -27,31 +19,16 @@ fn reject(field: &'static str, reason: impl Into<String>) -> ValidationError {
     }
 }
 
-fn check_public_key(value: &str) -> Result<(), ValidationError> {
-    if value.len() != REALITY_KEY_LEN {
-        return Err(reject(
-            "publicKey",
-            format!("expected {REALITY_KEY_LEN} base64url chars"),
-        ));
+fn check_auth(value: &str) -> Result<(), ValidationError> {
+    if value.is_empty() {
+        return Err(reject("auth", "must not be empty"));
     }
 
-    let is_base64url = value
-        .bytes()
-        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_');
-
-    if !is_base64url {
-        return Err(reject("publicKey", "not base64url"));
+    if value.len() > MAX_AUTH_LEN {
+        return Err(reject("auth", "too long"));
     }
 
     Ok(())
-}
-
-fn check_uuid(value: &str) -> Result<(), ValidationError> {
-    uuid::Uuid::try_parse(value)
-        .ok()
-        .filter(|_| value.len() == UUID_LEN)
-        .map(|_| ())
-        .ok_or_else(|| reject("userId", "not a uuid"))
 }
 
 fn check_host(field: &'static str, value: &str) -> Result<(), ValidationError> {
@@ -87,25 +64,6 @@ fn check_host(field: &'static str, value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
-fn check_short_id(value: &str) -> Result<(), ValidationError> {
-    if value.len() > MAX_SHORT_ID_LEN {
-        return Err(reject(
-            "shortId",
-            format!("longer than {MAX_SHORT_ID_LEN} chars"),
-        ));
-    }
-
-    if !value.len().is_multiple_of(2) {
-        return Err(reject("shortId", "must have an even length"));
-    }
-
-    if !value.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-        return Err(reject("shortId", "not hex"));
-    }
-
-    Ok(())
-}
-
 fn check_dns(values: &[String]) -> Result<(), ValidationError> {
     if values.is_empty() {
         return Err(reject("dns", "must not be empty"));
@@ -127,21 +85,8 @@ pub fn validate_tunnel_config(config: &TunnelConfig) -> Result<(), ValidationErr
         return Err(reject("port", "must not be zero"));
     }
 
-    check_uuid(&config.user_id)?;
+    check_auth(&config.auth)?;
     check_host("serverName", &config.server_name)?;
-    check_public_key(&config.public_key)?;
-
-    if let Some(short_id) = &config.short_id {
-        check_short_id(short_id)?;
-    }
-
-    if !FINGERPRINTS.contains(&config.fingerprint.as_str()) {
-        return Err(reject(
-            "fingerprint",
-            format!("unsupported: {}", config.fingerprint),
-        ));
-    }
-
     check_dns(&config.dns)?;
 
     Ok(())

@@ -4,8 +4,8 @@ import { subHours } from 'date-fns';
 import { map, pipe, unique } from 'remeda';
 
 import { PrismaService } from '../../../../core';
-import { ConfigsService } from '../../../configs';
-import { SessionsService } from '../../../sessions';
+import { ConfigAccessService } from '../../../configs';
+import { SessionAccessService } from '../../../sessions';
 import { CONFIG_GRACE_HOURS } from '../../config';
 import { lapsedBefore } from '../../lib';
 
@@ -15,8 +15,8 @@ export class ExpiredAccessJob {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly sessions: SessionsService,
-    private readonly configs: ConfigsService,
+    private readonly sessions: SessionAccessService,
+    private readonly configs: ConfigAccessService,
   ) {}
 
   private async revokeExpiredSessions(): Promise<string[]> {

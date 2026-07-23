@@ -1,5 +1,6 @@
 'use client';
 
+import { clsx } from 'clsx';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import prettyBytes from 'pretty-bytes';
@@ -12,14 +13,14 @@ import s from './TunnelStats.module.scss';
 
 import type { TunnelStatsProps } from './TunnelStats.types';
 
-export const TunnelStats = ({ traffic, connectedAt }: TunnelStatsProps) => {
+export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProps) => {
   const t = useTranslations('app');
 
   const speed = useSpeed(traffic);
   const [uptime, setUptime] = useState('00:00:00');
 
   useEffect(() => {
-    if (!connectedAt) {
+    if (!connectedAt || !isVisible) {
       setUptime('00:00:00');
 
       return;
@@ -30,10 +31,10 @@ export const TunnelStats = ({ traffic, connectedAt }: TunnelStatsProps) => {
     const timer = setInterval(() => setUptime(formatUptime(connectedAt)), 1000);
 
     return () => clearInterval(timer);
-  }, [connectedAt]);
+  }, [connectedAt, isVisible]);
 
   return (
-    <div className={s.root}>
+    <div aria-hidden={!isVisible} className={clsx(s.root, !isVisible && s.hidden)}>
       <div className={s.uptime}>
         <span className={s.label}>{t('uptime')}</span>
         <span className={s.clock}>{uptime}</span>

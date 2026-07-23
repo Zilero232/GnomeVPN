@@ -3,11 +3,9 @@ import { z } from 'zod';
 export const tunnelConfigSchema = z.object({
   server: z.string().min(1),
   port: z.number().int().positive(),
-  userId: z.uuid(),
+  auth: z.string().min(1),
   serverName: z.string().min(1),
-  publicKey: z.string().min(1),
-  shortId: z.string().nullable().default(null),
-  fingerprint: z.string().min(1),
+  insecure: z.boolean().default(false),
   dns: z.array(z.string().min(1)),
 });
 

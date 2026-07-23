@@ -52,7 +52,6 @@ pub async fn service_repair() -> Result<(), ServiceError> {
 
     match status.code() {
         Some(0) => Ok(()),
-        // Start-Process raises this when the user dismisses the UAC prompt.
         Some(1) | None => Err(ServiceError::Declined),
         Some(code) => Err(ServiceError::InstallFailed(code)),
     }
