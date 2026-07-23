@@ -120,6 +120,22 @@ pub async fn vpn_hide_window<R: Runtime>(app: AppHandle<R>) -> Result<(), Mobile
 }
 
 #[tauri::command]
+pub async fn vpn_has_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+    app.state::<VpnPlugin<R>>().has_permission()
+}
+
+#[tauri::command]
+pub async fn vpn_request_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+    let handle = app.clone();
+
+    tauri::async_runtime::spawn_blocking(move || {
+        handle.state::<VpnPlugin<R>>().request_permission()
+    })
+    .await
+    .map_err(|error| MobileVpnError::Service(error.to_string()))?
+}
+
+#[tauri::command]
 pub async fn vpn_status(state: State<'_, MobileVpnState>) -> Result<&'static str, MobileVpnError> {
     Ok(if state.is_active() {
         "connected"

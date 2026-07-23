@@ -11,6 +11,7 @@ import { useDeviceUsage } from '@/entities/vpn/device';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
+import { VpnPermissionBanner } from '@/features/app/vpn-permission';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
@@ -112,11 +113,13 @@ export const AppView = () => {
         <TunnelStats connectedAt={connectedAt} isVisible={isOnline} traffic={traffic} />
       </div>
 
-      <ServiceRepairBanner />
-
       <UpdateGate />
 
       <MobileUpdateBanner />
+
+      <VpnPermissionBanner />
+
+      <ServiceRepairBanner />
     </main>
   );
 };

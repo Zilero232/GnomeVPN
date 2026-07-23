@@ -184,10 +184,6 @@ export class XrayClient {
   }
 
   async health(): Promise<boolean> {
-    try {
-      return (await this.getInbound()).enable;
-    } catch {
-      return false;
-    }
+    return (await this.getInbound()).enable;
   }
 }

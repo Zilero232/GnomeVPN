@@ -313,5 +313,11 @@
     "repair": "Start service",
     "repairing": "Starting…",
     "repairFailed": "Could not start the service"
+  },
+  "vpnPermission": {
+    "title": "VPN access is required",
+    "description": "Android asks for it once. Without it the tunnel cannot be created and connecting will fail.",
+    "allow": "Grant access",
+    "requesting": "Waiting…"
   }
 }

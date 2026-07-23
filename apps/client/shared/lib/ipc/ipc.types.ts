@@ -23,6 +23,8 @@ export type RustCommands = {
   vpn_service_available: { args: never; result: boolean };
   vpn_take_tile_request: { args: never; result: boolean };
   vpn_hide_window: { args: never; result: null };
+  vpn_has_permission: { args: never; result: boolean };
+  vpn_request_permission: { args: never; result: boolean };
   vpn_probe_latency: {
     args: {
       targets: { id: string; host: string; port: number; serverName: string }[];

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
@@ -12,6 +12,8 @@ import type { ConnectSessionInput, DisconnectSessionInput } from '../sessions.se
 
 @Injectable()
 export class SessionConnectService {
+  private readonly logger = new Logger(SessionConnectService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly nodes: NodesService,
@@ -32,6 +34,10 @@ export class SessionConnectService {
     if (sessions.some((peer) => peer.name === deviceId) || sessions.length < deviceLimit) {
       return;
     }
+
+    this.logger.warn(
+      `connect refused for ${userId}/${deviceId}: ${sessions.length} of ${deviceLimit} slots taken`,
+    );
 
     throw new AppBadRequestException(
       'DEVICE_LIMIT_REACHED',
@@ -66,6 +72,8 @@ export class SessionConnectService {
   }
 
   async connect({ userId, nodeId, deviceId }: ConnectSessionInput): Promise<TunnelConfig> {
+    this.logger.log(`connect requested by ${userId}/${deviceId} for node ${nodeId}`);
+
     const node = await this.nodes.getNodeForConnect(nodeId);
 
     await this.assertSlotAvailable({ userId, deviceId });
@@ -89,6 +97,8 @@ export class SessionConnectService {
 
       throw error;
     }
+
+    this.logger.log(`connect granted to ${userId}/${deviceId} on ${node.country} (${node.host})`);
 
     return buildTunnelConfig({ node, auth: created.xrayUserId });
   }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { AppNotFoundException, AppServiceUnavailableException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
@@ -8,6 +8,8 @@ import type { Node, NodeEndpoint } from '@gnomevpn/schemas';
 
 @Injectable()
 export class NodesService {
+  private readonly logger = new Logger(NodesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async listPublicNodes(): Promise<Node[]> {
@@ -67,13 +69,21 @@ export class NodesService {
     });
 
     if (!node) {
+      this.logger.warn(`node ${nodeId} not found or disabled`);
+
       throw new AppNotFoundException('NODE_NOT_FOUND', 'Node not found');
     }
 
-    if (
-      resolveNodeStatus({ isAvailable: node.isAvailable, lastHealthyAt: node.lastHealthyAt }) !==
-      'online'
-    ) {
+    const status = resolveNodeStatus({
+      isAvailable: node.isAvailable,
+      lastHealthyAt: node.lastHealthyAt,
+    });
+
+    if (status !== 'online') {
+      this.logger.warn(
+        `node ${node.country} (${node.host}) is ${status}, last healthy at ${node.lastHealthyAt?.toISOString() ?? 'never'}`,
+      );
+
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is not healthy');
     }
 

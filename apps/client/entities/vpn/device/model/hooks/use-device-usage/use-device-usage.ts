@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/entities/auth/user';
 import { getDeviceUsage } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
-import { getDeviceId } from '@/shared/lib';
+import { getDeviceId, logger } from '@/shared/lib';
 
 import type { UseDeviceUsageInput } from './use-device-usage.types';
 
@@ -17,7 +17,13 @@ export const useDeviceUsage = ({ status }: UseDeviceUsageInput = {}) => {
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
-    getDeviceId().then(setDeviceId);
+    const read = async () => {
+      setDeviceId(await getDeviceId());
+    };
+
+    read().catch((error: unknown) => {
+      logger.warn(`cannot read the device id: ${String(error)}`);
+    });
   }, []);
 
   const { data, isLoading } = useQuery({
