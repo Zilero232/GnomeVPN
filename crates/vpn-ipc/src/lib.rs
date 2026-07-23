@@ -1,12 +1,12 @@
 pub mod frame;
+pub mod hysteria;
 pub mod types;
 pub mod validate;
-pub mod xray;
 
 pub use frame::{read_frame, write_frame, FrameError, MAX_FRAME_LEN};
+pub use hysteria::{build_hysteria_config, SocksCredentials};
 pub use types::{Request, Response, TunnelConfig, TunnelEvent, TunnelStatus};
 pub use validate::{validate_tunnel_config, ValidationError};
-pub use xray::{build_xray_config, SocksCredentials};
 
 pub const PROTOCOL_VERSION: u32 = 1;
 

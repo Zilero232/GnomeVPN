@@ -15,8 +15,6 @@ const fromBrowserStorage = (): string => {
   return created;
 };
 
-// Identifies this installation across restarts so the server can tell two
-// devices of the same account apart and hand each its own session slot.
 export const getDeviceId = async (): Promise<string> => {
   const stored = await read();
 

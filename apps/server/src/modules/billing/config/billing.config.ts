@@ -10,9 +10,6 @@ const YOOKASSA_CIDRS = [
 
 const LOOPBACK_CIDRS = ['127.0.0.1/32', '::1/128'] as const;
 
-// Loopback stays out of production: the IP filter is the only thing guarding
-// the payment webhook, and trusting it there would let any process on the host
-// forge one.
 export const WEBHOOK_ALLOWED_CIDRS: readonly string[] =
   process.env.NODE_ENV === 'production' ? YOOKASSA_CIDRS : [...YOOKASSA_CIDRS, ...LOOPBACK_CIDRS];
 

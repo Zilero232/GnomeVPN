@@ -3,7 +3,7 @@ import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
 import { ReleaseDto } from './dto/release.dto';
-import { ReleaseService } from './release.service';
+import { ReleaseService } from './services';
 
 @Controller('release')
 export class ReleaseController {

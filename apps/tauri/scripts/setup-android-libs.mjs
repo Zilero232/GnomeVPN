@@ -112,8 +112,8 @@ const patchManifest = () => {
     '        </service>',
   ].join('\n');
 
-  // xray is an executable, not a library: Android only runs it from disk, and
-  // with extractNativeLibs=false it stays compressed inside the APK.
+  // hysteria is an executable, not a library: Android only runs it from disk,
+  // and with extractNativeLibs=false it stays compressed inside the APK.
   const steps = [
     {
       has: 'FOREGROUND_SERVICE_SPECIAL_USE',

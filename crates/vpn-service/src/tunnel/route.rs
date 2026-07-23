@@ -65,12 +65,17 @@ pub fn apply_default_route(
     {
         let index = iface_index_windows(iface)?;
         let physical_gateway = default_gateway_windows()?;
+        let physical_index = physical_iface_index_windows()?;
+
+        log::info!(
+            "routing: tun {iface} ifIndex={index}, physical gateway {physical_gateway} ifIndex={physical_index}; pinning {endpoint} to physical, half-routes via {tunnel_gateway}"
+        );
 
         run(Command::new("route").args(windows_add_args(
             &endpoint.to_string(),
             "255.255.255.255",
             &physical_gateway,
-            &physical_iface_index_windows()?,
+            &physical_index,
             "1",
         )))?;
 
@@ -83,8 +88,6 @@ pub fn apply_default_route(
                 "1",
             )))?;
         }
-
-        let physical_index = physical_iface_index_windows()?;
 
         for (destination, mask) in LAN_ROUTES {
             if covers_tunnel(destination, mask, tunnel_gateway) {

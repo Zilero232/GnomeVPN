@@ -50,7 +50,7 @@
       "step2Title": "Pick a country",
       "step2Body": "Every node is a separate server. Switch on the fly, no manual reconnect.",
       "step3Title": "Connect",
-      "step3Body": "Through our app for Windows and Android in one tap. Or download a config and open it in any VLESS client: macOS, Linux, iOS."
+      "step3Body": "Through our app for Windows and Android in one tap. Or download a config and open it in any Hysteria2 client: macOS, Linux, iOS."
     },
     "pricing": {
       "title": "Pricing",
@@ -76,7 +76,7 @@
       "q2": "What happens when I cancel?",
       "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
       "q3": "Which devices are supported?",
-      "a3": "Our app covers Windows and Android. On macOS, Linux and iOS it works through a config from your account — open it in any VLESS client such as v2rayNG, Hiddify or Streisand.",
+      "a3": "Our app covers Windows and Android. On macOS, Linux and iOS it works through a config from your account — open it in any Hysteria2 client such as Hiddify, Streisand or NekoBox.",
       "q4": "Why so cheap?",
       "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
     },
@@ -169,7 +169,7 @@
   },
   "configs": {
     "title": "Configs",
-    "hint": "The link opens in any VLESS client — v2rayNG, Hiddify, Streisand. Up to {limit} devices, revoked when the subscription ends.",
+    "hint": "The link opens in any Hysteria2 client — Hiddify, Streisand, NekoBox. Up to {limit} devices, revoked when the subscription ends.",
     "lockedHint": "Configs come with a subscription — start one above and the files unlock.",
     "loading": "Loading…",
     "empty": "No countries available",
@@ -181,7 +181,7 @@
     "redownload": "Download again",
     "revoke": "Remove",
     "downloaded": "{fileName} saved to your downloads",
-    "downloadedHint": "Open it and paste the link into your VLESS client",
+    "downloadedHint": "Open it and paste the link into your Hysteria2 client",
     "issued": "Your configs",
     "copy": "Copy link",
     "copied": "Link copied",

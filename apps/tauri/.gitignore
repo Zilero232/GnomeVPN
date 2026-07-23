@@ -11,19 +11,19 @@
 !/icons/tray/
 
 # Downloaded manually, see bin/README.md — required for the TUN device on Windows
-/bin/wintun.dll
+/bin/wintun/wintun.dll
 
-# Downloaded manually, see bin/README.md — runs the VLESS/Reality tunnel
-/bin/xray.exe
+# Downloaded manually, see bin/README.md — runs the Hysteria2 tunnel
+/bin/hysteria/hysteria.exe
 
-# Same tunnel core built for Android, see android/README.md — 36 MB per ABI,
-# fetched rather than committed for the same reason as bin/xray.exe
-/android/libs/*/libxray.so
+# Same tunnel binary built for Android, see android/README.md — per ABI,
+# fetched rather than committed for the same reason as bin/hysteria/hysteria.exe
+/android/libs/*/libhysteria.so
 
 # Release signing (never commit)
 *.keystore
 keystore.properties
 
 # Built by scripts/build-service.mjs — the privileged tunnel service
-/bin/gnomevpn-service.exe
+/bin/service/gnomevpn-service.exe
 

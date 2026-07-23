@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import { AppNotFoundException, AppServiceUnavailableException } from '../../common/exceptions';
-import { PrismaService } from '../../core';
-import { resolveNodeStatus } from './lib';
+import { AppNotFoundException, AppServiceUnavailableException } from '../../../common/exceptions';
+import { PrismaService } from '../../../core';
+import { resolveNodeStatus } from '../lib';
 
 import type { Node } from '@gnomevpn/schemas';
 
@@ -43,9 +43,7 @@ export class NodesService {
         countryCode: true,
         host: true,
         port: true,
-        realityServerName: true,
-        realityPublicKey: true,
-        realityShortId: true,
+        serverName: true,
         apiUrl: true,
         apiTokenEnvVar: true,
         isAvailable: true,

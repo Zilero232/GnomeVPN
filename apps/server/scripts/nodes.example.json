@@ -5,7 +5,6 @@
     "sshPassword": "REPLACE_ME",
     "country": "Germany",
     "countryCode": "DE",
-    "city": "Frankfurt",
-    "realityServerName": "www.cloudflare.com"
+    "city": "Frankfurt"
   }
 ]

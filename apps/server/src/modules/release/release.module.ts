@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { ReleaseController } from './release.controller';
-import { ReleaseService } from './release.service';
+import { ReleaseService } from './services';
 
 @Module({
   controllers: [ReleaseController],

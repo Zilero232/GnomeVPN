@@ -7,12 +7,10 @@ use serde::{Deserialize, Serialize};
 pub struct TunnelConfig {
     pub server: String,
     pub port: u16,
-    pub user_id: String,
+    pub auth: String,
     pub server_name: String,
-    pub public_key: String,
     #[serde(default)]
-    pub short_id: Option<String>,
-    pub fingerprint: String,
+    pub insecure: bool,
     pub dns: Vec<String>,
 }
 
@@ -21,11 +19,9 @@ impl fmt::Debug for TunnelConfig {
         f.debug_struct("TunnelConfig")
             .field("server", &self.server)
             .field("port", &self.port)
-            .field("user_id", &"[redacted]")
+            .field("auth", &"[redacted]")
             .field("server_name", &self.server_name)
-            .field("public_key", &self.public_key)
-            .field("short_id", &self.short_id.as_ref().map(|_| "[redacted]"))
-            .field("fingerprint", &self.fingerprint)
+            .field("insecure", &self.insecure)
             .field("dns", &self.dns)
             .finish()
     }

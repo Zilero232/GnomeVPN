@@ -1,4 +1,10 @@
-export { configurePanel, ensureDocker, openTunnelPort, shipStack } from './remote-setup';
+export {
+  configurePanel,
+  ensureCert,
+  ensureDocker,
+  openTunnelPort,
+  shipStack,
+} from './remote-setup';
 export { CONTAINER_NAME, REMOTE_DIR } from './remote-setup.constants';
 
 export type { ConfigurePanelInput, ShipStackInput } from './remote-setup.types';

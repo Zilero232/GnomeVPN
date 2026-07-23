@@ -1,9 +1,9 @@
 import { DEFAULT_PLAN_ID } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 
-import { isPeriodActive, resolveStatus } from '../../common/lib';
-import { AppConfigService } from '../../config/config.module';
-import { PrismaService } from '../../core';
+import { isPeriodActive, resolveStatus } from '../../../common/lib';
+import { AppConfigService } from '../../../config/config.module';
+import { PrismaService } from '../../../core';
 
 import type { SubscriptionStatus } from '@gnomevpn/schemas';
 

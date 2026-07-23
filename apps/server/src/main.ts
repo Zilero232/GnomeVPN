@@ -14,9 +14,6 @@ const env = validateEnv(process.env);
 
 const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
 
-// Caddy terminates TLS and proxies to this container, so the socket peer is
-// always the reverse proxy. Trusting one hop makes req.ip the client address
-// from X-Forwarded-For — which the YooKassa webhook guard checks against.
 app.set('trust proxy', 1);
 
 app.use(helmet({ contentSecurityPolicy: false }));

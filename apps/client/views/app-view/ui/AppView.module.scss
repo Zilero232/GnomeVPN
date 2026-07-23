@@ -16,21 +16,12 @@
 
 .body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 22px;
   align-items: center;
-  width: 100%;
-  padding: 34px 0 0;
-}
-
-// The stats panel only exists while connected. Holding its space keeps the
-// layout still across a connect instead of growing by its height.
-.stats {
-  display: flex;
-  align-items: flex-start;
   justify-content: center;
   width: 100%;
-  min-height: 116px;
 }
 
 .head {

@@ -9,9 +9,9 @@ use tun2proxy::{ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 
 use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
 
+use super::hysteria::{self, Credentials, Hysteria};
 use super::route;
 use super::tunio::TunIo;
-use super::xray::{self, Credentials, Xray};
 use super::TunnelError;
 
 const TUNNEL_NAME: &str = "gnomevpn0";
@@ -24,15 +24,15 @@ const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 const WATCH_INTERVAL: Duration = Duration::from_secs(1);
 
-async fn wait_until_ready(socks: SocketAddr, xray: &mut Xray) -> Result<(), TunnelError> {
+async fn wait_until_ready(socks: SocketAddr, hysteria: &mut Hysteria) -> Result<(), TunnelError> {
     let mut ticker = interval(READY_INTERVAL);
 
     let probe = async {
         loop {
             ticker.tick().await;
 
-            if let Some(reason) = xray.has_exited() {
-                return Err(TunnelError::Xray(reason));
+            if let Some(reason) = hysteria.has_exited() {
+                return Err(TunnelError::Hysteria(reason));
             }
 
             if tokio::net::TcpStream::connect(socks).await.is_ok() {
@@ -43,7 +43,7 @@ async fn wait_until_ready(socks: SocketAddr, xray: &mut Xray) -> Result<(), Tunn
 
     timeout(READY_TIMEOUT, probe)
         .await
-        .map_err(|_| TunnelError::Xray("xray did not open its inbound in time".into()))?
+        .map_err(|_| TunnelError::Hysteria("hysteria did not open its inbound in time".into()))?
 }
 
 fn resolve_server(config: &TunnelConfig) -> Result<IpAddr, TunnelError> {
@@ -80,19 +80,32 @@ pub async fn run_tunnel(
     emit: Arc<dyn Fn(TunnelEvent) + Send + Sync>,
     mut stop: oneshot::Receiver<()>,
 ) -> Result<(), TunnelError> {
+    log::info!(
+        "connect requested: server={}:{} protocol=hysteria2 sni={} insecure={} dns={:?}",
+        config.server,
+        config.port,
+        config.server_name,
+        config.insecure,
+        config.dns
+    );
+
     emit(TunnelEvent::Connecting);
 
     let server = resolve_server(&config)?;
+    log::info!("resolved {} -> {server}", config.server);
 
-    let (mut process, credentials) = xray::spawn(&config).await?;
+    let (mut process, credentials) = hysteria::spawn(&config).await?;
     let socks = process.socks_addr();
+    log::info!("hysteria started, socks inbound on {socks}, waiting for it to open");
 
     if let Err(error) = wait_until_ready(socks, &mut process).await {
+        log::error!("hysteria inbound never opened: {error}");
         process.stop().await;
 
         return Err(error);
     }
 
+    log::info!("hysteria inbound is open; installing routes to node {server}");
     let _ = route::remove_default_route(TUNNEL_NAME, server);
 
     let device = match tun_rs::DeviceBuilder::new()
@@ -103,6 +116,7 @@ pub async fn run_tunnel(
     {
         Ok(device) => device,
         Err(error) => {
+            log::error!("wintun device {TUNNEL_NAME} failed: {error}");
             process.stop().await;
 
             return Err(TunnelError::Tun(error.to_string()));
@@ -111,6 +125,7 @@ pub async fn run_tunnel(
 
     if let Err(error) = route::apply_default_route(TUNNEL_NAME, server, IpAddr::V4(TUNNEL_GATEWAY))
     {
+        log::error!("applying default route failed: {error}");
         process.stop().await;
 
         return Err(TunnelError::Io(format!("route: {error}")));
@@ -122,15 +137,18 @@ pub async fn run_tunnel(
 
     let mut proxy = Box::pin(tun2proxy::run(io, MTU, args, cancellation.clone()));
 
+    log::info!("routes in place, tun2proxy running; tunnel is up on {TUNNEL_ADDRESS}");
     emit(TunnelEvent::Connected {
         assigned_ip: TUNNEL_ADDRESS.to_string(),
     });
 
     let mut watch = interval(WATCH_INTERVAL);
+    let mut ticks: u64 = 0;
 
     let result = loop {
         tokio::select! {
             _ = &mut stop => {
+                log::info!("stop requested; tearing the tunnel down");
                 cancellation.cancel();
                 let _ = proxy.await;
 
@@ -139,17 +157,29 @@ pub async fn run_tunnel(
 
             finished = &mut proxy => {
                 break match finished {
-                    Ok(_) => Ok(()),
-                    Err(error) => Err(TunnelError::Io(error.to_string())),
+                    Ok(_) => {
+                        log::warn!("tun2proxy exited on its own");
+                        Ok(())
+                    }
+                    Err(error) => {
+                        log::error!("tun2proxy failed: {error}");
+                        Err(TunnelError::Io(error.to_string()))
+                    }
                 };
             }
 
             _ = watch.tick() => {
                 if let Some(reason) = process.has_exited() {
+                    log::error!("hysteria exited while connected: {reason}");
                     cancellation.cancel();
                     let _ = proxy.await;
 
-                    break Err(TunnelError::Xray(reason));
+                    break Err(TunnelError::Hysteria(reason));
+                }
+
+                ticks += 1;
+                if ticks.is_multiple_of(5) {
+                    log::info!("traffic so far: rx={} tx={}", traffic.rx(), traffic.tx());
                 }
 
                 emit(TunnelEvent::BytesUpdate {
@@ -160,6 +190,7 @@ pub async fn run_tunnel(
         }
     };
 
+    log::info!("tunnel loop ended ({result:?}); removing routes and stopping hysteria");
     let _ = route::remove_default_route(TUNNEL_NAME, server);
     process.stop().await;
     emit(TunnelEvent::Disconnected);

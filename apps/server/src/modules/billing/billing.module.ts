@@ -3,8 +3,14 @@ import { Module } from '@nestjs/common';
 import { AppConfigService } from '../../config/config.module';
 import { makeYooKassaClient, YooKassaClient } from '../../lib';
 import { BillingController } from './billing.controller';
-import { BillingService } from './billing.service';
 import { WebhookIpGuard } from './guards';
+import {
+  AutoRenewService,
+  BillingSharedService,
+  CardService,
+  CheckoutService,
+  WebhookService,
+} from './services';
 
 const yooKassaProvider = {
   provide: YooKassaClient,
@@ -14,7 +20,15 @@ const yooKassaProvider = {
 
 @Module({
   controllers: [BillingController],
-  providers: [BillingService, WebhookIpGuard, yooKassaProvider],
-  exports: [BillingService, YooKassaClient],
+  providers: [
+    BillingSharedService,
+    CheckoutService,
+    WebhookService,
+    AutoRenewService,
+    CardService,
+    WebhookIpGuard,
+    yooKassaProvider,
+  ],
+  exports: [CheckoutService, YooKassaClient],
 })
 export class BillingModule {}

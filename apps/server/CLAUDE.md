@@ -11,7 +11,7 @@ src/
 ├── modules/         # one folder per domain
 │   ├── auth/        # better-auth module wiring
 │   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
-│   ├── configs/     # downloadable VLESS configs — config/ dto/ lib/
+│   ├── configs/     # downloadable Hysteria2 configs (hy2:// links) — config/ dto/ lib/
 │   ├── health/      # /health — also probes the database
 │   ├── nodes/       # public node list with health status — config/ lib/
 │   ├── peers/       # xray clients shared by sessions and configs — config/ lib/
@@ -27,7 +27,9 @@ src/
 
 ## Module convention
 
-A module is `x.module.ts` + `x.controller.ts` + `x.service.ts`, plus `dto/`, `guards/`, `lib/`, `config/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in the service.
+A module is `x.module.ts` + `x.controller.ts` + `services/`, plus `dto/`, `guards/`, `lib/`, `config/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in `services/`.
+
+**Business logic lives in `services/<domain>.service.ts`, one service per domain of work** — never a single fat `x.service.ts` at the module root. `billing/services/` holds `checkout`, `webhook`, `auto-renew`, `card` and a shared `billing-shared` for what several of them need; a single-domain module (`nodes`, `peers`) still gets a `services/` folder with one service inside, for a predictable shape. There is **no facade**: the controller and any cross-module consumer inject the specific domain service they use, and the module `exports` only those that other modules legitimately call. Services collaborate by injecting one another (e.g. `session-connect` injects `session-access` for `releaseAll`); shared helpers used by 2+ domains go into a `*-shared` service, not duplicated.
 
 **Nothing but the class lives in a service or controller file.** Constants, lookup tables and pure functions go elsewhere, so the file reads as behaviour rather than a mix of data and logic:
 
@@ -134,15 +136,15 @@ Use a raw cron string when the interval has no `CronExpression` constant. Invent
 
 ## Provisioning nodes
 
-`bun provision` reads `apps/server/nodes.json` (gitignored — it holds root SSH passwords) and sets each host up over SSH: install Docker, ship the Xray compose stack, open 443, configure the panel, register the node.
+`bun provision` reads `apps/server/nodes.json` (gitignored — it holds root SSH passwords) and sets each host up over SSH: install Docker, ship the 3x-ui compose stack, open 443/udp, configure the panel, generate the TLS cert, register the node.
 
-Reality keys are generated **per node, on every run** — `scripts/lib/reality-keys` derives an x25519 pair from `node:crypto`. Re-provisioning therefore rotates the key, and `upsertNode` has to write the new public key back; leaving a stale one in the database silently breaks every client of that node.
+The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built in `scripts/lib/hysteria-inbound`, served by the 3x-ui panel — no separate hysteria process. It listens on **443/UDP** (QUIC), so `openTunnelPort` opens udp, not tcp. `ensureCert` generates a self-signed EC cert inside the container (`/etc/gnomevpn/{cert,key}.pem`); clients accept it with `insecure: true`.
 
-The same rotation is why `ensureInbound` **updates** an existing inbound instead of leaving it alone. Creating it only when absent looks harmless and is not: the second run writes fresh keys to the database while the node keeps the first pair, so the client is handed a `shortId` the node never accepts and every handshake fails — with a panel that still answers `200` and a node that looks healthy.
+Each client has its own `auth` password, generated in `XrayClient.createClient` and stored as the peer's tunnel credential (in the `xrayUserId` column, reused as-is). `ensureInbound` **updates** an existing inbound rather than replacing it, and `updateInbound` preserves the current client list so a re-provision does not strand live sessions.
 
-The donor host is `DONOR_HOST` in `scripts/lib/reality-inbound` — one value for every node, since a per-node donor buys nothing and only invites a typo. Changing it means picking a host that answers TLS 1.3 over HTTP/2 *without redirecting*: `dl.google.com` and `www.nvidia.com` both 30x and are unsuitable despite being widely recommended.
+The masquerade target is `MASQUERADE_HOST` in `scripts/lib/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
 
-**Answering TLS 1.3 correctly is not sufficient.** `www.microsoft.com` passes every static check — TLS 1.3, HTTP/2, X25519, a valid certificate, `xray tls ping` reports a successful handshake — and still fails every REALITY handshake with `handshake did not complete successfully`. The node then completes TCP, serves the donor's real certificate on fallback, and carries no tunnel traffic, which looks like broken keys rather than a broken donor. The only trustworthy check is an end-to-end one: run a standalone REALITY server and client on the node itself and confirm a request returns the node's own IP.
+**Verify a node end-to-end, never by "the panel returned 200".** A Hysteria2 client written without its full field set is stored by the panel but dropped from the running core (`clients: null`), and every connection then fails auth with a 404. The only trustworthy check is to run a real hysteria client against the node and confirm a request returns the node's own IP — ideally from the target network, since the whole reason for Hysteria2 is a TSPU that treats UDP/QUIC differently from TCP.
 
 ## Prisma
 

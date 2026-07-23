@@ -8,8 +8,8 @@ pub mod state;
 pub enum MobileVpnError {
     #[error("vpn service error: {0}")]
     Service(String),
-    #[error("xray error: {0}")]
-    Xray(String),
+    #[error("hysteria error: {0}")]
+    Hysteria(String),
     #[error("tunnel error: {0}")]
     Tunnel(String),
 }

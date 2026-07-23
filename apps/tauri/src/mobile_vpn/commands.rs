@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager, Runtime, State};
 use tun2proxy::CancellationToken;
 
 use super::counters::report;
-use super::engine::{proxy_args, run_tun2proxy, spawn_xray};
+use super::engine::{proxy_args, run_tun2proxy, spawn_hysteria};
 use super::plugin::VpnPlugin;
 use super::state::MobileVpnState;
 use super::MobileVpnError;
@@ -26,18 +26,18 @@ pub async fn vpn_connect<R: Runtime>(
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);
 
-    let (xray, credentials) = spawn_xray(&app, &config).await?;
+    let (hysteria, credentials) = spawn_hysteria(&app, &config).await?;
 
     let fd = match request_descriptor(&app, &config).await {
         Ok(fd) => fd,
         Err(error) => {
-            xray.stop().await;
+            hysteria.stop().await;
 
             return Err(error);
         }
     };
 
-    let args = proxy_args(xray.socks_addr(), &credentials, &config.dns);
+    let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
 
     let cancellation = CancellationToken::new();
     state.arm(cancellation.clone());
@@ -62,7 +62,7 @@ pub async fn vpn_connect<R: Runtime>(
             });
         }
 
-        xray.stop().await;
+        hysteria.stop().await;
         let _ = handle.state::<VpnPlugin<R>>().stop();
         let _ = on_event.send(TunnelEvent::Disconnected);
     });
@@ -70,8 +70,6 @@ pub async fn vpn_connect<R: Runtime>(
     Ok(())
 }
 
-// The Kotlin side blocks until VpnService.establish() returns, so the call has
-// to leave the async runtime rather than stall it.
 async fn request_descriptor<R: Runtime>(
     app: &AppHandle<R>,
     config: &TunnelConfig,

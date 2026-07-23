@@ -10,9 +10,6 @@ use super::plugin::VpnPlugin;
 
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
 
-// SELinux denies untrusted apps a read of /proc/net, so the byte counts come
-// from android's own per-uid tally through TrafficStats rather than the
-// interface table.
 pub async fn report<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
     on_event: Channel<TunnelEvent>,

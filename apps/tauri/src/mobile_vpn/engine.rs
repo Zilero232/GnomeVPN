@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener};
 use std::path::PathBuf;
 use std::process::Stdio;
 
-use gnomevpn_ipc::{build_xray_config, SocksCredentials, TunnelConfig};
+use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig};
 use tauri::{AppHandle, Manager, Runtime};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
@@ -12,14 +12,12 @@ use super::plugin::VpnPlugin;
 use super::MobileVpnError;
 
 const MTU: u16 = 1420;
-const BINARY_NAME: &str = "libxray.so";
-const CONFIG_NAME: &str = "xray-config.json";
-const LOG_NAME: &str = "xray.log";
+const BINARY_NAME: &str = "libhysteria.so";
+const CONFIG_NAME: &str = "hysteria-config.yaml";
+const LOG_NAME: &str = "hysteria.log";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 
-// Android only executes files from the app's native library directory, so the
-// xray binary ships as libxray.so in jniLibs rather than as an asset.
 fn binary_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, MobileVpnError> {
     let path = app
         .state::<VpnPlugin<R>>()
@@ -27,7 +25,7 @@ fn binary_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, MobileVpnError
         .join(BINARY_NAME);
 
     if !path.exists() {
-        return Err(MobileVpnError::Xray(format!(
+        return Err(MobileVpnError::Hysteria(format!(
             "{BINARY_NAME} not found at {}",
             path.display()
         )));
@@ -38,29 +36,29 @@ fn binary_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, MobileVpnError
 
 fn free_loopback_port() -> Result<u16, MobileVpnError> {
     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0))
-        .map_err(|error| MobileVpnError::Xray(error.to_string()))?;
+        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     listener
         .local_addr()
         .map(|addr| addr.port())
-        .map_err(|error| MobileVpnError::Xray(error.to_string()))
+        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))
 }
 
-pub struct Xray {
+pub struct Hysteria {
     child: Child,
     socks: SocketAddr,
 }
 
-impl Xray {
+impl Hysteria {
     pub fn socks_addr(&self) -> SocketAddr {
         self.socks
     }
 
     pub fn has_exited(&mut self) -> Option<String> {
         match self.child.try_wait() {
-            Ok(Some(status)) => Some(format!("xray exited with {status}")),
+            Ok(Some(status)) => Some(format!("hysteria exited with {status}")),
             Ok(None) => None,
-            Err(error) => Some(format!("xray status unavailable: {error}")),
+            Err(error) => Some(format!("hysteria status unavailable: {error}")),
         }
     }
 
@@ -69,63 +67,72 @@ impl Xray {
     }
 }
 
-pub async fn spawn_xray<R: Runtime>(
+pub async fn spawn_hysteria<R: Runtime>(
     app: &AppHandle<R>,
     config: &TunnelConfig,
-) -> Result<(Xray, SocksCredentials), MobileVpnError> {
+) -> Result<(Hysteria, SocksCredentials), MobileVpnError> {
     let binary = binary_path(app)?;
 
     let socks = SocketAddr::from((Ipv4Addr::LOCALHOST, free_loopback_port()?));
     let credentials = SocksCredentials::generate()
-        .map_err(|error| MobileVpnError::Xray(format!("no randomness available: {error}")))?;
+        .map_err(|error| MobileVpnError::Hysteria(format!("no randomness available: {error}")))?;
 
     let dir = app
         .path()
         .app_data_dir()
-        .map_err(|error| MobileVpnError::Xray(error.to_string()))?;
+        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     tokio::fs::create_dir_all(&dir)
         .await
-        .map_err(|error| MobileVpnError::Xray(error.to_string()))?;
+        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     let config_path = dir.join(CONFIG_NAME);
 
-    tokio::fs::write(&config_path, build_xray_config(config, socks, &credentials))
-        .await
-        .map_err(|error| MobileVpnError::Xray(format!("cannot write the xray config: {error}")))?;
+    tokio::fs::write(
+        &config_path,
+        build_hysteria_config(config, socks, &credentials),
+    )
+    .await
+    .map_err(|error| {
+        MobileVpnError::Hysteria(format!("cannot write the hysteria config: {error}"))
+    })?;
 
-    let log = std::fs::File::create(dir.join(LOG_NAME))
-        .map_err(|error| MobileVpnError::Xray(format!("cannot open the xray log: {error}")))?;
+    let log = std::fs::File::create(dir.join(LOG_NAME)).map_err(|error| {
+        MobileVpnError::Hysteria(format!("cannot open the hysteria log: {error}"))
+    })?;
 
     let errors = log
         .try_clone()
-        .map_err(|error| MobileVpnError::Xray(error.to_string()))?;
+        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     let child = Command::new(&binary)
-        .arg("run")
+        .arg("client")
         .arg("-c")
         .arg(&config_path)
         .stdout(Stdio::from(log))
         .stderr(Stdio::from(errors))
         .spawn()
-        .map_err(|error| MobileVpnError::Xray(format!("cannot start xray: {error}")))?;
+        .map_err(|error| MobileVpnError::Hysteria(format!("cannot start hysteria: {error}")))?;
 
-    let mut xray = Xray { child, socks };
+    let mut hysteria = Hysteria { child, socks };
 
-    wait_until_ready(socks, &mut xray).await?;
+    wait_until_ready(socks, &mut hysteria).await?;
 
-    Ok((xray, credentials))
+    Ok((hysteria, credentials))
 }
 
-async fn wait_until_ready(socks: SocketAddr, xray: &mut Xray) -> Result<(), MobileVpnError> {
+async fn wait_until_ready(
+    socks: SocketAddr,
+    hysteria: &mut Hysteria,
+) -> Result<(), MobileVpnError> {
     let mut ticker = interval(READY_INTERVAL);
 
     let probe = async {
         loop {
             ticker.tick().await;
 
-            if let Some(reason) = xray.has_exited() {
-                return Err(MobileVpnError::Xray(reason));
+            if let Some(reason) = hysteria.has_exited() {
+                return Err(MobileVpnError::Hysteria(reason));
             }
 
             if tokio::net::TcpStream::connect(socks).await.is_ok() {
@@ -136,7 +143,7 @@ async fn wait_until_ready(socks: SocketAddr, xray: &mut Xray) -> Result<(), Mobi
 
     timeout(READY_TIMEOUT, probe)
         .await
-        .map_err(|_| MobileVpnError::Xray("xray did not open its inbound in time".into()))?
+        .map_err(|_| MobileVpnError::Hysteria("hysteria did not open its inbound in time".into()))?
 }
 
 pub fn proxy_args(socks: SocketAddr, credentials: &SocksCredentials, dns: &[String]) -> Args {
@@ -162,8 +169,6 @@ pub async fn run_tun2proxy(
     fd: i32,
     cancellation: CancellationToken,
 ) -> Result<(), MobileVpnError> {
-    // The descriptor belongs to the Kotlin ParcelFileDescriptor, which closes it
-    // in teardown(). Closing it here too trips fdsan and aborts the process.
     args.tun_fd(Some(fd)).close_fd_on_drop(false);
 
     tun2proxy::general_run_async(args, MTU, false, cancellation)

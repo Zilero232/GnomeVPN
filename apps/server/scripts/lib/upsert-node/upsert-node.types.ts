@@ -8,9 +8,8 @@ export type UpsertNodeInput = {
   city?: string;
   host: string;
   port: number;
-  realityServerName: string;
-  realityPublicKey: string;
-  realityShortId: string;
+  serverName: string;
+  auth: string;
   apiUrl: string;
   apiTokenEnvVar: string;
 };

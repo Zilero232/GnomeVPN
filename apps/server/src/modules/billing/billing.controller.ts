@@ -3,7 +3,6 @@ import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUser } from '../../common/decorators';
-import { BillingService } from './billing.service';
 import {
   BindCardDto,
   BindCardResultDto,
@@ -12,39 +11,45 @@ import {
   WebhookEventDto,
 } from './dto/billing.dto';
 import { WebhookIpGuard } from './guards';
+import { AutoRenewService, CardService, CheckoutService, WebhookService } from './services';
 
 @Controller('billing')
 export class BillingController {
-  constructor(private readonly billing: BillingService) {}
+  constructor(
+    private readonly checkout: CheckoutService,
+    private readonly autoRenew: AutoRenewService,
+    private readonly card: CardService,
+    private readonly webhook: WebhookService,
+  ) {}
 
   @Post('checkout')
   @ZodResponse({ type: CheckoutResultDto })
   createCheckout(@Body() body: CreateCheckoutDto, @CurrentUser() userId: string) {
-    return this.billing.createCheckout(userId, body.planId, body.client);
+    return this.checkout.createCheckout(userId, body.planId, body.client);
   }
 
   @Post('cancel')
   @HttpCode(204)
   cancelAutoRenew(@CurrentUser() userId: string) {
-    return this.billing.cancelAutoRenew(userId);
+    return this.autoRenew.cancelAutoRenew(userId);
   }
 
   @Post('resume')
   @HttpCode(204)
   resumeAutoRenew(@CurrentUser() userId: string) {
-    return this.billing.resumeAutoRenew(userId);
+    return this.autoRenew.resumeAutoRenew(userId);
   }
 
   @Post('bind-card')
   @ZodResponse({ type: BindCardResultDto })
   bindCard(@Body() body: BindCardDto, @CurrentUser() userId: string) {
-    return this.billing.bindCard(userId, body.client);
+    return this.card.bindCard(userId, body.client);
   }
 
   @Post('unbind-card')
   @HttpCode(204)
   unbindCard(@CurrentUser() userId: string) {
-    return this.billing.unbindCard(userId);
+    return this.card.unbindCard(userId);
   }
 
   @AllowAnonymous()
@@ -52,7 +57,7 @@ export class BillingController {
   @Post('webhook')
   @HttpCode(200)
   async handleWebhook(@Body() body: WebhookEventDto) {
-    await this.billing.handleWebhook(body);
+    await this.webhook.handleWebhook(body);
 
     return { received: true };
   }

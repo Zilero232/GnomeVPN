@@ -32,6 +32,7 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
         }),
 
         Request::Disconnect => {
+            log::info!("disconnect requested over the pipe");
             supervisor.stop();
             Action::Reply(Response::Ok)
         }
@@ -39,18 +40,33 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
         Request::Connect {
             config,
             auto_reconnect,
-        } => match supervisor.begin(&config) {
-            Ok(()) => {
-                supervisor.set_options(auto_reconnect);
+        } => {
+            log::info!(
+                "connect request over the pipe: {}:{} sni={} auto_reconnect={auto_reconnect}",
+                config.server,
+                config.port,
+                config.server_name
+            );
 
-                Action::StartTunnel(Response::Ok, config)
+            match supervisor.begin(&config) {
+                Ok(()) => {
+                    supervisor.set_options(auto_reconnect);
+
+                    Action::StartTunnel(Response::Ok, config)
+                }
+                Err(error @ SupervisorError::AlreadyRunning) => {
+                    log::warn!("connect rejected: {error}");
+                    Action::Reply(Response::Error {
+                        message: error.to_string(),
+                    })
+                }
+                Err(SupervisorError::Rejected(error)) => {
+                    log::warn!("connect rejected by validation: {error}");
+                    Action::Reply(Response::Error {
+                        message: error.to_string(),
+                    })
+                }
             }
-            Err(error @ SupervisorError::AlreadyRunning) => Action::Reply(Response::Error {
-                message: error.to_string(),
-            }),
-            Err(SupervisorError::Rejected(error)) => Action::Reply(Response::Error {
-                message: error.to_string(),
-            }),
-        },
+        }
     }
 }

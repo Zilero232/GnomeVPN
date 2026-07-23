@@ -2,9 +2,9 @@
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
     "resources": {
-      "bin/xray.exe": "xray.exe",
-      "bin/wintun.dll": "wintun.dll",
-      "bin/gnomevpn-service.exe": "gnomevpn-service.exe",
+      "bin/wintun/wintun.dll": "wintun.dll",
+      "bin/hysteria/hysteria.exe": "hysteria.exe",
+      "bin/service/gnomevpn-service.exe": "gnomevpn-service.exe",
       "icons/tray/connected.png": "icons/tray/connected.png",
       "icons/tray/disconnected.png": "icons/tray/disconnected.png"
     },

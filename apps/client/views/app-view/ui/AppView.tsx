@@ -91,9 +91,7 @@ export const AppView = () => {
           onSelect={selection.select}
         />
 
-        <div className={s.stats}>
-          {isOnline && <TunnelStats connectedAt={connectedAt} traffic={traffic} />}
-        </div>
+        <TunnelStats connectedAt={connectedAt} isVisible={isOnline} traffic={traffic} />
       </div>
 
       <ServiceRepairBanner />
