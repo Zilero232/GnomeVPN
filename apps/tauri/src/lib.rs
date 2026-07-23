@@ -1,3 +1,4 @@
+pub mod latency;
 #[cfg(mobile)]
 pub mod mobile_vpn;
 #[cfg(target_os = "windows")]
@@ -107,6 +108,7 @@ pub fn run() {
             vpn_status,
             vpn_service_available,
             service_repair,
+            latency::commands::vpn_probe_latency,
             vault_save_token,
             vault_read_token,
             vault_clear_token
@@ -120,6 +122,8 @@ pub fn run() {
             mobile_vpn::commands::vpn_disconnect,
             mobile_vpn::commands::vpn_status,
             mobile_vpn::commands::vpn_service_available,
+            mobile_vpn::commands::vpn_take_tile_request,
+            latency::commands::vpn_probe_latency,
             vault_save_token,
             vault_read_token,
             vault_clear_token
@@ -127,6 +131,7 @@ pub fn run() {
 
     #[cfg(not(any(target_os = "windows", mobile)))]
     let builder = builder.invoke_handler(tauri::generate_handler![
+        latency::commands::vpn_probe_latency,
         vault_save_token,
         vault_read_token,
         vault_clear_token

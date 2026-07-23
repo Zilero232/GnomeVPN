@@ -1,12 +1,12 @@
 import { TrayIcon } from '@tauri-apps/api/tray';
 
-import { toggleMainWindow } from '@/shared/lib';
+import { resolveBundledResource, toggleMainWindow } from '@/shared/lib';
 import { TRAY_ICON, TRAY_ID } from '../config';
 
 import type { SetupTrayInput } from './setup-tray.types';
 
-const iconFor = (isConnected: boolean): string =>
-  isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected;
+const iconFor = async (isConnected: boolean): Promise<string> =>
+  resolveBundledResource(isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected);
 
 export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) => {
   const existing = await TrayIcon.getById(TRAY_ID);
@@ -17,7 +17,7 @@ export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) 
 
   const tray = await TrayIcon.new({
     id: TRAY_ID,
-    icon: iconFor(isConnected),
+    icon: await iconFor(isConnected),
     tooltip,
     menu,
     menuOnLeftClick: false,
@@ -33,7 +33,7 @@ export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) 
       await tray.setTooltip(value);
     },
     setConnected: async (value: boolean) => {
-      await tray.setIcon(iconFor(value));
+      await tray.setIcon(await iconFor(value));
     },
     dispose: async () => {
       await tray.close();

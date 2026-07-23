@@ -20,6 +20,16 @@ class StartArgs {
     var dns: List<String> = emptyList()
 }
 
+@InvokeArg
+class RememberArgs {
+    var server: String = ""
+    var port: Int = 0
+    var auth: String = ""
+    var serverName: String = ""
+    var insecure: Boolean = true
+    var dns: List<String> = emptyList()
+}
+
 @TauriPlugin
 class VpnPlugin(private val activity: Activity) : Plugin(activity) {
     private var pendingArgs: StartArgs? = null
@@ -108,6 +118,47 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
 
         result.put("rx", TrafficStats.getUidRxBytes(uid).coerceAtLeast(0))
         result.put("tx", TrafficStats.getUidTxBytes(uid).coerceAtLeast(0))
+        invoke.resolve(result)
+    }
+
+    @Command
+    fun rememberTunnel(invoke: Invoke) {
+        val args = invoke.parseArgs(RememberArgs::class.java)
+
+        TunnelStore.save(
+            activity,
+            TunnelSnapshot(
+                server = args.server,
+                port = args.port,
+                auth = args.auth,
+                serverName = args.serverName,
+                insecure = args.insecure,
+                dns = args.dns,
+            ),
+        )
+
+        invoke.resolve()
+    }
+
+    @Command
+    fun forgetTunnel(invoke: Invoke) {
+        TunnelStore.clear(activity)
+        invoke.resolve()
+    }
+
+    @Command
+    fun consumeAutoConnect(invoke: Invoke) {
+        val requested = activity.intent?.getBooleanExtra(
+            VpnTileService.EXTRA_AUTO_CONNECT,
+            false,
+        ) ?: false
+
+        if (requested) {
+            activity.intent?.removeExtra(VpnTileService.EXTRA_AUTO_CONNECT)
+        }
+
+        val result = JSObject()
+        result.put("requested", requested)
         invoke.resolve(result)
     }
 

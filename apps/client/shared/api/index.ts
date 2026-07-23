@@ -17,6 +17,7 @@ export {
   getSubscriptionStatus,
   issueConfig,
   listConfigs,
+  listNodeEndpoints,
   listNodes,
   resumeAutoRenew,
   revokeConfig,

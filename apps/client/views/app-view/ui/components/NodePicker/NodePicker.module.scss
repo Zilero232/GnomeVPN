@@ -38,6 +38,40 @@
   white-space: nowrap;
 }
 
+.latency {
+  flex-shrink: 0;
+  min-width: 42px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+  text-align: right;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.latencyReady {
+  opacity: 1;
+}
+
+.fast {
+  color: var(--color-accent);
+}
+
+.fair {
+  color: var(--color-warning);
+}
+
+.slow {
+  color: var(--color-text-muted);
+}
+
 .dot {
   flex-shrink: 0;
   width: 7px;
@@ -45,6 +79,10 @@
   margin-left: auto;
   border-radius: 50%;
   background-color: currentcolor;
+}
+
+.latency + .dot {
+  margin-left: 8px;
 }
 
 .online {

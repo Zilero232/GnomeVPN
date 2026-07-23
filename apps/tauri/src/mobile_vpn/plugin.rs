@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use gnomevpn_ipc::TunnelConfig;
 use serde::{Deserialize, Serialize};
 use tauri::plugin::{Builder, PluginApi, PluginHandle, TauriPlugin};
 use tauri::{Manager, Runtime};
@@ -39,6 +40,22 @@ pub struct TrafficResult {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct RememberArgs {
+    server: String,
+    port: u16,
+    auth: String,
+    server_name: String,
+    insecure: bool,
+    dns: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct AutoConnectResult {
+    requested: bool,
+}
+
+#[derive(Serialize)]
 struct Empty {}
 
 pub struct VpnPlugin<R: Runtime>(PluginHandle<R>);
@@ -75,6 +92,37 @@ impl<R: Runtime> VpnPlugin<R> {
             .map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
         Ok(result.fd)
+    }
+
+    pub fn remember_tunnel(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
+        self.0
+            .run_mobile_plugin::<()>(
+                "rememberTunnel",
+                RememberArgs {
+                    server: config.server.clone(),
+                    port: config.port,
+                    auth: config.auth.clone(),
+                    server_name: config.server_name.clone(),
+                    insecure: config.insecure,
+                    dns: config.dns.clone(),
+                },
+            )
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
+    }
+
+    pub fn forget_tunnel(&self) -> Result<(), MobileVpnError> {
+        self.0
+            .run_mobile_plugin::<()>("forgetTunnel", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
+    }
+
+    pub fn take_auto_connect(&self) -> Result<bool, MobileVpnError> {
+        let result: AutoConnectResult = self
+            .0
+            .run_mobile_plugin("consumeAutoConnect", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.requested)
     }
 
     pub fn traffic(&self) -> Result<TrafficResult, MobileVpnError> {

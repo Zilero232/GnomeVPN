@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
-import { useNodes } from '@/entities/vpn/node';
+import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
@@ -30,6 +30,8 @@ export const AppView = () => {
   const selection = useNodeSelection({ nodes, activeNodeId });
 
   const isOnline = status === 'connected';
+
+  const { latency } = useNodeLatency({ isEnabled: hasAccess && status === 'disconnected' });
 
   const onToggle = async () => {
     if (status === 'connected') {
@@ -87,6 +89,7 @@ export const AppView = () => {
           isError={isError}
           isLoading={isLoading}
           isLocked={status !== 'disconnected'}
+          latency={latency}
           nodes={nodes}
           onSelect={selection.select}
         />

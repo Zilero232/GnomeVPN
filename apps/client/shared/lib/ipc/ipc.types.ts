@@ -21,6 +21,13 @@ export type RustCommands = {
   vpn_disconnect: { args: never; result: null };
   vpn_status: { args: never; result: string };
   vpn_service_available: { args: never; result: boolean };
+  vpn_take_tile_request: { args: never; result: boolean };
+  vpn_probe_latency: {
+    args: {
+      targets: { id: string; host: string; port: number; serverName: string }[];
+    };
+    result: { id: string; rttMs: number | null }[];
+  };
   service_repair: { args: never; result: null };
   vault_save_token: { args: { token: string }; result: null };
   vault_read_token: { args: never; result: string | null };

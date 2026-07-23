@@ -4,6 +4,12 @@
   ; A failure here just means the service was not installed yet.
   nsExec::ExecToLog 'net stop GnomeVPNService'
   Pop $0
+
+  ; hysteria.exe is a child of the service, not the service itself, so stopping
+  ; the service does not always take it down. A survivor keeps its own file
+  ; locked and the update fails to overwrite it.
+  nsExec::ExecToLog 'taskkill.exe /F /IM hysteria.exe'
+  Pop $0
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
