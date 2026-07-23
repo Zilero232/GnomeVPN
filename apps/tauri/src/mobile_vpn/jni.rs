@@ -22,7 +22,7 @@ fn read_string(env: &mut JNIEnv, value: &JString) -> Option<String> {
 }
 
 #[no_mangle]
-pub extern "system" fn Java_app_gnomevpn_mobile_TunnelEngine_nativeStart(
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
     mut env: JNIEnv,
     _class: JClass,
     native_lib_dir: JString,
@@ -85,7 +85,7 @@ pub extern "system" fn Java_app_gnomevpn_mobile_TunnelEngine_nativeStart(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_app_gnomevpn_mobile_TunnelEngine_nativeStop(
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStop(
     _env: JNIEnv,
     _class: JClass,
 ) {

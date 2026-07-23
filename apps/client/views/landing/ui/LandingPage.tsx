@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { Faq, Hero, HowItWorks, LandingHeader, PricingCard } from './components';
+import { Faq, Hero, HowItWorks, LandingFooter, LandingHeader, PricingCard } from './components';
 
 import s from './LandingPage.module.scss';
 
@@ -29,6 +29,8 @@ export const LandingPage = () => {
         <h2 className={s.sectionTitle}>{t('faq.title')}</h2>
         <Faq />
       </section>
+
+      <LandingFooter />
     </main>
   );
 };

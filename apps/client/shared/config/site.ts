@@ -1,5 +1,6 @@
 export const SITE = {
   url: 'https://gnomevpn.ru',
+  email: 'support@gnomevpn.ru',
   name: 'GnomeVPN',
   title: 'GnomeVPN',
   description: 'Личный кабинет GnomeVPN.',

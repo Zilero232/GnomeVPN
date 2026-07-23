@@ -1,7 +1,7 @@
 'use client';
 
 import { useClickOutside } from '@siberiacancode/reactuse';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -12,6 +12,9 @@ import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
+import { SITE } from '@/shared/config';
+import { ROUTES } from '@/shared/constants';
+import { openExternal } from '@/shared/lib';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
 import { MenuItem } from './components';
@@ -101,6 +104,12 @@ export const AppMenu = () => {
             </motion.div>
 
             <div className={s.divider} />
+
+            <MenuItem
+              icon={ShieldCheck}
+              label={t('privacy')}
+              onClick={() => openExternal(`${SITE.url}${ROUTES.privacy}`)}
+            />
 
             <MenuItem
               icon={LogOut}

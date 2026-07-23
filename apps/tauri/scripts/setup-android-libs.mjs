@@ -15,6 +15,7 @@ const overlay = join(here, '..', 'android');
 const libs = join(overlay, 'libs');
 const generated = join(here, '..', 'gen', 'android');
 const appMain = join(generated, 'app', 'src', 'main');
+const packagePath = join('ru', 'gnomevpn', 'app');
 
 const GENERATED = ['MainActivity.kt'];
 
@@ -62,7 +63,7 @@ const copyLibs = () => {
 // no longer there.
 const copySources = () => {
   const from = join(overlay, 'java');
-  const to = join(appMain, 'java', 'app', 'gnomevpn', 'mobile');
+  const to = join(appMain, 'java', packagePath);
   const ours = readdirSync(from);
 
   mkdirSync(to, { recursive: true });

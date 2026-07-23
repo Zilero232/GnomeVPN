@@ -1,7 +1,7 @@
 .root {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 0 24px 100px;
+  padding: 0 24px;
 }
 
 .section {
@@ -28,7 +28,7 @@
 
 @media (width <= 560px) {
   .root {
-    padding: 0 16px 64px;
+    padding: 0 16px;
   }
 
   .section {

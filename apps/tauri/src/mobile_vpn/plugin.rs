@@ -8,7 +8,7 @@ use tauri::{Manager, Runtime};
 use super::MobileVpnError;
 
 const PLUGIN_NAME: &str = "gnomevpn";
-const PLUGIN_IDENTIFIER: &str = "app.gnomevpn.mobile";
+const PLUGIN_IDENTIFIER: &str = "ru.gnomevpn.app";
 const PLUGIN_CLASS: &str = "VpnPlugin";
 
 #[derive(Serialize)]

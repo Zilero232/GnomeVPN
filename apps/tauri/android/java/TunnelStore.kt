@@ -1,4 +1,4 @@
-package app.gnomevpn.mobile
+package ru.gnomevpn.app
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec

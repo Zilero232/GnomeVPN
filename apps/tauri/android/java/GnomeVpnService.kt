@@ -1,4 +1,4 @@
-package app.gnomevpn.mobile
+package ru.gnomevpn.app
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -213,8 +213,8 @@ class GnomeVpnService : VpnService() {
     }
 
     companion object {
-        const val ACTION_STOP = "app.gnomevpn.mobile.STOP"
-        const val ACTION_START_FROM_TILE = "app.gnomevpn.mobile.START_FROM_TILE"
+        const val ACTION_STOP = "ru.gnomevpn.app.STOP"
+        const val ACTION_START_FROM_TILE = "ru.gnomevpn.app.START_FROM_TILE"
         const val EXTRA_SERVER = "server"
         const val EXTRA_DNS = "dns"
         const val NO_DESCRIPTOR = -1

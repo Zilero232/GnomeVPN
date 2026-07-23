@@ -1,4 +1,4 @@
-package app.gnomevpn.mobile
+package ru.gnomevpn.app
 
 import android.app.Activity
 import android.content.Intent

@@ -1,4 +1,4 @@
-package app.gnomevpn.mobile
+package ru.gnomevpn.app
 
 import android.app.PendingIntent
 import android.content.ComponentName
@@ -83,7 +83,7 @@ class VpnTileService : TileService() {
     }
 
     companion object {
-        const val EXTRA_AUTO_CONNECT = "app.gnomevpn.mobile.AUTO_CONNECT"
+        const val EXTRA_AUTO_CONNECT = "ru.gnomevpn.app.AUTO_CONNECT"
 
         fun requestUpdate(context: Context) {
             requestListeningState(context, ComponentName(context, VpnTileService::class.java))

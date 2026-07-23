@@ -1,5 +1,5 @@
 {
-  "identifier": "app.gnomevpn.mobile",
+  "identifier": "ru.gnomevpn.app",
   "productName": "GnomeVPN",
   "bundle": {
     "createUpdaterArtifacts": false,

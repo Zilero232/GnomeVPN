@@ -13,11 +13,11 @@ import s from './AccountNav.module.scss';
 
 export const AccountNav = () => {
   const t = useTranslations('account');
-  const { isDesktopApp } = usePlatform();
+  const { isNativeApp } = usePlatform();
 
   return (
     <nav className={s.root}>
-      {isDesktopApp ? (
+      {isNativeApp ? (
         <Link className={s.back} href={ROUTES.app}>
           <ArrowLeft size={15} />
           {t('backToVpn')}
