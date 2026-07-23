@@ -39,6 +39,10 @@ pub async fn vpn_connect<R: Runtime>(
 
     let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
 
+    if let Err(error) = app.state::<VpnPlugin<R>>().remember_tunnel(&config) {
+        log::warn!("cannot store the session for the tile: {error}");
+    }
+
     let cancellation = CancellationToken::new();
     state.arm(cancellation.clone());
 
@@ -93,9 +97,21 @@ pub async fn vpn_disconnect<R: Runtime>(
     log::info!("vpn_disconnect: closing the android tunnel");
 
     state.cancel();
-    app.state::<VpnPlugin<R>>().stop()?;
+
+    let plugin = app.state::<VpnPlugin<R>>();
+
+    if let Err(error) = plugin.forget_tunnel() {
+        log::warn!("cannot drop the stored session: {error}");
+    }
+
+    plugin.stop()?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn vpn_take_tile_request<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+    app.state::<VpnPlugin<R>>().take_auto_connect()
 }
 
 #[tauri::command]

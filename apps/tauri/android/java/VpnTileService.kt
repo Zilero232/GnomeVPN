@@ -27,17 +27,29 @@ class VpnTileService : TileService() {
             return
         }
 
-        openApp()
+        connect()
     }
 
-    private fun openApp() {
+    private fun connect() {
+        val hasSession = TunnelStore.load(this) != null
+
+        openApp(autoConnect = hasSession)
+    }
+
+    private fun openApp(autoConnect: Boolean = false) {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return
 
-        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        launch
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(EXTRA_AUTO_CONNECT, autoConnect)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val pending =
-                PendingIntent.getActivity(this, 0, launch, PendingIntent.FLAG_IMMUTABLE)
+            val pending = PendingIntent.getActivity(
+                this,
+                0,
+                launch,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
 
             startActivityAndCollapse(pending)
 
@@ -56,6 +68,8 @@ class VpnTileService : TileService() {
     }
 
     companion object {
+        const val EXTRA_AUTO_CONNECT = "app.gnomevpn.mobile.AUTO_CONNECT"
+
         fun requestUpdate(context: Context) {
             requestListeningState(context, ComponentName(context, VpnTileService::class.java))
         }

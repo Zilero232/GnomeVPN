@@ -1,1 +1,1 @@
-export { useNodes } from './model/hooks';
+export { useNodeLatency, useNodes } from './model/hooks';

@@ -10,3 +10,10 @@ export const nodeSchema = z.object({
   status: nodeStatusSchema,
   lastHealthyAt: z.string().nullable(),
 });
+
+export const nodeEndpointSchema = z.object({
+  id: z.uuid(),
+  host: z.string().min(1),
+  port: z.number().int().positive(),
+  serverName: z.string().min(1),
+});

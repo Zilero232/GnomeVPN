@@ -1,4 +1,4 @@
-import type { TunnelConfig } from '@gnomevpn/schemas';
+import type { NodeEndpoint, TunnelConfig } from '@gnomevpn/schemas';
 import type { TunnelEvent } from '../ipc';
 
 export type VpnConnectInput = {
@@ -6,3 +6,9 @@ export type VpnConnectInput = {
   onEvent: (event: TunnelEvent) => void;
   autoReconnect: boolean;
 };
+
+export type ProbeLatencyInput = {
+  targets: NodeEndpoint[];
+};
+
+export type LatencyByNode = Record<string, number | null>;

@@ -225,6 +225,9 @@ jobs:
           ndk-version: r27c
           link-to-sdk: true
 
+      - name: Expose the NDK toolchain to cc-rs
+        run: echo "${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin" >> "$GITHUB_PATH"
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,x86_64-linux-android

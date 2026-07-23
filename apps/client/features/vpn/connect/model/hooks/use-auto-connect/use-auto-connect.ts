@@ -7,6 +7,7 @@ import {
   getLastNodeId,
   isVpnServiceAvailable,
   logger,
+  takeTileConnectRequest,
   wasManuallyDisconnected,
 } from '@/shared/lib';
 
@@ -27,12 +28,13 @@ export const useAutoConnect = ({
     }
 
     const run = async () => {
-      const [isEnabled, wasDisconnectedByUser] = await Promise.all([
+      const [isEnabled, wasDisconnectedByUser, isFromTile] = await Promise.all([
         getAutoConnect(),
         wasManuallyDisconnected(),
+        takeTileConnectRequest(),
       ]);
 
-      if (!isEnabled || wasDisconnectedByUser) {
+      if (!isFromTile && (!isEnabled || wasDisconnectedByUser)) {
         hasAttempted = true;
 
         return;

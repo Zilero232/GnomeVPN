@@ -42,7 +42,7 @@ impl Hysteria {
     }
 }
 
-async fn reap_orphans() {
+pub async fn reap_orphans() {
     #[cfg(target_os = "windows")]
     let mut command = {
         let mut command = Command::new("taskkill.exe");

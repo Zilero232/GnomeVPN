@@ -5,6 +5,7 @@ import {
 } from '@tauri-apps/plugin-notification';
 
 import { logger } from '../logger';
+import { resolveBundledResource } from '../resource-path';
 import { isTauriDesktop } from '../tauri-platform';
 import { NOTIFICATION_GROUP, NOTIFICATION_ICON, STATUS_NOTIFICATION_ID } from './config';
 import { resolveSound } from './lib';
@@ -34,7 +35,7 @@ export const notify = async ({ title, body, tone = 'info' }: NotifyInput): Promi
       title,
       body,
       group: NOTIFICATION_GROUP,
-      icon: NOTIFICATION_ICON,
+      icon: await resolveBundledResource(NOTIFICATION_ICON),
       sound: resolveSound(tone),
     });
   } catch (error) {

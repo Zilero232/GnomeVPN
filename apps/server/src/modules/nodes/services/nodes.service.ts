@@ -4,7 +4,7 @@ import { AppNotFoundException, AppServiceUnavailableException } from '../../../c
 import { PrismaService } from '../../../core';
 import { resolveNodeStatus } from '../lib';
 
-import type { Node } from '@gnomevpn/schemas';
+import type { Node, NodeEndpoint } from '@gnomevpn/schemas';
 
 @Injectable()
 export class NodesService {
@@ -31,6 +31,21 @@ export class NodesService {
       city: r.city ?? undefined,
       status: resolveNodeStatus({ isAvailable: r.isAvailable, lastHealthyAt: r.lastHealthyAt }),
       lastHealthyAt: r.lastHealthyAt ? r.lastHealthyAt.toISOString() : null,
+    }));
+  }
+
+  async listEndpoints(): Promise<NodeEndpoint[]> {
+    const rows = await this.prisma.node.findMany({
+      where: { isAvailable: true },
+      orderBy: { displayOrder: 'asc' },
+      select: { id: true, host: true, port: true, serverName: true },
+    });
+
+    return rows.map((r) => ({
+      id: r.id,
+      host: r.host,
+      port: r.port,
+      serverName: r.serverName,
     }));
   }
 

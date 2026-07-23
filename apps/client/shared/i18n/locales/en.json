@@ -266,6 +266,7 @@
     "nodeDegraded": "Unstable",
     "nodeOffline": "Unavailable",
     "nodeOfflineHint": "This node is not responding — pick another country",
+    "nodeLatency": "{value} ms",
     "nodeLabel": "Country",
     "nodePlaceholder": "Pick a country",
     "openAccount": "Account",

@@ -10,6 +10,7 @@ import type {
   DownloadedConfig,
   IssueConfigRequest,
   Node,
+  NodeEndpoint,
   PlanId,
   Release,
   SubscriptionStatus,
@@ -19,6 +20,11 @@ import type { ConfigDownload } from './vpn.types';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');
+  return data;
+};
+
+export const listNodeEndpoints = async (): Promise<NodeEndpoint[]> => {
+  const { data } = await api.get('/nodes/endpoints');
   return data;
 };
 

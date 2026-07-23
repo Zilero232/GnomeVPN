@@ -1,3 +1,10 @@
-export { isVpnServiceAvailable, vpnConnect, vpnDisconnect, vpnStatus } from './vpn-bridge';
+export {
+  isVpnServiceAvailable,
+  probeNodeLatency,
+  takeTileConnectRequest,
+  vpnConnect,
+  vpnDisconnect,
+  vpnStatus,
+} from './vpn-bridge';
 
-export type { VpnConnectInput } from './vpn-bridge.types';
+export type { LatencyByNode, ProbeLatencyInput, VpnConnectInput } from './vpn-bridge.types';

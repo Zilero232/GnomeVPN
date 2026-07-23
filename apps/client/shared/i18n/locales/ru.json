@@ -266,6 +266,7 @@
     "nodeDegraded": "Нестабилен",
     "nodeOffline": "Недоступен",
     "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
+    "nodeLatency": "{value} мс",
     "nodeLabel": "Страна",
     "nodePlaceholder": "Выберите страну",
     "openAccount": "Аккаунт",
