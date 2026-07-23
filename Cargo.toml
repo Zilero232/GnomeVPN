@@ -2,8 +2,13 @@
 members = ["apps/tauri", "crates/vpn-ipc", "crates/vpn-service"]
 resolver = "2"
 
+# Measured on the service crate, relinking after a dependency change: fat LTO
+# with one codegen unit takes 48s and produces 3.35 MB, thin takes 10s and
+# produces 3.95 MB. The 600 KB is noise next to the 20 MB hysteria binary the
+# installer already carries, and the tunnel waits on the network rather than on
+# the CPU, so the build time is worth more here than the size.
 [profile.release]
 opt-level = "s"
-lto = true
-codegen-units = 1
+lto = "thin"
+codegen-units = 16
 strip = true

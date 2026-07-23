@@ -112,7 +112,17 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      # Same key as the Check Code rust job: that run has already compiled the
+      # dependency graph on an identical runner, so the release starts warm.
       - uses: swatinem/rust-cache@v2
+        with:
+          shared-key: windows-workspace
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
@@ -124,9 +134,21 @@ jobs:
           DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
         run: bunx prisma generate
 
+      # Both are pinned downloads that never change for a given version, so a
+      # hit here skips the fetches below entirely.
+      - name: Cache native binaries
+        id: native-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/tauri/bin/wintun
+            apps/tauri/bin/hysteria
+          key: native-windows-wintun-0.14.1-hysteria-${{ env.HYSTERIA_VERSION }}
+
       # wintun.dll is not redistributable through git: the tunnel adapter needs it
       # at runtime, so the installer bundles a copy fetched here.
       - name: Fetch wintun
+        if: steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o wintun.zip
@@ -137,6 +159,7 @@ jobs:
       # The Hysteria2 client runs the tunnel as a child of the service. Like
       # wintun it is not committed, so the installer bundles a copy fetched here.
       - name: Fetch hysteria
+        if: steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           mkdir -p apps/tauri/bin/hysteria
@@ -214,13 +237,29 @@ jobs:
       # re-download its whole dependency set each time.
       - uses: gradle/actions/setup-gradle@v4
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+
+      # ~20 MB per ABI, immutable for a given release tag, so it is keyed on the
+      # version alone and re-downloaded only when that moves.
+      - name: Cache hysteria binaries
+        id: hysteria-cache
+        uses: actions/cache@v4
+        with:
+          path: apps/tauri/android/libs
+          key: hysteria-android-${{ env.HYSTERIA_VERSION }}
 
       # The Hysteria2 client runs the tunnel on Android too and, like the Windows
       # build, is fetched rather than committed. It ships as libhysteria.so
       # because Android only executes files from jniLibs.
       - name: Fetch hysteria for Android
+        if: steps.hysteria-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           mkdir -p apps/tauri/android/libs/arm64-v8a apps/tauri/android/libs/x86_64
