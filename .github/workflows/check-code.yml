@@ -24,6 +24,14 @@ jobs:
         with:
           bun-version: 1.3.1
 
+      # setup-bun caches the executable, never the packages — that is what
+      # actions/cache is for. Keyed per OS: the caches are not interchangeable.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
       - run: bun install --frozen-lockfile --ignore-scripts
 
       # Prisma types are generated, not committed: typecheck fails without them.
@@ -50,7 +58,12 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      # Shared with the desktop release build, which compiles the same two
+      # crates on the same runner — without a common key the two jobs evict
+      # each other and both start from scratch.
       - uses: swatinem/rust-cache@v2
+        with:
+          shared-key: windows-workspace
 
       - name: Check formatting
         run: cargo fmt --all --check

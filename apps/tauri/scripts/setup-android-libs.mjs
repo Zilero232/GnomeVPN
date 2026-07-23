@@ -18,23 +18,43 @@ const appMain = join(generated, 'app', 'src', 'main');
 
 const GENERATED = ['MainActivity.kt'];
 
+// Built by cargo into jniLibs rather than copied from the overlay, so the
+// cleanup below must leave it alone.
+const CARGO_LIB = 'libgnomevpn_lib.so';
+
 if (!existsSync(generated)) {
   console.error('[android] gen/android is missing — run `tauri android init` first');
   process.exit(1);
 }
 
+// A binary renamed in the overlay leaves its predecessor behind in jniLibs,
+// where it still ships inside the APK — libxray.so outlived the move to
+// hysteria that way, and the tunnel failed at runtime looking for a name the
+// APK no longer carried.
 const copyLibs = () => {
   const abis = readdirSync(libs, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
+  const removed = [];
+
   for (const abi of abis) {
     const to = join(appMain, 'jniLibs', abi);
+    const ours = readdirSync(join(libs, abi));
+
     mkdirSync(to, { recursive: true });
+
+    for (const entry of readdirSync(to)) {
+      if (entry !== CARGO_LIB && !ours.includes(entry)) {
+        rmSync(join(to, entry), { recursive: true });
+        removed.push(`${abi}/${entry}`);
+      }
+    }
+
     cpSync(join(libs, abi), to, { recursive: true });
   }
 
-  return abis;
+  return { abis, removed };
 };
 
 // Kotlin sources removed from the overlay have to disappear from the generated
@@ -167,12 +187,12 @@ const patchManifest = () => {
   return true;
 };
 
-const abis = copyLibs();
+const { abis, removed } = copyLibs();
 const sources = copySources();
 const resources = copyResources();
 const patched = patchManifest();
 
 // biome-ignore lint/suspicious/noConsole: standalone CLI script, console is the output channel
 console.log(
-  `[android] libs: ${abis.join(', ')} | sources: ${sources.join(', ')} | res: ${resources.join(', ') || 'none'} | manifest: ${patched ? 'patched' : 'already patched'}`,
+  `[android] libs: ${abis.join(', ')}${removed.length ? ` | removed: ${removed.join(', ')}` : ''} | sources: ${sources.join(', ')} | res: ${resources.join(', ') || 'none'} | manifest: ${patched ? 'patched' : 'already patched'}`,
 );
