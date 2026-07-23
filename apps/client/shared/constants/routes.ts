@@ -6,6 +6,8 @@ export const ROUTES = {
   app: '/app',
 } as const;
 
+export const DOWNLOAD_HASH = '#download';
+
 const KNOWN_ROUTES: string[] = Object.values(ROUTES);
 const PUBLIC_ROUTES: string[] = [ROUTES.landing, ROUTES.auth, ROUTES.resetPassword];
 const GUEST_ONLY_ROUTES: string[] = [ROUTES.auth];

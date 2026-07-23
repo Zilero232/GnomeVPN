@@ -27,6 +27,7 @@ concurrency:
 env:
   WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/gnomevpn-web
   API_IMAGE: ghcr.io/${{ github.repository_owner }}/gnomevpn-server
+  BASELINE_MIGRATION: 20260723000000_baseline
 
 jobs:
   build-web:
@@ -138,6 +139,20 @@ jobs:
             echo "present=false" >> "$GITHUB_OUTPUT"
             echo "::warning::No migration files in apps/server/prisma/migrations — skipping migrate deploy. The schema on the VPS is whatever \`db push\` last left there, and further schema changes will NOT reach production. See DEPLOY.md to create the baseline migration."
           fi
+
+      # The database predates the migration history: it was built with
+      # `db push`, so its tables already exist while `_prisma_migrations` is
+      # empty. Applying the baseline to it would fail on "table already
+      # exists", so it is recorded as applied instead. Once the row is there
+      # the command fails harmlessly, which is why its exit code is ignored.
+      - name: Baseline the migration history
+        if: steps.migrations.outputs.present == 'true'
+        continue-on-error: true
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}' && \
+             docker compose exec -T server bunx prisma migrate resolve --applied ${{ env.BASELINE_MIGRATION }}"
 
       # Schema changes ship inside the image, so migrations run once the new
       # server container is up with the matching Prisma client.

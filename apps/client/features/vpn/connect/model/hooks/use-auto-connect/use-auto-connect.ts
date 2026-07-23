@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import {
   getAutoConnect,
   getLastNodeId,
+  hideAppWindow,
   isVpnServiceAvailable,
   logger,
   takeTileConnectRequest,
@@ -62,6 +63,10 @@ export const useAutoConnect = ({
       logger.info(`autoconnect: connecting to ${target.country}`);
 
       await connect({ nodeId: target.id, country: target.country, isAutomatic: true });
+
+      if (isFromTile) {
+        await hideAppWindow();
+      }
     };
 
     run().catch((error: unknown) => {

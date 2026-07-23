@@ -34,7 +34,14 @@ export class WebhookService {
   private async handlePaymentEvent(paymentId: string): Promise<void> {
     const row = await this.prisma.payment.findUnique({
       where: { yookassaPaymentId: paymentId },
-      select: { id: true, userId: true, status: true, plan: true },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        plan: true,
+        kind: true,
+        extraDevices: true,
+      },
     });
 
     if (!row) {
@@ -75,6 +82,15 @@ export class WebhookService {
 
     if (claimed.count === 0) {
       this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
+
+      return;
+    }
+
+    if (row.kind === 'extraDevices') {
+      await this.shared.grantExtraDevices({
+        userId: row.userId,
+        quantity: row.extraDevices,
+      });
 
       return;
     }

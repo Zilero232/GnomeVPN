@@ -41,6 +41,28 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve(result)
     }
 
+    @Command
+    fun requestPermission(invoke: Invoke) {
+        val consent = VpnService.prepare(activity)
+
+        if (consent == null) {
+            val result = JSObject()
+            result.put("granted", true)
+            invoke.resolve(result)
+
+            return
+        }
+
+        startActivityForResult(invoke, consent, "onPermissionResult")
+    }
+
+    @ActivityCallback
+    fun onPermissionResult(invoke: Invoke, result: ActivityResult) {
+        val granted = JSObject()
+        granted.put("granted", result.resultCode == Activity.RESULT_OK)
+        invoke.resolve(granted)
+    }
+
     // Android extracts jniLibs to an install-specific directory, so the path
     // has to be read from the system rather than assembled by hand.
     @Command
@@ -160,6 +182,12 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         val result = JSObject()
         result.put("requested", requested)
         invoke.resolve(result)
+    }
+
+    @Command
+    fun moveToBackground(invoke: Invoke) {
+        activity.moveTaskToBack(true)
+        invoke.resolve()
     }
 
     @Command

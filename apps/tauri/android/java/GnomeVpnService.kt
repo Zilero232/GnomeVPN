@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -226,5 +228,18 @@ class GnomeVpnService : VpnService() {
         }
 
         fun isRunning(): Boolean = currentFd != NO_DESCRIPTOR
+
+        fun isRunning(context: Context): Boolean {
+            if (currentFd != NO_DESCRIPTOR) {
+                return true
+            }
+
+            val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+                as? ConnectivityManager ?: return false
+
+            val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
+
+            return capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+        }
     }
 }

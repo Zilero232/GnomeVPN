@@ -125,6 +125,21 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(result.requested)
     }
 
+    pub fn request_permission(&self) -> Result<bool, MobileVpnError> {
+        let result: PermissionResult = self
+            .0
+            .run_mobile_plugin("requestPermission", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.granted)
+    }
+
+    pub fn move_to_background(&self) -> Result<(), MobileVpnError> {
+        self.0
+            .run_mobile_plugin::<()>("moveToBackground", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
+    }
+
     pub fn traffic(&self) -> Result<TrafficResult, MobileVpnError> {
         self.0
             .run_mobile_plugin("traffic", Empty {})

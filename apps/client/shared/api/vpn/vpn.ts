@@ -3,9 +3,11 @@ import { parseFileName } from './vpn.lib';
 
 import type {
   BindCardResult,
+  BuyExtraDevicesInput,
   CheckoutClient,
   CheckoutResult,
   ConnectRequest,
+  DeviceUsage,
   DisconnectRequest,
   DownloadedConfig,
   IssueConfigRequest,
@@ -25,6 +27,11 @@ export const listNodes = async (): Promise<Node[]> => {
 
 export const listNodeEndpoints = async (): Promise<NodeEndpoint[]> => {
   const { data } = await api.get('/nodes/endpoints');
+  return data;
+};
+
+export const getDeviceUsage = async (deviceId: string): Promise<DeviceUsage> => {
+  const { data } = await api.get('/tunnel/devices', { params: { deviceId } });
   return data;
 };
 
@@ -68,6 +75,14 @@ export const bindCard = async (client: CheckoutClient): Promise<BindCardResult> 
 
 export const unbindCard = async (): Promise<void> => {
   await api.post('/billing/unbind-card');
+};
+
+export const buyExtraDevices = async ({
+  quantity,
+  client,
+}: BuyExtraDevicesInput): Promise<CheckoutResult> => {
+  const { data } = await api.post('/billing/extra-devices', { quantity, client });
+  return data;
 };
 
 export const listConfigs = async (): Promise<DownloadedConfig[]> => {

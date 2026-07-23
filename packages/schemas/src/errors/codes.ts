@@ -16,4 +16,7 @@ export const apiErrorCodeSchema = z.enum([
   'NODE_NOT_FOUND',
   'NODE_UNAVAILABLE',
   'CONFIG_LIMIT_REACHED',
+  'DEVICE_LIMIT_REACHED',
+  'SUBSCRIPTION_REQUIRED',
+  'EXTRA_DEVICES_LIMIT',
 ]);

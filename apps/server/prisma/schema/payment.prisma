@@ -4,6 +4,11 @@ enum PaymentStatus {
   canceled
 }
 
+enum PaymentKind {
+  subscription
+  extraDevices
+}
+
 model Payment {
   id                String @id @default(dbgenerated("gen_random_uuid()"))
   userId            String @map("user_id")
@@ -13,6 +18,9 @@ model Payment {
   status       PaymentStatus    @default(pending)
   plan         SubscriptionPlan @default(monthly)
   isAutoCharge Boolean          @default(false) @map("is_auto_charge")
+
+  kind         PaymentKind @default(subscription)
+  extraDevices Int         @default(0) @map("extra_devices")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 

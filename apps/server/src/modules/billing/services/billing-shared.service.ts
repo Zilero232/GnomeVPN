@@ -1,15 +1,22 @@
-import { findPlan } from '@gnomevpn/schemas';
-import { Injectable } from '@nestjs/common';
+import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { PrismaService } from '../../../core';
 
 import type { CheckoutClient } from '@gnomevpn/schemas';
-import type { ActivateInput, AttachMethodInput, AutoRenewInput } from '../billing.types';
+import type {
+  ActivateInput,
+  AttachMethodInput,
+  AutoRenewInput,
+  GrantExtraDevicesInput,
+} from '../billing.types';
 
 @Injectable()
 export class BillingSharedService {
+  private readonly logger = new Logger(BillingSharedService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: AppConfigService,
@@ -82,6 +89,28 @@ export class BillingSharedService {
       where: { userId },
       create: { userId, ...data },
       update: data,
+    });
+  }
+
+  async grantExtraDevices({ userId, quantity }: GrantExtraDevicesInput): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const subscription = await tx.subscription.findUnique({
+        where: { userId },
+        select: { extraDevices: true },
+      });
+
+      if (!subscription) {
+        this.logger.warn(`paid extra devices for ${userId} without a subscription row`);
+
+        return;
+      }
+
+      await tx.subscription.update({
+        where: { userId },
+        data: {
+          extraDevices: Math.min(subscription.extraDevices + quantity, MAX_EXTRA_DEVICES),
+        },
+      });
     });
   }
 }

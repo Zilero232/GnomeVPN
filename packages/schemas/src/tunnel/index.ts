@@ -4,10 +4,11 @@ export {
   issueConfigSchema,
   revokeConfigSchema,
 } from './inputs';
-export { downloadedConfigSchema, tunnelConfigSchema } from './outputs';
+export { deviceUsageSchema, downloadedConfigSchema, tunnelConfigSchema } from './outputs';
 
 export type {
   ConnectRequest,
+  DeviceUsage,
   DisconnectRequest,
   DownloadedConfig,
   IssueConfigRequest,

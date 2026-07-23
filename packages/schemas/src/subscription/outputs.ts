@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { limitsSchema } from '../billing/outputs';
 import { planIdSchema } from '../billing/plans';
 
 export const subscriptionStatusSchema = z.object({
@@ -10,4 +11,5 @@ export const subscriptionStatusSchema = z.object({
   hasPaymentMethod: z.boolean(),
   savedCardTitle: z.string().nullable(),
   isRecurringAvailable: z.boolean(),
+  limits: limitsSchema,
 });

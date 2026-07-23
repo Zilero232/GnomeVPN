@@ -1,9 +1,9 @@
-import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUser } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
-import { ConnectDto, DisconnectDto, TunnelConfigDto } from './dto/sessions.dto';
+import { ConnectDto, DeviceUsageDto, DisconnectDto, TunnelConfigDto } from './dto/sessions.dto';
 import { SessionConnectService } from './services';
 
 @Controller('tunnel')
@@ -21,5 +21,11 @@ export class SessionsController {
   @HttpCode(204)
   async disconnect(@Body() body: DisconnectDto, @CurrentUser() userId: string) {
     await this.sessions.disconnect({ userId, deviceId: body.deviceId });
+  }
+
+  @Get('devices')
+  @ZodResponse({ type: DeviceUsageDto })
+  listDevices(@Query() query: DisconnectDto, @CurrentUser() userId: string) {
+    return this.sessions.listDevices({ userId, deviceId: query.deviceId });
   }
 }

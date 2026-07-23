@@ -1,4 +1,4 @@
-import type { Plan, PlanId } from '@gnomevpn/schemas';
+import type { CheckoutClient, Plan, PlanId } from '@gnomevpn/schemas';
 
 export type PaymentMethodRef = {
   id: string;
@@ -27,4 +27,15 @@ export type RecordPaymentInput = {
   paymentId: string;
   plan: Plan;
   isAutoCharge: boolean;
+};
+
+export type GrantExtraDevicesInput = {
+  userId: string;
+  quantity: number;
+};
+
+export type BuyExtraDevicesServiceInput = {
+  userId: string;
+  quantity: number;
+  client: CheckoutClient;
 };

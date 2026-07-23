@@ -1,6 +1,9 @@
 export {
+  hasVpnPermission,
+  hideAppWindow,
   isVpnServiceAvailable,
   probeNodeLatency,
+  requestVpnPermission,
   takeTileConnectRequest,
   vpnConnect,
   vpnDisconnect,

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { MAX_EXTRA_DEVICES } from './addons';
 import { planIdSchema } from './plans';
 
 export const webhookEventSchema = z.object({
@@ -23,5 +24,10 @@ export const createCheckoutSchema = z.object({
 });
 
 export const bindCardSchema = z.object({
+  client: checkoutClientSchema.default('web'),
+});
+
+export const buyExtraDevicesSchema = z.object({
+  quantity: z.number().int().min(1).max(MAX_EXTRA_DEVICES),
   client: checkoutClientSchema.default('web'),
 });

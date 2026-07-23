@@ -1,6 +1,7 @@
 import {
   bindCardResultSchema,
   bindCardSchema,
+  buyExtraDevicesSchema,
   checkoutResultSchema,
   createCheckoutSchema,
   webhookEventSchema,
@@ -16,3 +17,5 @@ export class WebhookEventDto extends createZodDto(webhookEventSchema) {}
 export class BindCardResultDto extends createZodDto(bindCardResultSchema) {}
 
 export class BindCardDto extends createZodDto(bindCardSchema) {}
+
+export class BuyExtraDevicesDto extends createZodDto(buyExtraDevicesSchema) {}

@@ -19,7 +19,13 @@ export class NodeHealthJob {
       token: resolveNodeApiKey(node.apiTokenEnvVar),
     });
 
-    if (!(await xray.health())) {
+    const isHealthy = await xray.health().catch((error: unknown) => {
+      throw new Error(`${node.apiUrl}: ${describeError(error)}`);
+    });
+
+    if (!isHealthy) {
+      this.logger.warn(`node ${node.apiUrl} answered but its inbound is disabled`);
+
       return;
     }
 

@@ -4,7 +4,7 @@ import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PeersService } from '../../peers';
-import { CONFIG_LIMIT } from '../config';
+import { SubscriptionService } from '../../subscription';
 import { configFileName, renderConfigFile } from '../lib';
 
 import type { DownloadedConfig } from '@gnomevpn/schemas';
@@ -16,6 +16,7 @@ export class ConfigIssueService {
     private readonly prisma: PrismaService,
     private readonly nodes: NodesService,
     private readonly peers: PeersService,
+    private readonly subscription: SubscriptionService,
   ) {}
 
   async list(userId: string): Promise<DownloadedConfig[]> {
@@ -48,10 +49,13 @@ export class ConfigIssueService {
       where: { userId, kind: 'config', name: { equals: name, mode: 'insensitive' } },
     });
 
-    const count = await this.prisma.peer.count({ where: { userId, kind: 'config' } });
+    const [count, { configLimit }] = await Promise.all([
+      this.prisma.peer.count({ where: { userId, kind: 'config' } }),
+      this.subscription.getLimits(userId),
+    ]);
 
-    if (!existing && count >= CONFIG_LIMIT) {
-      throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${CONFIG_LIMIT} configs`);
+    if (!existing && count >= configLimit) {
+      throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${configLimit} configs`);
     }
 
     const created = await this.peers.issue({ node, userId, kind: 'config', name });
