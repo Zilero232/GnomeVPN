@@ -7,8 +7,9 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
+import { useDeviceUsage } from '@/entities/vpn/device';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
-import { UpdateGate } from '@/features/app/check-update';
+import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
 import { env } from '@/shared/config';
@@ -32,6 +33,12 @@ export const AppView = () => {
   const isOnline = status === 'connected';
 
   const { latency } = useNodeLatency({ isEnabled: hasAccess && status === 'disconnected' });
+  const { usage } = useDeviceUsage({ status });
+
+  const isDeviceLimitReached =
+    usage !== null &&
+    usage.used >= usage.limit &&
+    !usage.devices.some((device) => device.isCurrent);
 
   const onToggle = async () => {
     if (status === 'connected') {
@@ -94,12 +101,22 @@ export const AppView = () => {
           onSelect={selection.select}
         />
 
+        {hasAccess && usage && (
+          <Text size="xs" tone={isDeviceLimitReached ? 'danger' : 'muted'}>
+            {isDeviceLimitReached
+              ? t('devicesFull', { limit: usage.limit })
+              : t('devicesUsed', { used: usage.used, limit: usage.limit })}
+          </Text>
+        )}
+
         <TunnelStats connectedAt={connectedAt} isVisible={isOnline} traffic={traffic} />
       </div>
 
       <ServiceRepairBanner />
 
       <UpdateGate />
+
+      <MobileUpdateBanner />
     </main>
   );
 };

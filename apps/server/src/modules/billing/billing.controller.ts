@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/decorators';
 import {
   BindCardDto,
   BindCardResultDto,
+  BuyExtraDevicesDto,
   CheckoutResultDto,
   CreateCheckoutDto,
   WebhookEventDto,
@@ -26,6 +27,12 @@ export class BillingController {
   @ZodResponse({ type: CheckoutResultDto })
   createCheckout(@Body() body: CreateCheckoutDto, @CurrentUser() userId: string) {
     return this.checkout.createCheckout(userId, body.planId, body.client);
+  }
+
+  @Post('extra-devices')
+  @ZodResponse({ type: CheckoutResultDto })
+  buyExtraDevices(@Body() body: BuyExtraDevicesDto, @CurrentUser() userId: string) {
+    return this.checkout.buyExtraDevices({ userId, quantity: body.quantity, client: body.client });
   }
 
   @Post('cancel')

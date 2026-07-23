@@ -1,10 +1,17 @@
 export {
+  DEFAULT_DEVICE_LIMIT,
+  extraDevicesPriceRub,
+  MAX_EXTRA_DEVICES,
+  resolveLimits,
+} from './addons';
+export {
   bindCardSchema,
+  buyExtraDevicesSchema,
   checkoutClientSchema,
   createCheckoutSchema,
   webhookEventSchema,
 } from './inputs';
-export { bindCardResultSchema, checkoutResultSchema } from './outputs';
+export { bindCardResultSchema, checkoutResultSchema, limitsSchema } from './outputs';
 export {
   DEFAULT_PLAN_ID,
   findPlan,
@@ -18,9 +25,11 @@ export {
 export type {
   BindCardInput,
   BindCardResult,
+  BuyExtraDevicesInput,
   CheckoutClient,
   CheckoutResult,
   CreateCheckoutInput,
+  Limits,
   Plan,
   PlanId,
   WebhookEvent,

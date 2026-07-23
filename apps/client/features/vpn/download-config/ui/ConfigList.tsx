@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { Stack, Text } from '@/shared/ui';
-import { CONFIG_LIMIT } from '../config';
 import { useConfigs, useCopyConfig, useIssueConfig, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigRow } from './components';
 
@@ -18,14 +17,14 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const t = useTranslations('configs');
   const { nodes, isLoading: isLoadingNodes } = useNodes();
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
-  const { hasAccess } = useSubscriptionStatus();
+  const { hasAccess, limits } = useSubscriptionStatus();
 
   const issue = useIssueConfig();
   const copy = useCopyConfig();
   const revoke = useRevokeConfig();
 
   const isPending = issue.isPending || copy.isPending || revoke.isPending;
-  const isFull = configs.length >= CONFIG_LIMIT;
+  const isFull = configs.length >= limits.configLimit;
 
   if (isLoadingNodes || isLoadingConfigs || nodes.length === 0) {
     return (
@@ -40,14 +39,14 @@ export const ConfigList = ({ className }: ConfigListProps) => {
       <section className={s.panel}>
         <Stack gap="md">
           <Text size="xs" tone="muted">
-            {hasAccess ? t('hint', { limit: CONFIG_LIMIT }) : t('lockedHint')}
+            {hasAccess ? t('hint', { limit: limits.configLimit }) : t('lockedHint')}
           </Text>
 
           {hasAccess && <AddConfigForm isDisabled={isPending || isFull} nodes={nodes} />}
 
           {isFull && (
             <Text size="xs" tone="muted">
-              {t('limitReached', { limit: CONFIG_LIMIT })}
+              {t('limitReached', { limit: limits.configLimit })}
             </Text>
           )}
         </Stack>
@@ -59,7 +58,7 @@ export const ConfigList = ({ className }: ConfigListProps) => {
             <h3 className={s.panelTitle}>{t('issued')}</h3>
 
             <span className={s.counter}>
-              {configs.length} / {CONFIG_LIMIT}
+              {configs.length} / {limits.configLimit}
             </span>
           </header>
 

@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { DownloadAppDialog } from '@/features/app/download-app';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
-import { ROUTES } from '@/shared/constants';
+import { DOWNLOAD_HASH, ROUTES } from '@/shared/constants';
 import { BrandMark, Button } from '@/shared/ui';
 import { LANDING_NAV_SECTIONS } from '../../../config';
 
@@ -21,6 +21,12 @@ export const LandingHeader = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.location.hash === DOWNLOAD_HASH) {
+      setIsDownloadOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;

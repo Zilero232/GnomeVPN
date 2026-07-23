@@ -1,1 +1,7 @@
-export { MONTH_FORMS, SUBSCRIPTION_PREFIX, WEBHOOK_ALLOWED_CIDRS } from './billing.config';
+export {
+  DEVICE_FORMS,
+  EXTRA_DEVICES_PREFIX,
+  MONTH_FORMS,
+  SUBSCRIPTION_PREFIX,
+  WEBHOOK_ALLOWED_CIDRS,
+} from './billing.config';

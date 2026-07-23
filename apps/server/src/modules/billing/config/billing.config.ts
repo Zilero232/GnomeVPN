@@ -23,3 +23,11 @@ export const SUBSCRIPTION_PREFIX = {
   purchase: 'Подписка GnomeVPN на',
   renewal: 'Продление подписки GnomeVPN на',
 } as const;
+
+export const DEVICE_FORMS = {
+  one: 'устройство',
+  few: 'устройства',
+  many: 'устройств',
+} as const;
+
+export const EXTRA_DEVICES_PREFIX = 'Дополнительные устройства GnomeVPN:';

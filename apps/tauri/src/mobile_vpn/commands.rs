@@ -115,6 +115,11 @@ pub async fn vpn_take_tile_request<R: Runtime>(app: AppHandle<R>) -> Result<bool
 }
 
 #[tauri::command]
+pub async fn vpn_hide_window<R: Runtime>(app: AppHandle<R>) -> Result<(), MobileVpnError> {
+    app.state::<VpnPlugin<R>>().move_to_background()
+}
+
+#[tauri::command]
 pub async fn vpn_status(state: State<'_, MobileVpnState>) -> Result<&'static str, MobileVpnError> {
     Ok(if state.is_active() {
         "connected"

@@ -163,6 +163,12 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     @Command
+    fun moveToBackground(invoke: Invoke) {
+        activity.moveTaskToBack(true)
+        invoke.resolve()
+    }
+
+    @Command
     fun stop(invoke: Invoke) {
         val intent = Intent(activity, GnomeVpnService::class.java)
             .setAction(GnomeVpnService.ACTION_STOP)

@@ -123,6 +123,7 @@ pub fn run() {
             mobile_vpn::commands::vpn_status,
             mobile_vpn::commands::vpn_service_available,
             mobile_vpn::commands::vpn_take_tile_request,
+            mobile_vpn::commands::vpn_hide_window,
             latency::commands::vpn_probe_latency,
             vault_save_token,
             vault_read_token,

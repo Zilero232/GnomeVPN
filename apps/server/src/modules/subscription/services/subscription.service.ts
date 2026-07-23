@@ -1,11 +1,11 @@
-import { DEFAULT_PLAN_ID } from '@gnomevpn/schemas';
+import { DEFAULT_PLAN_ID, resolveLimits } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 
 import { isPeriodActive, resolveStatus } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { PrismaService } from '../../../core';
 
-import type { SubscriptionStatus } from '@gnomevpn/schemas';
+import type { Limits, SubscriptionStatus } from '@gnomevpn/schemas';
 
 @Injectable()
 export class SubscriptionService {
@@ -23,6 +23,15 @@ export class SubscriptionService {
     return isPeriodActive(row?.currentPeriodEnd);
   }
 
+  async getLimits(userId: string): Promise<Limits> {
+    const row = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { extraDevices: true, currentPeriodEnd: true },
+    });
+
+    return resolveLimits(isPeriodActive(row?.currentPeriodEnd) ? row?.extraDevices : 0);
+  }
+
   async getStatus(userId: string): Promise<SubscriptionStatus> {
     const isRecurringAvailable = this.config.get('YOOKASSA_RECURRING');
 
@@ -34,6 +43,7 @@ export class SubscriptionService {
         cancelAtPeriodEnd: true,
         savedCardId: true,
         savedCardTitle: true,
+        extraDevices: true,
       },
     });
 
@@ -46,6 +56,7 @@ export class SubscriptionService {
         hasPaymentMethod: false,
         savedCardTitle: null,
         isRecurringAvailable,
+        limits: resolveLimits(0),
       };
     }
 
@@ -57,6 +68,7 @@ export class SubscriptionService {
       hasPaymentMethod: row.savedCardId !== null,
       savedCardTitle: row.savedCardTitle,
       isRecurringAvailable,
+      limits: resolveLimits(isPeriodActive(row.currentPeriodEnd) ? row.extraDevices : 0),
     };
   }
 }

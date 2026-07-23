@@ -1,9 +1,10 @@
 'use client';
 
+import { CreditCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
-import { Button, Stack, Text } from '@/shared/ui';
+import { Button, Text } from '@/shared/ui';
 import {
   useBindCard,
   useCancelAutoRenew,
@@ -27,9 +28,17 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
 
   const card = (
     <div className={s.card}>
-      <Text size="xs" tone="muted">
-        {savedCardTitle ?? t('cardBound')}
-      </Text>
+      <span className={s.cardIcon}>
+        <CreditCard size={15} />
+      </span>
+
+      <div className={s.cardText}>
+        <span className={s.cardTitle}>{savedCardTitle ?? t('cardBound')}</span>
+
+        <span className={s.cardNote}>
+          {cancelAtPeriodEnd ? t('autoRenewOff') : t('autoRenewOn')}
+        </span>
+      </div>
 
       <Button
         className={s.unbind}
@@ -45,7 +54,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   return match({ isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd })
     .with({ isRecurringAvailable: false }, () => null)
     .with({ hasPaymentMethod: false }, () => (
-      <>
+      <div className={s.root}>
         <Text size="xs" tone="muted">
           {t('noPaymentMethod')}
         </Text>
@@ -53,28 +62,24 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
         <Button disabled={bind.isPending} variant="ghost" onClick={() => bind.mutate()}>
           {t('bindCard')}
         </Button>
-      </>
+      </div>
     ))
     .with({ cancelAtPeriodEnd: true }, () => (
-      <Stack gap="sm">
+      <div className={s.root}>
         {card}
-
-        <Text size="xs" tone="muted">
-          {t('autoRenewOff')}
-        </Text>
 
         <Button disabled={resume.isPending} variant="ghost" onClick={() => resume.mutate()}>
           {t('resumeAutoRenew')}
         </Button>
-      </Stack>
+      </div>
     ))
     .otherwise(() => (
-      <Stack gap="sm">
+      <div className={s.root}>
         {card}
 
         <Button disabled={cancel.isPending} variant="ghost" onClick={() => cancel.mutate()}>
           {t('cancelAutoRenew')}
         </Button>
-      </Stack>
+      </div>
     ));
 };

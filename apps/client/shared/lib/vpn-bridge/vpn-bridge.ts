@@ -34,6 +34,10 @@ export const isVpnServiceAvailable = async (): Promise<boolean> =>
 export const takeTileConnectRequest = async (): Promise<boolean> =>
   callRust({ command: 'vpn_take_tile_request', fallback: false });
 
+export const hideAppWindow = async (): Promise<void> => {
+  await callRust({ command: 'vpn_hide_window', fallback: null });
+};
+
 export const probeNodeLatency = async ({ targets }: ProbeLatencyInput): Promise<LatencyByNode> => {
   const outcomes = await callRust({
     command: 'vpn_probe_latency',

@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
-import { AutoRenewControl, PlanPicker } from '@/features/billing/checkout';
+import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
 import { Text } from '@/shared/ui';
 
 import s from './SubscriptionCard.module.scss';
@@ -49,7 +49,15 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
           )}
         </dl>
 
-        {subscription && <AutoRenewControl subscription={subscription} />}
+        {subscription && (
+          <>
+            <ExtraDevicesControl limits={subscription.limits} />
+
+            <div className={s.addon}>
+              <AutoRenewControl subscription={subscription} />
+            </div>
+          </>
+        )}
       </>
     ))
     .otherwise(() => (

@@ -1,6 +1,6 @@
 import { TrayIcon } from '@tauri-apps/api/tray';
 
-import { resolveBundledResource, toggleMainWindow } from '@/shared/lib';
+import { logger, resolveBundledResource, toggleMainWindow } from '@/shared/lib';
 import { TRAY_ICON, TRAY_ID } from '../config';
 
 import type { SetupTrayInput } from './setup-tray.types';
@@ -8,12 +8,18 @@ import type { SetupTrayInput } from './setup-tray.types';
 const iconFor = async (isConnected: boolean): Promise<string> =>
   resolveBundledResource(isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected);
 
-export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) => {
-  const existing = await TrayIcon.getById(TRAY_ID);
+const dropExisting = async () => {
+  try {
+    const existing = await TrayIcon.getById(TRAY_ID);
 
-  if (existing) {
-    await existing.close();
+    await existing?.close();
+  } catch (error) {
+    logger.warn(`stale tray icon could not be closed: ${String(error)}`);
   }
+};
+
+export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) => {
+  await dropExisting();
 
   const tray = await TrayIcon.new({
     id: TRAY_ID,

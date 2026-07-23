@@ -5,6 +5,7 @@
       "bin/wintun/wintun.dll": "wintun.dll",
       "bin/hysteria/hysteria.exe": "hysteria.exe",
       "bin/service/gnomevpn-service.exe": "gnomevpn-service.exe",
+      "icons/128x128.png": "icons/128x128.png",
       "icons/tray/connected.png": "icons/tray/connected.png",
       "icons/tray/disconnected.png": "icons/tray/disconnected.png"
     },

@@ -12,6 +12,8 @@ model Subscription {
   currentPeriodEnd  DateTime?        @map("current_period_end") @db.Timestamptz(3)
   cancelAtPeriodEnd Boolean          @default(false) @map("cancel_at_period_end")
 
+  extraDevices Int @default(0) @map("extra_devices")
+
   savedCardId      String? @map("saved_card_id")
   savedCardTitle   String? @map("saved_card_title")
   pendingCardId    String? @unique @map("pending_card_id")

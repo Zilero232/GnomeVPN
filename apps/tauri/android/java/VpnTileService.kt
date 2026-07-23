@@ -17,26 +17,36 @@ class VpnTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        if (GnomeVpnService.isRunning()) {
-            startService(
-                Intent(this, GnomeVpnService::class.java)
-                    .setAction(GnomeVpnService.ACTION_STOP),
-            )
-            render()
+        if (GnomeVpnService.isRunning(this)) {
+            stopTunnel()
 
             return
         }
 
-        connect()
+        startTunnel()
     }
 
-    private fun connect() {
-        val hasSession = TunnelStore.load(this) != null
+    private fun stopTunnel() {
+        startService(
+            Intent(this, GnomeVpnService::class.java)
+                .setAction(GnomeVpnService.ACTION_STOP),
+        )
 
-        openApp(autoConnect = hasSession)
+        render(isActive = false)
     }
 
-    private fun openApp(autoConnect: Boolean = false) {
+    private fun startTunnel() {
+        if (TunnelStore.load(this) == null) {
+            openApp(autoConnect = false)
+
+            return
+        }
+
+        render(isActive = true)
+        openApp(autoConnect = true)
+    }
+
+    private fun openApp(autoConnect: Boolean) {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return
 
         launch
@@ -60,10 +70,10 @@ class VpnTileService : TileService() {
         startActivityAndCollapse(launch)
     }
 
-    private fun render() {
+    private fun render(isActive: Boolean = GnomeVpnService.isRunning(this)) {
         val tile = qsTile ?: return
 
-        tile.state = if (GnomeVpnService.isRunning()) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+        tile.state = if (isActive) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.updateTile()
     }
 

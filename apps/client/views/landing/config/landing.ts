@@ -1,4 +1,4 @@
-import { LOWEST_MONTHLY_RUB, PLANS } from '@gnomevpn/schemas';
+import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
 
 export const HERO_METRICS = [
   { value: 'Hysteria2', key: 'protocol' },
@@ -12,4 +12,4 @@ export const HOW_IT_WORKS_STEPS = ['step1', 'step2', 'step3'] as const;
 
 export const FAQ_ITEMS = ['1', '2', '3', '4'] as const;
 
-export const FEATURED_PLAN_ID = PLANS[PLANS.length - 1].id;
+export const FEATURED_PLAN_ID = 'yearly' as const;

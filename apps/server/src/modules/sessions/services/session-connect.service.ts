@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
+import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../../peers';
-import { SESSION_LIMIT } from '../config';
+import { SubscriptionService } from '../../subscription';
 import { SessionAccessService } from './session-access.service';
 
-import type { TunnelConfig } from '@gnomevpn/schemas';
+import type { DeviceUsage, TunnelConfig } from '@gnomevpn/schemas';
 import type { ConnectSessionInput, DisconnectSessionInput } from '../sessions.service.types';
 
 @Injectable()
@@ -16,26 +17,58 @@ export class SessionConnectService {
     private readonly nodes: NodesService,
     private readonly peers: PeersService,
     private readonly access: SessionAccessService,
+    private readonly subscription: SubscriptionService,
   ) {}
 
-  private async freeSlot({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
-    const sessions = await this.prisma.peer.findMany({
-      where: { userId, kind: 'session' },
-      select: PEER_REF_SELECT,
-      orderBy: [{ lastActiveAt: { sort: 'asc', nulls: 'first' } }, { createdAt: 'asc' }],
-    });
+  private async assertSlotAvailable({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
+    const [sessions, { deviceLimit }] = await Promise.all([
+      this.prisma.peer.findMany({
+        where: { userId, kind: 'session' },
+        select: PEER_REF_SELECT,
+      }),
+      this.subscription.getLimits(userId),
+    ]);
 
-    if (sessions.some((peer) => peer.name === deviceId) || sessions.length < SESSION_LIMIT) {
+    if (sessions.some((peer) => peer.name === deviceId) || sessions.length < deviceLimit) {
       return;
     }
 
-    await this.access.releaseAll(sessions.slice(0, sessions.length - SESSION_LIMIT + 1));
+    throw new AppBadRequestException(
+      'DEVICE_LIMIT_REACHED',
+      `At most ${deviceLimit} devices can be connected at once`,
+    );
+  }
+
+  async listDevices({ userId, deviceId }: DisconnectSessionInput): Promise<DeviceUsage> {
+    const [rows, { deviceLimit }] = await Promise.all([
+      this.prisma.peer.findMany({
+        where: { userId, kind: 'session' },
+        orderBy: [{ lastActiveAt: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }],
+        select: {
+          name: true,
+          lastActiveAt: true,
+          node: { select: { country: true } },
+        },
+      }),
+      this.subscription.getLimits(userId),
+    ]);
+
+    return {
+      used: rows.length,
+      limit: deviceLimit,
+      devices: rows.map((row) => ({
+        name: row.name ?? '',
+        country: row.node.country,
+        lastActiveAt: row.lastActiveAt?.toISOString() ?? null,
+        isCurrent: row.name === deviceId,
+      })),
+    };
   }
 
   async connect({ userId, nodeId, deviceId }: ConnectSessionInput): Promise<TunnelConfig> {
     const node = await this.nodes.getNodeForConnect(nodeId);
 
-    await this.freeSlot({ userId, deviceId });
+    await this.assertSlotAvailable({ userId, deviceId });
 
     const created = await this.peers.issue({ node, userId, kind: 'session', name: deviceId });
 

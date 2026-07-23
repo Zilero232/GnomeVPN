@@ -22,6 +22,7 @@ export { settleAll } from './settle';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
 export { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from './vault';
 export {
+  hideAppWindow,
   isVpnServiceAvailable,
   probeNodeLatency,
   takeTileConnectRequest,
