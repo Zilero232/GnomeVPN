@@ -19,12 +19,11 @@ concurrency:
   group: release-app
   cancel-in-progress: false
 
-# The nodes run Xray-core inside the 3x-ui image, and both sides implement the
-# same Reality handshake. A client built against a different release than the
-# one the nodes run connects and then carries nothing, so this version and the
-# image tag in infra/xray/docker-compose.yml move together.
+# The client that runs the tunnel as a child of the service. It speaks Hysteria2
+# to the nodes, so it moves together with the server side rather than with any
+# particular node image tag.
 env:
-  XRAY_VERSION: v26.7.11
+  HYSTERIA_VERSION: app/v2.10.0
 
 jobs:
   resolve-version:
@@ -43,17 +42,25 @@ jobs:
         id: read
         run: echo "version=$(jq -r .version package.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Skip if release already exists
+      # A published release is final: re-running over it would swap the
+      # installers under people who already updated. An unpublished draft is
+      # a build that never shipped, so a re-run replaces its assets instead of
+      # demanding a version bump to retry.
+      - name: Decide whether to build
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="v${{ steps.read.outputs.version }}"
-          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_release=true" >> "$GITHUB_OUTPUT"
-          fi
+          state="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null || echo missing)"
+
+          case "$state" in
+            missing) echo "should_release=true" >> "$GITHUB_OUTPUT" ;;
+            true) echo "should_release=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "should_release=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+          echo "release state for ${tag}: ${state}"
 
   # Creating the draft release up front lets the desktop and Android builds run
   # in parallel and upload into it, instead of one waiting on the other.
@@ -64,11 +71,18 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Reused as-is when a draft from an earlier attempt is already there, so a
+      # retry uploads into it rather than failing on an existing tag.
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.resolve-version.outputs.version }}
         run: |
+          if gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "draft v${VERSION} already exists, reusing it"
+            exit 0
+          fi
+
           gh release create "v${VERSION}" \
             --repo "$GITHUB_REPOSITORY" \
             --title "GnomeVPN v${VERSION}" \
@@ -117,16 +131,16 @@ jobs:
         run: |
           curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o wintun.zip
           unzip -q wintun.zip
-          cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun.dll
+          mkdir -p apps/tauri/bin/wintun
+          cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun/wintun.dll
 
-      # Xray-core runs the VLESS/Reality tunnel as a child of the service. Like
+      # The Hysteria2 client runs the tunnel as a child of the service. Like
       # wintun it is not committed, so the installer bundles a copy fetched here.
-      - name: Fetch xray
+      - name: Fetch hysteria
         shell: bash
         run: |
-          curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-windows-64.zip" -o xray.zip
-          unzip -q xray.zip -d xray
-          cp xray/xray.exe apps/tauri/bin/xray.exe
+          mkdir -p apps/tauri/bin/hysteria
+          curl -fsSL "https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-windows-amd64.exe" -o apps/tauri/bin/hysteria/hysteria.exe
 
       # The privileged service is a separate binary that the NSIS hooks install.
       - name: Build tunnel service
@@ -203,19 +217,15 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
-      # Xray-core runs the tunnel on Android too. It is 36 MB per ABI and, like
-      # the Windows build, is fetched rather than committed. It ships as
-      # libxray.so because Android only executes files from jniLibs.
-      - name: Fetch xray for Android
+      # The Hysteria2 client runs the tunnel on Android too and, like the Windows
+      # build, is fetched rather than committed. It ships as libhysteria.so
+      # because Android only executes files from jniLibs.
+      - name: Fetch hysteria for Android
         shell: bash
         run: |
-          for abi in arm64-v8a amd64; do
-            curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-android-${abi}.zip" -o "xray-${abi}.zip"
-            unzip -q "xray-${abi}.zip" -d "xray-${abi}"
-          done
           mkdir -p apps/tauri/android/libs/arm64-v8a apps/tauri/android/libs/x86_64
-          cp xray-arm64-v8a/xray apps/tauri/android/libs/arm64-v8a/libxray.so
-          cp xray-amd64/xray apps/tauri/android/libs/x86_64/libxray.so
+          curl -fsSL "https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-android-arm64" -o apps/tauri/android/libs/arm64-v8a/libhysteria.so
+          curl -fsSL "https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-android-amd64" -o apps/tauri/android/libs/x86_64/libhysteria.so
 
       # gen/android is gitignored, so the Gradle project is created here on
       # every run and the signing config is patched into the generated file.
@@ -232,7 +242,7 @@ jobs:
         run: bunx tauri icon icon.manifest.json -o icons
 
       # tauri android init overwrites gen/android, so the VpnService sources,
-      # libxray.so and the manifest entries are re-applied afterwards.
+      # libhysteria.so and the manifest entries are re-applied afterwards.
       - name: Apply Android overlay
         working-directory: apps/tauri
         run: node ./scripts/setup-android-libs.mjs
@@ -266,7 +276,7 @@ jobs:
             sed -i '/getByName("release") {/a\            signingConfig = signingConfigs.getByName("release")' "$gradle"
           fi
 
-      # Only the two ABIs that ship a libxray.so: without the binary the tunnel
+      # Only the two ABIs that ship a libhysteria.so: without the binary the tunnel
       # cannot start, so building armv7 and x86 spends a full Rust compile on
       # an APK that would not work anyway.
       - name: Build APK
