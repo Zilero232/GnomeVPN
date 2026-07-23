@@ -117,7 +117,7 @@ export const AppView = () => {
 
       <MobileUpdateBanner />
 
-      <VpnPermissionBanner />
+      <VpnPermissionBanner isConnected={isOnline} />
 
       <ServiceRepairBanner />
     </main>

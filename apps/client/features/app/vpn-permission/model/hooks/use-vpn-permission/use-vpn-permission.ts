@@ -14,12 +14,26 @@ export const useVpnPermission = () => {
     }
 
     const check = async () => {
-      setIsGranted(await hasVpnPermission());
+      try {
+        setIsGranted(await hasVpnPermission());
+      } catch (error) {
+        logger.warn(`vpn permission check failed: ${String(error)}`);
+      }
     };
 
-    check().catch((error: unknown) => {
-      logger.warn(`vpn permission check failed: ${String(error)}`);
-    });
+    const runCheck = () => {
+      void check();
+    };
+
+    runCheck();
+
+    window.addEventListener('focus', runCheck);
+    document.addEventListener('visibilitychange', runCheck);
+
+    return () => {
+      window.removeEventListener('focus', runCheck);
+      document.removeEventListener('visibilitychange', runCheck);
+    };
   }, []);
 
   const request = async () => {

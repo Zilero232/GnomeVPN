@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.VpnService
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
@@ -36,22 +37,26 @@ class VpnTileService : TileService() {
     }
 
     private fun startTunnel() {
-        if (TunnelStore.load(this) == null) {
-            openApp(autoConnect = false)
+        if (TunnelStore.load(this) == null || VpnService.prepare(this) != null) {
+            openApp()
 
             return
         }
 
+        startForegroundService(
+            Intent(this, GnomeVpnService::class.java)
+                .setAction(GnomeVpnService.ACTION_START_FROM_TILE),
+        )
+
         render(isActive = true)
-        openApp(autoConnect = true)
     }
 
-    private fun openApp(autoConnect: Boolean) {
+    private fun openApp() {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return
 
         launch
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .putExtra(EXTRA_AUTO_CONNECT, autoConnect)
+            .putExtra(EXTRA_AUTO_CONNECT, true)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val pending = PendingIntent.getActivity(

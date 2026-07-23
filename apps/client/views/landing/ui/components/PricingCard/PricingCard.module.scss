@@ -1,6 +1,5 @@
 .root {
   width: 100%;
-  max-width: 940px;
 }
 
 .plans {
@@ -43,7 +42,7 @@
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-  min-height: 24px;
+  height: 26px;
 }
 
 .term {
@@ -56,6 +55,7 @@
   display: flex;
   gap: 8px;
   align-items: baseline;
+  height: 40px;
   font-family: var(--font-mono);
 }
 

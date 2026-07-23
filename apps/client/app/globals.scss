@@ -39,6 +39,12 @@
   --titlebar-height: 34px;
 }
 
+:root[data-mobile-app='true'] {
+  --safe-area-top: calc(
+    var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) + 12px
+  );
+}
+
 html,
 body {
   overscroll-behavior-x: none;

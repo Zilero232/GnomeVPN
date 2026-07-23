@@ -8,11 +8,13 @@ import { useVpnPermission } from '../../model/hooks';
 
 import s from './VpnPermissionBanner.module.scss';
 
-export const VpnPermissionBanner = () => {
+import type { VpnPermissionBannerProps } from './VpnPermissionBanner.types';
+
+export const VpnPermissionBanner = ({ isConnected }: VpnPermissionBannerProps) => {
   const t = useTranslations('vpnPermission');
   const { isGranted, isRequesting, request } = useVpnPermission();
 
-  if (isGranted) {
+  if (isGranted || isConnected) {
     return null;
   }
 

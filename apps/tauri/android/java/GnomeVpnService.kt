@@ -28,6 +28,10 @@ class GnomeVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
+        if (intent?.action == ACTION_START_FROM_TILE) {
+            return startFromStoredSession()
+        }
+
         val dns = intent?.getStringArrayExtra(EXTRA_DNS)?.takeIf { it.isNotEmpty() } ?: DEFAULT_DNS
         val server = intent?.getStringExtra(EXTRA_SERVER).orEmpty()
 
@@ -43,7 +47,39 @@ class GnomeVpnService : VpnService() {
         }
     }
 
-    private fun startTunnel(dns: Array<String>, server: String) {
+    private fun startFromStoredSession(): Int {
+        val snapshot = TunnelStore.load(this)
+
+        if (snapshot == null) {
+            Log.w(TAG, "tile start requested without a stored session")
+            stopSelf()
+
+            return START_NOT_STICKY
+        }
+
+        return try {
+            val fd = openDescriptor(snapshot.dns.toTypedArray(), snapshot.server)
+
+            TunnelEngine.nativeStart(
+                applicationInfo.nativeLibraryDir,
+                filesDir.absolutePath,
+                snapshot.toJson(),
+                fd,
+            )
+
+            publish(fd)
+            Log.i(TAG, "tile tunnel is up, fd=$fd")
+            START_STICKY
+        } catch (error: Throwable) {
+            Log.e(TAG, "failed to start the tunnel from the tile", error)
+            teardown()
+            stopSelf()
+
+            START_NOT_STICKY
+        }
+    }
+
+    private fun openDescriptor(dns: Array<String>, server: String): Int {
         val builder = Builder()
             .setSession(SESSION)
             .setMtu(MTU)
@@ -72,10 +108,16 @@ class GnomeVpnService : VpnService() {
 
         descriptor = opened
         startForeground(NOTIFICATION_ID, buildNotification())
-        publish(opened.fd)
         VpnTileService.requestUpdate(this)
 
-        Log.i(TAG, "tunnel is up, fd=${opened.fd}")
+        return opened.fd
+    }
+
+    private fun startTunnel(dns: Array<String>, server: String) {
+        val fd = openDescriptor(dns, server)
+        publish(fd)
+
+        Log.i(TAG, "tunnel is up, fd=$fd")
     }
 
     // The half routes cover everything, the node included, so a packet destined
@@ -139,6 +181,8 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun teardown() {
+        runCatching { TunnelEngine.nativeStop() }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_DETACH)
         } else {
@@ -170,6 +214,7 @@ class GnomeVpnService : VpnService() {
 
     companion object {
         const val ACTION_STOP = "app.gnomevpn.mobile.STOP"
+        const val ACTION_START_FROM_TILE = "app.gnomevpn.mobile.START_FROM_TILE"
         const val EXTRA_SERVER = "server"
         const val EXTRA_DNS = "dns"
         const val NO_DESCRIPTOR = -1
@@ -234,12 +279,14 @@ class GnomeVpnService : VpnService() {
                 return true
             }
 
-            val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
-                as? ConnectivityManager ?: return false
+            return runCatching {
+                val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
+                    as? ConnectivityManager ?: return false
 
-            val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
+                val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
 
-            return capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+            }.getOrDefault(false)
         }
     }
 }

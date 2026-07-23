@@ -44,3 +44,4 @@ keyring = "4"
 tauri-plugin-safe-area-insets-css = "0.2.0"
 tun2proxy = "0.8"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "process", "fs"] }
+jni = "0.21"

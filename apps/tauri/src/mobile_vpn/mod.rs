@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod counters;
 pub mod engine;
+pub mod jni;
 pub mod plugin;
 pub mod state;
 

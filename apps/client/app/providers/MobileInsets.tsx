@@ -28,6 +28,8 @@ export const MobileInsets = () => {
       return;
     }
 
+    document.documentElement.dataset.mobileApp = 'true';
+
     const apply = () => {
       syncInsets().catch(() => {});
     };
@@ -47,6 +49,7 @@ export const MobileInsets = () => {
 
       root.style.removeProperty(TOP_VAR);
       root.style.removeProperty(BOTTOM_VAR);
+      delete root.dataset.mobileApp;
     };
   }, []);
 

@@ -1923,6 +1923,7 @@ version = "0.1.0"
 dependencies = [
  "gnomevpn-ipc",
  "interprocess",
+ "jni 0.21.1",
  "keyring",
  "log",
  "parking_lot",

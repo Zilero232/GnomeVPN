@@ -4,12 +4,10 @@ use tauri::{AppHandle, Manager, Runtime, State};
 use tun2proxy::CancellationToken;
 
 use super::counters::report;
-use super::engine::{proxy_args, run_tun2proxy, spawn_hysteria};
+use super::engine;
 use super::plugin::VpnPlugin;
 use super::state::MobileVpnState;
 use super::MobileVpnError;
-
-const TUN_ADDRESS: &str = "10.8.0.2";
 
 #[tauri::command]
 pub async fn vpn_connect<R: Runtime>(
@@ -26,20 +24,16 @@ pub async fn vpn_connect<R: Runtime>(
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);
 
-    let (hysteria, credentials) = spawn_hysteria(&app, &config).await?;
+    let plugin = app.state::<VpnPlugin<R>>();
+    let native_lib_dir = plugin.native_library_dir()?;
+    let data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
-    let fd = match request_descriptor(&app, &config).await {
-        Ok(fd) => fd,
-        Err(error) => {
-            hysteria.stop().await;
+    let fd = request_descriptor(&app, &config).await?;
 
-            return Err(error);
-        }
-    };
-
-    let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
-
-    if let Err(error) = app.state::<VpnPlugin<R>>().remember_tunnel(&config) {
+    if let Err(error) = plugin.remember_tunnel(&config) {
         log::warn!("cannot store the session for the tile: {error}");
     }
 
@@ -47,10 +41,11 @@ pub async fn vpn_connect<R: Runtime>(
     state.arm(cancellation.clone());
 
     let handle = app.clone();
+    let config = config.clone();
 
     tauri::async_runtime::spawn(async move {
         let _ = on_event.send(TunnelEvent::Connected {
-            assigned_ip: TUN_ADDRESS.into(),
+            assigned_ip: engine::assigned_ip().into(),
         });
 
         tauri::async_runtime::spawn(report(
@@ -59,14 +54,15 @@ pub async fn vpn_connect<R: Runtime>(
             cancellation.clone(),
         ));
 
-        if let Err(error) = run_tun2proxy(args, fd, cancellation).await {
+        if let Err(error) =
+            engine::run_tunnel(&native_lib_dir, &data_dir, &config, fd, cancellation).await
+        {
             log::error!("android tunnel stopped: {error}");
             let _ = on_event.send(TunnelEvent::Error {
                 message: error.to_string(),
             });
         }
 
-        hysteria.stop().await;
         let _ = handle.state::<VpnPlugin<R>>().stop();
         let _ = on_event.send(TunnelEvent::Disconnected);
     });

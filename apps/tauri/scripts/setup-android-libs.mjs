@@ -102,6 +102,7 @@ const patchManifest = () => {
     '<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
     '<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />',
     '<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
+    '<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />',
   ].join('\n    ');
 
   const vpnService = [
@@ -139,6 +140,11 @@ const patchManifest = () => {
       has: 'FOREGROUND_SERVICE_SPECIAL_USE',
       find: '<uses-permission android:name="android.permission.INTERNET" />',
       put: `<uses-permission android:name="android.permission.INTERNET" />\n    ${permissions}`,
+    },
+    {
+      has: 'ACCESS_NETWORK_STATE',
+      find: '<uses-permission android:name="android.permission.INTERNET" />',
+      put: `<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />`,
     },
     {
       has: 'extractNativeLibs',

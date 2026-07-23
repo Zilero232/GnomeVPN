@@ -1,28 +1,24 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig};
-use tauri::{AppHandle, Manager, Runtime};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
 use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 
-use super::plugin::VpnPlugin;
 use super::MobileVpnError;
 
 const MTU: u16 = 1420;
 const BINARY_NAME: &str = "libhysteria.so";
 const CONFIG_NAME: &str = "hysteria-config.yaml";
 const LOG_NAME: &str = "hysteria.log";
+const TUN_ADDRESS: &str = "10.8.0.2";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 
-fn binary_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, MobileVpnError> {
-    let path = app
-        .state::<VpnPlugin<R>>()
-        .native_library_dir()?
-        .join(BINARY_NAME);
+fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
+    let path = native_lib_dir.join(BINARY_NAME);
 
     if !path.exists() {
         return Err(MobileVpnError::Hysteria(format!(
@@ -32,6 +28,10 @@ fn binary_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf, MobileVpnError
     }
 
     Ok(path)
+}
+
+pub fn assigned_ip() -> &'static str {
+    TUN_ADDRESS
 }
 
 fn free_loopback_port() -> Result<u16, MobileVpnError> {
@@ -67,20 +67,18 @@ impl Hysteria {
     }
 }
 
-pub async fn spawn_hysteria<R: Runtime>(
-    app: &AppHandle<R>,
+pub async fn spawn_hysteria(
+    native_lib_dir: &Path,
+    data_dir: &Path,
     config: &TunnelConfig,
 ) -> Result<(Hysteria, SocksCredentials), MobileVpnError> {
-    let binary = binary_path(app)?;
+    let binary = binary_path(native_lib_dir)?;
 
     let socks = SocketAddr::from((Ipv4Addr::LOCALHOST, free_loopback_port()?));
     let credentials = SocksCredentials::generate()
         .map_err(|error| MobileVpnError::Hysteria(format!("no randomness available: {error}")))?;
 
-    let dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
+    let dir = data_dir.to_path_buf();
 
     tokio::fs::create_dir_all(&dir)
         .await
@@ -175,4 +173,21 @@ pub async fn run_tun2proxy(
         .await
         .map(|_| ())
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
+}
+
+pub async fn run_tunnel(
+    native_lib_dir: &Path,
+    data_dir: &Path,
+    config: &TunnelConfig,
+    fd: i32,
+    cancellation: CancellationToken,
+) -> Result<(), MobileVpnError> {
+    let (hysteria, credentials) = spawn_hysteria(native_lib_dir, data_dir, config).await?;
+    let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
+
+    let result = run_tun2proxy(args, fd, cancellation).await;
+
+    hysteria.stop().await;
+
+    result
 }
