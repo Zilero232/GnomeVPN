@@ -128,6 +128,13 @@ because the panel rejects duplicates. Releasing the old peer *after* creating th
 new one would delete the client that was just handed out — that bug cost a
 "NODE_UNAVAILABLE" that had nothing to do with the node being down.
 
+**Disconnecting deletes the row first and releases the panel client afterwards.**
+`release()` is an HTTP call to the node, so waiting for it means a slow or
+unreachable panel holds up the response — and the device counter in the UI keeps
+showing a session the user just closed. `releaseAll` removes the rows, then fires
+the panel calls detached; a leaked client is collected by `peer-gc` anyway, while
+a stuck disconnect is visible immediately.
+
 ## Cron jobs
 
 `modules/scheduler` runs four: node health, peer garbage collection, expired access, recurring charges.

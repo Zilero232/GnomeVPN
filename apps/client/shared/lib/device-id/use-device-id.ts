@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { logger } from '../logger';
 import { getDeviceId, readDeviceIdSync } from './device-id';
 
-export const useDeviceId = (): string | null => {
+export const useDeviceId = () => {
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useIsomorphicLayoutEffect(() => {
@@ -18,11 +18,15 @@ export const useDeviceId = (): string | null => {
       return;
     }
 
-    getDeviceId()
-      .then(setDeviceId)
-      .catch((error: unknown) => {
+    const load = async () => {
+      try {
+        setDeviceId(await getDeviceId());
+      } catch (error) {
         logger.warn(`cannot read the device id: ${String(error)}`);
-      });
+      }
+    };
+
+    void load();
   }, []);
 
   return deviceId;

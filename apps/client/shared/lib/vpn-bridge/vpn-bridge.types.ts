@@ -5,6 +5,12 @@ export type VpnConnectInput = {
   config: TunnelConfig;
   onEvent: (event: TunnelEvent) => void;
   autoReconnect: boolean;
+  splitApps?: string[];
+};
+
+export type InstalledApp = {
+  name: string;
+  path: string;
 };
 
 export type ProbeLatencyInput = {

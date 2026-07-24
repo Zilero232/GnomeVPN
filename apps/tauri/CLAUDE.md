@@ -57,9 +57,31 @@ not there.
 
 ## No privileged work here
 
-Creating the wintun adapter, editing routes and setting DNS all need administrator rights. They belong to the service. This crate opens a pipe and asks.
+Creating the wintun adapter, editing routes and setting DNS all need administrator rights. They belong to the service, which spawns `sing-box.exe` to do them. This crate opens a pipe and asks.
 
 Moving any of it back would bring a UAC prompt to every launch — the reason the split exists.
+
+## Three things that kill the tunnel and look like bugs
+
+**The tunnel lives in the app's process.** `VpnService` hands over a descriptor,
+but `tun2proxy` runs inside `apps/tauri`, so when Android reclaims the process
+after a swipe the tunnel dies with it. `android:stopWithTask="false"` and an
+`onTaskRemoved` that does not call `stopSelf` keep the *service* alive, not the
+tunnel — the service is then restarted with a **null intent**, which is why
+`onStartCommand` treats that case as "rebuild from `TunnelStore`" rather than
+falling through to an empty server address.
+
+**Doze suspends the tunnel while the screen is off.** A foreground service is
+not enough: without a `PARTIAL_WAKE_LOCK` the CPU stops scheduling the tunnel
+threads after a few idle minutes, and the connection is dead by the time the
+user unlocks the phone. The lock is taken in `openDescriptor` and released in
+`teardown`, so it lives exactly as long as the descriptor does.
+
+**Windows toasts ignore the `icon` field.** The icon comes from
+`Software\Classes\AppUserModelId\<identifier>\IconUri` in the registry, written
+by `installer/hooks.nsh`, and it must point at an image file — `app.exe,0`
+resolves for shortcuts but leaves the toast blank. Notifications only carry the
+app's identity once installed; a dev run shows PowerShell's name and icon.
 
 ## Capabilities
 
@@ -79,7 +101,7 @@ The `invoke_handler` list in `lib.rs` is mirrored by `RustCommands` in [`apps/cl
 
 `tauri.conf.json` holds only what every platform needs. Anything desktop-shaped
 lives in `tauri.windows.conf.json`, which Tauri merges for Windows targets alone:
-the native binaries (`wintun.dll`, `hysteria.exe`, the service), the tray icons, the
+the native binaries (`wintun.dll`, `sing-box.exe`, the service), the tray icons, the
 NSIS installer hooks and the whole `updater` plugin block. Listing them in the
 base config breaks the Linux and macOS builds and ships dead weight to Android.
 
@@ -92,9 +114,15 @@ enabling it for every target only grows the APK.
 ## Scripts
 
 - `predev` / `prebuild` — sync the native binaries, build the service, regenerate icons
-- `sync-bin.mjs` — copies `wintun.dll` and `hysteria.exe` into `target/{debug,release}`. Both are loaded from the service's own directory, so a dev run cannot find them otherwise.
+- `sync-bin.mjs` — copies `wintun.dll` and `sing-box.exe` into `target/{debug,release}`. Both are loaded from the service's own directory, so a dev run cannot find them otherwise.
 - `build-service.mjs` — builds the service and **verifies the binary actually changed**. A running service holds its own file: cargo then exits successfully while keeping the old build. In dev this only warns; in release it fails.
+- `setup-android-libs.mjs` — re-applies the `android/` overlay onto `gen/android`.
 - `kill` — `fkill gnomevpn.exe`
+
+`scripts/lib/` holds what the three share: `shell.mjs` (paths and the `[scope]`
+logger), plus `android-manifest.mjs` and `android-overlay.mjs`. **A new Android
+permission is one string in `PERMISSIONS`** — the patch turns each entry into its
+own idempotent step, so nothing else has to change.
 
 ## The service must be restarted to pick up changes
 

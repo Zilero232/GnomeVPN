@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use gnomevpn_ipc::{Request, Response, TunnelConfig, PROTOCOL_VERSION};
+use gnomevpn_ipc::{validate_split_apps, Request, Response, TunnelConfig, PROTOCOL_VERSION};
 
 use crate::tunnel::supervisor::{Supervisor, SupervisorError};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Action {
     Reply(Response),
-    StartTunnel(Response, Box<TunnelConfig>),
+    StartTunnel(Response, Box<TunnelConfig>, Vec<String>),
     Reject(Response),
 }
 
@@ -40,19 +40,29 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
         Request::Connect {
             config,
             auto_reconnect,
+            split_apps,
         } => {
             log::info!(
-                "connect request over the pipe: {}:{} sni={} auto_reconnect={auto_reconnect}",
+                "connect request over the pipe: {}:{} sni={} auto_reconnect={auto_reconnect} split_apps={}",
                 config.server,
                 config.port,
-                config.server_name
+                config.server_name,
+                split_apps.len()
             );
+
+            if let Err(error) = validate_split_apps(&split_apps) {
+                log::warn!("connect rejected by validation: {error}");
+
+                return Action::Reply(Response::Error {
+                    message: error.to_string(),
+                });
+            }
 
             match supervisor.begin(&config) {
                 Ok(()) => {
                     supervisor.set_options(auto_reconnect);
 
-                    Action::StartTunnel(Response::Ok, config)
+                    Action::StartTunnel(Response::Ok, config, split_apps)
                 }
                 Err(error @ SupervisorError::AlreadyRunning) => {
                     log::warn!("connect rejected: {error}");

@@ -12,6 +12,7 @@ pub async fn vpn_connect(
     config: TunnelConfig,
     on_event: Channel<TunnelEvent>,
     auto_reconnect: Option<bool>,
+    split_apps: Option<Vec<String>>,
     state: State<'_, VpnState>,
 ) -> Result<(), ClientError> {
     log::info!("vpn_connect: asking the service to open a tunnel");
@@ -24,7 +25,11 @@ pub async fn vpn_connect(
     std::thread::spawn(move || events.pump_events(emit));
 
     let mut client = ServiceClient::connect()?;
-    client.connect_tunnel(config, auto_reconnect.unwrap_or(true))?;
+    client.connect_tunnel(
+        config,
+        auto_reconnect.unwrap_or(true),
+        split_apps.unwrap_or_default(),
+    )?;
 
     state.replace_connection(client);
 

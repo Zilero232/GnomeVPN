@@ -2,6 +2,7 @@ export {
   hasVpnPermission,
   hideAppWindow,
   isVpnServiceAvailable,
+  listInstalledApps,
   probeNodeLatency,
   requestVpnPermission,
   takeTileConnectRequest,
@@ -10,4 +11,9 @@ export {
   vpnStatus,
 } from './vpn-bridge';
 
-export type { LatencyByNode, ProbeLatencyInput, VpnConnectInput } from './vpn-bridge.types';
+export type {
+  InstalledApp,
+  LatencyByNode,
+  ProbeLatencyInput,
+  VpnConnectInput,
+} from './vpn-bridge.types';

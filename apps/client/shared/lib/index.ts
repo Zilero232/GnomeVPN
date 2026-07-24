@@ -2,6 +2,7 @@ export {
   getAutoConnect,
   getAutoReconnect,
   getLastNodeId,
+  getSplitApps,
   initAutoStartDefault,
   isAutoStartEnabled,
   setAutoConnect,
@@ -9,6 +10,7 @@ export {
   setAutoStart,
   setLastNodeId,
   setManuallyDisconnected,
+  setSplitApps,
   wasManuallyDisconnected,
 } from './app-settings';
 export { getDeviceId, useDeviceId } from './device-id';
@@ -26,6 +28,7 @@ export {
   hasVpnPermission,
   hideAppWindow,
   isVpnServiceAvailable,
+  listInstalledApps,
   probeNodeLatency,
   requestVpnPermission,
   takeTileConnectRequest,
@@ -43,4 +46,9 @@ export {
 
 export type { RustCommand, RustCommands, TunnelEvent } from './ipc';
 export type { NotifyInput, NotifyTone } from './notifications';
-export type { LatencyByNode, ProbeLatencyInput, VpnConnectInput } from './vpn-bridge';
+export type {
+  InstalledApp,
+  LatencyByNode,
+  ProbeLatencyInput,
+  VpnConnectInput,
+} from './vpn-bridge';

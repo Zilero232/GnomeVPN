@@ -1,3 +1,4 @@
+pub mod apps;
 pub mod latency;
 #[cfg(mobile)]
 pub mod mobile_vpn;
@@ -108,6 +109,7 @@ pub fn run() {
             vpn_status,
             vpn_service_available,
             service_repair,
+            apps::list_installed_apps,
             latency::commands::vpn_probe_latency,
             vault_save_token,
             vault_read_token,

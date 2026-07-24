@@ -33,15 +33,15 @@
     "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.3",
+    "@biomejs/biome": "2.5.5",
     "@types/bcryptjs": "^3.0.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "fkill-cli": "^9.0.0",
     "husky": "^9.1.7",
     "kill-port": "^2.0.1",
-    "lint-staged": "^17.1.0",
+    "lint-staged": "^17.2.0",
     "sharp": "^0.35.3",
-    "stylelint": "17.14.0",
+    "stylelint": "17.14.1",
     "stylelint-config-clean-order": "10.0.0",
     "stylelint-config-standard-scss": "17.0.0",
     "stylelint-declaration-block-no-ignored-properties": "3.0.0",

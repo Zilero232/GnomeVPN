@@ -8,6 +8,7 @@ import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
   getDeviceId,
+  getSplitApps,
   logger,
   setManuallyDisconnected,
   settleAll,
@@ -95,14 +96,18 @@ export const useVpnConnection = () => {
     });
 
     try {
-      const [config, autoReconnect] = await Promise.all([
-        getDeviceId().then((deviceId) => connectTunnel({ nodeId, deviceId })),
+      const [deviceId, autoReconnect, splitApps] = await Promise.all([
+        getDeviceId(),
         getAutoReconnect(),
+        getSplitApps(),
       ]);
+
+      const config = await connectTunnel({ nodeId, deviceId });
 
       await vpnConnect({
         config,
         autoReconnect,
+        splitApps,
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {
             logger.error(`tunnel event failed: ${String(error)}`);

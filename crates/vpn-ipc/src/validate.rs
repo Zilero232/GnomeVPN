@@ -6,6 +6,10 @@ const MAX_HOST_LEN: usize = 253;
 
 const MAX_AUTH_LEN: usize = 256;
 
+const MAX_SPLIT_APPS: usize = 128;
+
+const MAX_PATH_LEN: usize = 260;
+
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ValidationError {
     #[error("bad {field}: {reason}")]
@@ -73,6 +77,38 @@ fn check_dns(values: &[String]) -> Result<(), ValidationError> {
         entry
             .parse::<IpAddr>()
             .map_err(|_| reject("dns", format!("not an ip address: {entry}")))?;
+    }
+
+    Ok(())
+}
+
+pub fn validate_split_apps(paths: &[String]) -> Result<(), ValidationError> {
+    if paths.len() > MAX_SPLIT_APPS {
+        return Err(reject("splitApps", "too many entries"));
+    }
+
+    for path in paths {
+        if path.is_empty() {
+            return Err(reject("splitApps", "must not be empty"));
+        }
+
+        if path.len() > MAX_PATH_LEN {
+            return Err(reject("splitApps", "path too long"));
+        }
+
+        if path.contains('\0') || path.contains("..") {
+            return Err(reject("splitApps", format!("suspicious path: {path}")));
+        }
+
+        let is_absolute = path.starts_with(r"\\")
+            || path
+                .as_bytes()
+                .get(1..3)
+                .is_some_and(|prefix| prefix == br":\");
+
+        if !is_absolute {
+            return Err(reject("splitApps", format!("not an absolute path: {path}")));
+        }
     }
 
     Ok(())

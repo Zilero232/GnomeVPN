@@ -11,6 +11,7 @@ import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.util.Log
 import java.net.Inet4Address
 import java.net.InetAddress
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 class GnomeVpnService : VpnService() {
     private var descriptor: ParcelFileDescriptor? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
@@ -28,12 +30,12 @@ class GnomeVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
-        if (intent?.action == ACTION_START_FROM_TILE) {
+        if (intent == null || intent.action == ACTION_START_FROM_TILE) {
             return startFromStoredSession()
         }
 
-        val dns = intent?.getStringArrayExtra(EXTRA_DNS)?.takeIf { it.isNotEmpty() } ?: DEFAULT_DNS
-        val server = intent?.getStringExtra(EXTRA_SERVER).orEmpty()
+        val dns = intent.getStringArrayExtra(EXTRA_DNS)?.takeIf { it.isNotEmpty() } ?: DEFAULT_DNS
+        val server = intent.getStringExtra(EXTRA_SERVER).orEmpty()
 
         return try {
             startTunnel(dns, server)
@@ -108,9 +110,37 @@ class GnomeVpnService : VpnService() {
 
         descriptor = opened
         startForeground(NOTIFICATION_ID, buildNotification())
+        acquireWakeLock()
         VpnTileService.requestUpdate(this)
 
         return opened.fd
+    }
+
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) {
+            return
+        }
+
+        runCatching {
+            val manager = getSystemService(Context.POWER_SERVICE) as PowerManager
+
+            wakeLock = manager
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+                .apply {
+                    setReferenceCounted(false)
+                    acquire()
+                }
+        }.onFailure { error ->
+            Log.w(TAG, "cannot hold a wake lock; the tunnel may stall in doze", error)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        runCatching {
+            wakeLock?.takeIf { it.isHeld }?.release()
+        }
+
+        wakeLock = null
     }
 
     private fun startTunnel(dns: Array<String>, server: String) {
@@ -181,6 +211,7 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun teardown() {
+        releaseWakeLock()
         runCatching { TunnelEngine.nativeStop() }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -224,6 +255,7 @@ class GnomeVpnService : VpnService() {
         const val NO_DESCRIPTOR = -1
 
         private const val TAG = "GnomeVpn"
+        private const val WAKE_LOCK_TAG = "GnomeVPN::tunnel"
         private const val SESSION = "GnomeVPN"
         private const val CHANNEL_ID = "gnomevpn.tunnel"
         private const val CHANNEL_NAME = "Tunnel"

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
+import { usePlatform } from '@/entities/app/platform';
 import { useServerEvents } from '@/entities/app/server-events';
 import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
@@ -15,6 +16,7 @@ import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
 import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
+import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Text } from '@/shared/ui';
@@ -28,6 +30,7 @@ export const AppView = () => {
   const router = useRouter();
   const { nodes, isLoading, isError } = useNodes();
   const { isAuthenticated } = useCurrentUser();
+  const { isDesktopApp } = usePlatform();
   const { hasAccess } = useSubscriptionStatus();
 
   useServerEvents({ isEnabled: isAuthenticated });
@@ -80,6 +83,8 @@ export const AppView = () => {
           <Link aria-label={t('openAccount')} className={s.accountLink} href={ROUTES.account}>
             <UserRound size={15} />
           </Link>
+
+          {isDesktopApp && <SplitTunnelingButton />}
 
           <AppMenu />
         </div>

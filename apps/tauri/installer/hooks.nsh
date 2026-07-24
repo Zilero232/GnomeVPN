@@ -5,10 +5,10 @@
   nsExec::ExecToLog 'net stop GnomeVPNService'
   Pop $0
 
-  ; hysteria.exe is a child of the service, not the service itself, so stopping
+  ; sing-box.exe is a child of the service, not the service itself, so stopping
   ; the service does not always take it down. A survivor keeps its own file
   ; locked and the update fails to overwrite it.
-  nsExec::ExecToLog 'taskkill.exe /F /IM hysteria.exe'
+  nsExec::ExecToLog 'taskkill.exe /F /IM sing-box.exe'
   Pop $0
 !macroend
 
@@ -23,8 +23,12 @@
       "Не удалось установить службу GnomeVPN (код $0).$\n$\nПриложение установлено, но подключение работать не будет. Попробуйте переустановить от имени администратора."
   ${EndIf}
 
+  ; Windows toasts read the icon from this key, not from the `icon` field of the
+  ; notification. IconUri must point at an image file — `app.exe,0` resolves for
+  ; shortcuts but leaves toasts blank.
   WriteRegStr HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "DisplayName" "GnomeVPN"
-  WriteRegStr HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "IconUri" "$INSTDIR\GnomeVPN.exe,0"
+  WriteRegStr HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "IconUri" "$INSTDIR\icons\128x128.png"
+  WriteRegDWORD HKLM "Software\Classes\AppUserModelId\app.gnomevpn.desktop" "ShowInSettings" 1
 !macroend
 
 !macro NSIS_HOOK_PREUNINSTALL

@@ -64,7 +64,7 @@ fn run_as_service() -> Result<(), Box<dyn std::error::Error>> {
     let _ = shutdown_rx.recv();
 
     if let Ok(runtime) = tokio::runtime::Runtime::new() {
-        runtime.block_on(crate::tunnel::hysteria::reap_orphans());
+        runtime.block_on(crate::tunnel::singbox::reap_orphans());
     }
 
     status_handle.set_service_status(ServiceStatus {

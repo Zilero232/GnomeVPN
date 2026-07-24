@@ -4,22 +4,31 @@ import { mapToObj } from 'remeda';
 import { callRust } from '../ipc';
 
 import type { TunnelEvent } from '../ipc';
-import type { LatencyByNode, ProbeLatencyInput, VpnConnectInput } from './vpn-bridge.types';
+import type {
+  InstalledApp,
+  LatencyByNode,
+  ProbeLatencyInput,
+  VpnConnectInput,
+} from './vpn-bridge.types';
 
 export const vpnConnect = async ({
   config,
   onEvent,
   autoReconnect,
+  splitApps = [],
 }: VpnConnectInput): Promise<void> => {
   const channel = new Channel<TunnelEvent>();
   channel.onmessage = onEvent;
 
   await callRust({
     command: 'vpn_connect',
-    args: { config, onEvent: channel, autoReconnect },
+    args: { config, onEvent: channel, autoReconnect, splitApps },
     fallback: null,
   });
 };
+
+export const listInstalledApps = async (): Promise<InstalledApp[]> =>
+  callRust({ command: 'list_installed_apps', fallback: [] });
 
 export const vpnDisconnect = async (): Promise<void> => {
   await callRust({ command: 'vpn_disconnect', fallback: null });
