@@ -1,14 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useIsomorphicLayoutEffect } from '@siberiacancode/reactuse';
+import { useState } from 'react';
 
 import { logger } from '../logger';
-import { getDeviceId } from './device-id';
+import { getDeviceId, readDeviceIdSync } from './device-id';
 
 export const useDeviceId = (): string | null => {
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
+    const cached = readDeviceIdSync();
+
+    if (cached) {
+      setDeviceId(cached);
+
+      return;
+    }
+
     getDeviceId()
       .then(setDeviceId)
       .catch((error: unknown) => {

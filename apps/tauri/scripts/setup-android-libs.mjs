@@ -109,6 +109,7 @@ const patchManifest = () => {
   const vpnService = [
     '<service',
     '            android:name=".GnomeVpnService"',
+    '            android:stopWithTask="false"',
     '            android:exported="false"',
     '            android:permission="android.permission.BIND_VPN_SERVICE"',
     '            android:foregroundServiceType="specialUse">',
@@ -156,6 +157,11 @@ const patchManifest = () => {
       has: 'GnomeVpnService',
       find: '    </application>',
       put: `        ${vpnService}\n    </application>`,
+    },
+    {
+      has: 'stopWithTask',
+      find: '            android:name=".GnomeVpnService"',
+      put: '            android:name=".GnomeVpnService"\n            android:stopWithTask="false"',
     },
     {
       has: 'VpnTileService',

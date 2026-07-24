@@ -207,6 +207,10 @@ class GnomeVpnService : VpnService() {
         stopSelf()
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.i(TAG, "task swiped away; keeping the tunnel alive")
+    }
+
     override fun onDestroy() {
         teardown()
         super.onDestroy()

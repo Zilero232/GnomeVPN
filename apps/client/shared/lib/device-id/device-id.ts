@@ -29,3 +29,11 @@ export const getDeviceId = async (): Promise<string> => {
 
   return created;
 };
+
+export const readDeviceIdSync = (): string | null => {
+  if (isServer()) {
+    return null;
+  }
+
+  return window.localStorage.getItem(STORAGE_KEY);
+};
