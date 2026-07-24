@@ -35,7 +35,7 @@ apps/
 ├── server/          # NestJS API — modules/, lib/, core/, common/ (CLAUDE.md)
 └── tauri/           # Rust shell — src/, capabilities/, tauri.conf.json (CLAUDE.md)
 crates/
-├── vpn-ipc/         # Wire protocol: types, framing, validation, xray config
+├── vpn-ipc/         # Wire protocol: types, framing, validation, tunnel configs
 └── vpn-service/     # Privileged service: tunnel, routes, DNS (CLAUDE.md)
 packages/schemas/    # Zod schemas, imported by client and server
 infra/
@@ -48,7 +48,7 @@ infra/
 **On Windows** the desktop app is two processes:
 
 - `GnomeVPN.exe` — the window. **No administrator rights.**
-- `GnomeVPNService` — runs as LocalSystem. Owns wintun, the routing table, DNS, firewall rules.
+- `GnomeVPNService` — runs as LocalSystem. Spawns `sing-box.exe`, which owns wintun, the routing table and DNS.
 
 They talk over a named pipe. This is why the app never shows a UAC prompt, and why every request reaching the service is validated — any local process can open that pipe, and the service can rewrite the system's routes.
 
@@ -56,9 +56,10 @@ They talk over a named pipe. This is why the app never shows a UAC prompt, and w
 
 **On Android there is no such split.** `VpnService` hands the app a TUN descriptor
 once the user consents, so the tunnel runs inside `apps/tauri` itself — see
-`src/mobile_vpn/`. Only the descriptor differs: xray and `tun2proxy` above it are
-the same code, which is why `build_xray_config` lives in `vpn-ipc` rather than in
-the service.
+`src/mobile_vpn/`, which spawns `hysteria` under `tun2proxy` because a separate
+process cannot own a descriptor granted to the app. `build_hysteria_config` lives
+in `vpn-ipc` for that path; Windows uses `build_singbox_config` from the same
+crate.
 
 ## Per-app guidance
 
@@ -107,7 +108,8 @@ CI runs the same set — see `.github/workflows/check-code.yml`.
 
 ## Things that have already bitten us
 
-- **`route delete 0.0.0.0`** wipes the physical default route and kills the user's internet. The tunnel uses half-routes (`0.0.0.0/1` + `128.0.0.0/1`) instead.
+- **Per-app split cannot be done from user space.** Redirecting a connection by the process that opened it needs a kernel callout at `FWPM_LAYER_ALE_BIND_REDIRECT`, and that needs an EV-signed driver. WFP `Block`/`Permit`, dropping packets on the TUN, rewriting `IfIdx` and NAT on the physical interface were all tried against a live tunnel and all broke connectivity. sing-box solves it by never redirecting: it pulls everything into the TUN and opens the outgoing connection itself.
+- **`route delete 0.0.0.0`** wipes the physical default route and kills the user's internet. Half-routes (`0.0.0.0/1` + `128.0.0.0/1`) are what sing-box installs instead, and nothing in this repo should touch the routing table by hand.
 - **A running service holds its own binary.** `cargo build` then silently keeps the old file — `scripts/build-service.mjs` checks for this.
 - **Health checks must probe an authenticated endpoint.** An unauthenticated 200 only proves something is listening, not that the tunnel subsystem works.
 - **A Hysteria2 client needs its full field set.** Writing `{email, auth}` alone leaves the panel storing the client but generating `clients: null` in the running core, so every connection fails auth with a 404. `enable/limitIp/totalGB/expiryTime/tgId/reset` must all be present — see `XrayClient.newClient`.

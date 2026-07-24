@@ -1,45 +1,38 @@
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const binDir = join(here, '..', 'bin');
-const workspaceTarget = join(here, '..', '..', 'target');
-const profiles = ['debug', 'release'];
+import { isWindows, paths, reporter } from './lib/shell.mjs';
 
 // Both are resolved from the service's own directory: wintun.dll through
-// LoadLibraryExW, hysteria.exe by spawning it as a child. Neither is found
+// LoadLibraryExW, sing-box.exe by spawning it as a child. Neither is found
 // elsewhere, so they land flat next to the service in target/, whatever
 // subfolder they live in under bin/.
-const files = [
+const BINARIES = [
   { from: join('wintun', 'wintun.dll'), name: 'wintun.dll' },
-  { from: join('hysteria', 'hysteria.exe'), name: 'hysteria.exe' },
+  { from: join('singbox', 'sing-box.exe'), name: 'sing-box.exe' },
 ];
 
-if (process.platform !== 'win32') {
+const PROFILES = ['debug', 'release'];
+
+const log = reporter('sync-bin');
+
+if (!isWindows) {
   process.exit(0);
 }
 
-for (const file of files) {
-  const source = join(binDir, file.from);
+for (const binary of BINARIES) {
+  const source = join(paths.bin, binary.from);
 
   if (!existsSync(source)) {
-    console.error(`[sync-bin] apps/tauri/bin/${file.from} not found — see bin/README.md`);
-    process.exit(1);
+    log.fail(`apps/tauri/bin/${binary.from} not found — see bin/README.md`);
   }
 
-  for (const profile of profiles) {
-    const dir = join(workspaceTarget, profile);
+  for (const profile of PROFILES) {
+    const directory = join(paths.target, profile);
 
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-
-    copyFileSync(source, join(dir, file.name));
+    mkdirSync(directory, { recursive: true });
+    copyFileSync(source, join(directory, binary.name));
   }
 }
 
-// biome-ignore lint/suspicious/noConsole: standalone CLI script, console is the output channel
-console.log(
-  `[sync-bin] ${files.map((f) => f.name).join(', ')} copied to target/debug and target/release`,
-);
+log.info(`${BINARIES.map((binary) => binary.name).join(', ')} copied to target/{${PROFILES}}`);

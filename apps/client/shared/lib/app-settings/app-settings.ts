@@ -13,6 +13,7 @@ const KEYS = {
   autoReconnect: 'autoReconnect',
   deviceId: 'deviceId',
   manuallyDisconnected: 'manuallyDisconnected',
+  splitApps: 'splitApps',
 } as const;
 
 let storePromise: Promise<Store> | null = null;
@@ -65,6 +66,10 @@ export const getAutoReconnect = async (): Promise<boolean> => read(KEYS.autoReco
 
 export const setAutoReconnect = async (value: boolean): Promise<void> =>
   write(KEYS.autoReconnect, value);
+
+export const getSplitApps = async (): Promise<string[]> => read(KEYS.splitApps, []);
+
+export const setSplitApps = async (value: string[]): Promise<void> => write(KEYS.splitApps, value);
 
 export const wasManuallyDisconnected = async (): Promise<boolean> =>
   read(KEYS.manuallyDisconnected, false);

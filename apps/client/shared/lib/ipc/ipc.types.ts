@@ -15,9 +15,11 @@ export type RustCommands = {
       config: TunnelConfig;
       onEvent: Channel<TunnelEvent>;
       autoReconnect: boolean;
+      splitApps: string[];
     };
     result: null;
   };
+  list_installed_apps: { args: never; result: { name: string; path: string }[] };
   vpn_disconnect: { args: never; result: null };
   vpn_status: { args: never; result: string };
   vpn_service_available: { args: never; result: boolean };

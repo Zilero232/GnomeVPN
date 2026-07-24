@@ -113,11 +113,9 @@ export class SessionConnectService {
   async disconnect({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
     const [session] = await this.peers.findRefs({ userId, kind: 'session', name: deviceId });
 
-    if (!session) {
-      return;
+    if (session) {
+      await this.access.releaseAll([session]);
     }
-
-    await this.access.releaseAll([session]);
 
     this.events.publish(userId, { type: 'devices-changed' });
   }

@@ -88,12 +88,37 @@
       "how": "How it works",
       "pricing": "Pricing",
       "faq": "Questions",
-      "download": "Download"
+      "download": "Download",
+      "features": "Features"
     },
     "footer": {
       "copy": "© {year} {name}",
       "privacy": "Privacy Policy",
       "support": "Support"
+    },
+    "features": {
+      "title": "What is inside",
+      "splitTitle": "Split tunneling",
+      "splitBody": "Pick the applications that go through the VPN. Everything else takes the direct route — no speed lost, no traffic wasted on the node.",
+      "devicesTitle": "Two devices",
+      "devicesBody": "Desktop and phone at once on a single subscription. Connect on one and the other sees it immediately.",
+      "autostartTitle": "Autostart",
+      "autostartBody": "The app launches with the system and raises the tunnel on its own. Nothing to press.",
+      "lanTitle": "LAN keeps working",
+      "lanBody": "Printers, NAS and the router stay reachable while the tunnel is up — local subnets are routed around the VPN.",
+      "noLogsTitle": "No logs",
+      "noLogsBody": "The server knows your subscription is active and which node you picked. Browsing history is never collected.",
+      "updatesTitle": "Signed updates",
+      "updatesBody": "The app updates itself and verifies the signature on the client, so a build cannot be swapped in transit."
+    },
+    "platforms": {
+      "title": "Where it runs",
+      "native": "Native app",
+      "config": "Via config",
+      "windowsBody": "A full client with split tunneling and autostart. Never asks for administrator rights.",
+      "androidBody": "Available on Google Play. The tunnel survives being swiped away and keeps running in the background.",
+      "appleBody": "Grab the config from your account and open it in Streisand, Hiddify or any Hysteria2 client.",
+      "linuxBody": "The same config works in NekoBox, sing-box or the native Hysteria2 client."
     }
   },
   "auth": {
@@ -366,5 +391,24 @@
     "description": "Android asks for it once. Without it the tunnel cannot be created and connecting will fail.",
     "allow": "Grant access",
     "requesting": "Waiting…"
+  },
+  "splitTunneling": {
+    "open": "Split tunneling",
+    "title": "Split tunneling",
+    "description": "Only the selected applications will use the VPN.",
+    "searchPlaceholder": "Search applications",
+    "loading": "Reading installed applications…",
+    "empty": "Nothing found",
+    "allTraffic": "All traffic goes through the VPN",
+    "selectedCount": "{count} application(s) use the VPN",
+    "clear": "Reset",
+    "note": "Child processes inherit the rule of the application that started them.",
+    "clearSearch": "Clear search",
+    "apply": "Apply",
+    "applying": "Applying…",
+    "cancel": "Cancel",
+    "reconnectWarning": "The tunnel will reconnect to apply the new rules.",
+    "applyFailed": "Could not apply the rules",
+    "limitReached": "Maximum of {count} applications reached."
   }
 }

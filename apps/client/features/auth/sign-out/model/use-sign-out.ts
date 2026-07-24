@@ -8,7 +8,8 @@ import { getDeviceId, isTauriDesktop, settleAll, vpnDisconnect } from '@/shared/
 export const useSignOut = () => {
   return useMutation({
     mutationFn: async () => {
-      const cleanup = [getDeviceId().then((deviceId) => disconnectTunnel({ deviceId }))];
+      const deviceId = await getDeviceId();
+      const cleanup = [disconnectTunnel({ deviceId })];
 
       if (isTauriDesktop()) {
         cleanup.push(vpnDisconnect());

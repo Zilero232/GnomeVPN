@@ -11,11 +11,15 @@ export class SessionAccessService {
   constructor(private readonly peers: PeersService) {}
 
   async releaseAll(peers: PeerRef[]): Promise<void> {
-    const { kept } = await this.peers.releaseMany(peers);
-
-    if (kept > 0) {
-      this.logger.warn(`Kept ${kept} session row(s): peers still live`);
+    if (peers.length === 0) {
+      return;
     }
+
+    await this.peers.remove(peers.map((peer) => peer.id));
+
+    void this.peers.releaseMany(peers).catch((error: unknown) => {
+      this.logger.warn(`Detached release failed for ${peers.length} peer(s): ${String(error)}`);
+    });
   }
 
   async disconnectAll(userId: string): Promise<void> {

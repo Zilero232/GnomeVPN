@@ -16,6 +16,10 @@
 # Downloaded manually, see bin/README.md — runs the Hysteria2 tunnel
 /bin/hysteria/hysteria.exe
 
+# Downloaded manually, see bin/README.md — tunnel core with per-app routing
+/bin/singbox/sing-box.exe
+
+
 # Same tunnel binary built for Android, see android/README.md — per ABI,
 # fetched rather than committed for the same reason as bin/hysteria/hysteria.exe
 /android/libs/*/libhysteria.so

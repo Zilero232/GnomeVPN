@@ -1,8 +1,7 @@
+pub mod adapter;
 pub mod engine;
-pub mod hysteria;
-pub mod route;
+pub mod singbox;
 pub mod supervisor;
-pub mod tunio;
 
 use std::sync::Arc;
 
@@ -16,7 +15,12 @@ const MIN_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 const MAX_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(30);
 const MAX_RETRIES: usize = 5;
 
-pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig) {
+pub fn spawn(
+    runtime: &Handle,
+    supervisor: Arc<Supervisor>,
+    config: TunnelConfig,
+    split_apps: Vec<String>,
+) {
     let Some(stop) = supervisor.take_stop_receiver() else {
         log::error!("spawn called without a reserved tunnel slot");
         supervisor.finish();
@@ -37,6 +41,7 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
 
         let attempt = || {
             let config = config.clone();
+            let split_apps = split_apps.clone();
             let emit = Arc::clone(&emit);
             let mut watcher = stop_rx.clone();
 
@@ -56,7 +61,7 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
                     }
                 });
 
-                engine::run_tunnel(config, emit, rx).await
+                engine::run_tunnel(config, split_apps, emit, rx).await
             }
         };
 
@@ -92,12 +97,6 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
 
 #[derive(Debug, thiserror::Error)]
 pub enum TunnelError {
-    #[error("invalid endpoint: {0}")]
-    Endpoint(String),
-    #[error("tun device error: {0}")]
-    Tun(String),
-    #[error("hysteria error: {0}")]
-    Hysteria(String),
-    #[error("io error: {0}")]
-    Io(String),
+    #[error("sing-box error: {0}")]
+    Singbox(String),
 }

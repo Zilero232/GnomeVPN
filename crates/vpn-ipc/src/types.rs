@@ -34,6 +34,8 @@ pub enum Request {
         config: Box<TunnelConfig>,
         #[serde(default = "default_true")]
         auto_reconnect: bool,
+        #[serde(default)]
+        split_apps: Vec<String>,
     },
     Disconnect,
     Status,

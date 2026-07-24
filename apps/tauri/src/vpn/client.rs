@@ -73,11 +73,13 @@ impl ServiceClient {
         &mut self,
         config: TunnelConfig,
         auto_reconnect: bool,
+        split_apps: Vec<String>,
     ) -> Result<(), ClientError> {
         self.expect(
             Request::Connect {
                 config: Box::new(config),
                 auto_reconnect,
+                split_apps,
             },
             |response| matches!(response, Response::Ok).then_some(()),
         )
