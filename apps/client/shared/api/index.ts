@@ -5,25 +5,20 @@ export {
   restoreTokenFromVault,
   saveAuthToken,
 } from './auth/auth-client';
-export { ApiError, api, apiErrorCode, toApiError } from './http';
-export { queryClient } from './query-client';
 export {
   bindCard,
   buyExtraDevices,
   cancelAutoRenew,
-  connectTunnel,
   createCheckout,
-  disconnectTunnel,
-  getDeviceUsage,
-  getLatestRelease,
-  getSubscriptionStatus,
-  issueConfig,
-  listConfigs,
-  listNodeEndpoints,
-  listNodes,
   resumeAutoRenew,
-  revokeConfig,
   unbindCard,
-} from './vpn/vpn';
+} from './billing';
+export { issueConfig, listConfigs, revokeConfig } from './configs';
+export { ApiError, api, apiErrorCode, toApiError } from './http';
+export { listNodeEndpoints, listNodes } from './nodes';
+export { queryClient } from './query-client';
+export { getLatestRelease } from './release';
+export { getSubscriptionStatus } from './subscription';
+export { connectTunnel, disconnectTunnel, getDeviceUsage, sendHeartbeat } from './tunnel';
 
-export type { ConfigDownload } from './vpn/vpn.types';
+export type { ConfigDownload } from './configs';

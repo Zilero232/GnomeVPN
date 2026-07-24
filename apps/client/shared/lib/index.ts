@@ -11,7 +11,7 @@ export {
   setManuallyDisconnected,
   wasManuallyDisconnected,
 } from './app-settings';
-export { getDeviceId } from './device-id';
+export { getDeviceId, useDeviceId } from './device-id';
 export { callRust } from './ipc';
 export { logger } from './logger';
 export { notify } from './notifications';

@@ -104,17 +104,39 @@ export class CheckoutService {
       throw new AppBadRequestException('PAYMENT_FAILED', 'YooKassa returned no confirmation URL');
     }
 
-    await this.prisma.payment.create({
-      data: {
-        userId,
-        yookassaPaymentId: payment.id,
-        amount: extraDevicesPriceRub(quantity),
-        status: 'pending',
-        isAutoCharge: false,
-        kind: 'extraDevices',
-        extraDevices: quantity,
+    await this.prisma.$transaction(
+      async (tx) => {
+        const [current, pendingNow] = await Promise.all([
+          tx.subscription.findUnique({ where: { userId }, select: { extraDevices: true } }),
+          tx.payment.aggregate({
+            where: { userId, kind: 'extraDevices', status: 'pending' },
+            _sum: { extraDevices: true },
+          }),
+        ]);
+
+        const claimedNow = (current?.extraDevices ?? 0) + (pendingNow._sum.extraDevices ?? 0);
+
+        if (claimedNow + quantity > MAX_EXTRA_DEVICES) {
+          throw new AppBadRequestException(
+            'EXTRA_DEVICES_LIMIT',
+            `At most ${MAX_EXTRA_DEVICES} extra devices`,
+          );
+        }
+
+        await tx.payment.create({
+          data: {
+            userId,
+            yookassaPaymentId: payment.id,
+            amount: extraDevicesPriceRub(quantity),
+            status: 'pending',
+            isAutoCharge: false,
+            kind: 'extraDevices',
+            extraDevices: quantity,
+          },
+        });
       },
-    });
+      { isolationLevel: 'Serializable' },
+    );
 
     return { confirmationUrl: payment.confirmationUrl };
   }

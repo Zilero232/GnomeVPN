@@ -14,6 +14,8 @@ const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(3);
 
 const IDLE_TIMEOUT_MS: u32 = 3_000;
 
+const DRAIN_TIMEOUT: Duration = Duration::from_millis(200);
+
 #[derive(Debug, thiserror::Error)]
 pub enum LatencyError {
     #[error("cannot resolve {0}")]
@@ -152,7 +154,7 @@ pub async fn probe_latency(
         }
     };
 
-    endpoint.wait_idle().await;
+    let _ = tokio::time::timeout(DRAIN_TIMEOUT, endpoint.wait_idle()).await;
 
     result
 }

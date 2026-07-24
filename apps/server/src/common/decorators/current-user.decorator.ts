@@ -6,8 +6,3 @@ export const CurrentUser = createParamDecorator((_data: unknown, ctx: ExecutionC
   const request = ctx.switchToHttp().getRequest<{ session?: UserSession }>();
   return request.session?.user.id ?? '';
 });
-
-export const CurrentSession = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): UserSession =>
-    ctx.switchToHttp().getRequest<{ session: UserSession }>().session,
-);

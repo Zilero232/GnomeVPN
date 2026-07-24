@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import {
   getAutoConnect,
@@ -14,8 +14,6 @@ import {
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
 
-let hasAttempted = false;
-
 export const useAutoConnect = ({
   nodes,
   hasAccess,
@@ -23,10 +21,14 @@ export const useAutoConnect = ({
   isReady,
   connect,
 }: UseAutoConnectParams): void => {
+  const hasAttemptedRef = useRef(false);
+
   useEffect(() => {
-    if (hasAttempted || !isReady || !hasAccess || isConnected || nodes.length === 0) {
+    if (hasAttemptedRef.current || !isReady || !hasAccess || isConnected || nodes.length === 0) {
       return;
     }
+
+    hasAttemptedRef.current = true;
 
     const run = async () => {
       const [isEnabled, wasDisconnectedByUser, isFromTile] = await Promise.all([
@@ -36,13 +38,12 @@ export const useAutoConnect = ({
       ]);
 
       if (!isFromTile && (!isEnabled || wasDisconnectedByUser)) {
-        hasAttempted = true;
-
         return;
       }
 
       if (!(await isVpnServiceAvailable())) {
         logger.warn('autoconnect: service unavailable, skipping');
+        hasAttemptedRef.current = false;
 
         return;
       }
@@ -54,12 +55,10 @@ export const useAutoConnect = ({
 
       if (!target) {
         logger.warn('autoconnect: no reachable node available');
-        hasAttempted = true;
 
         return;
       }
 
-      hasAttempted = true;
       logger.info(`autoconnect: connecting to ${target.country}`);
 
       await connect({ nodeId: target.id, country: target.country, isAutomatic: true });
@@ -71,6 +70,7 @@ export const useAutoConnect = ({
 
     run().catch((error: unknown) => {
       logger.error(`autoconnect failed: ${String(error)}`);
+      hasAttemptedRef.current = false;
     });
   }, [nodes, hasAccess, isConnected, isReady, connect]);
 };

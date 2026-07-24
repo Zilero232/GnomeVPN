@@ -75,32 +75,34 @@ export class WebhookService {
       return;
     }
 
-    const claimed = await this.prisma.payment.updateMany({
-      where: { id: row.id, status: 'pending' },
-      data: { status: 'succeeded' },
-    });
-
-    if (claimed.count === 0) {
-      this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
-
-      return;
-    }
-
-    if (row.kind === 'extraDevices') {
-      await this.shared.grantExtraDevices({
-        userId: row.userId,
-        quantity: row.extraDevices,
+    await this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.payment.updateMany({
+        where: { id: row.id, status: 'pending' },
+        data: { status: 'succeeded' },
       });
 
-      return;
-    }
+      if (claimed.count === 0) {
+        this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
 
-    await this.shared.activate({
-      userId: row.userId,
-      planId: row.plan,
-      method: payment.paymentMethodId
-        ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
-        : null,
+        return;
+      }
+
+      if (row.kind === 'extraDevices') {
+        await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
+
+        return;
+      }
+
+      await this.shared.activate(
+        {
+          userId: row.userId,
+          planId: row.plan,
+          method: payment.paymentMethodId
+            ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
+            : null,
+        },
+        tx,
+      );
     });
   }
 

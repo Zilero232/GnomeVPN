@@ -9,6 +9,10 @@ export const disconnectInputSchema = z.object({
   deviceId: z.uuid(),
 });
 
+export const heartbeatInputSchema = z.object({
+  deviceId: z.uuid(),
+});
+
 export const issueConfigSchema = z.object({
   nodeId: z.uuid(),
   name: z

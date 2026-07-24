@@ -7,6 +7,8 @@ import {
   Logger,
 } from '@nestjs/common';
 
+import { Prisma } from '../../../generated';
+
 import type { ApiErrorCode } from '@gnomevpn/schemas';
 import type { Response } from 'express';
 
@@ -18,6 +20,11 @@ const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
 };
 
 const codeForStatus = (status: number): ApiErrorCode => STATUS_TO_CODE[status] ?? 'INTERNAL_ERROR';
+
+const PRISMA_ERROR: Record<string, { status: number; code: ApiErrorCode }> = {
+  P2025: { status: HttpStatus.NOT_FOUND, code: 'NOT_FOUND' },
+  P2002: { status: HttpStatus.CONFLICT, code: 'CONFLICT' },
+};
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -35,6 +42,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
         .json(hasCode ? res : { error: exception.message, code: codeForStatus(status) });
 
       return;
+    }
+
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const mapped = PRISMA_ERROR[exception.code];
+
+      if (mapped) {
+        response.status(mapped.status).json({ error: mapped.code, code: mapped.code });
+
+        return;
+      }
     }
 
     this.logger.error(exception instanceof Error ? exception.stack : String(exception));
