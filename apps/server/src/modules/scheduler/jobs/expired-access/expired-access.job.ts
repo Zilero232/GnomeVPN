@@ -5,6 +5,7 @@ import { map, pipe, unique } from 'remeda';
 
 import { PrismaService } from '../../../../core';
 import { ConfigAccessService } from '../../../configs';
+import { EventsService } from '../../../events';
 import { SessionAccessService } from '../../../sessions';
 import { CONFIG_GRACE_HOURS } from '../../config';
 import { lapsedBefore } from '../../lib';
@@ -17,6 +18,7 @@ export class ExpiredAccessJob {
     private readonly prisma: PrismaService,
     private readonly sessions: SessionAccessService,
     private readonly configs: ConfigAccessService,
+    private readonly events: EventsService,
   ) {}
 
   private async revokeExpiredSessions(): Promise<string[]> {
@@ -32,6 +34,10 @@ export class ExpiredAccessJob {
     );
 
     await Promise.allSettled(expired.map((userId) => this.sessions.disconnectAll(userId)));
+
+    for (const userId of expired) {
+      this.events.publish(userId, { type: 'devices-changed' });
+    }
 
     return expired;
   }

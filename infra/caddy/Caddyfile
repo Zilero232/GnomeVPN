@@ -21,9 +21,19 @@ www.gnomevpn.ru {
 api.gnomevpn.ru {
 	# The server container is not published to the host: it is reachable only
 	# inside the compose network, by service name.
+
+	# Server-Sent Events must stream unbuffered: flush every write and never
+	# compress, or the browser sees events only when the buffer fills.
+	@sse path /events*
+	reverse_proxy @sse server:4000 {
+		flush_interval -1
+	}
+
 	reverse_proxy server:4000
 
-	encode gzip zstd
+	# Compression buffers the response, so keep it off the SSE stream.
+	@compressible not path /events*
+	encode @compressible gzip zstd
 
 	log {
 		output stdout

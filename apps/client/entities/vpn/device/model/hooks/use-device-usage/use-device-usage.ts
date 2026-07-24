@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { useCurrentUser } from '@/entities/auth/user';
 import { getDeviceUsage } from '@/shared/api';
@@ -15,13 +16,19 @@ export const useDeviceUsage = ({ status }: UseDeviceUsageInput = {}) => {
   const { isAuthenticated } = useCurrentUser();
   const deviceId = useDeviceId();
 
-  const { data, isLoading } = useQuery({
-    queryKey: QUERY_KEYS.deviceUsage(status),
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: QUERY_KEYS.deviceUsage(),
     queryFn: () => (deviceId === null ? null : getDeviceUsage(deviceId)),
     enabled: isAuthenticated && deviceId !== null,
     refetchInterval: REFRESH_MS,
     refetchOnWindowFocus: true,
   });
+
+  useEffect(() => {
+    if (status === 'connected' || status === 'disconnected') {
+      refetch();
+    }
+  }, [status, refetch]);
 
   return { usage: data ?? null, isLoading };
 };

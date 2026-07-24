@@ -1,10 +1,12 @@
 import { isTauri } from '@tauri-apps/api/core';
 import { type as osType } from '@tauri-apps/plugin-os';
 
+import { isBrowser, isServer } from '../env';
+
 const isMobileUserAgent = (): boolean => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
 export const isTauriMobile = (): boolean => {
-  if (typeof window === 'undefined' || !isTauri()) {
+  if (isServer() || !isTauri()) {
     return false;
   }
 
@@ -17,5 +19,4 @@ export const isTauriMobile = (): boolean => {
   }
 };
 
-export const isTauriDesktop = (): boolean =>
-  typeof window !== 'undefined' && isTauri() && !isTauriMobile();
+export const isTauriDesktop = (): boolean => isBrowser() && isTauri() && !isTauriMobile();

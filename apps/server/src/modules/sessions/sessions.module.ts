@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { EventsModule } from '../events';
 import { NodesModule } from '../nodes';
 import { PeersModule } from '../peers';
 import { SubscriptionModule } from '../subscription';
@@ -7,7 +8,7 @@ import { SessionAccessService, SessionConnectService } from './services';
 import { SessionsController } from './sessions.controller';
 
 @Module({
-  imports: [NodesModule, PeersModule, SubscriptionModule],
+  imports: [NodesModule, PeersModule, SubscriptionModule, EventsModule],
   controllers: [SessionsController],
   providers: [SessionConnectService, SessionAccessService],
   exports: [SessionAccessService],

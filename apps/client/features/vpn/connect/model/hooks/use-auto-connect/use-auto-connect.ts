@@ -20,7 +20,7 @@ export const useAutoConnect = ({
   isConnected,
   isReady,
   connect,
-}: UseAutoConnectParams): void => {
+}: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
 
   useEffect(() => {

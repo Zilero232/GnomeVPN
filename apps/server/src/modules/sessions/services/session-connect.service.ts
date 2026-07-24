@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService } from '../../../core';
+import { EventsService } from '../../events';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../../peers';
 import { SubscriptionService } from '../../subscription';
@@ -23,6 +24,7 @@ export class SessionConnectService {
     private readonly peers: PeersService,
     private readonly access: SessionAccessService,
     private readonly subscription: SubscriptionService,
+    private readonly events: EventsService,
   ) {}
 
   private async freeSlot({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
@@ -103,6 +105,8 @@ export class SessionConnectService {
 
     this.logger.log(`connect granted to ${userId}/${deviceId} on ${node.country} (${node.host})`);
 
+    this.events.publish(userId, { type: 'devices-changed' });
+
     return buildTunnelConfig({ node, auth: created.xrayUserId });
   }
 
@@ -114,6 +118,8 @@ export class SessionConnectService {
     }
 
     await this.access.releaseAll([session]);
+
+    this.events.publish(userId, { type: 'devices-changed' });
   }
 
   async heartbeat({ userId, deviceId }: HeartbeatSessionInput): Promise<void> {

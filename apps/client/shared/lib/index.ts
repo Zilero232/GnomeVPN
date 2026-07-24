@@ -12,6 +12,7 @@ export {
   wasManuallyDisconnected,
 } from './app-settings';
 export { getDeviceId, useDeviceId } from './device-id';
+export { isBrowser, isServer } from './env';
 export { callRust } from './ipc';
 export { logger } from './logger';
 export { notify } from './notifications';

@@ -1,12 +1,12 @@
 import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
-import { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
+import { clearTokenFromVault, isServer, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
 
 const STORAGE_KEY = 'gnomevpn.auth-token';
 
 export const getAuthToken = () => {
-  if (typeof window === 'undefined') {
+  if (isServer()) {
     return '';
   }
 
@@ -14,7 +14,7 @@ export const getAuthToken = () => {
 };
 
 export const saveAuthToken = (token: string | null) => {
-  if (typeof window === 'undefined' || !token) {
+  if (isServer() || !token) {
     return;
   }
 
@@ -23,7 +23,7 @@ export const saveAuthToken = (token: string | null) => {
 };
 
 export const clearToken = () => {
-  if (typeof window === 'undefined') {
+  if (isServer()) {
     return;
   }
 
@@ -32,7 +32,7 @@ export const clearToken = () => {
 };
 
 export const restoreTokenFromVault = async (): Promise<boolean> => {
-  if (typeof window === 'undefined') {
+  if (isServer()) {
     return false;
   }
 

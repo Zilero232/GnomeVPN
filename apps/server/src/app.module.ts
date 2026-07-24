@@ -8,6 +8,7 @@ import { PrismaModule } from './core';
 import { AuthModule } from './modules/auth';
 import { BillingModule } from './modules/billing';
 import { ConfigsModule } from './modules/configs';
+import { EventsModule } from './modules/events';
 import { HealthModule } from './modules/health';
 import { NodesModule } from './modules/nodes';
 import { PeersModule } from './modules/peers';
@@ -31,6 +32,7 @@ import { SubscriptionModule } from './modules/subscription';
     SessionsModule,
     ConfigsModule,
     SchedulerModule,
+    EventsModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

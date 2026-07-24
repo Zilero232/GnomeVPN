@@ -32,7 +32,7 @@ Imports go downward only: `app → views → widgets → features → entities �
 
 The landing page is prerendered, the account area runs in a browser, and `/app` runs inside Tauri. A component can hit all three.
 
-- **Never call a Tauri API at module scope or during render.** `isTauri()` touches `window`; on the server it throws. Guard with `typeof window !== 'undefined'` or call it inside `useEffect`.
+- **Never call a Tauri API at module scope or during render.** `isTauri()` touches `window`; on the server it throws. Guard with `isBrowser()` / `isServer()` from `@/shared/lib` (never a raw `typeof window` check) or call it inside `useEffect`.
 - **Never return `null` while loading in a provider that wraps the landing page.** It ships an empty `<body>` to crawlers. `VaultProvider` blocks only in the desktop app for this reason.
 - **A `useState` initialiser that reads the platform desugars into a hydration mismatch** — server and client disagree. Read it in an effect instead.
 

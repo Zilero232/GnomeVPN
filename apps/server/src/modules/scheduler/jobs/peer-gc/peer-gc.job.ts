@@ -5,6 +5,7 @@ import { isBefore, subMilliseconds } from 'date-fns';
 import { describeError, resolveNodeApiKey } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { XrayClient } from '../../../../lib';
+import { EventsService } from '../../../events';
 import { peerClientName } from '../../../peers';
 import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
 
@@ -14,7 +15,10 @@ import type { PeerRow } from './peer-gc.job.types';
 export class PeerGcJob {
   private readonly logger = new Logger(PeerGcJob.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventsService,
+  ) {}
 
   private isStale({ createdAt, lastActiveAt }: PeerRow): boolean {
     if (!lastActiveAt) {
@@ -56,6 +60,8 @@ export class PeerGcJob {
     await xray.deleteClient(email).catch(() => undefined);
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
+
+    this.events.publish(peer.userId, { type: 'devices-changed' });
   }
 
   @Cron('*/2 * * * *')

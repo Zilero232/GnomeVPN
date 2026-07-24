@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
+import { useServerEvents } from '@/entities/app/server-events';
+import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useDeviceUsage } from '@/entities/vpn/device';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
@@ -25,7 +27,10 @@ export const AppView = () => {
   const t = useTranslations('app');
   const router = useRouter();
   const { nodes, isLoading, isError } = useNodes();
+  const { isAuthenticated } = useCurrentUser();
   const { hasAccess } = useSubscriptionStatus();
+
+  useServerEvents({ isEnabled: isAuthenticated });
   const { status, activeNodeId, traffic, connectedAt, connect, disconnect } =
     useVpnConnectionContext();
 

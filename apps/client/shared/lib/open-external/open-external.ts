@@ -1,11 +1,16 @@
+import { isTauri } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
+import { isServer } from '../env';
 import { logger } from '../logger';
-import { isTauriDesktop } from '../tauri-platform';
 
 export const openExternal = async (url: string): Promise<void> => {
-  if (!isTauriDesktop()) {
-    window.location.href = url;
+  if (isServer()) {
+    return;
+  }
+
+  if (!isTauri()) {
+    window.open(url, '_blank', 'noopener,noreferrer');
 
     return;
   }
@@ -14,5 +19,7 @@ export const openExternal = async (url: string): Promise<void> => {
     await openUrl(url);
   } catch (error) {
     logger.error(`openExternal failed: ${String(error)}`);
+
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 };
