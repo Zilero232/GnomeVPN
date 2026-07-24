@@ -23,6 +23,9 @@ concurrency:
 # to the nodes, so it moves together with the server side rather than with any
 # particular node image tag.
 env:
+  # Windows runs the tunnel through sing-box; Android still spawns hysteria under
+  # tun2proxy, so both versions are pinned here.
+  SINGBOX_VERSION: 1.13.14
   HYSTERIA_VERSION: app/v2.10.0
 
 jobs:
@@ -142,8 +145,8 @@ jobs:
         with:
           path: |
             apps/tauri/bin/wintun
-            apps/tauri/bin/hysteria
-          key: native-windows-wintun-0.14.1-hysteria-${{ env.HYSTERIA_VERSION }}
+            apps/tauri/bin/singbox
+          key: native-windows-wintun-0.14.1-singbox-${{ env.SINGBOX_VERSION }}
 
       # wintun.dll is not redistributable through git: the tunnel adapter needs it
       # at runtime, so the installer bundles a copy fetched here.
@@ -156,14 +159,18 @@ jobs:
           mkdir -p apps/tauri/bin/wintun
           cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun/wintun.dll
 
-      # The Hysteria2 client runs the tunnel as a child of the service. Like
-      # wintun it is not committed, so the installer bundles a copy fetched here.
-      - name: Fetch hysteria
+      # sing-box runs the tunnel as a child of the service: it owns the adapter,
+      # the routes and the per-app split rules. Like wintun it is not committed,
+      # so the installer bundles a copy fetched here.
+      - name: Fetch sing-box
         if: steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          mkdir -p apps/tauri/bin/hysteria
-          curl -fsSL "https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-windows-amd64.exe" -o apps/tauri/bin/hysteria/hysteria.exe
+          curl -fsSL "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VERSION}/sing-box-${SINGBOX_VERSION}-windows-amd64.zip" -o singbox.zip
+          unzip -q singbox.zip
+          mkdir -p apps/tauri/bin/singbox
+          cp "sing-box-${SINGBOX_VERSION}-windows-amd64/sing-box.exe" apps/tauri/bin/singbox/sing-box.exe
+          cp "sing-box-${SINGBOX_VERSION}-windows-amd64/LICENSE" apps/tauri/bin/singbox/singbox-LICENSE.txt
 
       # The privileged service is a separate binary that the NSIS hooks install.
       - name: Build tunnel service
