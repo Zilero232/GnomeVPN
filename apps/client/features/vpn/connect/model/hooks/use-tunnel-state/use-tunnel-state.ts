@@ -18,6 +18,7 @@ export const useTunnelState = () => {
   const markConnecting = (nodeId: string) => {
     setStatus('connecting');
     setActiveNodeId(nodeId);
+    setTraffic(EMPTY_TRAFFIC);
   };
 
   const markConnected = () => {

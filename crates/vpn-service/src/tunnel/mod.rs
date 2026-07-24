@@ -19,6 +19,7 @@ const MAX_RETRIES: usize = 5;
 pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig) {
     let Some(stop) = supervisor.take_stop_receiver() else {
         log::error!("spawn called without a reserved tunnel slot");
+        supervisor.finish();
         return;
     };
 
@@ -40,6 +41,10 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
             let mut watcher = stop_rx.clone();
 
             async move {
+                if *watcher.borrow() {
+                    return Ok(());
+                }
+
                 let (attempt_stop, rx) = tokio::sync::oneshot::channel();
 
                 tokio::spawn(async move {

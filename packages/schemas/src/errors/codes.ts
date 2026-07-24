@@ -5,6 +5,8 @@ export const apiErrorCodeSchema = z.enum([
   'VALIDATION_FAILED',
   'UNAUTHORIZED',
   'FORBIDDEN',
+  'NOT_FOUND',
+  'CONFLICT',
 
   'PAYMENT_REQUIRED',
   'PAYMENT_FAILED',

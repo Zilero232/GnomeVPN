@@ -85,10 +85,7 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStop(
-    _env: JNIEnv,
-    _class: JClass,
-) {
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStop(_env: JNIEnv, _class: JClass) {
     if let Ok(mut guard) = SESSION.lock() {
         if let Some(session) = guard.take() {
             session.cancellation.cancel();

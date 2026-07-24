@@ -8,4 +8,4 @@ pub const SERVICE_NAME: &str = "GnomeVPNService";
 pub const DISPLAY_NAME: &str = "GnomeVPN Tunnel Service";
 
 pub const DESCRIPTION: &str =
-    "Поднимает WireGuard-туннель GnomeVPN. Без неё приложение требовало бы прав администратора при каждом запуске.";
+    "Поднимает туннель GnomeVPN. Без неё приложение требовало бы прав администратора при каждом запуске.";

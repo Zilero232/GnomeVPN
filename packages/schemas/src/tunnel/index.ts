@@ -1,6 +1,7 @@
 export {
   connectInputSchema,
   disconnectInputSchema,
+  heartbeatInputSchema,
   issueConfigSchema,
   revokeConfigSchema,
 } from './inputs';
@@ -11,6 +12,7 @@ export type {
   DeviceUsage,
   DisconnectRequest,
   DownloadedConfig,
+  HeartbeatRequest,
   IssueConfigRequest,
   RevokeConfigRequest,
   TunnelConfig,

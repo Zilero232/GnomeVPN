@@ -16,6 +16,7 @@ const LOG_NAME: &str = "hysteria.log";
 const TUN_ADDRESS: &str = "10.8.0.2";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
+const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
 
 fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
     let path = native_lib_dir.join(BINARY_NAME);
@@ -175,6 +176,27 @@ pub async fn run_tun2proxy(
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
 }
 
+async fn watch_hysteria(
+    hysteria: &mut Hysteria,
+    cancellation: CancellationToken,
+) -> MobileVpnError {
+    let mut ticker = interval(LIVENESS_INTERVAL);
+
+    loop {
+        tokio::select! {
+            _ = cancellation.cancelled() => {
+                return MobileVpnError::Hysteria("tunnel cancelled".into());
+            }
+            _ = ticker.tick() => {
+                if let Some(reason) = hysteria.has_exited() {
+                    cancellation.cancel();
+                    return MobileVpnError::Hysteria(reason);
+                }
+            }
+        }
+    }
+}
+
 pub async fn run_tunnel(
     native_lib_dir: &Path,
     data_dir: &Path,
@@ -182,10 +204,13 @@ pub async fn run_tunnel(
     fd: i32,
     cancellation: CancellationToken,
 ) -> Result<(), MobileVpnError> {
-    let (hysteria, credentials) = spawn_hysteria(native_lib_dir, data_dir, config).await?;
+    let (mut hysteria, credentials) = spawn_hysteria(native_lib_dir, data_dir, config).await?;
     let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
 
-    let result = run_tun2proxy(args, fd, cancellation).await;
+    let result = tokio::select! {
+        tunnel = run_tun2proxy(args, fd, cancellation.clone()) => tunnel,
+        reason = watch_hysteria(&mut hysteria, cancellation.clone()) => Err(reason),
+    };
 
     hysteria.stop().await;
 

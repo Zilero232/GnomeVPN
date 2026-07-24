@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../../peers';
@@ -8,7 +7,11 @@ import { SubscriptionService } from '../../subscription';
 import { SessionAccessService } from './session-access.service';
 
 import type { DeviceUsage, TunnelConfig } from '@gnomevpn/schemas';
-import type { ConnectSessionInput, DisconnectSessionInput } from '../sessions.service.types';
+import type {
+  ConnectSessionInput,
+  DisconnectSessionInput,
+  HeartbeatSessionInput,
+} from '../sessions.service.types';
 
 @Injectable()
 export class SessionConnectService {
@@ -22,10 +25,11 @@ export class SessionConnectService {
     private readonly subscription: SubscriptionService,
   ) {}
 
-  private async assertSlotAvailable({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
+  private async freeSlot({ userId, deviceId }: DisconnectSessionInput): Promise<void> {
     const [sessions, { deviceLimit }] = await Promise.all([
       this.prisma.peer.findMany({
         where: { userId, kind: 'session' },
+        orderBy: [{ lastActiveAt: { sort: 'asc', nulls: 'first' } }, { createdAt: 'asc' }],
         select: PEER_REF_SELECT,
       }),
       this.subscription.getLimits(userId),
@@ -35,14 +39,13 @@ export class SessionConnectService {
       return;
     }
 
-    this.logger.warn(
-      `connect refused for ${userId}/${deviceId}: ${sessions.length} of ${deviceLimit} slots taken`,
+    const evicted = sessions.slice(0, sessions.length - deviceLimit + 1);
+
+    this.logger.log(
+      `evicting ${evicted.length} least-recently-used slot(s) for ${userId}/${deviceId}`,
     );
 
-    throw new AppBadRequestException(
-      'DEVICE_LIMIT_REACHED',
-      `At most ${deviceLimit} devices can be connected at once`,
-    );
+    await this.access.releaseAll(evicted);
   }
 
   async listDevices({ userId, deviceId }: DisconnectSessionInput): Promise<DeviceUsage> {
@@ -76,7 +79,7 @@ export class SessionConnectService {
 
     const node = await this.nodes.getNodeForConnect(nodeId);
 
-    await this.assertSlotAvailable({ userId, deviceId });
+    await this.freeSlot({ userId, deviceId });
 
     const created = await this.peers.issue({ node, userId, kind: 'session', name: deviceId });
 
@@ -111,5 +114,12 @@ export class SessionConnectService {
     }
 
     await this.access.releaseAll([session]);
+  }
+
+  async heartbeat({ userId, deviceId }: HeartbeatSessionInput): Promise<void> {
+    await this.prisma.peer.updateMany({
+      where: { userId, kind: 'session', name: deviceId },
+      data: { lastActiveAt: new Date() },
+    });
   }
 }

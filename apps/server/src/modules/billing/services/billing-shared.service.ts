@@ -11,6 +11,7 @@ import type {
   AttachMethodInput,
   AutoRenewInput,
   GrantExtraDevicesInput,
+  PrismaExecutor,
 } from '../billing.types';
 
 @Injectable()
@@ -59,8 +60,11 @@ export class BillingSharedService {
     return wasCancelled;
   }
 
-  async activate({ userId, planId, method }: ActivateInput): Promise<void> {
-    const subscription = await this.prisma.subscription.findUnique({
+  async activate(
+    { userId, planId, method }: ActivateInput,
+    db: PrismaExecutor = this.prisma,
+  ): Promise<void> {
+    const subscription = await db.subscription.findUnique({
       where: { userId },
       select: {
         plan: true,
@@ -85,32 +89,33 @@ export class BillingSharedService {
       ...(method?.id ? { savedCardId: method.id, savedCardTitle: method.title } : {}),
     };
 
-    await this.prisma.subscription.upsert({
+    await db.subscription.upsert({
       where: { userId },
       create: { userId, ...data },
       update: data,
     });
   }
 
-  async grantExtraDevices({ userId, quantity }: GrantExtraDevicesInput): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const subscription = await tx.subscription.findUnique({
-        where: { userId },
-        select: { extraDevices: true },
-      });
+  async grantExtraDevices(
+    { userId, quantity }: GrantExtraDevicesInput,
+    db: PrismaExecutor = this.prisma,
+  ): Promise<void> {
+    const subscription = await db.subscription.findUnique({
+      where: { userId },
+      select: { extraDevices: true },
+    });
 
-      if (!subscription) {
-        this.logger.warn(`paid extra devices for ${userId} without a subscription row`);
+    if (!subscription) {
+      this.logger.warn(`paid extra devices for ${userId} without a subscription row`);
 
-        return;
-      }
+      return;
+    }
 
-      await tx.subscription.update({
-        where: { userId },
-        data: {
-          extraDevices: Math.min(subscription.extraDevices + quantity, MAX_EXTRA_DEVICES),
-        },
-      });
+    await db.subscription.update({
+      where: { userId },
+      data: {
+        extraDevices: Math.min(subscription.extraDevices + quantity, MAX_EXTRA_DEVICES),
+      },
     });
   }
 }

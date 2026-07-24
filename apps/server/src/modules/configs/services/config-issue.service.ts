@@ -45,13 +45,15 @@ export class ConfigIssueService {
   async issue({ userId, nodeId, name }: IssueConfigInput): Promise<ConfigFile> {
     const node = await this.nodes.getNodeForConnect(nodeId);
 
-    const existing = await this.prisma.peer.findFirst({
-      where: { userId, kind: 'config', name: { equals: name, mode: 'insensitive' } },
-    });
+    const findExisting = () =>
+      this.prisma.peer.findUnique({
+        where: { userId_kind_name: { userId, kind: 'config', name } },
+      });
 
-    const [count, { configLimit }] = await Promise.all([
-      this.prisma.peer.count({ where: { userId, kind: 'config' } }),
+    const [existing, { configLimit }, count] = await Promise.all([
+      findExisting(),
       this.subscription.getLimits(userId),
+      this.prisma.peer.count({ where: { userId, kind: 'config' } }),
     ]);
 
     if (!existing && count >= configLimit) {
@@ -61,14 +63,34 @@ export class ConfigIssueService {
     const created = await this.peers.issue({ node, userId, kind: 'config', name });
 
     try {
-      await (existing
-        ? this.prisma.peer.update({
-            where: { id: existing.id },
-            data: { nodeId, xrayUserId: created.xrayUserId },
-          })
-        : this.prisma.peer.create({
+      await this.prisma.$transaction(
+        async (tx) => {
+          const current = await tx.peer.findUnique({
+            where: { userId_kind_name: { userId, kind: 'config', name } },
+          });
+
+          if (current) {
+            await tx.peer.update({
+              where: { id: current.id },
+              data: { nodeId, xrayUserId: created.xrayUserId },
+            });
+
+            return;
+          }
+
+          if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
+            throw new AppBadRequestException(
+              'CONFIG_LIMIT_REACHED',
+              `At most ${configLimit} configs`,
+            );
+          }
+
+          await tx.peer.create({
             data: { userId, nodeId, kind: 'config', name, xrayUserId: created.xrayUserId },
-          }));
+          });
+        },
+        { isolationLevel: 'Serializable' },
+      );
     } catch (error) {
       await this.peers.discard({ node, email: created.email });
 

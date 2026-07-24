@@ -98,11 +98,28 @@ pub async fn run_tunnel(
     let socks = process.socks_addr();
     log::info!("hysteria started, socks inbound on {socks}, waiting for it to open");
 
-    if let Err(error) = wait_until_ready(socks, &mut process).await {
+    let ready = tokio::select! {
+        _ = &mut stop => {
+            log::info!("stop requested during startup; aborting before the inbound opened");
+            process.stop().await;
+
+            return Ok(());
+        }
+        ready = wait_until_ready(socks, &mut process) => ready,
+    };
+
+    if let Err(error) = ready {
         log::error!("hysteria inbound never opened: {error}");
         process.stop().await;
 
         return Err(error);
+    }
+
+    if stop.try_recv().is_ok() {
+        log::info!("stop requested before installing routes; aborting");
+        process.stop().await;
+
+        return Ok(());
     }
 
     log::info!("hysteria inbound is open; installing routes to node {server}");
@@ -126,9 +143,18 @@ pub async fn run_tunnel(
     if let Err(error) = route::apply_default_route(TUNNEL_NAME, server, IpAddr::V4(TUNNEL_GATEWAY))
     {
         log::error!("applying default route failed: {error}");
+        let _ = route::remove_default_route(TUNNEL_NAME, server);
         process.stop().await;
 
         return Err(TunnelError::Io(format!("route: {error}")));
+    }
+
+    if stop.try_recv().is_ok() {
+        log::info!("stop requested right after routes went in; tearing back down");
+        let _ = route::remove_default_route(TUNNEL_NAME, server);
+        process.stop().await;
+
+        return Ok(());
     }
 
     let args = proxy_args(socks, &credentials, &config.dns);

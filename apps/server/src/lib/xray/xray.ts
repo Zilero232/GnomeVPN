@@ -1,6 +1,12 @@
 import { randomBytes } from 'node:crypto';
 
-import { currentClients, panelApi, parseSettings, parseStreamSettings } from './lib';
+import {
+  currentClients,
+  panelApi,
+  parseSettings,
+  parseStreamSettings,
+  serializeByKey,
+} from './lib';
 import { AUTH_BYTES, INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED } from './xray.constants';
 
 import type ThreeXUI from '3xui-api-client';
@@ -15,10 +21,12 @@ import type {
 
 export class XrayClient {
   private readonly panel: ThreeXUI;
+  private readonly nodeKey: string;
 
   constructor(opts: XrayClientOptions) {
+    this.nodeKey = opts.baseUrl.replace(/\/$/, '');
     this.panel = panelApi({
-      baseUrl: opts.baseUrl.replace(/\/$/, ''),
+      baseUrl: this.nodeKey,
       token: opts.token,
       timeout: REQUEST_TIMEOUT_MS,
     });
@@ -76,17 +84,19 @@ export class XrayClient {
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
-    const current = await this.getInbound();
-    const clients = currentClients(current);
-    const settings = { ...(inbound.settings as object), clients };
+    return serializeByKey(this.nodeKey, async () => {
+      const current = await this.getInbound();
+      const clients = currentClients(current);
+      const settings = { ...(inbound.settings as object), clients };
 
-    this.unwrap(
-      (await this.panel.updateInbound(
-        current.id,
-        this.inboundPayload({ ...inbound, settings }),
-      )) as XrayApiResponse<unknown>,
-      'updateInbound',
-    );
+      this.unwrap(
+        (await this.panel.updateInbound(
+          current.id,
+          this.inboundPayload({ ...inbound, settings }),
+        )) as XrayApiResponse<unknown>,
+        'updateInbound',
+      );
+    });
   }
 
   private async writeClients(clients: HysteriaClient[]): Promise<void> {
@@ -125,18 +135,20 @@ export class XrayClient {
   }
 
   async createClient(email: string): Promise<CreateClientResult> {
-    const clients = await this.listClients();
-    const existing = clients.find((client) => client.email === email);
+    return serializeByKey(this.nodeKey, async () => {
+      const clients = await this.listClients();
+      const existing = clients.find((client) => client.email === email);
 
-    if (existing) {
-      return { xrayUserId: existing.auth, email };
-    }
+      if (existing) {
+        return { xrayUserId: existing.auth, email };
+      }
 
-    const auth = randomBytes(AUTH_BYTES).toString('hex');
-    await this.writeClients([...clients, this.newClient({ email, auth })]);
-    await this.restartCore();
+      const auth = randomBytes(AUTH_BYTES).toString('hex');
+      await this.writeClients([...clients, this.newClient({ email, auth })]);
+      await this.restartCore();
 
-    return { xrayUserId: auth, email };
+      return { xrayUserId: auth, email };
+    });
   }
 
   async restartCore(): Promise<void> {
@@ -152,15 +164,17 @@ export class XrayClient {
   }
 
   async deleteClient(email: string): Promise<void> {
-    const clients = await this.listClients();
-    const kept = clients.filter((client) => client.email !== email);
+    return serializeByKey(this.nodeKey, async () => {
+      const clients = await this.listClients();
+      const kept = clients.filter((client) => client.email !== email);
 
-    if (kept.length === clients.length) {
-      return;
-    }
+      if (kept.length === clients.length) {
+        return;
+      }
 
-    await this.writeClients(kept);
-    await this.restartCore();
+      await this.writeClients(kept);
+      await this.restartCore();
+    });
   }
 
   async getClientTraffic(email: string): Promise<number | null> {

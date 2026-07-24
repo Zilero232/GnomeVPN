@@ -16,6 +16,7 @@ import {
 } from '@/shared/lib';
 import { useAdoptTunnel } from '../use-adopt-tunnel';
 import { useConnectWatchdog } from '../use-connect-watchdog';
+import { useHeartbeat } from '../use-heartbeat';
 import { useTunnelEvents } from '../use-tunnel-events';
 import { useTunnelNotifications } from '../use-tunnel-notifications';
 import { useTunnelState } from '../use-tunnel-state';
@@ -28,6 +29,8 @@ export const useVpnConnection = () => {
   const tunnel = useTunnelState();
   const watchdog = useConnectWatchdog();
   const { notifyError } = useTunnelNotifications();
+
+  useHeartbeat({ status: tunnel.status });
 
   const generationRef = useRef(0);
   const countryRef = useRef('');
