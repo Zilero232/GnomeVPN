@@ -196,7 +196,7 @@ service.
 ```bash
 bun install
 
-cp apps/server/.env.example apps/server/.env   # fill in the values
+cp .env.example .env                           # one env for the whole monorepo
 docker compose -f docker-compose.dev.yml up -d # database
 
 bun --filter @gnomevpn/server db:push
@@ -254,10 +254,12 @@ Full walkthrough — domain, secrets, `.env`, first launch — in
 | `bun run lint:css` | Stylelint |
 | `bun run tauri:build` | installers |
 | `bun run android:build` | APK / AAB |
+| `bun run release` | build, sign & publish desktop + Android |
+| `bun run deploy:web` | build images, push to ghcr, deploy web + API |
 | `bun run provision:nodes` | set up VPN nodes |
 
 Rust is checked with `cargo clippy --workspace` and `cargo fmt --all --check`.
-CI runs the same set — see [.github/workflows/check-code.yml](.github/workflows/check-code.yml).
+There is no CI — run the checks locally before every commit.
 
 <br/>
 

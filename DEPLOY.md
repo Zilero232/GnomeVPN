@@ -4,13 +4,60 @@
 
 | Компонент | Где | Как обновляется |
 |---|---|---|
-| Лендинг + кабинет | VPS, Caddy | push в master → `deploy-web.yml` |
-| API | VPS, Docker | push в master → `deploy-web.yml` |
+| Лендинг + кабинет | VPS, Caddy | `bun run deploy:web` |
+| API | VPS, Docker | `bun run deploy:web` |
 | База | VPS, Docker | там же |
-| Десктоп | у пользователя | версия в `package.json` → `release-app.yml` |
+| Десктоп + Android | у пользователя | `bun run release` |
 | VPN-узлы | отдельные VPS | `bun run provision:nodes` |
 
-CI собирает образы и кладёт в ghcr.io. **VPS ничего не собирает** — только забирает готовые образы.
+CI нет — всё собирается и выкатывается локально с рабочей машины. Образы кладутся
+в ghcr.io; **VPS ничего не собирает** — только забирает готовые образы.
+
+---
+
+## Локальный релиз и деплой
+
+Всё делается локальными скриптами с рабочей машины. Секреты берутся из единого
+корневого `.env` и сгенерированного `.env.release` (оба вне git), ничего вводить
+руками не нужно.
+
+### Разовая подготовка
+
+```bash
+bun run setup:release
+```
+
+Ставит `gh` через winget, генерирует Android-keystore
+(`apps/tauri/gnomevpn.keystore`) и пишет `ANDROID_KEY_*` в `.env.release`.
+Keystore и `.env.release` в git не попадают — **сохрани их копию отдельно**,
+иначе следующий релиз подпишется другим ключом и обновление у пользователей не
+сойдётся. Если ключ подписи десктопа зашифрован, впиши его пароль в
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` в `.env.release`.
+
+`gh` после установки требует один вход: `gh auth login`.
+
+### Релиз десктопа и Android
+
+```bash
+bun run release            # десктоп + Android в один релиз vX.Y.Z
+bun run release --desktop  # только Windows
+bun run release --android  # только Android
+```
+
+Создаёт (или переиспользует) черновик `vX.Y.Z` по версии из `package.json`,
+собирает и подписывает, заливает артефакты и публикует релиз. Повторный запуск
+на той же версии дозаливает в существующий черновик.
+
+### Деплой веб + API
+
+```bash
+bun run deploy:web
+```
+
+Собирает образы web и server, пушит в ghcr.io, заходит по SSH на VPS
+(`PROVISION_SSH_*` из `.env`), копирует `docker-compose.yml`, делает
+`pull && up -d` и применяет миграции. VPS остаётся тем же — только забирает
+образы.
 
 ---
 
@@ -121,19 +168,13 @@ openssl rand -base64 32
 
 ---
 
-## 4. Секреты GitHub
+## 4. Ключи для релиза
 
-Settings → Secrets and variables → Actions:
+CI нет, поэтому секретов в GitHub тоже нет. Всё живёт локально:
 
-| Секрет | Значение |
-|---|---|
-| `SSH_HOST` | IP сервера |
-| `SSH_USER` | `root` или пользователь для деплоя |
-| `SSH_PRIVATE_KEY` | приватный ключ целиком |
-| `SSH_PORT` | если не 22 |
-| `DEPLOY_PATH` | `/opt/gnomevpn` |
-| `NEXT_PUBLIC_API_URL` | `https://api.gnomevpn.ru` |
-| `TAURI_SIGNING_PRIVATE_KEY` | для автообновления десктопа |
+- **SSH к VPS** — `PROVISION_SSH_*` в корневом `.env` (см. раздел 3).
+- **Ключ подписи десктопа** — `~/.tauri/gnomevpn.key` (см. ниже).
+- **Android-keystore** — создаётся `bun run setup:release`, пишется в `.env.release`.
 
 ### Ключ подписи обновлений
 
@@ -147,11 +188,14 @@ bun --filter @gnomevpn/tauri signer:generate
 
 Дальше:
 
-1. Содержимое `~/.tauri/gnomevpn.key` целиком → секрет `TAURI_SIGNING_PRIVATE_KEY` в GitHub
-2. Содержимое `~/.tauri/gnomevpn.key.pub` → `apps/tauri/tauri.conf.json`, поле `plugins.updater.pubkey`
-3. Там же `"active": false` → `true`
+1. `~/.tauri/gnomevpn.key.pub` → `apps/tauri/tauri.windows.conf.json`, поле `plugins.updater.pubkey`
+2. Там же `"active": false` → `true`
 
-Подписать файл вручную (обычно не нужно — CI делает это сам):
+Релиз (`bun run release`) читает приватный ключ из `~/.tauri/gnomevpn.key` сам.
+Если ключ зашифрован — впиши его пароль в `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` в
+`.env.release`.
+
+Подписать файл вручную (обычно не нужно — `bun run release` делает это сам):
 
 ```bash
 bun --filter @gnomevpn/tauri signer:sign -- <путь-к-файлу>
@@ -181,15 +225,18 @@ curl -I https://gnomevpn.ru           # 200
 
 ## 6. Миграции базы
 
-**Сейчас их нет** — в разработке использовался `prisma db push`, история миграций не велась. До первого деплоя нужно её создать:
+История миграций лежит в `apps/server/prisma/migrations`. `bun run deploy:web`
+применяет их сам: при наличии файлов миграций он делает `migrate resolve`
+(baseline для базы, собранной ранее через `db push`) и затем `migrate deploy`.
+
+Новую миграцию создать так:
 
 ```bash
 cd apps/server
-bunx prisma migrate dev --name init
-git add prisma/migrations && git commit -m "chore: add initial migration"
+bunx prisma migrate dev --name <название>
 ```
 
-После этого `deploy-web.yml` будет применять миграции сам. Без этого шага деплой упадёт на шаге `migrate deploy`.
+Следующий `bun run deploy:web` её накатит.
 
 ---
 

@@ -6,7 +6,7 @@ import { logger } from '@/shared/lib';
 
 import type { StartWatchdogInput } from './use-connect-watchdog.types';
 
-const CONNECT_TIMEOUT_MS = 15_000;
+const CONNECT_TIMEOUT_MS = 30_000;
 
 export const useConnectWatchdog = () => {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -21,12 +21,14 @@ export const useConnectWatchdog = () => {
   const start = ({ onTimeout }: StartWatchdogInput) => {
     clear();
 
-    timerRef.current = setTimeout(() => {
+    timerRef.current = setTimeout(async () => {
       timerRef.current = null;
 
-      onTimeout().catch((error: unknown) => {
+      try {
+        await onTimeout();
+      } catch (error) {
         logger.error(`connect watchdog failed: ${String(error)}`);
-      });
+      }
     }, CONNECT_TIMEOUT_MS);
   };
 

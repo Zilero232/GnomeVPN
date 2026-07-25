@@ -69,8 +69,8 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      # Sits next to this compose file on the VPS. Create it once from
-      # apps/server/.env.example with production values.
+      # Sits next to this compose file on the VPS. Create it once from the
+      # root .env.example with production values.
       - ./.env
       # Written by `bun provision`, one XRAY_KEY_<CC> / XRAY_PANEL_<CC> pair per
       # node. Kept apart from .env so the hand-written file stays hand-written.
