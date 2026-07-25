@@ -82,6 +82,8 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun openDescriptor(dns: Array<String>, server: String): Int {
+        startForeground(NOTIFICATION_ID, buildNotification())
+
         val builder = Builder()
             .setSession(SESSION)
             .setMtu(MTU)
@@ -109,7 +111,6 @@ class GnomeVpnService : VpnService() {
             ?: throw IllegalStateException("VpnService.establish() returned null")
 
         descriptor = opened
-        startForeground(NOTIFICATION_ID, buildNotification())
         acquireWakeLock()
         VpnTileService.requestUpdate(this)
 

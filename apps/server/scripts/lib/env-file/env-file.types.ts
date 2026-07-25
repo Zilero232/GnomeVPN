@@ -3,10 +3,6 @@ export type EnvKeyInput = {
   key: string;
 };
 
-export type AppendEnvLineInput = EnvKeyInput & {
-  value: string;
-};
-
 export type EnvEntry = {
   key: string;
   value: string;

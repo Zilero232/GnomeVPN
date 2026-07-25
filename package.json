@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -23,7 +23,12 @@
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
     "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
-    "provision:nodes": "bun --env-file apps/server/.env --env-file apps/server/.env.nodes apps/server/scripts/provision-nodes.ts"
+    "provision:nodes": "bun --env-file .env --env-file apps/server/.env.nodes apps/server/scripts/provision-nodes.ts",
+    "setup:release": "bun --env-file .env --env-file .env.release scripts/setup-release-env.mjs",
+    "deploy:web": "bun --env-file .env --env-file .env.release scripts/deploy/web.mjs",
+    "release": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/index.mjs",
+    "release:desktop": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/desktop.mjs",
+    "release:android": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/android.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

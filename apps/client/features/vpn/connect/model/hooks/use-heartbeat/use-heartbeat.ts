@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 import { sendHeartbeat } from '@/shared/api';
-import { logger, useDeviceId } from '@/shared/lib';
+import { isBrowser, logger, useDeviceId } from '@/shared/lib';
 
 import type { UseHeartbeatInput } from './use-heartbeat.types';
 
@@ -25,10 +25,23 @@ export const useHeartbeat = ({ status }: UseHeartbeatInput) => {
       }
     };
 
-    beat();
+    const beatWhenVisible = () => {
+      if (isBrowser() && document.visibilityState === 'visible') {
+        void beat();
+      }
+    };
+
+    void beat();
 
     const timer = setInterval(beat, HEARTBEAT_INTERVAL_MS);
 
-    return () => clearInterval(timer);
+    document.addEventListener('visibilitychange', beatWhenVisible);
+    window.addEventListener('focus', beatWhenVisible);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', beatWhenVisible);
+      window.removeEventListener('focus', beatWhenVisible);
+    };
   }, [status, deviceId]);
 };

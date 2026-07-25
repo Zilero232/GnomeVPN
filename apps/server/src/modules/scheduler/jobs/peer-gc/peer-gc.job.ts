@@ -7,13 +7,14 @@ import { PrismaService } from '../../../../core';
 import { XrayClient } from '../../../../lib';
 import { EventsService } from '../../../events';
 import { peerClientName } from '../../../peers';
-import { NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
+import { BOOT_GRACE_MS, NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
 
 import type { PeerRow } from './peer-gc.job.types';
 
 @Injectable()
 export class PeerGcJob {
   private readonly logger = new Logger(PeerGcJob.name);
+  private readonly bootedAt = Date.now();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -57,7 +58,7 @@ export class PeerGcJob {
       return;
     }
 
-    await xray.deleteClient(email).catch(() => undefined);
+    await xray.deleteClient(email);
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
 
@@ -66,6 +67,10 @@ export class PeerGcJob {
 
   @Cron('*/2 * * * *')
   async run(): Promise<void> {
+    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
+      return;
+    }
+
     const peers = await this.prisma.peer.findMany({
       where: { kind: 'session' },
       select: {

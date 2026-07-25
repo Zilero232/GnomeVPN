@@ -104,7 +104,7 @@ cargo clippy --workspace  # Rust
 cargo fmt --all --check
 ```
 
-CI runs the same set — see `.github/workflows/check-code.yml`.
+There is no CI — run this set locally before every commit; nothing else will.
 
 ## Things that have already bitten us
 

@@ -6,7 +6,7 @@
   "main": "src/main.ts",
   "scripts": {
     "predev": "kill-port 4000",
-    "dev": "bun --hot --cwd ../.. --env-file apps/server/.env --env-file apps/server/.env.nodes apps/server/src/main.ts",
+    "dev": "bun --hot --cwd ../.. --env-file .env --env-file apps/server/.env.nodes apps/server/src/main.ts",
     "start": "bun src/main.ts",
     "db:push": "prisma db push && prisma generate",
     "db:migrate": "prisma migrate dev && prisma generate",
@@ -14,7 +14,7 @@
     "db:status": "prisma migrate status",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "provision": "bun --env-file .env --env-file .env.nodes scripts/provision-nodes.ts",
+    "provision": "bun --env-file ../../.env --env-file .env.nodes scripts/provision-nodes.ts",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate"
   },
