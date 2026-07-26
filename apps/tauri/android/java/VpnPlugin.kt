@@ -1,14 +1,9 @@
 package ru.gnomevpn.app
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.TrafficStats
-import android.net.Uri
 import android.net.VpnService
-import android.os.PowerManager
-import android.provider.Settings
-import android.util.Log
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
@@ -108,27 +103,7 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
 
     // The descriptor only exists once the service has finished establishing the
     // tunnel, so the wait happens off the caller's thread to avoid an ANR.
-    private fun requestBatteryExemption() {
-        val power = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
-
-        if (power.isIgnoringBatteryOptimizations(activity.packageName)) {
-            return
-        }
-
-        runCatching {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                .setData(Uri.parse("package:${activity.packageName}"))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-            activity.startActivity(intent)
-        }.onFailure { error ->
-            Log.w(TAG, "cannot request battery-optimization exemption", error)
-        }
-    }
-
     private fun launchService(invoke: Invoke, args: StartArgs) {
-        requestBatteryExemption()
-
         val intent = Intent(activity, GnomeVpnService::class.java)
             .putExtra(GnomeVpnService.EXTRA_SERVER, args.server)
             .putExtra(GnomeVpnService.EXTRA_DNS, args.dns.toTypedArray())
@@ -222,9 +197,5 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
 
         activity.startService(intent)
         invoke.resolve()
-    }
-
-    private companion object {
-        private const val TAG = "GnomeVpnPlugin"
     }
 }

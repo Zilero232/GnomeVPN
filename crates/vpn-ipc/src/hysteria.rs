@@ -48,6 +48,10 @@ struct HysteriaQuic {
     init_conn_receive_window: u32,
     #[serde(rename = "maxConnReceiveWindow")]
     max_conn_receive_window: u32,
+    #[serde(rename = "maxIdleTimeout")]
+    max_idle_timeout: String,
+    #[serde(rename = "keepAlivePeriod")]
+    keep_alive_period: String,
 }
 
 #[derive(Serialize)]
@@ -108,6 +112,8 @@ pub fn build_hysteria_config(
             max_stream_receive_window: 8_388_608,
             init_conn_receive_window: 20_971_520,
             max_conn_receive_window: 20_971_520,
+            max_idle_timeout: "30s".to_string(),
+            keep_alive_period: "10s".to_string(),
         },
         fast_open: true,
         resolver,

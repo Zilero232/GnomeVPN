@@ -93,15 +93,22 @@ threads after a few idle minutes, and the connection is dead by the time the
 user unlocks the phone. The lock is taken in `openDescriptor` and released in
 `teardown`, so it lives exactly as long as the descriptor does.
 
-The wake-lock alone is **still not enough** — it keeps the CPU scheduling the
-threads, but Doze also freezes the app and defers its network unless the app is
-on the battery-optimization whitelist. So `VpnPlugin.launchService` fires
-`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` on first connect (guarded by
-`isIgnoringBatteryOptimizations`), and the manifest carries
-`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. Without it the service is killed a few
-minutes after the screen locks — the tunnel dies exactly as reported. Aggressive
-vendors (MIUI/EMUI/OneUI) may additionally need the app in their own autostart /
-protected-apps list, which is OS-level and cannot be set from code.
+The wake-lock is not the whole story either. What actually dropped the tunnel a
+few minutes after the screen locked was the Hysteria2 **QUIC connection idling
+out**: without `keepAlivePeriod` the client's default idle timeout (~30s) closes
+the connection the moment Doze batches the radio and no packets flow, and
+`watch_hysteria` only checks whether the *process* exited — a live process with a
+dead connection never triggers a reconnect. `build_hysteria_config` sets
+`quic.keepAlivePeriod: 10s` (plus an explicit `maxIdleTimeout: 30s`); the 10s
+heartbeat keeps the session alive across Doze's maintenance windows. This is the
+same reason WireGuard/OpenVPN clients survive Doze — they keepalive by default.
+
+A battery-optimization exemption (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) was
+tried and **removed**: a foreground `VpnService` is already exempt enough that
+established VPNs (AmneziaVPN, etc.) never request it, and the permission trips an
+extra Play Store review. The keepalive is the real fix. Aggressive vendors
+(MIUI/EMUI/OneUI) may still need the app in their own autostart / protected-apps
+list, which is OS-level and cannot be set from code.
 
 **Windows toasts ignore the `icon` field.** The icon comes from
 `Software\Classes\AppUserModelId\<identifier>\IconUri` in the registry, written

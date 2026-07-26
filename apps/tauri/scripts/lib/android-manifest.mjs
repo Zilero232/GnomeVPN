@@ -7,7 +7,6 @@ const PERMISSIONS = [
   'FOREGROUND_SERVICE_SPECIAL_USE',
   'POST_NOTIFICATIONS',
   'WAKE_LOCK',
-  'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
 ];
 
 const PERMISSION_ANCHOR = '<uses-permission android:name="android.permission.INTERNET" />';
@@ -110,8 +109,9 @@ const dropStalePermissions = (xml) =>
       /\s*<uses-permission android:name="android\.permission\.FOREGROUND_SERVICE_VPN" \/>/,
       '',
     )
+    .replace(/\s*<uses-permission android:name="android\.permission\.ACCESS_NETWORK_STATE" \/>/, '')
     .replace(
-      /\s*<uses-permission android:name="android\.permission\.ACCESS_NETWORK_STATE" \/>/,
+      /\s*<uses-permission android:name="android\.permission\.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" \/>/,
       '',
     );
 

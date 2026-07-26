@@ -11,6 +11,14 @@ import { isServer } from '@/shared/lib';
 
 import type { ServerEvent } from './use-server-events.types';
 
+const parseEvent = (raw: string): ServerEvent | null => {
+  try {
+    return JSON.parse(raw) as ServerEvent;
+  } catch {
+    return null;
+  }
+};
+
 export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
   const queryClient = useQueryClient();
 
@@ -20,9 +28,16 @@ export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
   const source = useEventSource<string, ServerEvent>(url ?? '', ['message'], {
     immediately: false,
     retry: true,
-    select: (data) => JSON.parse(data) as ServerEvent,
     onMessage: (event) => {
-      if (event.data?.type === 'devices-changed') {
+      const raw = (event as unknown as MessageEvent<string>).data;
+
+      if (typeof raw !== 'string' || raw.length === 0) {
+        return;
+      }
+
+      const parsed = parseEvent(raw);
+
+      if (parsed?.type === 'devices-changed') {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.deviceUsage() });
       }
     },
