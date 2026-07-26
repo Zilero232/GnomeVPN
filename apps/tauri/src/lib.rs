@@ -20,6 +20,28 @@ use vpn::state::VpnState;
 
 const AUTOSTART_FLAG: &str = "--autostart";
 
+#[cfg(all(desktop, not(debug_assertions)))]
+const HARDEN_WEBVIEW_JS: &str = r#"
+(() => {
+  const blockKey = (event) => {
+    const key = event.key.toLowerCase();
+    const reload = key === 'f5' || ((event.ctrlKey || event.metaKey) && key === 'r');
+    const devtools =
+      key === 'f12' ||
+      ((event.ctrlKey || event.metaKey) && event.shiftKey && (key === 'i' || key === 'j' || key === 'c')) ||
+      ((event.ctrlKey || event.metaKey) && key === 'u');
+
+    if (reload || devtools) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+
+  window.addEventListener('keydown', blockKey, { capture: true });
+  window.addEventListener('contextmenu', (event) => event.preventDefault(), { capture: true });
+})();
+"#;
+
 fn started_by_autostart() -> bool {
     std::env::args().any(|arg| arg == AUTOSTART_FLAG)
 }
@@ -100,6 +122,13 @@ pub fn run() {
 
             Ok(())
         });
+
+    #[cfg(all(desktop, not(debug_assertions)))]
+    let builder = builder.on_page_load(|webview, payload| {
+        if payload.event() == tauri::webview::PageLoadEvent::Started {
+            let _ = webview.eval(HARDEN_WEBVIEW_JS);
+        }
+    });
 
     #[cfg(target_os = "windows")]
     let builder = builder

@@ -61,6 +61,16 @@ whole network breaks, not just split:
   it and `strict_route` firewalls the router itself: "nothing loads, the network
   is broken." A live tunnel produced exactly that once these two were absent.
 
+The TUN inbound also carries `route_exclude_address` for loopback + all RFC1918
+(`127/8`, `10/8`, `172.16/12`, `192.168/16`). The `ip_is_private → direct` rule
+alone was not enough on Windows: `strict_route` installs WFP filters that grab
+local traffic *before* the route rule runs (the docs warn it "may interfere with
+VirtualBox"). Connecting the tunnel then killed the dev server's connection to a
+local Docker Postgres (`localhost:5433` → the WSL2 bridge on `172.19.x`) with
+`Connection terminated unexpectedly`. `route_exclude_address` keeps those ranges
+out of the TUN entirely, which is also just correct — loopback and LAN should
+never egress through the tunnel.
+
 Each selected app emits **two** rules — one matching the full `process_path`,
 one matching the basename `process_name`. sing-box ORs rules together, so a
 running process whose real path differs from the scanned shortcut (wrong casing,

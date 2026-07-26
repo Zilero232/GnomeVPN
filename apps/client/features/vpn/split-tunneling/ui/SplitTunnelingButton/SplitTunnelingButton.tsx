@@ -24,6 +24,7 @@ export const SplitTunnelingButton = () => {
   const isConnected = status !== 'disconnected';
 
   const splitTunneling = useSplitTunneling({
+    isOpen,
     onApplied: () => {
       if (!isConnected || !activeNodeId) {
         return;

@@ -93,6 +93,16 @@ threads after a few idle minutes, and the connection is dead by the time the
 user unlocks the phone. The lock is taken in `openDescriptor` and released in
 `teardown`, so it lives exactly as long as the descriptor does.
 
+The wake-lock alone is **still not enough** — it keeps the CPU scheduling the
+threads, but Doze also freezes the app and defers its network unless the app is
+on the battery-optimization whitelist. So `VpnPlugin.launchService` fires
+`ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` on first connect (guarded by
+`isIgnoringBatteryOptimizations`), and the manifest carries
+`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. Without it the service is killed a few
+minutes after the screen locks — the tunnel dies exactly as reported. Aggressive
+vendors (MIUI/EMUI/OneUI) may additionally need the app in their own autostart /
+protected-apps list, which is OS-level and cannot be set from code.
+
 **Windows toasts ignore the `icon` field.** The icon comes from
 `Software\Classes\AppUserModelId\<identifier>\IconUri` in the registry, written
 by `installer/hooks.nsh`, and it must point at an image file — `app.exe,0`

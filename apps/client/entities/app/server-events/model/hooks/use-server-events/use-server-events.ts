@@ -2,6 +2,7 @@
 
 import { useEventSource } from '@siberiacancode/reactuse';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 
 import { getAuthToken } from '@/shared/api';
 import { env } from '@/shared/config';
@@ -16,8 +17,8 @@ export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
   const token = isEnabled && !isServer() ? getAuthToken() : null;
   const url = token ? `${env.NEXT_PUBLIC_API_URL}/events?token=${encodeURIComponent(token)}` : null;
 
-  useEventSource<string, ServerEvent>(url ?? '', ['message'], {
-    immediately: url !== null,
+  const source = useEventSource<string, ServerEvent>(url ?? '', ['message'], {
+    immediately: false,
     retry: true,
     select: (data) => JSON.parse(data) as ServerEvent,
     onMessage: (event) => {
@@ -26,4 +27,19 @@ export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
       }
     },
   });
+
+  const sourceRef = useRef(source);
+  sourceRef.current = source;
+
+  useEffect(() => {
+    if (!url) {
+      return;
+    }
+
+    sourceRef.current.open();
+
+    return () => {
+      sourceRef.current.close();
+    };
+  }, [url]);
 };

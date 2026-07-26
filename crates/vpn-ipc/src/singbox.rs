@@ -10,6 +10,12 @@ const DIRECT_TAG: &str = "direct";
 const TUNNEL_DNS_TAG: &str = "dns-tunnel";
 const LOCAL_DNS_TAG: &str = "dns-local";
 const FALLBACK_DNS: &str = "1.1.1.1";
+const LOCAL_NETWORKS: [&str; 4] = [
+    "127.0.0.0/8",
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16",
+];
 
 #[derive(Serialize)]
 struct Log {
@@ -30,6 +36,8 @@ struct Inbound {
     auto_route: bool,
     #[serde(rename = "strict_route")]
     strict_route: bool,
+    #[serde(rename = "route_exclude_address")]
+    route_exclude_address: Vec<String>,
     stack: String,
 }
 
@@ -367,6 +375,7 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
             mtu: MTU,
             auto_route: true,
             strict_route: true,
+            route_exclude_address: LOCAL_NETWORKS.iter().map(|net| net.to_string()).collect(),
             stack: "gvisor".to_string(),
         }],
         outbounds: vec![

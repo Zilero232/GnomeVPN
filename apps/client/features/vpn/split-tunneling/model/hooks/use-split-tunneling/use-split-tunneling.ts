@@ -11,15 +11,25 @@ import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 const toggleIn = (list: string[], value: string): string[] =>
   list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
-export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) => {
+export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}) => {
   const [applied, setApplied] = useState<SplitConfig>(emptySplitConfig);
   const [draft, setDraft] = useState<SplitConfig>(emptySplitConfig);
   const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let ignore = false;
+
     const load = async () => {
       try {
         const stored = await getSplitConfig();
+
+        if (ignore) {
+          return;
+        }
 
         setApplied(stored);
         setDraft(stored);
@@ -29,6 +39,32 @@ export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) =>
     };
 
     void load();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const load = async () => {
+      try {
+        const stored = await getSplitConfig();
+
+        if (!ignore) {
+          setApplied(stored);
+        }
+      } catch (error) {
+        logger.warn(`cannot read split config: ${String(error)}`);
+      }
+    };
+
+    void load();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const setAppsMode = (appsMode: SplitMode) => setDraft((current) => ({ ...current, appsMode }));

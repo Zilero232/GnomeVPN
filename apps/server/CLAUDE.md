@@ -159,6 +159,17 @@ Schema is split across `prisma/schema/`. The generated client lands in `generate
 
 **There is no migration history yet** (development used `db push`). Deployment needs one — see [DEPLOY.md](../../DEPLOY.md).
 
+Both Prisma clients (`PrismaService` for the API, `basePrisma` for better-auth)
+build their pool through `core/pg-pool.ts` — one place, with a `pool.on('error')`
+listener (pg *requires* one, or a dropped idle connection crashes the process)
+and `maxLifetimeSeconds: 300`. A pooled connection left open for hours eventually
+gets reset by the network in between, and the next query on it throws
+`Connection terminated unexpectedly` — which surfaced from the scheduler jobs
+that reuse connections every minute. Capping the lifetime recycles connections
+before they age into that window; verified with `pg_backend_pid()` changing after
+the lifetime elapses. Idle-drop was ruled out first — a held connection survived
+60s idle through the Docker Desktop port-proxy, so the cause was age, not idleness.
+
 ## Verification
 
 ```bash

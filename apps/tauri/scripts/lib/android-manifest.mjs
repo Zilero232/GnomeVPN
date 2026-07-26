@@ -7,6 +7,7 @@ const PERMISSIONS = [
   'FOREGROUND_SERVICE_SPECIAL_USE',
   'POST_NOTIFICATIONS',
   'WAKE_LOCK',
+  'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
 ];
 
 const PERMISSION_ANCHOR = '<uses-permission android:name="android.permission.INTERNET" />';
