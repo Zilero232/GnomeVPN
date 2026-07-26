@@ -61,6 +61,22 @@ Creating the wintun adapter, editing routes and setting DNS all need administrat
 
 Moving any of it back would bring a UAC prompt to every launch — the reason the split exists.
 
+## `foregroundServiceType="vpn"` does not exist in the manifest
+
+`FOREGROUND_SERVICE_TYPE_VPN` is a **runtime constant** (API 34), never a manifest
+XML flag value — AAPT rejects `android:foregroundServiceType="vpn"` even with
+`compileSdk` 36, because the `foregroundServiceType` attr has no `vpn` flag (it
+stops at `specialUse`). The manifest declares `specialUse` plus a
+`PROPERTY_SPECIAL_USE_FGS_SUBTYPE="vpn"` property, and `GnomeVpnService` passes
+`FOREGROUND_SERVICE_TYPE_SPECIAL_USE` to `startForeground`. Permission is
+`FOREGROUND_SERVICE_SPECIAL_USE`, not `FOREGROUND_SERVICE_VPN`.
+
+`tauri android init` **preserves an existing `AndroidManifest.xml`**, so a stale
+manifest carrying the old `vpn` value is never re-inserted by the substring-guarded
+steps in `android-manifest.mjs`. `normalizeVpnService`/`dropStalePermissions` there
+rewrite it unconditionally for that reason — the same self-heal pattern as
+`retargetTileIcon`.
+
 ## Three things that kill the tunnel and look like bugs
 
 **The tunnel lives in the app's process.** `VpnService` hands over a descriptor,
