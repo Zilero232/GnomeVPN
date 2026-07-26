@@ -6,7 +6,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { SITE } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
-import { BrandMark } from '@/shared/ui';
+import { BrandMark, Text } from '@/shared/ui';
 import { PRIVACY_SECTIONS, PRIVACY_UPDATED } from '../config';
 
 import s from './PrivacyPage.module.scss';
@@ -27,19 +27,27 @@ export const PrivacyPage = () => {
         </nav>
 
         <header className={s.head}>
-          <h1 className={s.title}>{t('title')}</h1>
-          <p className={s.updated}>
+          <Text as="h1" className={s.title}>
+            {t('title')}
+          </Text>
+          <Text as="p" className={s.updated}>
             {t('updated', {
               date: format.dateTime(new Date(PRIVACY_UPDATED), { dateStyle: 'long' }),
             })}
-          </p>
-          <p className={s.intro}>{t('intro')}</p>
+          </Text>
+          <Text as="p" className={s.intro}>
+            {t('intro')}
+          </Text>
         </header>
 
         {PRIVACY_SECTIONS.map((section) => (
           <section className={s.section} key={section}>
-            <h2 className={s.heading}>{t(`${section}.title`)}</h2>
-            <p className={s.body}>{t(`${section}.body`)}</p>
+            <Text as="h2" className={s.heading}>
+              {t(`${section}.title`)}
+            </Text>
+            <Text as="p" className={s.body}>
+              {t(`${section}.body`)}
+            </Text>
           </section>
         ))}
 

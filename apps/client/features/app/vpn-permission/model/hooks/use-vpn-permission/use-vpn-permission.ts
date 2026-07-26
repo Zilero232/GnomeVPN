@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
-import { hasVpnPermission, isTauriMobile, logger, requestVpnPermission } from '@/shared/lib';
+import {
+  ensureNotificationPermission,
+  hasVpnPermission,
+  isTauriMobile,
+  logger,
+  requestVpnPermission,
+} from '@/shared/lib';
 
 export const useVpnPermission = () => {
   const [isGranted, setIsGranted] = useState(true);
@@ -40,7 +46,12 @@ export const useVpnPermission = () => {
     setIsRequesting(true);
 
     try {
-      setIsGranted(await requestVpnPermission());
+      const granted = await requestVpnPermission();
+      setIsGranted(granted);
+
+      if (granted) {
+        await ensureNotificationPermission();
+      }
     } catch (error) {
       logger.warn(`vpn permission request failed: ${String(error)}`);
     } finally {

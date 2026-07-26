@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
-import { Button } from '@/shared/ui';
+import { Button, Text } from '@/shared/ui';
 
 import s from './DesktopOnlyView.module.scss';
 
@@ -18,8 +18,12 @@ export const DesktopOnlyView = () => {
         <MonitorDown size={30} />
       </span>
 
-      <h1 className={s.title}>{t('title')}</h1>
-      <p className={s.body}>{t('body')}</p>
+      <Text as="h1" className={s.title}>
+        {t('title')}
+      </Text>
+      <Text as="p" className={s.body}>
+        {t('body')}
+      </Text>
 
       <div className={s.actions}>
         <Link href={ROUTES.landing}>

@@ -1,0 +1,27 @@
+# node_modules must never enter the build context: Bun installs them inside the
+# image, and copying host node_modules over that install brings symlinks that
+# point at a .bun store which does not exist in the image — every dependency
+# then resolves to a broken symlink (ENOENT reflect-metadata) and the server
+# crash-loops. CI never hit this because it builds from a clean checkout.
+**/node_modules
+
+# Build outputs and local state that have no business in an image.
+**/target
+**/.next
+**/out
+**/gen
+**/dist
+
+# Secrets and local env — images get their config at runtime, never baked in.
+.env
+.env.*
+**/.env
+**/.env.*
+apps/server/nodes.json
+
+# Local tooling / VCS noise.
+.git
+.github
+**/*.log
+.vscode
+.idea

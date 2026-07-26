@@ -6,8 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
+import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -81,8 +80,20 @@ class GnomeVpnService : VpnService() {
         }
     }
 
+    private fun startVpnForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                buildNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_VPN,
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, buildNotification())
+        }
+    }
+
     private fun openDescriptor(dns: Array<String>, server: String): Int {
-        startForeground(NOTIFICATION_ID, buildNotification())
+        startVpnForeground()
 
         val builder = Builder()
             .setSession(SESSION)
@@ -310,20 +321,5 @@ class GnomeVpnService : VpnService() {
         }
 
         fun isRunning(): Boolean = currentFd != NO_DESCRIPTOR
-
-        fun isRunning(context: Context): Boolean {
-            if (currentFd != NO_DESCRIPTOR) {
-                return true
-            }
-
-            return runCatching {
-                val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
-                    as? ConnectivityManager ?: return false
-
-                val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities)
-
-                capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
-            }.getOrDefault(false)
-        }
     }
 }

@@ -81,8 +81,18 @@ impl Supervisor {
     }
 
     pub fn publish(&self, event: TunnelEvent) {
-        if let TunnelEvent::Connected { .. } = event {
-            self.runtime.lock().status = TunnelStatus::Connected;
+        match event {
+            TunnelEvent::Connecting | TunnelEvent::Handshake => {
+                let mut runtime = self.runtime.lock();
+
+                if runtime.status == TunnelStatus::Connected {
+                    runtime.status = TunnelStatus::Connecting;
+                }
+            }
+            TunnelEvent::Connected { .. } => {
+                self.runtime.lock().status = TunnelStatus::Connected;
+            }
+            _ => {}
         }
 
         let _ = self.events.send(event);
@@ -115,8 +125,6 @@ impl Supervisor {
         if let Some(stop) = runtime.stop.take() {
             let _ = stop.send(());
         }
-
-        runtime.status = TunnelStatus::Disconnected;
     }
 
     pub fn finish(&self) {

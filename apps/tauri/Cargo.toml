@@ -24,6 +24,7 @@ tauri-plugin-log = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-store = "2"
 tauri-plugin-deep-link = "2"
+tauri-plugin-dialog = "2"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -41,6 +42,8 @@ interprocess = "2"
 keyring = "4"
 # Чтение ярлыков меню «Пуск» без COM и ручного unsafe.
 lnk = "0.6"
+# Перечисление запущенных процессов без ручного EnumProcesses/unsafe.
+sysinfo = { version = "0.33", default-features = false, features = ["system", "multithread"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 tauri-plugin-safe-area-insets-css = "0.2.0"

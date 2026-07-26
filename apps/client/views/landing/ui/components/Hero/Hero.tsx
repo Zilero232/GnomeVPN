@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
-import { Button } from '@/shared/ui';
+import { Button, Text } from '@/shared/ui';
 import { HERO_METRICS } from '../../../config';
 
 import s from './Hero.module.scss';
@@ -25,14 +25,18 @@ export const Hero = () => {
         width={200}
       />
 
-      <span className={s.eyebrow}>{t('eyebrow')}</span>
+      <Text as="span" className={s.eyebrow}>
+        {t('eyebrow')}
+      </Text>
 
-      <h1 className={s.title}>
+      <Text as="h1" className={s.title}>
         {t('titleLine1')} <br />
         {t('titleLine2')} <span className={s.titleAccent}>{t('titleAccent')}</span>
-      </h1>
+      </Text>
 
-      <p className={s.lead}>{t('lead')}</p>
+      <Text as="p" className={s.lead}>
+        {t('lead')}
+      </Text>
 
       <div className={s.actions}>
         <Link href={ROUTES.account}>

@@ -12,7 +12,7 @@ export const useSignIn = () => {
       const { data, error } = await authClient.signIn.email(values);
 
       if (error) {
-        throw new Error(error.message ?? 'Не удалось войти');
+        throw new Error('errors.signInFailed');
       }
 
       return data;

@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
-use gnomevpn_ipc::{validate_split_apps, Request, Response, TunnelConfig, PROTOCOL_VERSION};
+use gnomevpn_ipc::{
+    validate_split, Request, Response, SplitConfig, TunnelConfig, PROTOCOL_VERSION,
+};
 
 use crate::tunnel::supervisor::{Supervisor, SupervisorError};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Action {
     Reply(Response),
-    StartTunnel(Response, Box<TunnelConfig>, Vec<String>),
+    StartTunnel(Response, Box<TunnelConfig>, SplitConfig),
     Reject(Response),
 }
 
@@ -40,17 +42,20 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
         Request::Connect {
             config,
             auto_reconnect,
-            split_apps,
+            split,
         } => {
             log::info!(
-                "connect request over the pipe: {}:{} sni={} auto_reconnect={auto_reconnect} split_apps={}",
+                "connect request over the pipe: {}:{} sni={} auto_reconnect={auto_reconnect} apps_mode={:?} apps={} ips_mode={:?} ips={}",
                 config.server,
                 config.port,
                 config.server_name,
-                split_apps.len()
+                split.apps_mode,
+                split.apps.len(),
+                split.ips_mode,
+                split.ips.len()
             );
 
-            if let Err(error) = validate_split_apps(&split_apps) {
+            if let Err(error) = validate_split(&split) {
                 log::warn!("connect rejected by validation: {error}");
 
                 return Action::Reply(Response::Error {
@@ -62,7 +67,7 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
                 Ok(()) => {
                     supervisor.set_options(auto_reconnect);
 
-                    Action::StartTunnel(Response::Ok, config, split_apps)
+                    Action::StartTunnel(Response::Ok, config, split)
                 }
                 Err(error @ SupervisorError::AlreadyRunning) => {
                     log::warn!("connect rejected: {error}");

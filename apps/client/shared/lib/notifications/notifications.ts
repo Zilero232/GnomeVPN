@@ -1,3 +1,4 @@
+import { isTauri } from '@tauri-apps/api/core';
 import {
   isPermissionGranted,
   requestPermission,
@@ -12,12 +13,22 @@ import { resolveSound } from './lib';
 
 import type { NotifyInput } from './model';
 
-const ensurePermission = async (): Promise<boolean> => {
-  if (await isPermissionGranted()) {
-    return true;
+export const ensureNotificationPermission = async (): Promise<boolean> => {
+  if (!isTauri()) {
+    return false;
   }
 
-  return (await requestPermission()) === 'granted';
+  try {
+    if (await isPermissionGranted()) {
+      return true;
+    }
+
+    return (await requestPermission()) === 'granted';
+  } catch (error) {
+    logger.warn(`notification permission request failed: ${String(error)}`);
+
+    return false;
+  }
 };
 
 export const notify = async ({ title, body, tone = 'info' }: NotifyInput): Promise<void> => {
@@ -26,7 +37,7 @@ export const notify = async ({ title, body, tone = 'info' }: NotifyInput): Promi
   }
 
   try {
-    if (!(await ensurePermission())) {
+    if (!(await ensureNotificationPermission())) {
       return;
     }
 

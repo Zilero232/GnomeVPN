@@ -5,7 +5,14 @@ export {
   issueConfigSchema,
   revokeConfigSchema,
 } from './inputs';
-export { deviceUsageSchema, downloadedConfigSchema, tunnelConfigSchema } from './outputs';
+export {
+  deviceUsageSchema,
+  downloadedConfigSchema,
+  SPLIT_MODE,
+  splitConfigSchema,
+  splitModeSchema,
+  tunnelConfigSchema,
+} from './outputs';
 
 export type {
   ConnectRequest,
@@ -15,5 +22,7 @@ export type {
   HeartbeatRequest,
   IssueConfigRequest,
   RevokeConfigRequest,
+  SplitConfig,
+  SplitMode,
   TunnelConfig,
 } from './types';

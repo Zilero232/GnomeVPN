@@ -1,12 +1,14 @@
 use std::net::IpAddr;
 
-use crate::types::TunnelConfig;
+use crate::types::{SplitConfig, TunnelConfig};
 
 const MAX_HOST_LEN: usize = 253;
 
 const MAX_AUTH_LEN: usize = 256;
 
 const MAX_SPLIT_APPS: usize = 128;
+
+const MAX_SPLIT_IPS: usize = 128;
 
 const MAX_PATH_LEN: usize = 260;
 
@@ -57,7 +59,12 @@ fn check_host(field: &'static str, value: &str) -> Result<(), ValidationError> {
             IpAddr::V4(ip) => {
                 !(ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified())
             }
-            IpAddr::V6(ip) => !(ip.is_loopback() || ip.is_unspecified()),
+            IpAddr::V6(ip) => {
+                !(ip.is_loopback()
+                    || ip.is_unspecified()
+                    || ip.is_unique_local()
+                    || ip.is_unicast_link_local())
+            }
         };
 
         if !is_public {
@@ -82,22 +89,22 @@ fn check_dns(values: &[String]) -> Result<(), ValidationError> {
     Ok(())
 }
 
-pub fn validate_split_apps(paths: &[String]) -> Result<(), ValidationError> {
+fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), ValidationError> {
     if paths.len() > MAX_SPLIT_APPS {
-        return Err(reject("splitApps", "too many entries"));
+        return Err(reject(field, "too many entries"));
     }
 
     for path in paths {
         if path.is_empty() {
-            return Err(reject("splitApps", "must not be empty"));
+            return Err(reject(field, "must not be empty"));
         }
 
         if path.len() > MAX_PATH_LEN {
-            return Err(reject("splitApps", "path too long"));
+            return Err(reject(field, "path too long"));
         }
 
         if path.contains('\0') || path.contains("..") {
-            return Err(reject("splitApps", format!("suspicious path: {path}")));
+            return Err(reject(field, format!("suspicious path: {path}")));
         }
 
         let is_absolute = path.starts_with(r"\\")
@@ -107,9 +114,48 @@ pub fn validate_split_apps(paths: &[String]) -> Result<(), ValidationError> {
                 .is_some_and(|prefix| prefix == br":\");
 
         if !is_absolute {
-            return Err(reject("splitApps", format!("not an absolute path: {path}")));
+            return Err(reject(field, format!("not an absolute path: {path}")));
         }
     }
+
+    Ok(())
+}
+
+fn validate_ip_cidrs(field: &'static str, cidrs: &[String]) -> Result<(), ValidationError> {
+    if cidrs.len() > MAX_SPLIT_IPS {
+        return Err(reject(field, "too many entries"));
+    }
+
+    for cidr in cidrs {
+        if !is_valid_cidr(cidr) {
+            return Err(reject(field, format!("not an ip or cidr: {cidr}")));
+        }
+    }
+
+    Ok(())
+}
+
+fn is_valid_cidr(value: &str) -> bool {
+    let Some((address, prefix)) = value.split_once('/') else {
+        return value.parse::<IpAddr>().is_ok();
+    };
+
+    let Ok(ip) = address.parse::<IpAddr>() else {
+        return false;
+    };
+
+    let Ok(bits) = prefix.parse::<u8>() else {
+        return false;
+    };
+
+    let max_bits = if ip.is_ipv4() { 32 } else { 128 };
+
+    bits <= max_bits
+}
+
+pub fn validate_split(split: &SplitConfig) -> Result<(), ValidationError> {
+    validate_app_paths("apps", &split.apps)?;
+    validate_ip_cidrs("ips", &split.ips)?;
 
     Ok(())
 }

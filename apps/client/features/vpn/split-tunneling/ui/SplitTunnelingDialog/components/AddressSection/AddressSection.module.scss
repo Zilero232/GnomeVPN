@@ -1,0 +1,50 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ipRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+
+  button {
+    flex: none;
+    gap: 5px;
+  }
+}
+
+.ipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ipChip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 6px 5px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  background-color: var(--color-surface);
+
+  &[data-mode='allowed'] {
+    border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+
+  &[data-mode='disallowed'] {
+    border-color: var(--color-border-bright);
+    background-color: var(--color-surface-raised);
+  }
+}
+
+.ipCidr {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text);
+}

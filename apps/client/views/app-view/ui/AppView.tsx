@@ -72,13 +72,15 @@ export const AppView = () => {
   return (
     <main className={s.root}>
       <header className={s.head}>
-        <span className={clsx(s.status, isOnline ? s.statusOn : s.statusOff)}>
+        <Text as="span" className={clsx(s.status, isOnline ? s.statusOn : s.statusOff)}>
           <span className={s.statusDot} />
           {isOnline ? t('statusOnline') : t('statusOffline')}
-        </span>
+        </Text>
 
         <div className={s.headRight}>
-          <span className={s.version}>v{env.NEXT_PUBLIC_APP_VERSION}</span>
+          <Text as="span" className={s.version}>
+            v{env.NEXT_PUBLIC_APP_VERSION}
+          </Text>
 
           <Link aria-label={t('openAccount')} className={s.accountLink} href={ROUTES.account}>
             <UserRound size={15} />

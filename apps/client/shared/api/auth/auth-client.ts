@@ -1,9 +1,31 @@
 import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
-import { clearTokenFromVault, isServer, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
+import {
+  clearTokenFromVault,
+  isServer,
+  logger,
+  readTokenFromVault,
+  saveTokenToVault,
+} from '@/shared/lib';
 
 const STORAGE_KEY = 'gnomevpn.auth-token';
+
+const persistToVault = async (token: string) => {
+  try {
+    await saveTokenToVault(token);
+  } catch (error) {
+    logger.warn(`cannot persist token to vault: ${String(error)}`);
+  }
+};
+
+const dropFromVault = async () => {
+  try {
+    await clearTokenFromVault();
+  } catch (error) {
+    logger.warn(`cannot clear token from vault: ${String(error)}`);
+  }
+};
 
 export const getAuthToken = () => {
   if (isServer()) {
@@ -19,7 +41,7 @@ export const saveAuthToken = (token: string | null) => {
   }
 
   window.localStorage.setItem(STORAGE_KEY, token);
-  saveTokenToVault(token).catch(() => {});
+  void persistToVault(token);
 };
 
 export const clearToken = () => {
@@ -28,7 +50,7 @@ export const clearToken = () => {
   }
 
   window.localStorage.removeItem(STORAGE_KEY);
-  clearTokenFromVault().catch(() => {});
+  void dropFromVault();
 };
 
 export const restoreTokenFromVault = async (): Promise<boolean> => {

@@ -1,8 +1,12 @@
 export {
+  emptySplitConfig,
   hasVpnPermission,
   hideAppWindow,
   isVpnServiceAvailable,
   listInstalledApps,
+  listRunningProcesses,
+  normalizeSplitConfig,
+  pickExecutable,
   probeNodeLatency,
   requestVpnPermission,
   takeTileConnectRequest,

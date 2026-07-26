@@ -10,7 +10,14 @@ const env = validateEnv(process.env);
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
     super({
-      adapter: new PrismaPg({ connectionString: env.DATABASE_URL }),
+      adapter: new PrismaPg({
+        connectionString: env.DATABASE_URL,
+        max: 10,
+        idleTimeoutMillis: 10_000,
+        connectionTimeoutMillis: 10_000,
+        keepAlive: true,
+        allowExitOnIdle: false,
+      }),
       log: env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     });
   }

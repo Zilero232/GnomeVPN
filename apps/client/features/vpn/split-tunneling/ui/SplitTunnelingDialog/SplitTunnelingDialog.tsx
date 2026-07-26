@@ -1,22 +1,21 @@
 'use client';
 
-import { Check, Loader2, Search, X } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { sortBy } from 'remeda';
 import { toast } from 'sonner';
 
-import { MAX_SPLIT_APPS } from '@/shared/constants';
+import { logger, pickExecutable } from '@/shared/lib';
 import {
+  Badge,
   Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Input,
+  Tabs,
 } from '@/shared/ui';
-import { matchesQuery } from '../../lib';
+import { AddressSection, AppSection } from './components';
 
 import s from './SplitTunnelingDialog.module.scss';
 
@@ -29,17 +28,34 @@ export const SplitTunnelingDialog = ({
   onOpenChange,
 }: SplitTunnelingDialogProps) => {
   const t = useTranslations('splitTunneling');
-  const { apps, isLoading, isApplying, isDirty, isFull, selected, toggle, clear, apply } =
-    splitTunneling;
-  const [query, setQuery] = useState('');
+  const {
+    draft,
+    isApplying,
+    isDirty,
+    setAppsMode,
+    setIpsMode,
+    toggleApp,
+    addIp,
+    removeIp,
+    clear,
+    apply,
+  } = splitTunneling;
 
-  const needle = query.trim().toLowerCase();
-  const matched = needle ? apps.filter((app) => matchesQuery({ name: app.name, needle })) : apps;
-  const visible = sortBy(
-    matched,
-    (app) => (selected.includes(app.path) ? 0 : 1),
-    (app) => (needle && app.name.toLowerCase().includes(needle) ? 0 : 1),
-  );
+  const appsTotal = draft.apps.length;
+  const ipsTotal = draft.ips.length;
+  const total = appsTotal + ipsTotal;
+
+  const pick = async () => {
+    try {
+      const path = await pickExecutable();
+
+      if (path) {
+        toggleApp(path);
+      }
+    } catch (error) {
+      logger.warn(`cannot pick executable: ${String(error)}`);
+    }
+  };
 
   const submit = async () => {
     if (await apply()) {
@@ -59,96 +75,74 @@ export const SplitTunnelingDialog = ({
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
-        <div className={s.search}>
-          <Search className={s.searchIcon} size={15} />
-
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-
-          {query && (
-            <button
-              aria-label={t('clearSearch')}
-              className={s.searchClear}
-              type="button"
-              onClick={() => setQuery('')}
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
-
-        <div className={s.list}>
-          {isLoading && <p className={s.state}>{t('loading')}</p>}
-
-          {!isLoading && visible.length === 0 && <p className={s.state}>{t('empty')}</p>}
-
-          {visible.map((app) => {
-            const isSelected = selected.includes(app.path);
-
-            return (
-              <button
-                className={s.row}
-                data-selected={isSelected}
-                key={app.path}
-                type="button"
-                onClick={() => toggle(app.path)}
-              >
-                <span aria-hidden className={s.glyph}>
-                  {app.name.charAt(0).toUpperCase()}
+        <Tabs
+          items={[
+            {
+              value: 'apps',
+              label: (
+                <span className={s.tab}>
+                  {t('tabApps')}
+                  {appsTotal > 0 && <Badge tone="accent">{appsTotal}</Badge>}
                 </span>
-
-                <span className={s.info}>
-                  <span className={s.name}>{app.name}</span>
-                  <span className={s.path}>{app.path}</span>
+              ),
+              content: (
+                <AppSection
+                  draft={draft}
+                  isOpen={isOpen}
+                  setAppsMode={setAppsMode}
+                  toggleApp={toggleApp}
+                  onPick={pick}
+                />
+              ),
+            },
+            {
+              value: 'addresses',
+              label: (
+                <span className={s.tab}>
+                  {t('tabAddresses')}
+                  {ipsTotal > 0 && <Badge tone="accent">{ipsTotal}</Badge>}
                 </span>
+              ),
+              content: (
+                <AddressSection
+                  addIp={addIp}
+                  draft={draft}
+                  removeIp={removeIp}
+                  setIpsMode={setIpsMode}
+                />
+              ),
+            },
+          ]}
+        />
 
-                <span className={s.box}>{isSelected && <Check size={12} strokeWidth={3} />}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className={s.summary}>
-          <span className={s.count} data-active={selected.length > 0}>
-            {selected.length === 0
-              ? t('allTraffic')
-              : t('selectedCount', { count: selected.length })}
-          </span>
-
-          <button
-            className={s.clear}
-            disabled={selected.length === 0 || isApplying}
-            type="button"
-            onClick={clear}
-          >
-            {t('clear')}
-          </button>
-        </div>
-
-        {isFull && <p className={s.warning}>{t('limitReached', { count: MAX_SPLIT_APPS })}</p>}
-
-        {isDirty && isConnected && <p className={s.warning}>{t('reconnectWarning')}</p>}
+        {isDirty && isConnected && (
+          <p className={s.warning} role="status">
+            <Loader2 aria-hidden size={13} />
+            {t('reconnectWarning')}
+          </p>
+        )}
 
         <div className={s.footer}>
-          <Button
-            disabled={isApplying}
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-          >
-            {t('cancel')}
-          </Button>
+          <div className={s.actions}>
+            <button
+              className={s.reset}
+              disabled={total === 0 || isApplying}
+              type="button"
+              onClick={clear}
+            >
+              {t('clear')}
+            </button>
 
-          <Button disabled={!isDirty || isApplying} type="button" onClick={submit}>
-            {isApplying && <Loader2 className={s.spinner} size={14} />}
-            {isApplying ? t('applying') : t('apply')}
-          </Button>
+            <Button disabled={!isDirty || isApplying} type="button" onClick={submit}>
+              {isApplying ? (
+                <Loader2 aria-hidden className={s.spinner} size={14} />
+              ) : (
+                <Check aria-hidden size={14} />
+              )}
+              {isApplying ? t('applying') : t('apply')}
+            </Button>
+          </div>
         </div>
-
-        <p className={s.note}>{t('note')}</p>
       </DialogContent>
     </Dialog>
   );

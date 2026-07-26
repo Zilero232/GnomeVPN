@@ -17,6 +17,8 @@ const TUN_ADDRESS: &str = "10.8.0.2";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
+const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
+const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
 
 fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
     let path = native_lib_dir.join(BINARY_NAME);
@@ -197,7 +199,7 @@ async fn watch_hysteria(
     }
 }
 
-pub async fn run_tunnel(
+async fn run_attempt(
     native_lib_dir: &Path,
     data_dir: &Path,
     config: &TunnelConfig,
@@ -215,4 +217,38 @@ pub async fn run_tunnel(
     hysteria.stop().await;
 
     result
+}
+
+pub async fn run_tunnel(
+    native_lib_dir: &Path,
+    data_dir: &Path,
+    config: &TunnelConfig,
+    fd: i32,
+    cancellation: CancellationToken,
+) -> Result<(), MobileVpnError> {
+    let mut delay = RECONNECT_MIN_DELAY;
+
+    loop {
+        if cancellation.is_cancelled() {
+            return Ok(());
+        }
+
+        let attempt = cancellation.child_token();
+
+        match run_attempt(native_lib_dir, data_dir, config, fd, attempt).await {
+            Ok(()) => delay = RECONNECT_MIN_DELAY,
+            Err(error) => log::warn!("mobile tunnel attempt failed, reconnecting: {error}"),
+        }
+
+        if cancellation.is_cancelled() {
+            return Ok(());
+        }
+
+        tokio::select! {
+            _ = cancellation.cancelled() => return Ok(()),
+            _ = tokio::time::sleep(delay) => {}
+        }
+
+        delay = (delay * 2).min(RECONNECT_MAX_DELAY);
+    }
 }

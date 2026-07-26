@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { requireEnv } from '../lib/env.mjs';
 import { $, reporter, requireGh, workspace } from '../lib/shell.mjs';
@@ -9,7 +9,7 @@ import { releaseTag, releaseVersion } from './version.mjs';
 
 const log = reporter('release:desktop');
 
-const creds = requireEnv(['NEXT_PUBLIC_API_URL']);
+const creds = requireEnv(['NEXT_PUBLIC_API_URL', 'GHCR_OWNER']);
 
 const tag = releaseTag();
 const version = releaseVersion();
@@ -43,6 +43,35 @@ const collectArtifacts = () => {
   return artifacts;
 };
 
+const writeUpdaterManifest = (artifacts) => {
+  const installer = artifacts.find((path) => path.endsWith('.exe'));
+  const signaturePath = artifacts.find((path) => path.endsWith('.sig'));
+
+  if (!installer || !signaturePath) {
+    log.fail('cannot build latest.json — installer or .sig missing');
+  }
+
+  const fileName = basename(installer);
+
+  const manifest = {
+    version,
+    notes: '',
+    pub_date: new Date().toISOString(),
+    platforms: {
+      'windows-x86_64': {
+        signature: readFileSync(signaturePath, 'utf8'),
+        url: `https://github.com/${creds.GHCR_OWNER}/GnomeVPN/releases/download/${tag}/${fileName}`,
+      },
+    },
+  };
+
+  const manifestPath = join(bundleDir, 'nsis', 'latest.json');
+
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+
+  return manifestPath;
+};
+
 const buildEnv = {
   ...process.env,
   NODE_ENV: 'production',
@@ -63,9 +92,11 @@ log.step(`tauri build (signed, api=${buildEnv.NEXT_PUBLIC_API_URL})`);
 await $`bunx tauri build`.cwd(tauri).env(buildEnv);
 
 const artifacts = collectArtifacts();
+const manifest = writeUpdaterManifest(artifacts);
+const uploads = [...artifacts, manifest];
 
-log.step(`upload ${artifacts.length} artifacts to ${tag}`);
-await $`${gh} release upload ${tag} ${artifacts} --clobber`;
+log.step(`upload ${uploads.length} artifacts to ${tag}`);
+await $`${gh} release upload ${tag} ${uploads} --clobber`;
 
 log.info(`desktop published to ${tag}`);
 

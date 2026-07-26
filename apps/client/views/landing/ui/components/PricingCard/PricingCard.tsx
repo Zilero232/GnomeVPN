@@ -28,13 +28,21 @@ export const PricingCard = () => {
               key={plan.id}
             >
               <div className={s.head}>
-                <span className={s.term}>{t(`plans.${plan.id}`)}</span>
+                <Text as="span" className={s.term}>
+                  {t(`plans.${plan.id}`)}
+                </Text>
                 {discount > 0 && <Badge>{t('save', { percent: discount })}</Badge>}
               </div>
 
               <div className={s.price}>
-                <span className={s.amount}>{t('amount', { price: plan.priceRub })}</span>
-                {plan.months === 1 && <span className={s.period}>{t('period')}</span>}
+                <Text as="span" className={s.amount}>
+                  {t('amount', { price: plan.priceRub })}
+                </Text>
+                {plan.months === 1 && (
+                  <Text as="span" className={s.period}>
+                    {t('period')}
+                  </Text>
+                )}
               </div>
 
               <Text size="xs" tone="muted">

@@ -1,5 +1,4 @@
 import 'modern-normalize/modern-normalize.css';
-import 'flag-icons/css/flag-icons.min.css';
 
 import { clsx } from 'clsx';
 

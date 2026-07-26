@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   reactStrictMode: false,
   images: { unoptimized: true },
+  experimental: { optimizePackageImports: ['lucide-react', 'remeda', 'date-fns'] },
   sassOptions: { implementation: 'sass-embedded', loadPaths: [clientRoot] },
   turbopack: { resolveAlias: { '@': clientRoot } },
 };

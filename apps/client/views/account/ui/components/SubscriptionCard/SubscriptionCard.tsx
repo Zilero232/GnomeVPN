@@ -28,10 +28,10 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
     .with({ isLoading: true }, () => <Text tone="muted">{t('loading')}</Text>)
     .with({ isActive: true }, () => (
       <>
-        <span className={s.status}>
+        <Text as="span" className={s.status}>
           <span className={s.dot} />
           {t('active')}
-        </span>
+        </Text>
 
         <dl className={s.meta}>
           {subscription && (

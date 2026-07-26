@@ -9,7 +9,7 @@ type CallRustInput<C extends RustCommand> = RustCommands[C]['args'] extends neve
   : { command: C; args: RustCommands[C]['args']; fallback: RustCommands[C]['result'] };
 
 const isMissingCommand = (error: unknown): boolean =>
-  /not (found|allowed)|Command \S+ not found/i.test(String(error));
+  /command not found|\bnot allowed\b/i.test(String(error));
 
 export const callRust = async <C extends RustCommand>(
   input: CallRustInput<C>,

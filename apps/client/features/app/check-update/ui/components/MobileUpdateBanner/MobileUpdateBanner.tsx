@@ -6,10 +6,8 @@ import { useTranslations } from 'next-intl';
 import { SITE } from '@/shared/config';
 import { DOWNLOAD_HASH } from '@/shared/constants';
 import { openExternal } from '@/shared/lib';
-import { Button } from '@/shared/ui';
+import { Banner, Button } from '@/shared/ui';
 import { useMobileUpdate } from '../../../model/hooks';
-
-import s from './MobileUpdateBanner.module.scss';
 
 export const MobileUpdateBanner = () => {
   const t = useTranslations('update');
@@ -20,25 +18,16 @@ export const MobileUpdateBanner = () => {
   }
 
   return (
-    <div className={s.root}>
-      <div className={s.head}>
-        <span className={s.badge}>
-          <ArrowDownToLine size={16} />
-        </span>
-
-        <span className={s.title}>{t('mobileTitle', { version: update.version })}</span>
-      </div>
-
-      <p className={s.body}>{t('mobileBody')}</p>
-
-      <Button
-        className={s.action}
-        size="md"
-        type="button"
-        onClick={() => openExternal(`${SITE.url}${DOWNLOAD_HASH}`)}
-      >
-        {t('mobileAction')}
-      </Button>
-    </div>
+    <Banner
+      action={
+        <Button size="md" type="button" onClick={() => openExternal(`${SITE.url}${DOWNLOAD_HASH}`)}>
+          {t('mobileAction')}
+        </Button>
+      }
+      description={t('mobileBody')}
+      icon={<ArrowDownToLine size={16} />}
+      title={t('mobileTitle', { version: update.version })}
+      tone="accent"
+    />
   );
 };

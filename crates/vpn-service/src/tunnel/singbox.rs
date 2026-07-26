@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process::Stdio;
 
-use gnomevpn_ipc::{build_singbox_config, SingboxConfigInput, TunnelConfig};
+use gnomevpn_ipc::{build_singbox_config, SingboxConfigInput, SplitConfig, TunnelConfig};
 use tokio::process::{Child, Command};
 
 use super::TunnelError;
@@ -109,11 +109,11 @@ fn config_dir() -> Result<PathBuf, TunnelError> {
 
 pub struct SpawnInput<'a> {
     pub config: &'a TunnelConfig,
-    pub split_apps: &'a [String],
+    pub split: &'a SplitConfig,
 }
 
 pub async fn spawn(input: SpawnInput<'_>) -> Result<Singbox, TunnelError> {
-    let SpawnInput { config, split_apps } = input;
+    let SpawnInput { config, split } = input;
 
     let binary = binary_path()?;
     let dir = config_dir()?;
@@ -125,7 +125,7 @@ pub async fn spawn(input: SpawnInput<'_>) -> Result<Singbox, TunnelError> {
         &config_path,
         build_singbox_config(SingboxConfigInput {
             config,
-            split_apps,
+            split,
             cache_path: &dir.join(CACHE_NAME).to_string_lossy(),
         }),
     )
@@ -133,9 +133,8 @@ pub async fn spawn(input: SpawnInput<'_>) -> Result<Singbox, TunnelError> {
     .map_err(|error| TunnelError::Singbox(format!("cannot write the sing-box config: {error}")))?;
 
     log::info!(
-        "wrote sing-box config to {} ({} split rule(s)); sing-box log goes to {}",
+        "wrote sing-box config to {}; sing-box log goes to {}",
         config_path.display(),
-        split_apps.len(),
         dir.join(LOG_NAME).display()
     );
 

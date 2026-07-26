@@ -4,9 +4,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 // idempotent step below.
 const PERMISSIONS = [
   'FOREGROUND_SERVICE',
-  'FOREGROUND_SERVICE_SPECIAL_USE',
+  'FOREGROUND_SERVICE_VPN',
   'POST_NOTIFICATIONS',
-  'ACCESS_NETWORK_STATE',
   'WAKE_LOCK',
 ];
 
@@ -18,10 +17,7 @@ const VPN_SERVICE = `<service
             android:stopWithTask="false"
             android:exported="false"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="vpn" />
+            android:foregroundServiceType="vpn">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
