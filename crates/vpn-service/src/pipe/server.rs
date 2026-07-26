@@ -119,9 +119,9 @@ fn serve_requests(
 
                 return Ok(());
             }
-            Action::StartTunnel(response, config, split_apps) => {
+            Action::StartTunnel(response, config, split) => {
                 reply(writer, &response)?;
-                crate::tunnel::spawn(runtime, Arc::clone(supervisor), *config, split_apps);
+                crate::tunnel::spawn(runtime, Arc::clone(supervisor), *config, split);
             }
         }
     }

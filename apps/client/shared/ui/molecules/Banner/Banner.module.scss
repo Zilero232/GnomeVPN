@@ -8,10 +8,22 @@
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone) 32%, transparent);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+  background: color-mix(in srgb, var(--tone) 10%, var(--color-surface));
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
+
+  &[data-tone='accent'] {
+    --tone: var(--color-accent);
+  }
+
+  &[data-tone='warning'] {
+    --tone: var(--color-warning);
+  }
+
+  &[data-tone='danger'] {
+    --tone: var(--color-danger);
+  }
 }
 
 .head {
@@ -28,13 +40,15 @@
   width: 30px;
   height: 30px;
   border-radius: var(--radius-sm);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
 }
 
 .title {
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
 }
 
 .body {
@@ -45,5 +59,10 @@
 }
 
 .action {
-  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+
+  button {
+    width: 100%;
+  }
 }

@@ -17,9 +17,7 @@ pub async fn vpn_connect<R: Runtime>(
     auto_reconnect: Option<bool>,
     state: State<'_, MobileVpnState>,
 ) -> Result<(), MobileVpnError> {
-    if auto_reconnect.unwrap_or(true) {
-        log::debug!("auto-reconnect is not implemented on android yet");
-    }
+    let _ = auto_reconnect;
 
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);

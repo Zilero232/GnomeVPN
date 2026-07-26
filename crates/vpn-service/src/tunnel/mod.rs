@@ -6,7 +6,7 @@ pub mod supervisor;
 use std::sync::Arc;
 
 use backon::{ExponentialBuilder, Retryable};
-use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
+use gnomevpn_ipc::{SplitConfig, TunnelConfig, TunnelEvent};
 use tokio::runtime::Handle;
 
 use supervisor::Supervisor;
@@ -19,13 +19,16 @@ pub fn spawn(
     runtime: &Handle,
     supervisor: Arc<Supervisor>,
     config: TunnelConfig,
-    split_apps: Vec<String>,
+    split: SplitConfig,
 ) {
     let Some(stop) = supervisor.take_stop_receiver() else {
         log::error!("spawn called without a reserved tunnel slot");
         supervisor.finish();
         return;
     };
+
+    let config = Arc::new(config);
+    let split = Arc::new(split);
 
     runtime.spawn(async move {
         let emitter = Arc::clone(&supervisor);
@@ -40,8 +43,8 @@ pub fn spawn(
         });
 
         let attempt = || {
-            let config = config.clone();
-            let split_apps = split_apps.clone();
+            let config = Arc::clone(&config);
+            let split = Arc::clone(&split);
             let emit = Arc::clone(&emit);
             let mut watcher = stop_rx.clone();
 
@@ -61,7 +64,7 @@ pub fn spawn(
                     }
                 });
 
-                engine::run_tunnel(config, split_apps, emit, rx).await
+                engine::run_tunnel(config, split, emit, rx).await
             }
         };
 

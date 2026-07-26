@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { Text } from '@/shared/ui';
 import {
   Faq,
   Features,
@@ -25,27 +26,37 @@ export const LandingPage = () => {
       <Hero />
 
       <section className={s.section} id="how">
-        <h2 className={s.sectionTitle}>{t('how.title')}</h2>
+        <Text as="h2" className={s.sectionTitle}>
+          {t('how.title')}
+        </Text>
         <HowItWorks />
       </section>
 
       <section className={s.section} id="features">
-        <h2 className={s.sectionTitle}>{t('features.title')}</h2>
+        <Text as="h2" className={s.sectionTitle}>
+          {t('features.title')}
+        </Text>
         <Features />
       </section>
 
       <section className={s.section} id="platforms">
-        <h2 className={s.sectionTitle}>{t('platforms.title')}</h2>
+        <Text as="h2" className={s.sectionTitle}>
+          {t('platforms.title')}
+        </Text>
         <Platforms />
       </section>
 
       <section className={s.section} id="pricing">
-        <h2 className={s.sectionTitle}>{t('pricing.title')}</h2>
+        <Text as="h2" className={s.sectionTitle}>
+          {t('pricing.title')}
+        </Text>
         <PricingCard />
       </section>
 
       <section className={s.section} id="faq">
-        <h2 className={s.sectionTitle}>{t('faq.title')}</h2>
+        <Text as="h2" className={s.sectionTitle}>
+          {t('faq.title')}
+        </Text>
         <Faq />
       </section>
 

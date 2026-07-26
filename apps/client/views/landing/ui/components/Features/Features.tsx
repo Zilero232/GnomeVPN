@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { Text } from '@/shared/ui';
 import { FEATURE_CARDS } from '../../../config';
 import { FEATURE_ICONS } from './Features.config';
 
@@ -21,8 +22,12 @@ export const Features = () => {
               <Icon size={17} strokeWidth={1.8} />
             </span>
 
-            <h3 className={s.title}>{t(`${card}Title`)}</h3>
-            <p className={s.body}>{t(`${card}Body`)}</p>
+            <Text as="h3" className={s.title}>
+              {t(`${card}Title`)}
+            </Text>
+            <Text as="p" className={s.body}>
+              {t(`${card}Body`)}
+            </Text>
           </article>
         );
       })}

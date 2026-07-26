@@ -1,3 +1,24 @@
+!macro UninstallLegacyMsi ROOT
+  StrCpy $1 0
+  ${Do}
+    EnumRegKey $2 ${ROOT} "Software\Microsoft\Windows\CurrentVersion\Uninstall" $1
+    ${If} $2 == ""
+      ${ExitDo}
+    ${EndIf}
+
+    ReadRegStr $3 ${ROOT} "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "DisplayName"
+    ReadRegStr $4 ${ROOT} "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "WindowsInstaller"
+
+    ${If} $3 == "GnomeVPN"
+    ${AndIf} $4 != ""
+      nsExec::ExecToLog 'msiexec.exe /x $2 /qn /norestart'
+      Pop $0
+    ${EndIf}
+
+    IntOp $1 $1 + 1
+  ${Loop}
+!macroend
+
 !macro NSIS_HOOK_PREINSTALL
   ; `net stop` blocks until the service has actually stopped, unlike `sc stop`
   ; which returns immediately and leaves the binary locked for a moment longer.
@@ -10,6 +31,13 @@
   ; locked and the update fails to overwrite it.
   nsExec::ExecToLog 'taskkill.exe /F /IM sing-box.exe'
   Pop $0
+
+  ; Releases up to v0.3.0 shipped an MSI. An NSIS installer cannot see or replace
+  ; an MSI install, so without this a user who installed the MSI keeps it and
+  ; ends up with two copies. Find any GnomeVPN MSI product in both registry views
+  ; and uninstall it silently before we lay down the NSIS install.
+  !insertmacro UninstallLegacyMsi HKLM
+  !insertmacro UninstallLegacyMsi HKCU
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL

@@ -3,6 +3,9 @@ import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
 import { load, type Store } from '@tauri-apps/plugin-store';
 
 import { logger } from '../logger';
+import { emptySplitConfig, normalizeSplitConfig } from '../vpn-bridge';
+
+import type { SplitConfig } from '@gnomevpn/schemas';
 
 const STORE_FILE = 'settings.json';
 
@@ -13,7 +16,7 @@ const KEYS = {
   autoReconnect: 'autoReconnect',
   deviceId: 'deviceId',
   manuallyDisconnected: 'manuallyDisconnected',
-  splitApps: 'splitApps',
+  split: 'split',
 } as const;
 
 let storePromise: Promise<Store> | null = null;
@@ -67,9 +70,10 @@ export const getAutoReconnect = async (): Promise<boolean> => read(KEYS.autoReco
 export const setAutoReconnect = async (value: boolean): Promise<void> =>
   write(KEYS.autoReconnect, value);
 
-export const getSplitApps = async (): Promise<string[]> => read(KEYS.splitApps, []);
+export const getSplitConfig = async (): Promise<SplitConfig> =>
+  normalizeSplitConfig(await read<unknown>(KEYS.split, emptySplitConfig()));
 
-export const setSplitApps = async (value: string[]): Promise<void> => write(KEYS.splitApps, value);
+export const setSplitConfig = async (value: SplitConfig): Promise<void> => write(KEYS.split, value);
 
 export const wasManuallyDisconnected = async (): Promise<boolean> =>
   read(KEYS.manuallyDisconnected, false);

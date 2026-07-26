@@ -34,7 +34,9 @@ export const PlanPicker = ({ className }: PlanPickerProps) => {
             >
               <Stack className={s.body} gap="sm">
                 <span className={s.head}>
-                  <span className={s.term}>{t(option.id)}</span>
+                  <Text as="span" className={s.term}>
+                    {t(option.id)}
+                  </Text>
                   {discount > 0 && <Badge>{t('save', { percent: discount })}</Badge>}
                 </span>
 
@@ -43,7 +45,9 @@ export const PlanPicker = ({ className }: PlanPickerProps) => {
                 </Text>
               </Stack>
 
-              <span className={s.price}>{t('price', { price: option.priceRub })}</span>
+              <Text as="span" className={s.price}>
+                {t('price', { price: option.priceRub })}
+              </Text>
             </SelectableCard>
           );
         })}

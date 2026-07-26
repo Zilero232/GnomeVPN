@@ -9,6 +9,20 @@ export const tunnelConfigSchema = z.object({
   dns: z.array(z.string().min(1)),
 });
 
+export const SPLIT_MODE = {
+  allowed: 'allowed',
+  disallowed: 'disallowed',
+} as const;
+
+export const splitModeSchema = z.enum([SPLIT_MODE.allowed, SPLIT_MODE.disallowed]);
+
+export const splitConfigSchema = z.object({
+  appsMode: splitModeSchema,
+  apps: z.array(z.string().min(1)),
+  ipsMode: splitModeSchema,
+  ips: z.array(z.string().min(1)),
+});
+
 export const deviceSlotSchema = z.object({
   name: z.string().min(1),
   country: z.string().min(1),

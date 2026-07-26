@@ -2,7 +2,7 @@ export {
   getAutoConnect,
   getAutoReconnect,
   getLastNodeId,
-  getSplitApps,
+  getSplitConfig,
   initAutoStartDefault,
   isAutoStartEnabled,
   setAutoConnect,
@@ -10,14 +10,14 @@ export {
   setAutoStart,
   setLastNodeId,
   setManuallyDisconnected,
-  setSplitApps,
+  setSplitConfig,
   wasManuallyDisconnected,
 } from './app-settings';
 export { getDeviceId, useDeviceId } from './device-id';
 export { isBrowser, isServer } from './env';
 export { callRust } from './ipc';
 export { logger } from './logger';
-export { notify } from './notifications';
+export { ensureNotificationPermission, notify } from './notifications';
 export { openExternal } from './open-external';
 export { resolveBundledResource } from './resource-path';
 export { repairVpnService } from './service-control';
@@ -25,10 +25,14 @@ export { settleAll } from './settle';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
 export { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from './vault';
 export {
+  emptySplitConfig,
   hasVpnPermission,
   hideAppWindow,
   isVpnServiceAvailable,
   listInstalledApps,
+  listRunningProcesses,
+  normalizeSplitConfig,
+  pickExecutable,
   probeNodeLatency,
   requestVpnPermission,
   takeTileConnectRequest,

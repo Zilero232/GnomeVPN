@@ -3,7 +3,7 @@ export {
   getAutoReconnect,
   getDeviceId,
   getLastNodeId,
-  getSplitApps,
+  getSplitConfig,
   initAutoStartDefault,
   isAutoStartEnabled,
   setAutoConnect,
@@ -12,6 +12,6 @@ export {
   setDeviceId,
   setLastNodeId,
   setManuallyDisconnected,
-  setSplitApps,
+  setSplitConfig,
   wasManuallyDisconnected,
 } from './app-settings';

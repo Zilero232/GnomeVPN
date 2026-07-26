@@ -12,7 +12,7 @@ export const useSignUp = () => {
       const { data, error } = await authClient.signUp.email({ email, password, name });
 
       if (error) {
-        throw new Error(error.message ?? 'Не удалось зарегистрироваться');
+        throw new Error('errors.signUpFailed');
       }
 
       return data;

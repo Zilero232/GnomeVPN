@@ -31,7 +31,7 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
 
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
-      onError: (error: Error) => toast.error(error.message),
+      onError: (error: Error) => toast.error(t(error.message)),
     });
   });
 

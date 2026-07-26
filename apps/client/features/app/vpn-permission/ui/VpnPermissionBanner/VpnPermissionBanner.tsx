@@ -3,10 +3,8 @@
 import { ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button } from '@/shared/ui';
+import { Banner, Button } from '@/shared/ui';
 import { useVpnPermission } from '../../model/hooks';
-
-import s from './VpnPermissionBanner.module.scss';
 
 import type { VpnPermissionBannerProps } from './VpnPermissionBanner.types';
 
@@ -19,26 +17,16 @@ export const VpnPermissionBanner = ({ isConnected }: VpnPermissionBannerProps) =
   }
 
   return (
-    <div className={s.root}>
-      <div className={s.head}>
-        <span className={s.badge}>
-          <ShieldCheck size={16} />
-        </span>
-
-        <span className={s.title}>{t('title')}</span>
-      </div>
-
-      <p className={s.body}>{t('description')}</p>
-
-      <Button
-        className={s.action}
-        disabled={isRequesting}
-        size="md"
-        type="button"
-        onClick={request}
-      >
-        {isRequesting ? t('requesting') : t('allow')}
-      </Button>
-    </div>
+    <Banner
+      action={
+        <Button disabled={isRequesting} size="md" type="button" onClick={request}>
+          {isRequesting ? t('requesting') : t('allow')}
+        </Button>
+      }
+      description={t('description')}
+      icon={<ShieldCheck size={16} />}
+      title={t('title')}
+      tone="warning"
+    />
   );
 };

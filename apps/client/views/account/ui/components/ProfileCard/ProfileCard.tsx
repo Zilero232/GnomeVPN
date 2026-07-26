@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ChangeEmailForm } from '@/features/auth/change-email';
 import { ChangePasswordForm } from '@/features/auth/change-password';
 import { UpdateNameForm } from '@/features/auth/update-name';
+import { Text } from '@/shared/ui';
 
 import s from './ProfileCard.module.scss';
 
@@ -21,7 +22,9 @@ export const ProfileCard = () => {
 
       <hr className={s.divider} />
 
-      <h3 className={s.subtitle}>{t('security')}</h3>
+      <Text as="h3" className={s.subtitle}>
+        {t('security')}
+      </Text>
 
       <ChangePasswordForm />
     </div>

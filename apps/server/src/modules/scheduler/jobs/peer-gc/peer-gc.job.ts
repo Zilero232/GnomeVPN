@@ -43,9 +43,7 @@ export class PeerGcJob {
 
     const traffic = await xray.getClientTraffic(email);
 
-    const hasMoved = traffic !== null && BigInt(traffic) > peer.trafficBytes;
-
-    if (hasMoved) {
+    if (traffic !== null && BigInt(traffic) !== peer.trafficBytes) {
       await this.prisma.peer.updateMany({
         where: { id: peer.id },
         data: { trafficBytes: BigInt(traffic), lastActiveAt: new Date() },

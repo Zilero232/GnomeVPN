@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { restoreTokenFromVault } from '@/shared/api';
-import { initAutoStartDefault, isTauriDesktop } from '@/shared/lib';
+import { initAutoStartDefault, isTauriDesktop, setManuallyDisconnected } from '@/shared/lib';
 import { AppSplash } from '@/shared/ui';
 
 import type { ReactNode } from 'react';
@@ -19,6 +19,7 @@ export const VaultProvider = ({ children }: { children: ReactNode }) => {
     setIsBlocking(true);
 
     initAutoStartDefault().catch(() => undefined);
+    setManuallyDisconnected(false).catch(() => undefined);
 
     restoreTokenFromVault()
       .catch(() => false)

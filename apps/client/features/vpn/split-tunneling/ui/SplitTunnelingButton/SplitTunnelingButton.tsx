@@ -1,41 +1,52 @@
 'use client';
 
 import { SplitSquareHorizontal } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { useVpnConnectionContext } from '@/features/vpn/connect';
 import { useSplitTunneling } from '../../model/hooks';
-import { SplitTunnelingDialog } from '../SplitTunnelingDialog';
 
 import s from './SplitTunnelingButton.module.scss';
+
+const SplitTunnelingDialog = dynamic(
+  () => import('../SplitTunnelingDialog').then((module) => module.SplitTunnelingDialog),
+  { ssr: false },
+);
 
 export const SplitTunnelingButton = () => {
   const t = useTranslations('splitTunneling');
   const [isOpen, setIsOpen] = useState(false);
-  const { status, activeNodeId, connect, disconnect } = useVpnConnectionContext();
+  const [hasOpened, setHasOpened] = useState(false);
+  const { status, activeNodeId, reconnect } = useVpnConnectionContext();
 
-  const isConnected = status === 'connected';
+  const isConnected = status !== 'disconnected';
 
   const splitTunneling = useSplitTunneling({
-    onApplied: async () => {
+    onApplied: () => {
       if (!isConnected || !activeNodeId) {
         return;
       }
 
-      await disconnect({ isAutomatic: true });
-      await connect({ nodeId: activeNodeId, isAutomatic: true });
+      void reconnect();
     },
   });
 
-  const count = splitTunneling.applied.length;
+  const { applied } = splitTunneling;
+  const count = applied.apps.length + applied.ips.length;
 
-  const close = (open: boolean) => {
-    if (!open) {
+  const open = () => {
+    setHasOpened(true);
+    setIsOpen(true);
+  };
+
+  const close = (next: boolean) => {
+    if (!next) {
       splitTunneling.reset();
     }
 
-    setIsOpen(open);
+    setIsOpen(next);
   };
 
   return (
@@ -45,19 +56,21 @@ export const SplitTunnelingButton = () => {
         className={s.root}
         data-active={count > 0}
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={open}
       >
         <SplitSquareHorizontal size={15} />
 
         {count > 0 && <span className={s.badge}>{count > 9 ? '9+' : count}</span>}
       </button>
 
-      <SplitTunnelingDialog
-        isConnected={isConnected}
-        isOpen={isOpen}
-        splitTunneling={splitTunneling}
-        onOpenChange={close}
-      />
+      {hasOpened && (
+        <SplitTunnelingDialog
+          isConnected={isConnected}
+          isOpen={isOpen}
+          splitTunneling={splitTunneling}
+          onOpenChange={close}
+        />
+      )}
     </>
   );
 };

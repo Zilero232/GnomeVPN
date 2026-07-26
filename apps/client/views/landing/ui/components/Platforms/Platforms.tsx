@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { Text } from '@/shared/ui';
 import { PLATFORMS } from '../../../config';
 
 import s from './Platforms.module.scss';
@@ -13,9 +14,15 @@ export const Platforms = () => {
     <div className={s.grid}>
       {PLATFORMS.map((platform) => (
         <article className={s.card} data-native={platform.isNative} key={platform.key}>
-          <span className={s.badge}>{t(platform.isNative ? 'native' : 'config')}</span>
-          <h3 className={s.name}>{platform.name}</h3>
-          <p className={s.body}>{t(`${platform.key}Body`)}</p>
+          <Text as="span" className={s.badge}>
+            {t(platform.isNative ? 'native' : 'config')}
+          </Text>
+          <Text as="h3" className={s.name}>
+            {platform.name}
+          </Text>
+          <Text as="p" className={s.body}>
+            {t(`${platform.key}Body`)}
+          </Text>
         </article>
       ))}
     </div>

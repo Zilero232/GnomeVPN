@@ -55,11 +55,13 @@ export const ConfigList = ({ className }: ConfigListProps) => {
       {configs.length > 0 && (
         <section className={s.panel}>
           <header className={s.panelHead}>
-            <h3 className={s.panelTitle}>{t('issued')}</h3>
+            <Text as="h3" className={s.panelTitle}>
+              {t('issued')}
+            </Text>
 
-            <span className={s.counter}>
+            <Text as="span" className={s.counter}>
               {configs.length} / {limits.configLimit}
-            </span>
+            </Text>
           </header>
 
           <div className={s.rows}>

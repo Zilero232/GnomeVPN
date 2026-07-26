@@ -78,3 +78,40 @@ pub fn installed_apps() -> Vec<InstalledApp> {
 
     apps
 }
+
+pub fn running_processes() -> Vec<InstalledApp> {
+    let mut system = sysinfo::System::new();
+    system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let mut found: BTreeMap<String, InstalledApp> = BTreeMap::new();
+
+    for process in system.processes().values() {
+        let Some(path) = process.exe() else {
+            continue;
+        };
+
+        if path
+            .extension()
+            .is_none_or(|ext| !ext.eq_ignore_ascii_case("exe"))
+        {
+            continue;
+        }
+
+        let name = path
+            .file_stem()
+            .map(|stem| stem.to_string_lossy().into_owned())
+            .unwrap_or_else(|| process.name().to_string_lossy().into_owned());
+
+        found
+            .entry(path.to_string_lossy().to_lowercase())
+            .or_insert(InstalledApp {
+                name,
+                path: path.to_string_lossy().into_owned(),
+            });
+    }
+
+    let mut apps: Vec<InstalledApp> = found.into_values().collect();
+    apps.sort_by_key(|app| app.name.to_lowercase());
+
+    apps
+}

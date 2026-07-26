@@ -35,7 +35,9 @@ export const AuthPage = () => {
           <LocaleSwitcher />
         </div>
 
-        <h1 className={s.title}>{title}</h1>
+        <Text as="h1" className={s.title}>
+          {title}
+        </Text>
 
         <div key={mode}>
           {match(mode)

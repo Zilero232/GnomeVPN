@@ -24,7 +24,9 @@ export const ConfigRow = ({
         <CountryFlag countryCode={config.countryCode} />
 
         <div className={s.info}>
-          <span className={s.name}>{config.name}</span>
+          <Text as="span" className={s.name}>
+            {config.name}
+          </Text>
 
           <Text size="xs" tone="muted">
             {config.country}

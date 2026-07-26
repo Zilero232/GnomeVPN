@@ -48,34 +48,71 @@ export const NodePicker = ({
       )
     : nodes;
 
+  const GRADE_LABEL = {
+    fast: t('nodeGradeFast'),
+    fair: t('nodeGradeFair'),
+    slow: t('nodeGradeSlow'),
+  } as const;
+
   const options = ordered.map((node) => {
     const rttMs = latency[node.id] ?? null;
+    const grade = rttMs !== null ? gradeLatency(rttMs) : null;
+    const bars = grade === 'fast' ? 3 : grade === 'fair' ? 2 : 1;
+    const isOnline = node.status !== 'offline';
+    const isActive = node.id === activeNodeId;
 
     return {
       value: node.id,
       isDisabled: node.status === 'offline',
       title: node.status === 'offline' ? t('nodeOfflineHint') : t(STATUS_LABEL[node.status]),
       label: (
-        <span className={s.option}>
-          <CountryFlag countryCode={node.countryCode} />
+        <span className={clsx(s.option, isActive && s.optionActive, !isOnline && s.optionOff)}>
+          <span aria-hidden className={s.rail} />
 
-          <span className={s.country}>{node.country}</span>
-
-          {node.city && <span className={s.city}>{node.city}</span>}
-
-          {node.status !== 'offline' && (
-            <span
-              aria-hidden={rttMs === null}
-              className={clsx(
-                s.latency,
-                rttMs !== null && [s.latencyReady, s[gradeLatency(rttMs)]],
-              )}
-            >
-              {rttMs !== null && t('nodeLatency', { value: rttMs })}
-            </span>
+          {isActive && (
+            <Text as="span" className={s.srOnly}>
+              {t('nodeActive')}
+            </Text>
           )}
 
-          <span className={clsx(s.dot, s[node.status])} />
+          <span className={s.flag}>
+            <CountryFlag countryCode={node.countryCode} />
+          </span>
+
+          <span className={s.place}>
+            <Text as="span" className={s.country}>
+              {node.country}
+            </Text>
+            {node.city && (
+              <Text as="span" className={s.city}>
+                {node.city}
+              </Text>
+            )}
+          </span>
+
+          {isOnline && rttMs !== null ? (
+            <span className={clsx(s.meter, grade && s[grade])}>
+              <Text as="span" className={s.latency}>
+                {t('nodeLatency', { value: rttMs })}
+              </Text>
+
+              {grade && (
+                <Text as="span" className={s.srOnly}>
+                  {GRADE_LABEL[grade]}
+                </Text>
+              )}
+
+              <span aria-hidden className={s.signal}>
+                {[0, 1, 2].map((index) => (
+                  <span className={clsx(s.bar, index < bars && s.barOn)} key={index} />
+                ))}
+              </span>
+            </span>
+          ) : (
+            <Text as="span" className={s.offlineTag}>
+              {t(STATUS_LABEL[node.status])}
+            </Text>
+          )}
         </span>
       ),
     };
@@ -83,7 +120,9 @@ export const NodePicker = ({
 
   return (
     <div className={s.root}>
-      <span className={s.label}>{t('nodeLabel')}</span>
+      <Text as="span" className={s.label}>
+        {t('nodeLabel')}
+      </Text>
 
       <Select
         aria-label={t('nodeLabel')}

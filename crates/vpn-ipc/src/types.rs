@@ -27,6 +27,33 @@ impl fmt::Debug for TunnelConfig {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SplitMode {
+    #[default]
+    Allowed,
+    Disallowed,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SplitConfig {
+    #[serde(default)]
+    pub apps_mode: SplitMode,
+    #[serde(default)]
+    pub apps: Vec<String>,
+    #[serde(default)]
+    pub ips_mode: SplitMode,
+    #[serde(default)]
+    pub ips: Vec<String>,
+}
+
+impl SplitConfig {
+    pub fn is_empty(&self) -> bool {
+        self.apps.is_empty() && self.ips.is_empty()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Request {
@@ -35,7 +62,7 @@ pub enum Request {
         #[serde(default = "default_true")]
         auto_reconnect: bool,
         #[serde(default)]
-        split_apps: Vec<String>,
+        split: SplitConfig,
     },
     Disconnect,
     Status,

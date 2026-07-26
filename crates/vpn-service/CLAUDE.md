@@ -41,15 +41,39 @@ connection is an ordinary userspace decision.
 "route": {
   "rules": [
     { "action": "sniff" },
-    { "process_path": ["…chrome.exe"], "outbound": "proxy" }
+    { "action": "hijack-dns", "protocol": "dns" },
+    { "action": "route", "ip_is_private": true, "outbound": "direct" },
+    { "action": "route", "process_path": ["…chrome.exe"], "outbound": "direct" },
+    { "action": "route", "process_name": ["chrome.exe"], "outbound": "direct" }
   ],
-  "final": "direct"
+  "final": "proxy"
 }
 ```
 
-With no split apps, `final` is `proxy` instead and everything goes through the
-tunnel. The same rule engine also accepts domain and CIDR rules, so any future
-routing policy belongs in that config rather than in Rust.
+The first three rules are **load-bearing and must stay in this order**, straight
+from sing-box's own TUN-client reference. Drop either of the middle two and the
+whole network breaks, not just split:
+
+- `hijack-dns` pulls app DNS queries into sing-box's resolver. Without it a
+  program pointed at `8.8.8.8` sends real UDP/53 that gets routed like any other
+  packet — to `final: proxy` before the tunnel is up — and every lookup hangs.
+- `ip_is_private → direct` keeps the LAN and the default gateway reachable. Miss
+  it and `strict_route` firewalls the router itself: "nothing loads, the network
+  is broken." A live tunnel produced exactly that once these two were absent.
+
+Each selected app emits **two** rules — one matching the full `process_path`,
+one matching the basename `process_name`. sing-box ORs rules together, so a
+running process whose real path differs from the scanned shortcut (wrong casing,
+a versioned Chrome path, a launcher stub) is still caught by the bare
+`chrome.exe`. Matching by path alone silently failed for exactly that reason.
+
+A bypassed app also needs its **DNS** resolved off the tunnel, or every lookup
+still traverses the proxy and leaks. `dns()` mirrors the same path+name pair into
+`dns.rules` pointing at `dns-local`, so a disallowed app is direct end to end.
+
+With no split apps, `final` is `proxy` and everything goes through the tunnel.
+The same rule engine also accepts domain and CIDR rules, so any future routing
+policy belongs in that config rather than in Rust.
 
 The config is written into `C:\ProgramData\GnomeVPN`, never into the shared temp
 directory — it holds the tunnel password.

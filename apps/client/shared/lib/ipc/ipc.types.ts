@@ -1,4 +1,4 @@
-import type { TunnelConfig } from '@gnomevpn/schemas';
+import type { SplitConfig, TunnelConfig } from '@gnomevpn/schemas';
 import type { Channel } from '@tauri-apps/api/core';
 
 export type TunnelEvent =
@@ -15,11 +15,12 @@ export type RustCommands = {
       config: TunnelConfig;
       onEvent: Channel<TunnelEvent>;
       autoReconnect: boolean;
-      splitApps: string[];
+      split?: SplitConfig;
     };
     result: null;
   };
   list_installed_apps: { args: never; result: { name: string; path: string }[] };
+  list_running_processes: { args: never; result: { name: string; path: string }[] };
   vpn_disconnect: { args: never; result: null };
   vpn_status: { args: never; result: string };
   vpn_service_available: { args: never; result: boolean };

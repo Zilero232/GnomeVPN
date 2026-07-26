@@ -3,6 +3,7 @@ export {
   BrandMark,
   Button,
   CountryFlag,
+  IconButton,
   Input,
   Label,
   PasswordInput,
@@ -14,6 +15,7 @@ export {
 } from './atoms';
 export {
   AppSplash,
+  Banner,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -21,6 +23,7 @@ export {
   DialogTitle,
   DialogTrigger,
   FormField,
+  Segmented,
   SelectableCard,
   SubmitButton,
   Tabs,
@@ -32,6 +35,7 @@ export type {
   BrandMarkProps,
   ButtonProps,
   CountryFlagProps,
+  IconButtonProps,
   InputProps,
   LabelProps,
   PasswordInputProps,
@@ -43,7 +47,11 @@ export type {
   TextProps,
 } from './atoms';
 export type {
+  BannerProps,
+  BannerTone,
   FormFieldProps,
+  SegmentedOption,
+  SegmentedProps,
   SelectableCardProps,
   SubmitButtonProps,
   TabItem,

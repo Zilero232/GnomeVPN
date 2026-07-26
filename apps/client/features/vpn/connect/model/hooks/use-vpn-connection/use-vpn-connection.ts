@@ -8,12 +8,13 @@ import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
   getDeviceId,
-  getSplitApps,
+  getSplitConfig,
   logger,
   setManuallyDisconnected,
   settleAll,
   vpnConnect,
   vpnDisconnect,
+  vpnStatus,
 } from '@/shared/lib';
 import { useAdoptTunnel } from '../use-adopt-tunnel';
 import { useConnectWatchdog } from '../use-connect-watchdog';
@@ -23,6 +24,23 @@ import { useTunnelNotifications } from '../use-tunnel-notifications';
 import { useTunnelState } from '../use-tunnel-state';
 
 import type { ConnectInput } from './use-vpn-connection.types';
+
+const DISCONNECT_POLL_MS = 150;
+const DISCONNECT_TIMEOUT_MS = 8_000;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForDisconnected = async (): Promise<void> => {
+  const deadline = Date.now() + DISCONNECT_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    if ((await vpnStatus()) === 'disconnected') {
+      return;
+    }
+
+    await sleep(DISCONNECT_POLL_MS);
+  }
+};
 
 export const useVpnConnection = () => {
   const t = useTranslations('notifications');
@@ -96,10 +114,10 @@ export const useVpnConnection = () => {
     });
 
     try {
-      const [deviceId, autoReconnect, splitApps] = await Promise.all([
+      const [deviceId, autoReconnect, split] = await Promise.all([
         getDeviceId(),
         getAutoReconnect(),
-        getSplitApps(),
+        getSplitConfig(),
       ]);
 
       const config = await connectTunnel({ nodeId, deviceId });
@@ -107,7 +125,7 @@ export const useVpnConnection = () => {
       await vpnConnect({
         config,
         autoReconnect,
-        splitApps,
+        split,
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {
             logger.error(`tunnel event failed: ${String(error)}`);
@@ -141,6 +159,18 @@ export const useVpnConnection = () => {
     await teardown();
   };
 
+  const reconnect = async () => {
+    const nodeId = nodeIdRef.current ?? tunnel.activeNodeId;
+
+    if (!nodeId) {
+      return;
+    }
+
+    await disconnect({ isAutomatic: true });
+    await waitForDisconnected();
+    await connect({ nodeId, country: countryRef.current, isAutomatic: true });
+  };
+
   return {
     status: tunnel.status,
     activeNodeId: tunnel.activeNodeId,
@@ -148,5 +178,6 @@ export const useVpnConnection = () => {
     connectedAt: tunnel.connectedAt,
     connect,
     disconnect,
+    reconnect,
   };
 };

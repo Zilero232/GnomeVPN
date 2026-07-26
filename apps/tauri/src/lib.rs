@@ -76,6 +76,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -110,6 +111,7 @@ pub fn run() {
             vpn_service_available,
             service_repair,
             apps::list_installed_apps,
+            apps::list_running_processes,
             latency::commands::vpn_probe_latency,
             vault_save_token,
             vault_read_token,

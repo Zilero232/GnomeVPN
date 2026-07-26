@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { Logger } from '@nestjs/common';
 
 import {
   currentClients,
@@ -20,6 +21,7 @@ import type {
 } from './xray.types';
 
 export class XrayClient {
+  private static readonly logger = new Logger(XrayClient.name);
   private readonly panel: ThreeXUI;
   private readonly nodeKey: string;
 
@@ -182,7 +184,9 @@ export class XrayClient {
       const body = await this.panel.getClientTraffic(email);
 
       return body.success ? body.obj.up + body.obj.down : null;
-    } catch {
+    } catch (error) {
+      XrayClient.logger.warn(`traffic lookup failed for ${email} on ${this.nodeKey}: ${error}`);
+
       return null;
     }
   }
@@ -192,7 +196,9 @@ export class XrayClient {
       await this.panel.getInbounds();
 
       return true;
-    } catch {
+    } catch (error) {
+      XrayClient.logger.warn(`node ${this.nodeKey} unreachable: ${error}`);
+
       return false;
     }
   }

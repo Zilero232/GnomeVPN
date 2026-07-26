@@ -13,7 +13,7 @@ src/
 │   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
 │   ├── configs/     # downloadable Hysteria2 configs (hy2:// links) — config/ dto/ lib/
 │   ├── health/      # /health — also probes the database
-│   ├── nodes/       # public node list with health status — config/ lib/
+│   ├── nodes/       # node list with health status (auth-gated) — config/ lib/
 │   ├── peers/       # xray clients shared by sessions and configs — config/ lib/
 │   ├── release/     # desktop release + updater manifest, proxied from GitHub — config/ lib/
 │   ├── scheduler/   # cron jobs — config/ jobs/

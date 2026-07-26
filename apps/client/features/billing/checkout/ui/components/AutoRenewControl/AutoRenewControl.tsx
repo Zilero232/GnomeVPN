@@ -33,11 +33,13 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       </span>
 
       <div className={s.cardText}>
-        <span className={s.cardTitle}>{savedCardTitle ?? t('cardBound')}</span>
+        <Text as="span" className={s.cardTitle}>
+          {savedCardTitle ?? t('cardBound')}
+        </Text>
 
-        <span className={s.cardNote}>
+        <Text as="span" className={s.cardNote}>
           {cancelAtPeriodEnd ? t('autoRenewOff') : t('autoRenewOn')}
-        </span>
+        </Text>
       </div>
 
       <Button

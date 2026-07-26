@@ -2,8 +2,8 @@ use std::io::BufReader;
 use std::sync::Arc;
 
 use gnomevpn_ipc::{
-    read_frame, write_frame, Request, Response, TunnelConfig, TunnelEvent, TunnelStatus, PIPE_NAME,
-    PROTOCOL_VERSION,
+    read_frame, write_frame, Request, Response, SplitConfig, TunnelConfig, TunnelEvent,
+    TunnelStatus, PIPE_NAME, PROTOCOL_VERSION,
 };
 use interprocess::os::windows::named_pipe::{pipe_mode, DuplexPipeStream};
 
@@ -50,7 +50,14 @@ impl ServiceClient {
 
         let mut reader = BufReader::new(&mut self.stream);
 
-        read_frame(&mut reader).map_err(|e| ClientError::Protocol(e.to_string()))
+        loop {
+            let response =
+                read_frame(&mut reader).map_err(|e| ClientError::Protocol(e.to_string()))?;
+
+            if !matches!(response, Response::Event { .. }) {
+                return Ok(response);
+            }
+        }
     }
 
     fn expect<T>(
@@ -73,13 +80,13 @@ impl ServiceClient {
         &mut self,
         config: TunnelConfig,
         auto_reconnect: bool,
-        split_apps: Vec<String>,
+        split: SplitConfig,
     ) -> Result<(), ClientError> {
         self.expect(
             Request::Connect {
                 config: Box::new(config),
                 auto_reconnect,
-                split_apps,
+                split,
             },
             |response| matches!(response, Response::Ok).then_some(()),
         )

@@ -1,3 +1,10 @@
 export { Text } from './Text';
 
-export type { TextProps } from './Text.types';
+export type {
+  TextAlign,
+  TextElement,
+  TextProps,
+  TextSize,
+  TextTone,
+  TextWeight,
+} from './Text.types';

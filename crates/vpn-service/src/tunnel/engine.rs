@@ -1,11 +1,11 @@
-use std::net::{Ipv4Addr, SocketAddr};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::sync::Arc;
 
-use tokio::net::TcpStream;
+use tokio::net::TcpSocket;
 use tokio::sync::oneshot;
 use tokio::time::{interval, timeout, Duration};
 
-use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
+use gnomevpn_ipc::{SplitConfig, TunnelConfig, TunnelEvent};
 
 use super::adapter::{self, Traffic};
 use super::singbox::{self, Singbox, SpawnInput};
@@ -36,9 +36,27 @@ async fn traffic() -> Traffic {
         .unwrap_or_default()
 }
 
+async fn probe_through_tunnel(target: SocketAddr) -> bool {
+    let Ok(socket) = TcpSocket::new_v4() else {
+        return false;
+    };
+
+    if socket
+        .bind(SocketAddr::V4(SocketAddrV4::new(TUNNEL_ADDRESS, 0)))
+        .is_err()
+    {
+        return false;
+    }
+
+    matches!(
+        timeout(PROBE_TIMEOUT, socket.connect(target)).await,
+        Ok(Ok(_))
+    )
+}
+
 async fn tunnel_carries_traffic() -> bool {
     for target in PROBE_TARGETS {
-        if let Ok(Ok(_)) = timeout(PROBE_TIMEOUT, TcpStream::connect(target)).await {
+        if probe_through_tunnel(target).await {
             return true;
         }
     }
@@ -69,26 +87,26 @@ async fn wait_until_ready(process: &mut Singbox) -> Result<(), TunnelError> {
 }
 
 pub async fn run_tunnel(
-    config: TunnelConfig,
-    split_apps: Vec<String>,
+    config: Arc<TunnelConfig>,
+    split: Arc<SplitConfig>,
     emit: Arc<dyn Fn(TunnelEvent) + Send + Sync>,
     mut stop: oneshot::Receiver<()>,
 ) -> Result<(), TunnelError> {
     log::info!(
-        "connect requested: server={}:{} protocol=hysteria2 sni={} insecure={} dns={:?} split_apps={}",
+        "connect requested: server={}:{} protocol=hysteria2 sni={} insecure={} dns={:?} split_rules={}",
         config.server,
         config.port,
         config.server_name,
         config.insecure,
         config.dns,
-        split_apps.len()
+        !split.is_empty()
     );
 
     emit(TunnelEvent::Connecting);
 
     let mut process = singbox::spawn(SpawnInput {
         config: &config,
-        split_apps: &split_apps,
+        split: &split,
     })
     .await?;
 

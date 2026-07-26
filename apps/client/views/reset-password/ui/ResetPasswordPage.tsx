@@ -25,7 +25,9 @@ export const ResetPasswordPage = () => {
           <LocaleSwitcher />
         </div>
 
-        <h1 className={s.title}>{t('resetPassword')}</h1>
+        <Text as="h1" className={s.title}>
+          {t('resetPassword')}
+        </Text>
 
         {token ? (
           <ResetPasswordForm token={token} onDone={() => router.replace(ROUTES.auth)} />

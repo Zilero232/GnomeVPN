@@ -17,6 +17,8 @@ export const useNodes = () => {
     enabled: isAuthenticated,
     refetchInterval: HEALTH_REFRESH_MS,
     refetchOnWindowFocus: true,
+    retry: 5,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15_000),
   });
 
   return { nodes: data ?? [], isLoading, isError };

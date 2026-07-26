@@ -46,7 +46,9 @@ export const AccountPage = () => {
       <AccountNav />
 
       <header className={s.header}>
-        <h1 className={s.title}>{t('title')}</h1>
+        <Text as="h1" className={s.title}>
+          {t('title')}
+        </Text>
         <Text size="xs" tone="muted">
           {email}
         </Text>

@@ -1,51 +1,52 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { difference } from 'remeda';
+import { isDeepEqual } from 'remeda';
 
-import { MAX_SPLIT_APPS, QUERY_KEYS } from '@/shared/constants';
-import { getSplitApps, listInstalledApps, logger, setSplitApps } from '@/shared/lib';
+import { emptySplitConfig, getSplitConfig, logger, setSplitConfig } from '@/shared/lib';
 
+import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
 import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 
-export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) => {
-  const [applied, setApplied] = useState<string[]>([]);
-  const [draft, setDraft] = useState<string[]>([]);
-  const [isApplying, setIsApplying] = useState(false);
+const toggleIn = (list: string[], value: string): string[] =>
+  list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
-  const { data: apps = [], isLoading } = useQuery({
-    queryKey: QUERY_KEYS.installedApps(),
-    queryFn: listInstalledApps,
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) => {
+  const [applied, setApplied] = useState<SplitConfig>(emptySplitConfig);
+  const [draft, setDraft] = useState<SplitConfig>(emptySplitConfig);
+  const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const stored = await getSplitApps();
+        const stored = await getSplitConfig();
 
         setApplied(stored);
         setDraft(stored);
       } catch (error) {
-        logger.warn(`cannot read split tunneling apps: ${String(error)}`);
+        logger.warn(`cannot read split config: ${String(error)}`);
       }
     };
 
     void load();
   }, []);
 
-  const toggle = (path: string) => {
-    setDraft((current) => {
-      if (current.includes(path)) {
-        return current.filter((entry) => entry !== path);
-      }
+  const setAppsMode = (appsMode: SplitMode) => setDraft((current) => ({ ...current, appsMode }));
 
-      return current.length >= MAX_SPLIT_APPS ? current : [...current, path];
-    });
-  };
+  const setIpsMode = (ipsMode: SplitMode) => setDraft((current) => ({ ...current, ipsMode }));
 
-  const clear = () => setDraft([]);
+  const toggleApp = (path: string) =>
+    setDraft((current) => ({ ...current, apps: toggleIn(current.apps, path) }));
+
+  const addIp = (cidr: string) =>
+    setDraft((current) =>
+      current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] },
+    );
+
+  const removeIp = (cidr: string) =>
+    setDraft((current) => ({ ...current, ips: current.ips.filter((entry) => entry !== cidr) }));
+
+  const clear = () => setDraft(emptySplitConfig());
 
   const reset = () => setDraft(applied);
 
@@ -53,18 +54,18 @@ export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) =>
     setIsApplying(true);
 
     try {
-      await setSplitApps(draft);
+      await setSplitConfig(draft);
       await onApplied?.();
       setApplied(draft);
 
       return true;
     } catch (error) {
-      logger.error(`cannot apply split tunneling apps: ${String(error)}`);
+      logger.error(`cannot apply split config: ${String(error)}`);
 
       try {
-        await setSplitApps(applied);
+        await setSplitConfig(applied);
       } catch (rollbackError) {
-        logger.error(`cannot roll split tunneling apps back: ${String(rollbackError)}`);
+        logger.error(`cannot roll split config back: ${String(rollbackError)}`);
       }
 
       return false;
@@ -74,14 +75,15 @@ export const useSplitTunneling = ({ onApplied }: UseSplitTunnelingInput = {}) =>
   };
 
   return {
-    apps,
-    isLoading,
-    isApplying,
-    isFull: draft.length >= MAX_SPLIT_APPS,
-    selected: draft,
+    draft,
     applied,
-    isDirty: draft.length !== applied.length || difference(draft, applied).length > 0,
-    toggle,
+    isApplying,
+    isDirty: !isDeepEqual(draft, applied),
+    setAppsMode,
+    setIpsMode,
+    toggleApp,
+    addIp,
+    removeIp,
     clear,
     reset,
     apply,

@@ -1,3 +1,5 @@
+import 'flag-icons/css/flag-icons.min.css';
+
 import { countryFlag } from './CountryFlag.variants';
 
 import type { CountryFlagProps } from './CountryFlag.types';
