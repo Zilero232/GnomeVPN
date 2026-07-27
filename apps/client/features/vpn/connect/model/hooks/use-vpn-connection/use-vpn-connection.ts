@@ -74,6 +74,11 @@ export const useVpnConnection = () => {
       watchdog.clear();
       tunnel.markConnected();
     },
+    onReconnecting: () => {
+      if (nodeIdRef.current) {
+        tunnel.markConnecting(nodeIdRef.current);
+      }
+    },
     onClosed: () => {
       watchdog.clear();
       tunnel.reset();

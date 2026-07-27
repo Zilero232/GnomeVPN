@@ -9,15 +9,13 @@ export const useSignOut = () => {
   return useMutation({
     mutationFn: async () => {
       const deviceId = await getDeviceId();
-      const cleanup = [disconnectTunnel({ deviceId })];
+      const tasks = [disconnectTunnel({ deviceId }), authClient.signOut()];
 
       if (isTauriDesktop()) {
-        cleanup.push(vpnDisconnect());
+        tasks.push(vpnDisconnect());
       }
 
-      await settleAll({ label: 'sign-out cleanup', tasks: cleanup });
-
-      await authClient.signOut();
+      await settleAll({ label: 'sign-out', tasks });
 
       clearToken();
       queryClient.clear();

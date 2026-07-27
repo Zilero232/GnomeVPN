@@ -1,7 +1,7 @@
 'use client';
 
 import { useClickOutside } from '@siberiacancode/reactuse';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -12,6 +12,7 @@ import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
+import { openSystemVpnSettings } from '@/shared/lib';
 import { Switch } from '@/shared/ui';
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
 import { MenuItem } from './components';
@@ -22,7 +23,7 @@ export const AppMenu = () => {
   const t = useTranslations('app');
   const tray = useTranslations('tray');
 
-  const { isDesktopApp } = usePlatform();
+  const { isDesktopApp, isMobileApp } = usePlatform();
   const { closeToTray, setCloseToTray } = useCloseToTray();
   const {
     autoStart,
@@ -94,6 +95,14 @@ export const AppMenu = () => {
               trailing={<Switch isChecked={autoReconnect} />}
               onClick={() => toggleAutoReconnect(!autoReconnect)}
             />
+
+            {isMobileApp && (
+              <MenuItem
+                icon={ShieldCheck}
+                label={tray('alwaysOnVpn')}
+                onClick={() => void openSystemVpnSettings()}
+              />
+            )}
 
             <motion.div className={s.section} variants={MENU_ITEM_MOTION}>
               <span className={s.sectionLabel}>{tray('language')}</span>

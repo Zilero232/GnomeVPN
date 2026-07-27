@@ -1,14 +1,28 @@
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Mutex, Once};
 
 use gnomevpn_ipc::TunnelConfig;
 use jni::objects::{JClass, JString};
-use jni::sys::jint;
+use jni::sys::{jboolean, jint};
 use jni::JNIEnv;
 use tokio::runtime::Runtime;
 use tun2proxy::CancellationToken;
 
 use super::engine;
+
+const LOG_TAG: &str = "GnomeVpnNative";
+
+static LOGGER: Once = Once::new();
+
+fn install_logger() {
+    LOGGER.call_once(|| {
+        android_logger::init_once(
+            android_logger::Config::default()
+                .with_max_level(log::LevelFilter::Debug)
+                .with_tag(LOG_TAG),
+        );
+    });
+}
 
 struct Session {
     runtime: Runtime,
@@ -16,6 +30,15 @@ struct Session {
 }
 
 static SESSION: Mutex<Option<Session>> = Mutex::new(None);
+
+#[no_mangle]
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeNetworkChanged(
+    _env: JNIEnv,
+    _class: JClass,
+) {
+    install_logger();
+    engine::restart_attempt();
+}
 
 fn read_string(env: &mut JNIEnv, value: &JString) -> Option<String> {
     env.get_string(value).ok().map(|value| value.into())
@@ -29,7 +52,10 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
     data_dir: JString,
     config_json: JString,
     fd: jint,
+    auto_reconnect: jboolean,
 ) -> jint {
+    install_logger();
+
     let (Some(native_lib_dir), Some(data_dir), Some(config_json)) = (
         read_string(&mut env, &native_lib_dir),
         read_string(&mut env, &data_dir),
@@ -64,10 +90,15 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
     let data_dir = PathBuf::from(data_dir);
 
     runtime.spawn(async move {
+        let options = engine::TunnelOptions {
+            fd,
+            auto_reconnect: auto_reconnect != 0,
+        };
+
         if let Err(error) =
-            engine::run_tunnel(&native_lib_dir, &data_dir, &config, fd, worker).await
+            engine::run_tunnel(&native_lib_dir, &data_dir, &config, options, worker, |_| {}).await
         {
-            log::error!("service tunnel stopped: {error}");
+            log::error!("tunnel stopped: {error}");
         }
     });
 

@@ -18,7 +18,7 @@ class VpnTileService : TileService() {
     override fun onClick() {
         super.onClick()
 
-        if (GnomeVpnService.isRunning()) {
+        if (GnomeVpnService.isRunning(this)) {
             stopTunnel()
 
             return
@@ -75,7 +75,7 @@ class VpnTileService : TileService() {
         startActivityAndCollapse(launch)
     }
 
-    private fun render(isActive: Boolean = GnomeVpnService.isRunning()) {
+    private fun render(isActive: Boolean = GnomeVpnService.isRunning(this)) {
         val tile = qsTile ?: return
 
         tile.state = if (isActive) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE

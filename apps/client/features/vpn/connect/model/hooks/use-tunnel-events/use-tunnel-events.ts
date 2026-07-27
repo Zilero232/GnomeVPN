@@ -12,6 +12,7 @@ import type { HandleTunnelEventInput, UseTunnelEventsInput } from './use-tunnel-
 export const useTunnelEvents = ({
   isCurrent,
   onConnected,
+  onReconnecting,
   onTraffic,
   onClosed,
   countryRef,
@@ -63,7 +64,12 @@ export const useTunnelEvents = ({
       .with({ type: 'bytesUpdate' }, async ({ rx, tx }) => {
         onTraffic({ rx, tx });
       })
-      .with({ type: 'connecting' }, { type: 'handshake' }, async () => {})
+      .with({ type: 'connecting' }, async () => {
+        if (takeWasConnected()) {
+          onReconnecting();
+        }
+      })
+      .with({ type: 'handshake' }, async () => {})
       .exhaustive();
   };
 

@@ -6,6 +6,7 @@ export {
   listInstalledApps,
   listRunningProcesses,
   normalizeSplitConfig,
+  openSystemVpnSettings,
   pickExecutable,
   probeNodeLatency,
   requestVpnPermission,

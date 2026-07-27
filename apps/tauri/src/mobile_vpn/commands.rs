@@ -17,70 +17,45 @@ pub async fn vpn_connect<R: Runtime>(
     auto_reconnect: Option<bool>,
     state: State<'_, MobileVpnState>,
 ) -> Result<(), MobileVpnError> {
-    let _ = auto_reconnect;
+    let plugin = app.state::<VpnPlugin<R>>();
+
+    if let Err(error) = plugin.set_auto_reconnect(auto_reconnect.unwrap_or(true)) {
+        log::warn!("cannot store the auto-reconnect preference: {error}");
+    }
 
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);
 
-    let plugin = app.state::<VpnPlugin<R>>();
-    let native_lib_dir = plugin.native_library_dir()?;
-    let data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| MobileVpnError::Service(error.to_string()))?;
-
-    let fd = request_descriptor(&app, &config).await?;
-
-    if let Err(error) = plugin.remember_tunnel(&config) {
-        log::warn!("cannot store the session for the tile: {error}");
-    }
+    start_service(&app, &config).await?;
 
     let cancellation = CancellationToken::new();
     state.arm(cancellation.clone());
 
+    let _ = on_event.send(TunnelEvent::Connected {
+        assigned_ip: engine::assigned_ip().into(),
+    });
+
     let handle = app.clone();
-    let config = config.clone();
 
     tauri::async_runtime::spawn(async move {
-        let _ = on_event.send(TunnelEvent::Connected {
-            assigned_ip: engine::assigned_ip().into(),
-        });
+        report(handle, on_event.clone(), cancellation).await;
 
-        tauri::async_runtime::spawn(report(
-            handle.clone(),
-            on_event.clone(),
-            cancellation.clone(),
-        ));
-
-        if let Err(error) =
-            engine::run_tunnel(&native_lib_dir, &data_dir, &config, fd, cancellation).await
-        {
-            log::error!("android tunnel stopped: {error}");
-            let _ = on_event.send(TunnelEvent::Error {
-                message: error.to_string(),
-            });
-        }
-
-        let _ = handle.state::<VpnPlugin<R>>().stop();
         let _ = on_event.send(TunnelEvent::Disconnected);
     });
 
     Ok(())
 }
 
-async fn request_descriptor<R: Runtime>(
+async fn start_service<R: Runtime>(
     app: &AppHandle<R>,
     config: &TunnelConfig,
-) -> Result<i32, MobileVpnError> {
+) -> Result<(), MobileVpnError> {
     let handle = app.clone();
-    let server = config.server.clone();
-    let dns = config.dns.clone();
+    let config = config.clone();
 
-    tauri::async_runtime::spawn_blocking(move || {
-        handle.state::<VpnPlugin<R>>().start(&server, &dns)
-    })
-    .await
-    .map_err(|error| MobileVpnError::Service(error.to_string()))?
+    tauri::async_runtime::spawn_blocking(move || handle.state::<VpnPlugin<R>>().start(&config))
+        .await
+        .map_err(|error| MobileVpnError::Service(error.to_string()))?
 }
 
 #[tauri::command]
@@ -114,6 +89,11 @@ pub async fn vpn_hide_window<R: Runtime>(app: AppHandle<R>) -> Result<(), Mobile
 }
 
 #[tauri::command]
+pub async fn vpn_open_settings<R: Runtime>(app: AppHandle<R>) -> Result<(), MobileVpnError> {
+    app.state::<VpnPlugin<R>>().open_vpn_settings()
+}
+
+#[tauri::command]
 pub async fn vpn_has_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
     app.state::<VpnPlugin<R>>().has_permission()
 }
@@ -130,12 +110,16 @@ pub async fn vpn_request_permission<R: Runtime>(app: AppHandle<R>) -> Result<boo
 }
 
 #[tauri::command]
-pub async fn vpn_status(state: State<'_, MobileVpnState>) -> Result<&'static str, MobileVpnError> {
-    Ok(if state.is_active() {
-        "connected"
-    } else {
-        "disconnected"
-    })
+pub async fn vpn_status<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, MobileVpnState>,
+) -> Result<&'static str, MobileVpnError> {
+    let running = state.is_active()
+        || app
+            .try_state::<VpnPlugin<R>>()
+            .is_some_and(|plugin| plugin.is_running().unwrap_or(false));
+
+    Ok(if running { "connected" } else { "disconnected" })
 }
 
 #[tauri::command]

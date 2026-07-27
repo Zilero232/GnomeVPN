@@ -54,12 +54,12 @@ They talk over a named pipe. This is why the app never shows a UAC prompt, and w
 
 **Never move privileged work back into the GUI crate.** It would bring UAC back for every launch.
 
-**On Android there is no such split.** `VpnService` hands the app a TUN descriptor
-once the user consents, so the tunnel runs inside `apps/tauri` itself — see
-`src/mobile_vpn/`, which spawns `hysteria` under `tun2proxy` because a separate
-process cannot own a descriptor granted to the app. `build_hysteria_config` lives
-in `vpn-ipc` for that path; Windows uses `build_singbox_config` from the same
-crate.
+**On Android the split is by process, not by privilege.** `GnomeVpnService` runs
+in `:tunnel` (`android:process`), opens the TUN descriptor *and* runs the engine
+on it — `src/mobile_vpn/` spawns `hysteria` under `tun2proxy` from inside that
+process. The descriptor never crosses back to the UI, which is what lets the
+tunnel survive the user swiping the app away. `build_hysteria_config` lives in
+`vpn-ipc` for that path; Windows uses `build_singbox_config` from the same crate.
 
 ## Per-app guidance
 

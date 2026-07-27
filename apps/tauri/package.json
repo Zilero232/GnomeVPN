@@ -12,7 +12,7 @@
     "build": "tauri build",
     "android:init": "bun --env-file .env tauri android init && bun run icon && node ./scripts/setup-android-libs.mjs",
     "android:dev": "bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android dev",
-    "android:build": "bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android build --apk",
+    "android:build": "bun run icon && node ./scripts/setup-android-libs.mjs && node ./scripts/check-api-url.mjs && bun --env-file .env tauri android build --apk",
     "service:build": "node ./scripts/build-service.mjs",
     "signer:sign": "tauri signer sign",
     "signer:generate": "tauri signer generate -w ~/.tauri/gnomevpn.key --ci",

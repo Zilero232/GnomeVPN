@@ -4,9 +4,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 // idempotent step below.
 const PERMISSIONS = [
   'FOREGROUND_SERVICE',
-  'FOREGROUND_SERVICE_SPECIAL_USE',
+  'FOREGROUND_SERVICE_SYSTEM_EXEMPTED',
   'POST_NOTIFICATIONS',
   'WAKE_LOCK',
+  'ACCESS_NETWORK_STATE',
 ];
 
 const PERMISSION_ANCHOR = '<uses-permission android:name="android.permission.INTERNET" />';
@@ -14,13 +15,11 @@ const APPLICATION_END = '    </application>';
 
 const VPN_SERVICE = `<service
             android:name=".GnomeVpnService"
+            android:process=":tunnel"
             android:stopWithTask="false"
             android:exported="false"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="vpn" />
+            android:foregroundServiceType="systemExempted">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
@@ -79,27 +78,24 @@ const retargetTileIcon = (xml) =>
     '$1@drawable/ic_tile_vpn$2',
   );
 
-// android:foregroundServiceType="vpn" is a runtime constant, not a manifest flag
-// value — AAPT rejects it. The manifest declares specialUse plus the vpn subtype
-// property; the VpnService supplies FOREGROUND_SERVICE_TYPE_SPECIAL_USE at runtime.
-// tauri android init preserves an existing manifest, so a run that already has the
-// old "vpn" value would never be re-inserted — hence this unconditional heal.
 const SUBTYPE_PROPERTY =
-  '<property\n                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"\n                android:value="vpn" />';
+  /\s*<property\s*\n\s*android:name="android\.app\.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"\s*\n\s*android:value="vpn" \/>/;
 
 const normalizeVpnService = (xml) => {
-  const withType = xml.replace(
-    /(\.GnomeVpnService"[\s\S]*?android:foregroundServiceType=")vpn(")/,
-    '$1specialUse$2',
-  );
+  const healed = xml
+    .replace(
+      /(\.GnomeVpnService"[\s\S]*?android:foregroundServiceType=")(?:vpn|specialUse)(")/,
+      '$1systemExempted$2',
+    )
+    .replace(SUBTYPE_PROPERTY, '');
 
-  if (withType.includes('PROPERTY_SPECIAL_USE_FGS_SUBTYPE')) {
-    return withType;
+  if (healed.includes('android:process=":tunnel"')) {
+    return healed;
   }
 
-  return withType.replace(
-    /(android:foregroundServiceType="specialUse">\n)(\s*)(<intent-filter>)/,
-    `$1$2${SUBTYPE_PROPERTY}\n$2$3`,
+  return healed.replace(
+    /(android:name="\.GnomeVpnService")(\s*\n)(\s*)/,
+    '$1$2$3android:process=":tunnel"$2$3',
   );
 };
 
@@ -109,7 +105,10 @@ const dropStalePermissions = (xml) =>
       /\s*<uses-permission android:name="android\.permission\.FOREGROUND_SERVICE_VPN" \/>/,
       '',
     )
-    .replace(/\s*<uses-permission android:name="android\.permission\.ACCESS_NETWORK_STATE" \/>/, '')
+    .replace(
+      /\s*<uses-permission android:name="android\.permission\.FOREGROUND_SERVICE_SPECIAL_USE" \/>/,
+      '',
+    )
     .replace(
       /\s*<uses-permission android:name="android\.permission\.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" \/>/,
       '',

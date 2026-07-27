@@ -9,6 +9,7 @@ import {
   isVpnServiceAvailable,
   logger,
   takeTileConnectRequest,
+  vpnStatus,
   wasManuallyDisconnected,
 } from '@/shared/lib';
 
@@ -22,6 +23,17 @@ export const useAutoConnect = ({
   connect,
 }: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
+  const fromTileRef = useRef(false);
+
+  useEffect(() => {
+    takeTileConnectRequest()
+      .then((requested) => {
+        fromTileRef.current ||= requested;
+      })
+      .catch((error: unknown) => {
+        logger.error(`tile request check failed: ${String(error)}`);
+      });
+  }, []);
 
   useEffect(() => {
     if (hasAttemptedRef.current || !isReady || !hasAccess || isConnected || nodes.length === 0) {
@@ -31,11 +43,12 @@ export const useAutoConnect = ({
     hasAttemptedRef.current = true;
 
     const run = async () => {
-      const [isEnabled, wasDisconnectedByUser, isFromTile] = await Promise.all([
+      const [isEnabled, wasDisconnectedByUser] = await Promise.all([
         getAutoConnect(),
         wasManuallyDisconnected(),
-        takeTileConnectRequest(),
       ]);
+
+      const isFromTile = fromTileRef.current;
 
       if (!isFromTile && (!isEnabled || wasDisconnectedByUser)) {
         return;
@@ -63,7 +76,8 @@ export const useAutoConnect = ({
 
       await connect({ nodeId: target.id, country: target.country, isAutomatic: true });
 
-      if (isFromTile) {
+      if (isFromTile && (await vpnStatus()) === 'connected') {
+        fromTileRef.current = false;
         await hideAppWindow();
       }
     };

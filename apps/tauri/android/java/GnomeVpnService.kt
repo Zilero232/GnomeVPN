@@ -1,5 +1,7 @@
 package ru.gnomevpn.app
 
+import android.app.ActivityManager
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,37 +9,56 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.PowerManager
+import android.os.SystemClock
 import android.util.Log
 import java.net.Inet4Address
 import java.net.InetAddress
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class GnomeVpnService : VpnService() {
     private var descriptor: ParcelFileDescriptor? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var activeNetwork: Network? = null
+    private var isStopping = false
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
+            isStopping = true
+            cancelRevival()
             teardown()
             stopSelf()
 
             return START_NOT_STICKY
         }
 
-        if (intent == null || intent.action == ACTION_START_FROM_TILE) {
-            return startFromStoredSession()
+        return startFromStoredSession()
+    }
+
+    private fun startFromStoredSession(): Int {
+        val snapshot = TunnelStore.load(this)
+
+        if (snapshot == null) {
+            Log.w(TAG, "start requested without a stored session")
+            stopSelf()
+
+            return START_NOT_STICKY
         }
 
-        val dns = intent.getStringArrayExtra(EXTRA_DNS)?.takeIf { it.isNotEmpty() } ?: DEFAULT_DNS
-        val server = intent.getStringExtra(EXTRA_SERVER).orEmpty()
-
         return try {
-            startTunnel(dns, server)
+            val dns = snapshot.dns.takeIf { it.isNotEmpty() }?.toTypedArray() ?: DEFAULT_DNS
+            val fd = openDescriptor(dns, snapshot.server)
+
+            startEngine(snapshot.toJson(), fd, TunnelStore.autoReconnect(this))
+
+            publish(this, true)
+            Log.i(TAG, "tunnel is up, fd=$fd")
             START_STICKY
         } catch (error: Throwable) {
             Log.e(TAG, "failed to start the tunnel", error)
@@ -48,40 +69,28 @@ class GnomeVpnService : VpnService() {
         }
     }
 
-    private fun startFromStoredSession(): Int {
-        val snapshot = TunnelStore.load(this)
+    private fun startEngine(configJson: String, fd: Int, autoReconnect: Boolean) {
+        val started = TunnelEngine.nativeStart(
+            applicationInfo.nativeLibraryDir,
+            filesDir.absolutePath,
+            configJson,
+            fd,
+            autoReconnect,
+        )
 
-        if (snapshot == null) {
-            Log.w(TAG, "tile start requested without a stored session")
-            stopSelf()
-
-            return START_NOT_STICKY
-        }
-
-        return try {
-            val fd = openDescriptor(snapshot.dns.toTypedArray(), snapshot.server)
-
-            TunnelEngine.nativeStart(
-                applicationInfo.nativeLibraryDir,
-                filesDir.absolutePath,
-                snapshot.toJson(),
-                fd,
-            )
-
-            publish(fd)
-            Log.i(TAG, "tile tunnel is up, fd=$fd")
-            START_STICKY
-        } catch (error: Throwable) {
-            Log.e(TAG, "failed to start the tunnel from the tile", error)
-            teardown()
-            stopSelf()
-
-            START_NOT_STICKY
+        if (started == 0) {
+            throw IllegalStateException("TunnelEngine.nativeStart rejected the config")
         }
     }
 
     private fun startVpnForeground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                buildNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED,
+            )
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
                 buildNotification(),
@@ -122,10 +131,81 @@ class GnomeVpnService : VpnService() {
             ?: throw IllegalStateException("VpnService.establish() returned null")
 
         descriptor = opened
+        isStopping = false
+        cancelRevival()
         acquireWakeLock()
+        watchNetwork()
         VpnTileService.requestUpdate(this)
 
         return opened.fd
+    }
+
+    private fun watchNetwork() {
+        if (networkCallback != null) {
+            return
+        }
+
+        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
+
+        activeNetwork = runCatching {
+            manager.allNetworks.firstOrNull { candidate ->
+                val caps = manager.getNetworkCapabilities(candidate)
+
+                caps != null &&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            }
+        }.getOrNull()
+
+        activeNetwork?.let(::bindUnderlying)
+
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (activeNetwork == network) {
+                    return
+                }
+
+                val previous = activeNetwork
+                activeNetwork = network
+                bindUnderlying(network)
+
+                if (previous != null) {
+                    Log.i(TAG, "underlying network changed; restarting the engine")
+                    TunnelEngine.nativeNetworkChanged()
+                }
+            }
+
+            override fun onLost(network: Network) {
+                if (activeNetwork == network) {
+                    activeNetwork = null
+                }
+            }
+        }
+
+        runCatching { manager.registerDefaultNetworkCallback(callback) }
+            .onSuccess {
+                networkCallback = callback
+                Log.i(TAG, "watching the underlying network")
+            }
+            .onFailure { error ->
+                Log.e(TAG, "cannot watch the network; the tunnel will not survive a switch", error)
+            }
+    }
+
+    private fun bindUnderlying(network: Network) {
+        runCatching { setUnderlyingNetworks(arrayOf(network)) }
+            .onFailure { error -> Log.w(TAG, "cannot bind the tunnel to the network", error) }
+    }
+
+    private fun unwatchNetwork() {
+        val callback = networkCallback ?: return
+        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+        runCatching { manager?.unregisterNetworkCallback(callback) }
+
+        networkCallback = null
+        activeNetwork = null
     }
 
     private fun acquireWakeLock() {
@@ -153,13 +233,6 @@ class GnomeVpnService : VpnService() {
         }
 
         wakeLock = null
-    }
-
-    private fun startTunnel(dns: Array<String>, server: String) {
-        val fd = openDescriptor(dns, server)
-        publish(fd)
-
-        Log.i(TAG, "tunnel is up, fd=$fd")
     }
 
     // The half routes cover everything, the node included, so a packet destined
@@ -223,6 +296,7 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun teardown() {
+        unwatchNetwork()
         releaseWakeLock()
         runCatching { TunnelEngine.nativeStop() }
 
@@ -235,7 +309,7 @@ class GnomeVpnService : VpnService() {
 
         descriptor?.close()
         descriptor = null
-        publish(NO_DESCRIPTOR)
+        publish(this, false)
         VpnTileService.requestUpdate(this)
 
         notificationManager().cancel(NOTIFICATION_ID)
@@ -246,6 +320,7 @@ class GnomeVpnService : VpnService() {
 
     override fun onRevoke() {
         Log.w(TAG, "vpn permission revoked by the system")
+        isStopping = true
         teardown()
         stopSelf()
     }
@@ -254,19 +329,59 @@ class GnomeVpnService : VpnService() {
         Log.i(TAG, "task swiped away; keeping the tunnel alive")
     }
 
+    private fun scheduleRevival() {
+        val manager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+
+        val pending = revivalIntent(PendingIntent.FLAG_UPDATE_CURRENT) ?: return
+
+        runCatching {
+            manager.set(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + REVIVAL_DELAY_MS,
+                pending,
+            )
+        }.onFailure { error -> Log.w(TAG, "cannot schedule a revival", error) }
+    }
+
+    private fun revivalIntent(flag: Int): PendingIntent? {
+        val intent = Intent(this, GnomeVpnService::class.java).setAction(ACTION_START_FROM_TILE)
+        val flags = PendingIntent.FLAG_IMMUTABLE or flag
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PendingIntent.getForegroundService(this, REVIVAL_REQUEST, intent, flags)
+        } else {
+            PendingIntent.getService(this, REVIVAL_REQUEST, intent, flags)
+        }
+    }
+
+    private fun cancelRevival() {
+        val manager = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val pending = revivalIntent(PendingIntent.FLAG_NO_CREATE) ?: return
+
+        runCatching { manager.cancel(pending) }
+        pending.cancel()
+    }
+
     override fun onDestroy() {
+        val wasRunning = descriptor != null
+
         teardown()
+
+        if (!isStopping && wasRunning && TunnelStore.load(this) != null) {
+            Log.w(TAG, "destroyed with a live session; scheduling a revival")
+            scheduleRevival()
+        }
+
         super.onDestroy()
     }
 
     companion object {
         const val ACTION_STOP = "ru.gnomevpn.app.STOP"
         const val ACTION_START_FROM_TILE = "ru.gnomevpn.app.START_FROM_TILE"
-        const val EXTRA_SERVER = "server"
-        const val EXTRA_DNS = "dns"
-        const val NO_DESCRIPTOR = -1
 
         private const val TAG = "GnomeVpn"
+        private const val REVIVAL_REQUEST = 100
+        private const val REVIVAL_DELAY_MS = 5_000L
         private const val WAKE_LOCK_TAG = "GnomeVPN::tunnel"
         private const val SESSION = "GnomeVPN"
         private const val CHANNEL_ID = "gnomevpn.tunnel"
@@ -274,6 +389,7 @@ class GnomeVpnService : VpnService() {
         private const val NOTIFICATION_TEXT = "Tunnel is active"
         private const val NOTIFICATION_ID = 1
         private const val START_TIMEOUT_SECONDS = 15L
+        private const val POLL_INTERVAL_MS = 150L
 
         private const val TUN_ADDRESS = "10.8.0.2"
         private const val TUN_PREFIX = 24
@@ -286,40 +402,62 @@ class GnomeVpnService : VpnService() {
 
         private val DEFAULT_DNS = arrayOf("1.1.1.1", "8.8.8.8")
 
-        @Volatile
-        private var currentFd = NO_DESCRIPTOR
+        private const val STATE_PREFS = "gnomevpn.tunnel.state"
+        private const val KEY_RUNNING = "running"
 
-        private var latch: CountDownLatch? = null
+        @Suppress("DEPRECATION")
+        private fun statePrefs(context: Context) =
+            context.applicationContext.getSharedPreferences(
+                STATE_PREFS,
+                Context.MODE_PRIVATE or Context.MODE_MULTI_PROCESS,
+            )
 
         @JvmStatic
-        fun awaitDescriptor(): Int {
-            val waiter = CountDownLatch(1)
-
-            synchronized(this) {
-                if (currentFd != NO_DESCRIPTOR) {
-                    return currentFd
-                }
-
-                latch = waiter
-            }
-
-            val published = waiter.await(START_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            synchronized(this) { latch = null }
-
-            return if (published) currentFd else NO_DESCRIPTOR
+        fun publish(context: Context, isRunning: Boolean) {
+            statePrefs(context).edit().putBoolean(KEY_RUNNING, isRunning).commit()
         }
 
         @JvmStatic
-        fun publish(fd: Int) {
-            synchronized(this) {
-                currentFd = fd
-
-                if (fd != NO_DESCRIPTOR) {
-                    latch?.countDown()
-                }
+        fun isRunning(context: Context): Boolean {
+            if (!statePrefs(context).getBoolean(KEY_RUNNING, false)) {
+                return false
             }
+
+            if (isServiceAlive(context)) {
+                return true
+            }
+
+            publish(context, false)
+
+            return false
         }
 
-        fun isRunning(): Boolean = currentFd != NO_DESCRIPTOR
+        private fun isServiceAlive(context: Context): Boolean {
+            val manager =
+                context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+                    ?: return false
+
+            val name = GnomeVpnService::class.java.name
+
+            return runCatching {
+                @Suppress("DEPRECATION")
+                manager.getRunningServices(Int.MAX_VALUE).any { it.service.className == name }
+            }.getOrDefault(false)
+        }
+
+        @JvmStatic
+        fun awaitRunning(context: Context): Boolean {
+            val deadline = SystemClock.elapsedRealtime() + START_TIMEOUT_SECONDS * 1000
+
+            while (SystemClock.elapsedRealtime() < deadline) {
+                if (isRunning(context)) {
+                    return true
+                }
+
+                Thread.sleep(POLL_INTERVAL_MS)
+            }
+
+            return false
+        }
     }
 }

@@ -10,7 +10,10 @@ object TunnelEngine {
         dataDir: String,
         configJson: String,
         fd: Int,
+        autoReconnect: Boolean,
     ): Int
 
     external fun nativeStop()
+
+    external fun nativeNetworkChanged()
 }

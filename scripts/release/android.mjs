@@ -33,7 +33,7 @@ const writeKeystore = () => {
     [
       `keyAlias=${creds.ANDROID_KEY_ALIAS}`,
       `password=${creds.ANDROID_KEY_PASSWORD}`,
-      `storeFile=${keystore.replace(/\\/g, '/')}`,
+      'storeFile=../gnomevpn.keystore',
       '',
     ].join('\n'),
   );
@@ -49,7 +49,12 @@ const patchGradle = () => {
     );
   }
 
-  if (!gradle.includes('signingConfigs')) {
+  if (gradle.includes('signingConfigs')) {
+    gradle = gradle.replace(
+      / {4}signingConfigs \{[\s\S]*?\r?\n {4}\}\r?\n/,
+      readFileSync(signingSnippet, 'utf8'),
+    );
+  } else {
     const snippet = readFileSync(signingSnippet, 'utf8');
     gradle = gradle.replace('    buildTypes {', `${snippet}    buildTypes {`);
   }
@@ -99,6 +104,9 @@ const androidBuild = (flag) => {
     .cwd(tauri)
     .env(buildEnv);
 };
+
+log.step('build the client bundle');
+await $`bun --filter @gnomevpn/client build`.cwd(workspace).env(buildEnv);
 
 log.step('init android project');
 await $`bunx tauri android init`.cwd(tauri).env(buildEnv);

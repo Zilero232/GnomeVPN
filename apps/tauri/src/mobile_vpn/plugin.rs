@@ -15,12 +15,11 @@ const PLUGIN_CLASS: &str = "VpnPlugin";
 #[serde(rename_all = "camelCase")]
 struct StartArgs {
     server: String,
+    port: u16,
+    auth: String,
+    server_name: String,
+    insecure: bool,
     dns: Vec<String>,
-}
-
-#[derive(Deserialize)]
-struct StartResult {
-    fd: i32,
 }
 
 #[derive(Deserialize)]
@@ -40,19 +39,18 @@ pub struct TrafficResult {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct RememberArgs {
-    server: String,
-    port: u16,
-    auth: String,
-    server_name: String,
-    insecure: bool,
-    dns: Vec<String>,
+struct AutoReconnectArgs {
+    enabled: bool,
 }
 
 #[derive(Deserialize)]
 struct AutoConnectResult {
     requested: bool,
+}
+
+#[derive(Deserialize)]
+struct RunningResult {
+    running: bool,
 }
 
 #[derive(Serialize)]
@@ -70,6 +68,15 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(result.granted)
     }
 
+    pub fn is_running(&self) -> Result<bool, MobileVpnError> {
+        let result: RunningResult = self
+            .0
+            .run_mobile_plugin("isRunning", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.running)
+    }
+
     pub fn native_library_dir(&self) -> Result<PathBuf, MobileVpnError> {
         let result: NativeDirResult = self
             .0
@@ -79,26 +86,11 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(PathBuf::from(result.path))
     }
 
-    pub fn start(&self, server: &str, dns: &[String]) -> Result<i32, MobileVpnError> {
-        let result: StartResult = self
-            .0
-            .run_mobile_plugin(
-                "start",
-                StartArgs {
-                    server: server.to_string(),
-                    dns: dns.to_vec(),
-                },
-            )
-            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
-
-        Ok(result.fd)
-    }
-
-    pub fn remember_tunnel(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
+    pub fn start(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
         self.0
             .run_mobile_plugin::<()>(
-                "rememberTunnel",
-                RememberArgs {
+                "start",
+                StartArgs {
                     server: config.server.clone(),
                     port: config.port,
                     auth: config.auth.clone(),
@@ -107,6 +99,12 @@ impl<R: Runtime> VpnPlugin<R> {
                     dns: config.dns.clone(),
                 },
             )
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
+    }
+
+    pub fn set_auto_reconnect(&self, enabled: bool) -> Result<(), MobileVpnError> {
+        self.0
+            .run_mobile_plugin::<()>("setAutoReconnect", AutoReconnectArgs { enabled })
             .map_err(|error| MobileVpnError::Service(error.to_string()))
     }
 
@@ -132,6 +130,12 @@ impl<R: Runtime> VpnPlugin<R> {
             .map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
         Ok(result.granted)
+    }
+
+    pub fn open_vpn_settings(&self) -> Result<(), MobileVpnError> {
+        self.0
+            .run_mobile_plugin::<()>("openVpnSettings", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
     }
 
     pub fn move_to_background(&self) -> Result<(), MobileVpnError> {

@@ -58,6 +58,7 @@ object TunnelStore {
     private const val TAG = "GnomeVpnStore"
     private const val PREFS = "gnomevpn.tunnel"
     private const val KEY_PAYLOAD = "payload"
+    private const val KEY_AUTO_RECONNECT = "autoReconnect"
     private const val KEY_ALIAS = "gnomevpn.tunnel.key"
     private const val KEYSTORE = "AndroidKeyStore"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
@@ -71,7 +72,7 @@ object TunnelStore {
             return
         }
 
-        prefs(context).edit().putString(KEY_PAYLOAD, sealed).apply()
+        prefs(context).edit().putString(KEY_PAYLOAD, sealed).commit()
     }
 
     fun load(context: Context): TunnelSnapshot? {
@@ -88,11 +89,22 @@ object TunnelStore {
     }
 
     fun clear(context: Context) {
-        prefs(context).edit().remove(KEY_PAYLOAD).apply()
+        prefs(context).edit().remove(KEY_PAYLOAD).commit()
     }
 
+    fun setAutoReconnect(context: Context, isEnabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_RECONNECT, isEnabled).commit()
+    }
+
+    fun autoReconnect(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_AUTO_RECONNECT, true)
+
+    @Suppress("DEPRECATION")
     private fun prefs(context: Context) =
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences(
+            PREFS,
+            Context.MODE_PRIVATE or Context.MODE_MULTI_PROCESS,
+        )
 
     private fun seal(plain: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)

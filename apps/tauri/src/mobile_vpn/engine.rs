@@ -1,6 +1,7 @@
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
+use std::sync::Mutex;
 
 use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig};
 use tokio::process::{Child, Command};
@@ -17,8 +18,32 @@ const TUN_ADDRESS: &str = "10.8.0.2";
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
+const LOG_MAX_BYTES: u64 = 2 * 1024 * 1024;
 const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
+
+static ATTEMPT: Mutex<Option<CancellationToken>> = Mutex::new(None);
+
+fn arm_attempt(token: &CancellationToken) {
+    if let Ok(mut guard) = ATTEMPT.lock() {
+        *guard = Some(token.clone());
+    }
+}
+
+fn disarm_attempt() {
+    if let Ok(mut guard) = ATTEMPT.lock() {
+        *guard = None;
+    }
+}
+
+pub fn restart_attempt() {
+    let token = ATTEMPT.lock().ok().and_then(|guard| guard.clone());
+
+    match token {
+        Some(token) => token.cancel(),
+        None => log::warn!("restart requested with no attempt running"),
+    }
+}
 
 fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
     let path = native_lib_dir.join(BINARY_NAME);
@@ -98,9 +123,22 @@ pub async fn spawn_hysteria(
         MobileVpnError::Hysteria(format!("cannot write the hysteria config: {error}"))
     })?;
 
-    let log = std::fs::File::create(dir.join(LOG_NAME)).map_err(|error| {
-        MobileVpnError::Hysteria(format!("cannot open the hysteria log: {error}"))
-    })?;
+    let log_path = dir.join(LOG_NAME);
+
+    if tokio::fs::metadata(&log_path)
+        .await
+        .is_ok_and(|meta| meta.len() > LOG_MAX_BYTES)
+    {
+        let _ = tokio::fs::remove_file(&log_path).await;
+    }
+
+    let log = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path)
+        .map_err(|error| {
+            MobileVpnError::Hysteria(format!("cannot open the hysteria log: {error}"))
+        })?;
 
     let errors = log
         .try_clone()
@@ -199,14 +237,22 @@ async fn watch_hysteria(
     }
 }
 
-async fn run_attempt(
+async fn run_attempt<F>(
     native_lib_dir: &Path,
     data_dir: &Path,
     config: &TunnelConfig,
     fd: i32,
     cancellation: CancellationToken,
-) -> Result<(), MobileVpnError> {
+    on_phase: &mut F,
+) -> Result<(), MobileVpnError>
+where
+    F: FnMut(Phase) + Send,
+{
     let (mut hysteria, credentials) = spawn_hysteria(native_lib_dir, data_dir, config).await?;
+
+    log::info!("hysteria is up, socks={}", hysteria.socks_addr());
+    on_phase(Phase::Connected);
+
     let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
 
     let result = tokio::select! {
@@ -219,29 +265,64 @@ async fn run_attempt(
     result
 }
 
-pub async fn run_tunnel(
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Phase {
+    Connecting,
+    Connected,
+}
+
+#[derive(Clone, Copy)]
+pub struct TunnelOptions {
+    pub fd: i32,
+    pub auto_reconnect: bool,
+}
+
+pub async fn run_tunnel<F>(
     native_lib_dir: &Path,
     data_dir: &Path,
     config: &TunnelConfig,
-    fd: i32,
+    options: TunnelOptions,
     cancellation: CancellationToken,
-) -> Result<(), MobileVpnError> {
+    mut on_phase: F,
+) -> Result<(), MobileVpnError>
+where
+    F: FnMut(Phase) + Send,
+{
+    let fd = options.fd;
     let mut delay = RECONNECT_MIN_DELAY;
+    let mut generation = 0u32;
 
     loop {
         if cancellation.is_cancelled() {
             return Ok(());
         }
 
+        generation += 1;
+
         let attempt = cancellation.child_token();
 
-        match run_attempt(native_lib_dir, data_dir, config, fd, attempt).await {
-            Ok(()) => delay = RECONNECT_MIN_DELAY,
-            Err(error) => log::warn!("mobile tunnel attempt failed, reconnecting: {error}"),
-        }
+        arm_attempt(&attempt);
+        on_phase(Phase::Connecting);
+
+        let outcome =
+            run_attempt(native_lib_dir, data_dir, config, fd, attempt, &mut on_phase).await;
+
+        disarm_attempt();
 
         if cancellation.is_cancelled() {
             return Ok(());
+        }
+
+        match outcome {
+            Ok(()) => delay = RECONNECT_MIN_DELAY,
+            Err(error) if options.auto_reconnect => {
+                log::warn!("tunnel attempt #{generation} failed, retrying in {delay:?}: {error}")
+            }
+            Err(error) => {
+                log::warn!("tunnel attempt #{generation} failed and auto-reconnect is off");
+
+                return Err(error);
+            }
         }
 
         tokio::select! {

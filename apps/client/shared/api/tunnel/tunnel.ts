@@ -1,3 +1,5 @@
+import { tunnelConfigSchema } from '@gnomevpn/schemas';
+
 import { api } from '../http';
 
 import type {
@@ -20,7 +22,7 @@ export const connectTunnel = async ({
 }: ConnectRequest): Promise<TunnelConfig> => {
   const { data } = await api.post('/tunnel/connect', { nodeId, deviceId });
 
-  return data;
+  return tunnelConfigSchema.parse(data);
 };
 
 export const disconnectTunnel = async ({ deviceId }: DisconnectRequest): Promise<void> => {

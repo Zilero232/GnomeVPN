@@ -17,17 +17,16 @@ import kotlin.concurrent.thread
 @InvokeArg
 class StartArgs {
     var server: String = ""
-    var dns: List<String> = emptyList()
-}
-
-@InvokeArg
-class RememberArgs {
-    var server: String = ""
     var port: Int = 0
     var auth: String = ""
     var serverName: String = ""
     var insecure: Boolean = true
     var dns: List<String> = emptyList()
+}
+
+@InvokeArg
+class AutoReconnectArgs {
+    var enabled: Boolean = true
 }
 
 @TauriPlugin
@@ -101,12 +100,21 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         launchService(invoke, args)
     }
 
-    // The descriptor only exists once the service has finished establishing the
-    // tunnel, so the wait happens off the caller's thread to avoid an ANR.
     private fun launchService(invoke: Invoke, args: StartArgs) {
+        TunnelStore.save(
+            activity,
+            TunnelSnapshot(
+                server = args.server,
+                port = args.port,
+                auth = args.auth,
+                serverName = args.serverName,
+                insecure = args.insecure,
+                dns = args.dns,
+            ),
+        )
+
         val intent = Intent(activity, GnomeVpnService::class.java)
-            .putExtra(GnomeVpnService.EXTRA_SERVER, args.server)
-            .putExtra(GnomeVpnService.EXTRA_DNS, args.dns.toTypedArray())
+            .setAction(GnomeVpnService.ACTION_START_FROM_TILE)
 
         try {
             activity.startForegroundService(intent)
@@ -117,17 +125,13 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         thread(name = "gnomevpn-tunnel-start") {
-            val fd = GnomeVpnService.awaitDescriptor()
-
-            if (fd == GnomeVpnService.NO_DESCRIPTOR) {
+            if (!GnomeVpnService.awaitRunning(activity)) {
                 invoke.reject("the vpn service did not open a tunnel")
 
                 return@thread
             }
 
-            val result = JSObject()
-            result.put("fd", fd)
-            invoke.resolve(result)
+            invoke.resolve()
         }
     }
 
@@ -144,21 +148,8 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
     }
 
     @Command
-    fun rememberTunnel(invoke: Invoke) {
-        val args = invoke.parseArgs(RememberArgs::class.java)
-
-        TunnelStore.save(
-            activity,
-            TunnelSnapshot(
-                server = args.server,
-                port = args.port,
-                auth = args.auth,
-                serverName = args.serverName,
-                insecure = args.insecure,
-                dns = args.dns,
-            ),
-        )
-
+    fun setAutoReconnect(invoke: Invoke) {
+        TunnelStore.setAutoReconnect(activity, invoke.parseArgs(AutoReconnectArgs::class.java).enabled)
         invoke.resolve()
     }
 
@@ -187,6 +178,32 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
     @Command
     fun moveToBackground(invoke: Invoke) {
         activity.moveTaskToBack(true)
+        invoke.resolve()
+    }
+
+    @Command
+    fun isRunning(invoke: Invoke) {
+        val result = JSObject()
+        result.put("running", GnomeVpnService.isRunning(activity))
+        invoke.resolve(result)
+    }
+
+    @Command
+    fun openVpnSettings(invoke: Invoke) {
+        val intent = Intent("android.net.vpn.SETTINGS")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        val opened = runCatching { activity.startActivity(intent) }.isSuccess
+
+        if (!opened) {
+            runCatching {
+                activity.startActivity(
+                    Intent(android.provider.Settings.ACTION_SETTINGS)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            }
+        }
+
         invoke.resolve()
     }
 

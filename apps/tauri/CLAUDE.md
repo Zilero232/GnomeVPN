@@ -30,8 +30,8 @@ scripts/             # native binary sync, service build, android overlay
 ## Two tunnels, one contract
 
 Windows has a privileged service because creating the adapter needs administrator
-rights. Android has no such split: `VpnService` hands the app a TUN descriptor
-after the user consents, so the tunnel runs inside this crate.
+rights. Android splits by process instead: `GnomeVpnService` runs in `:tunnel`
+and owns the descriptor and the engine, so the tunnel outlives the UI process.
 
 Both ends expose the same four commands (`vpn_connect`, `vpn_disconnect`,
 `vpn_status`, `vpn_service_available`) and the same `TunnelEvent` stream, so the
@@ -61,15 +61,24 @@ Creating the wintun adapter, editing routes and setting DNS all need administrat
 
 Moving any of it back would bring a UAC prompt to every launch — the reason the split exists.
 
-## `foregroundServiceType="vpn"` does not exist in the manifest
+## The service type is `systemExempted`, and that choice is load-bearing
 
 `FOREGROUND_SERVICE_TYPE_VPN` is a **runtime constant** (API 34), never a manifest
 XML flag value — AAPT rejects `android:foregroundServiceType="vpn"` even with
-`compileSdk` 36, because the `foregroundServiceType` attr has no `vpn` flag (it
-stops at `specialUse`). The manifest declares `specialUse` plus a
-`PROPERTY_SPECIAL_USE_FGS_SUBTYPE="vpn"` property, and `GnomeVpnService` passes
-`FOREGROUND_SERVICE_TYPE_SPECIAL_USE` to `startForeground`. Permission is
-`FOREGROUND_SERVICE_SPECIAL_USE`, not `FOREGROUND_SERVICE_VPN`.
+`compileSdk` 36. The type to declare instead is **`systemExempted`** (`0x400`),
+with `FOREGROUND_SERVICE_SYSTEM_EXEMPTED` as the permission and
+`FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED` passed to `startForeground` on API 34+.
+
+**Not `specialUse`.** It is accepted by AAPT and looks equivalent, but OxygenOS
+treats it as fair game: `Athena … kill persistent app by guardelf` shot the whole
+process down minutes after the screen went off, taking the tunnel with it while
+the notification stayed up and traffic silently fell back to the open internet.
+AmneziaVPN on the same phone never drops — its manifest declares `systemExempted`,
+which is how this was found. Verify with
+`dumpsys activity services ru.gnomevpn.app | grep types=` → `types=0x00000400`.
+
+Amnezia also gives each VPN service its own `android:process`, so killing the UI
+cannot take the tunnel. Ours still shares one process; that split is not done.
 
 `tauri android init` **preserves an existing `AndroidManifest.xml`**, so a stale
 manifest carrying the old `vpn` value is never re-inserted by the substring-guarded
@@ -79,13 +88,24 @@ rewrite it unconditionally for that reason — the same self-heal pattern as
 
 ## Three things that kill the tunnel and look like bugs
 
-**The tunnel lives in the app's process.** `VpnService` hands over a descriptor,
-but `tun2proxy` runs inside `apps/tauri`, so when Android reclaims the process
-after a swipe the tunnel dies with it. `android:stopWithTask="false"` and an
-`onTaskRemoved` that does not call `stopSelf` keep the *service* alive, not the
-tunnel — the service is then restarted with a **null intent**, which is why
-`onStartCommand` treats that case as "rebuild from `TunnelStore`" rather than
-falling through to an empty server address.
+**The tunnel must never run in the UI process.** It used to: `VpnPlugin.start`
+handed the descriptor back and `run_tunnel` executed in `apps/tauri`, so swiping
+the app away killed hysteria — `onTaskRemoved` logged "keeping the tunnel alive"
+while the process died and traffic silently fell back to the open internet.
+
+Now `GnomeVpnService` declares `android:process=":tunnel"` and owns both ends:
+it opens the descriptor and calls `TunnelEngine.nativeStart` on it. The plugin
+only writes the session to `TunnelStore`, fires the intent and waits on
+`awaitRunning`. **Do not route the fd back through the plugin.**
+
+Because the two sides are separate processes, statics are not shared: cross-process
+state goes through `MODE_MULTI_PROCESS` prefs (`gnomevpn.tunnel.state`), and
+`TunnelStore.save` uses `commit()` rather than `apply()` — the service starts
+reading the snapshot the moment the intent lands.
+
+Every entry point — app, tile, `START_STICKY` restart with a **null intent** —
+funnels through `startFromStoredSession()`, so a restart can always reproduce
+what an intent carried.
 
 **Doze suspends the tunnel while the screen is off.** A foreground service is
 not enough: without a `PARTIAL_WAKE_LOCK` the CPU stops scheduling the tunnel

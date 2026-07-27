@@ -1,5 +1,8 @@
     signingConfigs {
         create("release") {
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
             val props = Properties()
             val propsFile = rootProject.file("keystore.properties")
             if (propsFile.exists()) {

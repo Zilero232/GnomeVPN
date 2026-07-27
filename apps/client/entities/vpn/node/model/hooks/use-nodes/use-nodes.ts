@@ -11,7 +11,7 @@ const HEALTH_REFRESH_MS = 60_000;
 export const useNodes = () => {
   const { isAuthenticated } = useCurrentUser();
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isFetching, isError } = useQuery({
     queryKey: QUERY_KEYS.nodes(),
     queryFn: listNodes,
     enabled: isAuthenticated,
@@ -21,5 +21,5 @@ export const useNodes = () => {
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 15_000),
   });
 
-  return { nodes: data ?? [], isLoading, isError };
+  return { nodes: data ?? [], isLoading: isFetching, isError };
 };

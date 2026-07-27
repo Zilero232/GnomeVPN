@@ -247,6 +247,7 @@
     "autoStart": "Запускать при старте",
     "autoConnect": "Подключаться автоматически",
     "autoReconnect": "Переподключаться автоматически",
+    "alwaysOnVpn": "Постоянный VPN в настройках",
     "language": "Язык"
   },
   "notifications": {
