@@ -99,12 +99,36 @@ body > * {
 
 .gnomevpn-toaster {
   top: calc(var(--safe-area-top) + 10px) !important;
-  width: min(100vw - 24px, 380px) !important;
+  width: min(100vw - 24px, 400px) !important;
   max-width: calc(100vw - 24px) !important;
 }
 
 .gnomevpn-toaster > li {
+  display: flex;
+  justify-content: center;
   width: 100% !important;
+}
+
+.gnomevpn-toaster [data-sonner-toast] [data-icon] {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.gnomevpn-toaster [data-sonner-toast] [data-title] {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.gnomevpn-toaster [data-sonner-toast][data-type='success'] [data-icon] {
+  color: var(--color-success);
+}
+
+.gnomevpn-toaster [data-sonner-toast][data-type='error'] [data-icon] {
+  color: var(--color-danger);
+}
+
+.gnomevpn-toaster [data-sonner-toast][data-type='warning'] [data-icon] {
+  color: var(--color-warning);
 }
 
 :root[data-desktop-app='true'] .gnomevpn-toaster {
