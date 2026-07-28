@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { findPlan } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -7,7 +6,12 @@ import { addHours, subHours } from 'date-fns';
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
-import { CheckoutService, describeRenewal } from '../../../billing';
+import {
+  CheckoutService,
+  describeRenewal,
+  renewalIdempotenceKey,
+  WebhookService,
+} from '../../../billing';
 import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../../config';
 
 import type { DueSubscription } from './recurring-charge.job.types';
@@ -20,6 +24,7 @@ export class RecurringChargeJob {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly checkout: CheckoutService,
+    private readonly webhook: WebhookService,
   ) {}
 
   private async hasChargeInFlight(userId: string): Promise<boolean> {
@@ -37,7 +42,7 @@ export class RecurringChargeJob {
   }
 
   private async chargeIfDue(subscription: DueSubscription): Promise<void> {
-    if (!subscription.savedCardId) {
+    if (!subscription.savedCardId || !subscription.currentPeriodEnd) {
       return;
     }
 
@@ -51,7 +56,10 @@ export class RecurringChargeJob {
       amountRub: plan.priceRub,
       description: describeRenewal(plan),
       paymentMethodId: subscription.savedCardId,
-      idempotenceKey: randomUUID(),
+      idempotenceKey: renewalIdempotenceKey({
+        userId: subscription.userId,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+      }),
     });
 
     await this.checkout.recordPendingPayment({
@@ -60,6 +68,10 @@ export class RecurringChargeJob {
       plan,
       isAutoCharge: true,
     });
+
+    if (payment.status === 'succeeded') {
+      await this.webhook.settlePayment(payment.id);
+    }
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -72,7 +84,7 @@ export class RecurringChargeJob {
           lt: addHours(new Date(), RENEW_WINDOW_HOURS),
         },
       },
-      select: { userId: true, savedCardId: true, plan: true },
+      select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true },
     });
 
     for (const subscription of due) {

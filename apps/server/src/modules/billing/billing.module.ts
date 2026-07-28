@@ -31,6 +31,6 @@ const yooKassaProvider = {
     WebhookIpGuard,
     yooKassaProvider,
   ],
-  exports: [CheckoutService, YooKassaClient],
+  exports: [CheckoutService, WebhookService, YooKassaClient],
 })
 export class BillingModule {}

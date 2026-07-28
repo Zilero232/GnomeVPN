@@ -4,4 +4,5 @@ export type DueSubscription = {
   userId: string;
   savedCardId: string | null;
   plan: PlanId;
+  currentPeriodEnd: Date | null;
 };

@@ -111,11 +111,18 @@ export class BillingSharedService {
       return;
     }
 
+    const granted = Math.min(subscription.extraDevices + quantity, MAX_EXTRA_DEVICES);
+    const dropped = subscription.extraDevices + quantity - granted;
+
+    if (dropped > 0) {
+      this.logger.error(
+        `extra-devices overflow for ${userId}: paid ${quantity}, granted ${granted - subscription.extraDevices}, ${dropped} dropped over MAX ${MAX_EXTRA_DEVICES} — manual review needed`,
+      );
+    }
+
     await db.subscription.update({
       where: { userId },
-      data: {
-        extraDevices: Math.min(subscription.extraDevices + quantity, MAX_EXTRA_DEVICES),
-      },
+      data: { extraDevices: granted },
     });
   }
 }

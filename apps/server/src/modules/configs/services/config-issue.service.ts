@@ -2,7 +2,7 @@ import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 
 import { AppBadRequestException } from '../../../common/exceptions';
-import { PrismaService } from '../../../core';
+import { PrismaService, withSerializableRetry } from '../../../core';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
@@ -127,30 +127,32 @@ export class ConfigIssueService {
   }: PersistConfigPeerInput): Promise<void> {
     const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
 
-    return this.prisma.$transaction(
-      async (tx) => {
-        const current = await tx.peer.findUnique({
-          where: {
-            userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
-          },
-        });
+    return withSerializableRetry(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          const current = await tx.peer.findUnique({
+            where: {
+              userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
+            },
+          });
 
-        if (current) {
-          await tx.peer.update({ where: { id: current.id }, data });
+          if (current) {
+            await tx.peer.update({ where: { id: current.id }, data });
 
-          return;
-        }
+            return;
+          }
 
-        if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
-          throw new AppBadRequestException(
-            'CONFIG_LIMIT_REACHED',
-            `At most ${configLimit} configs`,
-          );
-        }
+          if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
+            throw new AppBadRequestException(
+              'CONFIG_LIMIT_REACHED',
+              `At most ${configLimit} configs`,
+            );
+          }
 
-        await tx.peer.create({ data: { userId, kind: 'config', protocol, name, ...data } });
-      },
-      { isolationLevel: 'Serializable' },
+          await tx.peer.create({ data: { userId, kind: 'config', protocol, name, ...data } });
+        },
+        { isolationLevel: 'Serializable' },
+      ),
     );
   }
 

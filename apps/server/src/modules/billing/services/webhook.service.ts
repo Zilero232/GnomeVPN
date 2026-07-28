@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { describeError } from '../../../common/lib';
-import { PrismaService } from '../../../core';
+import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { ConfigAccessService } from '../../configs';
 import { BillingSharedService } from './billing-shared.service';
@@ -20,20 +19,16 @@ export class WebhookService {
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
-    try {
-      if (event.event === 'payment_method.active') {
-        await this.handlePaymentMethodActive(event.object.id);
+    if (event.event === 'payment_method.active') {
+      await this.handlePaymentMethodActive(event.object.id);
 
-        return;
-      }
-
-      await this.handlePaymentEvent(event.object.id);
-    } catch (error) {
-      this.logger.error(`webhook ${event.event} failed: ${describeError(error)}`);
+      return;
     }
+
+    await this.settlePayment(event.object.id);
   }
 
-  private async handlePaymentEvent(paymentId: string): Promise<void> {
+  async settlePayment(paymentId: string): Promise<void> {
     const row = await this.prisma.payment.findUnique({
       where: { yookassaPaymentId: paymentId },
       select: {
@@ -77,37 +72,45 @@ export class WebhookService {
       return;
     }
 
-    const activated = await this.prisma.$transaction(async (tx) => {
-      const claimed = await tx.payment.updateMany({
-        where: { id: row.id, status: 'pending' },
-        data: { status: 'succeeded' },
-      });
+    const activated = await withSerializableRetry(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          const claimed = await tx.payment.updateMany({
+            where: { id: row.id, status: 'pending' },
+            data: { status: 'succeeded' },
+          });
 
-      if (claimed.count === 0) {
-        this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
+          if (claimed.count === 0) {
+            this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
 
-        return false;
-      }
+            return false;
+          }
 
-      if (row.kind === 'extraDevices') {
-        await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
+          if (row.kind === 'extraDevices') {
+            await this.shared.grantExtraDevices(
+              { userId: row.userId, quantity: row.extraDevices },
+              tx,
+            );
 
-        return false;
-      }
+            return false;
+          }
 
-      await this.shared.activate(
-        {
-          userId: row.userId,
-          planId: row.plan,
-          method: payment.paymentMethodId
-            ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
-            : null,
+          await this.shared.activate(
+            {
+              userId: row.userId,
+              planId: row.plan,
+              method: payment.paymentMethodId
+                ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
+                : null,
+            },
+            tx,
+          );
+
+          return true;
         },
-        tx,
-      );
-
-      return true;
-    });
+        { isolationLevel: 'Serializable' },
+      ),
+    );
 
     if (activated) {
       await this.configs.setEnabledAll(row.userId, true);

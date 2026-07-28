@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { isPeriodActive } from '../../../common/lib';
-import { PrismaService } from '../../../core';
+import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { describeExtraDevices, describePlan } from '../lib';
 import { BillingSharedService } from './billing-shared.service';
@@ -104,38 +104,40 @@ export class CheckoutService {
       throw new AppBadRequestException('PAYMENT_FAILED', 'YooKassa returned no confirmation URL');
     }
 
-    await this.prisma.$transaction(
-      async (tx) => {
-        const [current, pendingNow] = await Promise.all([
-          tx.subscription.findUnique({ where: { userId }, select: { extraDevices: true } }),
-          tx.payment.aggregate({
-            where: { userId, kind: 'extraDevices', status: 'pending' },
-            _sum: { extraDevices: true },
-          }),
-        ]);
+    await withSerializableRetry(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          const [current, pendingNow] = await Promise.all([
+            tx.subscription.findUnique({ where: { userId }, select: { extraDevices: true } }),
+            tx.payment.aggregate({
+              where: { userId, kind: 'extraDevices', status: 'pending' },
+              _sum: { extraDevices: true },
+            }),
+          ]);
 
-        const claimedNow = (current?.extraDevices ?? 0) + (pendingNow._sum.extraDevices ?? 0);
+          const claimedNow = (current?.extraDevices ?? 0) + (pendingNow._sum.extraDevices ?? 0);
 
-        if (claimedNow + quantity > MAX_EXTRA_DEVICES) {
-          throw new AppBadRequestException(
-            'EXTRA_DEVICES_LIMIT',
-            `At most ${MAX_EXTRA_DEVICES} extra devices`,
-          );
-        }
+          if (claimedNow + quantity > MAX_EXTRA_DEVICES) {
+            throw new AppBadRequestException(
+              'EXTRA_DEVICES_LIMIT',
+              `At most ${MAX_EXTRA_DEVICES} extra devices`,
+            );
+          }
 
-        await tx.payment.create({
-          data: {
-            userId,
-            yookassaPaymentId: payment.id,
-            amount: extraDevicesPriceRub(quantity),
-            status: 'pending',
-            isAutoCharge: false,
-            kind: 'extraDevices',
-            extraDevices: quantity,
-          },
-        });
-      },
-      { isolationLevel: 'Serializable' },
+          await tx.payment.create({
+            data: {
+              userId,
+              yookassaPaymentId: payment.id,
+              amount: extraDevicesPriceRub(quantity),
+              status: 'pending',
+              isAutoCharge: false,
+              kind: 'extraDevices',
+              extraDevices: quantity,
+            },
+          });
+        },
+        { isolationLevel: 'Serializable' },
+      ),
     );
 
     return { confirmationUrl: payment.confirmationUrl };
@@ -147,8 +149,10 @@ export class CheckoutService {
     plan,
     isAutoCharge,
   }: RecordPaymentInput): Promise<void> {
-    await this.prisma.payment.create({
-      data: {
+    await this.prisma.payment.upsert({
+      where: { yookassaPaymentId: paymentId },
+      update: {},
+      create: {
         userId,
         yookassaPaymentId: paymentId,
         amount: plan.priceRub,
