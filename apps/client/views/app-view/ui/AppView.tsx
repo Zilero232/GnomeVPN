@@ -1,6 +1,5 @@
 'use client';
 
-import { clsx } from 'clsx';
 import { UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -15,13 +14,17 @@ import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
-import { ConnectButton, useVpnConnectionContext } from '@/features/vpn/connect';
+import {
+  ConnectButton,
+  useProtocolSelection,
+  useVpnConnectionContext,
+} from '@/features/vpn/connect';
 import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Text } from '@/shared/ui';
 import { useNodeSelection } from '../model/hooks';
-import { AppMenu, NodePicker, TunnelStats } from './components';
+import { AppMenu, NodePicker, ProtocolSwitch, TunnelStats } from './components';
 
 import s from './AppView.module.scss';
 
@@ -38,6 +41,7 @@ export const AppView = () => {
     useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
+  const { protocol, select: selectProtocol } = useProtocolSelection();
 
   const isOnline = status === 'connected';
 
@@ -66,16 +70,21 @@ export const AppView = () => {
       return;
     }
 
-    await connect({ nodeId: selection.nodeId, country: selection.country });
+    await connect({ nodeId: selection.nodeId, protocol, country: selection.country });
   };
 
   return (
     <main className={s.root}>
       <header className={s.head}>
-        <Text as="span" className={clsx(s.status, isOnline ? s.statusOn : s.statusOff)}>
-          <span className={s.statusDot} />
-          {isOnline ? t('statusOnline') : t('statusOffline')}
-        </Text>
+        {hasAccess ? (
+          <ProtocolSwitch
+            isDisabled={status !== 'disconnected'}
+            value={protocol}
+            onChange={selectProtocol}
+          />
+        ) : (
+          <span />
+        )}
 
         <div className={s.headRight}>
           <Text as="span" className={s.version}>

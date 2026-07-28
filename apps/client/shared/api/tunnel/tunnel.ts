@@ -19,8 +19,9 @@ export const getDeviceUsage = async (deviceId: string): Promise<DeviceUsage> => 
 export const connectTunnel = async ({
   nodeId,
   deviceId,
+  protocol,
 }: ConnectRequest): Promise<TunnelConfig> => {
-  const { data } = await api.post('/tunnel/connect', { nodeId, deviceId });
+  const { data } = await api.post('/tunnel/connect', { nodeId, deviceId, protocol });
 
   return tunnelConfigSchema.parse(data);
 };

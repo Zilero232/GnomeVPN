@@ -29,7 +29,13 @@ COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY apps/tauri/package.json ./apps/tauri/package.json
 # Lifecycle scripts are off because the server's postinstall runs
 # `prisma generate` before its schema is copied in.
-RUN bun install --frozen-lockfile --ignore-scripts
+# A retry loop that wipes the download cache between attempts survives transient
+# registry hiccups that corrupt a tarball mid-download (IntegrityCheckFailed).
+RUN for attempt in 1 2 3; do \
+      bun install --frozen-lockfile --ignore-scripts && break; \
+      echo "bun install attempt $attempt failed; clearing cache and retrying"; \
+      rm -rf /root/.bun/install/cache ~/.bun/install/cache; \
+    done
 
 COPY packages/schemas ./packages/schemas
 COPY apps/server ./apps/server

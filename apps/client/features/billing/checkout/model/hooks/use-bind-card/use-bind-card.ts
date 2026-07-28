@@ -1,17 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 
-import { useErrorMessage } from '@/entities/app/locale';
+import { useToastError } from '@/entities/app/locale';
+import { useInvalidateSubscription } from '@/entities/billing/subscription';
 import { bindCard } from '@/shared/api';
-import { QUERY_KEYS } from '@/shared/constants';
-import { isTauriDesktop, openExternal } from '@/shared/lib';
+import { clientKind, openExternal } from '@/shared/lib';
 
 export const useBindCard = () => {
-  const queryClient = useQueryClient();
-  const errorMessage = useErrorMessage();
+  const invalidateSubscription = useInvalidateSubscription();
+  const toastError = useToastError();
 
   return useMutation({
-    mutationFn: () => bindCard(isTauriDesktop() ? 'desktop' : 'web'),
+    mutationFn: () => bindCard(clientKind()),
     onSuccess: async (result) => {
       if (result.confirmationUrl) {
         await openExternal(result.confirmationUrl);
@@ -19,8 +18,8 @@ export const useBindCard = () => {
         return;
       }
 
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptionStatus() });
+      invalidateSubscription();
     },
-    onError: (error: unknown) => toast.error(errorMessage(error)),
+    onError: toastError,
   });
 };

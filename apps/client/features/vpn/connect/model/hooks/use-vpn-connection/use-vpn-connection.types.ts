@@ -1,3 +1,4 @@
+import type { TunnelProtocol } from '@gnomevpn/schemas';
 import type { TunnelEvent } from '@/shared/lib';
 
 export type VpnConnectionStatus = 'disconnected' | 'connecting' | 'connected';
@@ -14,6 +15,7 @@ export type TunnelEventInput = {
 
 export type ConnectInput = {
   nodeId: string;
+  protocol: TunnelProtocol;
   country?: string;
   isAutomatic?: boolean;
 };

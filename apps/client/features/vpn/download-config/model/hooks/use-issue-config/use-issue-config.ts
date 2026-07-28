@@ -1,21 +1,28 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { saveAs } from 'file-saver';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { useErrorMessage } from '@/entities/app/locale';
+import { useToastError } from '@/entities/app/locale';
 import { issueConfig } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
+import { saveFile } from '@/shared/lib';
 
 export const useIssueConfig = () => {
+  const t = useTranslations('configs');
   const queryClient = useQueryClient();
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   return useMutation({
     mutationFn: issueConfig,
-    onSuccess: (download) => {
-      saveAs(download.blob, download.fileName);
+    onSuccess: async (download) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+
+      const { target, fileName } = await saveFile(download);
+
+      toast.success(t('downloaded', { fileName }), {
+        description: target === 'downloads' ? t('savedToDownloads') : t('savedHint'),
+      });
     },
-    onError: (error: unknown) => toast.error(errorMessage(error)),
+    onError: toastError,
   });
 };

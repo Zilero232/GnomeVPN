@@ -5,6 +5,7 @@ export {
   restoreTokenFromVault,
   saveAuthToken,
 } from './auth/auth-client';
+export { unwrapAuth } from './auth/unwrap-auth';
 export {
   bindCard,
   buyExtraDevices,

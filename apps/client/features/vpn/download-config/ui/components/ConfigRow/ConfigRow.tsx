@@ -1,9 +1,10 @@
 'use client';
 
+import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Copy, Download, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button, CountryFlag, Text } from '@/shared/ui';
+import { Badge, Button, CountryFlag, Text } from '@/shared/ui';
 
 import s from './ConfigRow.module.scss';
 
@@ -18,15 +19,21 @@ export const ConfigRow = ({
 }: ConfigRowProps) => {
   const t = useTranslations('configs');
 
+  const isWireguard = config.protocol === TUNNEL_PROTOCOL.wireguard;
+
   return (
     <div className={s.root}>
       <div className={s.body}>
         <CountryFlag countryCode={config.countryCode} />
 
         <div className={s.info}>
-          <Text as="span" className={s.name}>
-            {config.name}
-          </Text>
+          <span className={s.head}>
+            <Text as="span" className={s.name}>
+              {config.name}
+            </Text>
+
+            <Badge>{t(`protocol.${config.protocol}`)}</Badge>
+          </span>
 
           <Text size="xs" tone="muted">
             {config.country}
@@ -35,25 +42,27 @@ export const ConfigRow = ({
       </div>
 
       <div className={s.actions}>
-        <Button
-          aria-label={t('copy')}
-          disabled={isPending}
-          size="icon"
-          variant="ghost"
-          onClick={onCopy}
-        >
-          <Copy aria-hidden size={15} />
-        </Button>
-
-        <Button
-          aria-label={t('redownload')}
-          disabled={isPending}
-          size="icon"
-          variant="ghost"
-          onClick={onRedownload}
-        >
-          <Download aria-hidden size={15} />
-        </Button>
+        {isWireguard ? (
+          <Button
+            aria-label={t('redownload')}
+            disabled={isPending}
+            size="icon"
+            variant="ghost"
+            onClick={onRedownload}
+          >
+            <Download aria-hidden size={15} />
+          </Button>
+        ) : (
+          <Button
+            aria-label={t('copy')}
+            disabled={isPending}
+            size="icon"
+            variant="ghost"
+            onClick={onCopy}
+          >
+            <Copy aria-hidden size={15} />
+          </Button>
+        )}
 
         <Button
           aria-label={t('revoke')}

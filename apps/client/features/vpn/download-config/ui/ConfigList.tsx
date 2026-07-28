@@ -42,7 +42,15 @@ export const ConfigList = ({ className }: ConfigListProps) => {
             {hasAccess ? t('hint', { limit: limits.configLimit }) : t('lockedHint')}
           </Text>
 
-          {hasAccess && <AddConfigForm isDisabled={isPending || isFull} nodes={nodes} />}
+          {hasAccess && (
+            <AddConfigForm
+              configs={configs}
+              isDisabled={isPending}
+              isFull={isFull}
+              key={configs.length}
+              nodes={nodes}
+            />
+          )}
 
           {isFull && (
             <Text size="xs" tone="muted">
@@ -70,8 +78,20 @@ export const ConfigList = ({ className }: ConfigListProps) => {
                 config={config}
                 isPending={isPending}
                 key={config.id}
-                onCopy={() => copy.mutate({ nodeId: config.nodeId, name: config.name })}
-                onRedownload={() => issue.mutate({ nodeId: config.nodeId, name: config.name })}
+                onCopy={() =>
+                  copy.mutate({
+                    nodeId: config.nodeId,
+                    name: config.name,
+                    protocol: config.protocol,
+                  })
+                }
+                onRedownload={() =>
+                  issue.mutate({
+                    nodeId: config.nodeId,
+                    name: config.name,
+                    protocol: config.protocol,
+                  })
+                }
                 onRevoke={() => revoke.mutate(config.id)}
               />
             ))}

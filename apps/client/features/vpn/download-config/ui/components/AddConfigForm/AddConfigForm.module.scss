@@ -1,6 +1,12 @@
 .form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px auto;
+  grid-template-columns: minmax(0, 1fr) 170px;
   gap: 10px;
   align-items: end;
 }
@@ -9,18 +15,19 @@
   min-width: 0;
 }
 
+.country {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .submit {
+  width: 100%;
   height: 46px;
-  margin-bottom: 20px;
 }
 
 @media (width <= 640px) {
-  .form {
+  .row {
     grid-template-columns: 1fr;
-  }
-
-  .submit {
-    width: 100%;
-    margin-bottom: 0;
   }
 }

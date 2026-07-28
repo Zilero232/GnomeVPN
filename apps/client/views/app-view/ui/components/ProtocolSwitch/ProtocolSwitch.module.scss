@@ -1,0 +1,96 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  cursor: pointer;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-accent-dim);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.icon {
+  color: var(--color-accent);
+}
+
+.current {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chevron {
+  color: var(--color-text-muted);
+  transition: transform 0.18s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  transform-origin: top left;
+  overflow: hidden;
+  min-width: 168px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid rgb(230 240 236 / 9%);
+  border-radius: 14px;
+  list-style: none;
+  background-color: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+  background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
+  backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 8%) inset,
+    0 0 0 1px rgb(0 0 0 / 40%),
+    0 28px 60px -24px rgb(0 0 0 / 90%);
+}
+
+.option {
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  transition:
+    color 0.14s ease,
+    background-color 0.14s ease;
+
+  &:hover {
+    color: var(--color-text);
+    background-color: color-mix(in srgb, var(--color-text) 6%, transparent);
+  }
+}
+
+.active {
+  color: var(--color-accent);
+}

@@ -1,19 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useMutation } from '@tanstack/react-query';
 
-import { useErrorMessage } from '@/entities/app/locale';
+import { useToastError } from '@/entities/app/locale';
+import { useInvalidateSubscription } from '@/entities/billing/subscription';
 import { unbindCard } from '@/shared/api';
-import { QUERY_KEYS } from '@/shared/constants';
 
 export const useUnbindCard = () => {
-  const queryClient = useQueryClient();
-  const errorMessage = useErrorMessage();
+  const invalidateSubscription = useInvalidateSubscription();
+  const toastError = useToastError();
 
   return useMutation({
     mutationFn: unbindCard,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptionStatus() });
-    },
-    onError: (error: unknown) => toast.error(errorMessage(error)),
+    onSuccess: invalidateSubscription,
+    onError: toastError,
   });
 };

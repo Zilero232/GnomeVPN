@@ -1,19 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
-import { useErrorMessage } from '@/entities/app/locale';
+import { useToastError } from '@/entities/app/locale';
 import { buyExtraDevices } from '@/shared/api';
-import { isTauriDesktop, openExternal } from '@/shared/lib';
+import { clientKind, openExternal } from '@/shared/lib';
 
 export const useBuyExtraDevices = () => {
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   return useMutation({
-    mutationFn: (quantity: number) =>
-      buyExtraDevices({ quantity, client: isTauriDesktop() ? 'desktop' : 'web' }),
+    mutationFn: (quantity: number) => buyExtraDevices({ quantity, client: clientKind() }),
     onSuccess: async (result) => {
       await openExternal(result.confirmationUrl);
     },
-    onError: (error: unknown) => toast.error(errorMessage(error)),
+    onError: toastError,
   });
 };

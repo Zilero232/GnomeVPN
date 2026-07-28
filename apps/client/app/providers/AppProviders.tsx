@@ -17,21 +17,7 @@ import type { ReactNode } from 'react';
 
 const TOAST_OPTIONS = {
   style: {
-    width: 'fit-content',
-    maxWidth: '100%',
-    marginInline: 'auto',
-    gap: '10px',
-    padding: '11px 15px',
     fontFamily: 'var(--font-sans)',
-    fontSize: '13px',
-    lineHeight: '1.45',
-    color: 'var(--color-text)',
-    background:
-      'linear-gradient(180deg, color-mix(in srgb, var(--color-surface-raised) 96%, white) 0%, var(--color-surface-raised) 100%)',
-    border: '1px solid var(--color-border-bright)',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: '0 18px 40px -20px rgb(0 0 0 / 80%), 0 1px 0 rgb(255 255 255 / 4%) inset',
-    backdropFilter: 'blur(12px)',
   },
 };
 

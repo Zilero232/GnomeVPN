@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import {
   getAutoConnect,
   getLastNodeId,
+  getProtocol,
   hideAppWindow,
   isVpnServiceAvailable,
   logger,
@@ -74,7 +75,12 @@ export const useAutoConnect = ({
 
       logger.info(`autoconnect: connecting to ${target.country}`);
 
-      await connect({ nodeId: target.id, country: target.country, isAutomatic: true });
+      await connect({
+        nodeId: target.id,
+        protocol: await getProtocol(),
+        country: target.country,
+        isAutomatic: true,
+      });
 
       if (isFromTile && (await vpnStatus()) === 'connected') {
         fromTileRef.current = false;

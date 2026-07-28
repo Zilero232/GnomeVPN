@@ -3,10 +3,9 @@
 import { clsx } from 'clsx';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import prettyBytes from 'pretty-bytes';
 import { useEffect, useState } from 'react';
 
-import { formatSpeed, formatUptime } from '../../../lib';
+import { formatBytes, formatSpeed, formatUptime } from '../../../lib';
 import { useSpeed } from '../../../model/hooks';
 
 import s from './TunnelStats.module.scss';
@@ -51,7 +50,7 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
           <div className={s.metric}>
             <span className={s.label}>{t('sentTotal')}</span>
-            <span className={s.value}>{prettyBytes(traffic.tx)}</span>
+            <span className={s.value}>{formatBytes(traffic.tx)}</span>
           </div>
         </div>
 
@@ -65,7 +64,7 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
           <div className={s.metric}>
             <span className={s.label}>{t('receivedTotal')}</span>
-            <span className={s.value}>{prettyBytes(traffic.rx)}</span>
+            <span className={s.value}>{formatBytes(traffic.rx)}</span>
           </div>
         </div>
       </div>

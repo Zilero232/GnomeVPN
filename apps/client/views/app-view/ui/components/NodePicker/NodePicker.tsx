@@ -24,19 +24,11 @@ export const NodePicker = ({
 }: NodePickerProps) => {
   const t = useTranslations('app');
 
-  const hint = match({ isLoading, isError, isEmpty: nodes.length === 0 })
+  const statusPlaceholder = match({ isLoading, isError, isEmpty: nodes.length === 0 })
     .with({ isLoading: true }, () => t('nodesLoading'))
     .with({ isError: true }, () => t('nodesError'))
     .with({ isEmpty: true }, () => t('nodesEmpty'))
     .otherwise(() => null);
-
-  if (hint) {
-    return (
-      <Text size="xs" tone="muted">
-        {hint}
-      </Text>
-    );
-  }
 
   const isRanked = nodes.some((node) => isNonNullish(latency[node.id]));
 
@@ -126,9 +118,9 @@ export const NodePicker = ({
 
       <Select
         aria-label={t('nodeLabel')}
-        isDisabled={isLocked}
+        isDisabled={isLocked || statusPlaceholder !== null}
         options={options}
-        placeholder={t('nodePlaceholder')}
+        placeholder={statusPlaceholder ?? t('nodePlaceholder')}
         value={activeNodeId ?? ''}
         onChange={onSelect}
       />

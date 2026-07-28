@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
+import { DEFAULT_PROTOCOL } from '@/entities/vpn/protocol';
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   getAutoReconnect,
@@ -23,6 +24,7 @@ import { useTunnelEvents } from '../use-tunnel-events';
 import { useTunnelNotifications } from '../use-tunnel-notifications';
 import { useTunnelState } from '../use-tunnel-state';
 
+import type { TunnelProtocol } from '@gnomevpn/schemas';
 import type { ConnectInput } from './use-vpn-connection.types';
 
 const DISCONNECT_POLL_MS = 150;
@@ -54,6 +56,7 @@ export const useVpnConnection = () => {
   const generationRef = useRef(0);
   const countryRef = useRef('');
   const nodeIdRef = useRef<string | null>(null);
+  const protocolRef = useRef<TunnelProtocol>(DEFAULT_PROTOCOL);
 
   const teardown = async () => {
     watchdog.clear();
@@ -95,11 +98,12 @@ export const useVpnConnection = () => {
     },
   });
 
-  const connect = async ({ nodeId, country = '', isAutomatic = false }: ConnectInput) => {
+  const connect = async ({ nodeId, protocol, country = '', isAutomatic = false }: ConnectInput) => {
     const generation = ++generationRef.current;
 
     countryRef.current = country;
     nodeIdRef.current = nodeId;
+    protocolRef.current = protocol;
 
     if (!isAutomatic) {
       await setManuallyDisconnected(false);
@@ -125,7 +129,7 @@ export const useVpnConnection = () => {
         getSplitConfig(),
       ]);
 
-      const config = await connectTunnel({ nodeId, deviceId });
+      const config = await connectTunnel({ nodeId, deviceId, protocol });
 
       await vpnConnect({
         config,
@@ -173,7 +177,12 @@ export const useVpnConnection = () => {
 
     await disconnect({ isAutomatic: true });
     await waitForDisconnected();
-    await connect({ nodeId, country: countryRef.current, isAutomatic: true });
+    await connect({
+      nodeId,
+      protocol: protocolRef.current,
+      country: countryRef.current,
+      isAutomatic: true,
+    });
   };
 
   return {

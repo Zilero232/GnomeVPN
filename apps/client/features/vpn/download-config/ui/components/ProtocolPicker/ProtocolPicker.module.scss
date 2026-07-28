@@ -1,0 +1,24 @@
+.list {
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+  text-align: left;
+}
+
+.body {
+  flex: 1;
+  gap: 4px;
+}
+
+.head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+}

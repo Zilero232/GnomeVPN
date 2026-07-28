@@ -1,6 +1,8 @@
-import type { Node } from '@gnomevpn/schemas';
+import type { DownloadedConfig, Node } from '@gnomevpn/schemas';
 
 export type AddConfigFormProps = {
   nodes: Node[];
+  configs: DownloadedConfig[];
+  isFull: boolean;
   isDisabled: boolean;
 };

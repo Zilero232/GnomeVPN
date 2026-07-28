@@ -3,12 +3,12 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { useErrorMessage } from '@/entities/app/locale';
+import { useToastError } from '@/entities/app/locale';
 import { issueConfig } from '@/shared/api';
 
 export const useCopyConfig = () => {
   const t = useTranslations('configs');
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   const { copy } = useCopy();
 
@@ -19,6 +19,6 @@ export const useCopyConfig = () => {
 
       toast.success(t('copied'), { description: t('copiedHint') });
     },
-    onError: (error: unknown) => toast.error(errorMessage(error)),
+    onError: toastError,
   });
 };
