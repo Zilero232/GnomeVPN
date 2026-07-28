@@ -62,5 +62,6 @@ export type {
   LatencyByNode,
   ProbeLatencyInput,
   VpnConnectInput,
+  VpnHeartbeat,
   VpnTraffic,
 } from './vpn-bridge';

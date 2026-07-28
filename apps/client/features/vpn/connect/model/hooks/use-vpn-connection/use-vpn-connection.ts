@@ -17,6 +17,7 @@ import {
   vpnDisconnect,
   vpnStatus,
 } from '@/shared/lib';
+import { buildHeartbeat } from '../../lib/build-heartbeat';
 import { useAdoptTunnel } from '../use-adopt-tunnel';
 import { useConnectWatchdog } from '../use-connect-watchdog';
 import { useHeartbeat } from '../use-heartbeat';
@@ -97,6 +98,7 @@ export const useVpnConnection = () => {
       events.markConnected();
     },
     onTraffic: tunnel.setTraffic,
+    onLost: tunnel.reset,
   });
 
   const connect = async ({ nodeId, protocol, country = '', isAutomatic = false }: ConnectInput) => {
@@ -136,6 +138,7 @@ export const useVpnConnection = () => {
         config,
         autoReconnect,
         split,
+        heartbeat: buildHeartbeat(deviceId),
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {
             logger.error(`tunnel event failed: ${String(error)}`);

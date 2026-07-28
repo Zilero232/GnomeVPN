@@ -21,7 +21,15 @@ pub async fn report<R: tauri::Runtime>(
         tokio::select! {
             _ = cancellation.cancelled() => return,
             _ = ticker.tick() => {
-                let Ok(bytes) = app.state::<VpnPlugin<R>>().traffic() else { continue };
+                let plugin = app.state::<VpnPlugin<R>>();
+
+                if !plugin.is_running().unwrap_or(true) {
+                    let _ = on_event.send(TunnelEvent::Disconnected);
+
+                    return;
+                }
+
+                let Ok(bytes) = plugin.traffic() else { continue };
 
                 let _ = on_event.send(TunnelEvent::BytesUpdate {
                     rx: bytes.rx,

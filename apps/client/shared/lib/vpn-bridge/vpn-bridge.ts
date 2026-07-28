@@ -44,13 +44,14 @@ export const vpnConnect = async ({
   onEvent,
   autoReconnect,
   split = emptySplitConfig(),
+  heartbeat,
 }: VpnConnectInput): Promise<void> => {
   const channel = new Channel<TunnelEvent>();
   channel.onmessage = onEvent;
 
   const args = isTauriDesktop()
     ? { config, onEvent: channel, autoReconnect, split }
-    : { config, onEvent: channel, autoReconnect };
+    : { config, onEvent: channel, autoReconnect, heartbeat };
 
   await callRust({
     command: 'vpn_connect',

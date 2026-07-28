@@ -5,7 +5,7 @@ use tun2proxy::CancellationToken;
 
 use super::counters::report;
 use super::engine;
-use super::plugin::{TrafficResult, VpnPlugin};
+use super::plugin::{Heartbeat, TrafficResult, VpnPlugin};
 use super::state::MobileVpnState;
 use super::MobileVpnError;
 
@@ -15,6 +15,7 @@ pub async fn vpn_connect<R: Runtime>(
     config: TunnelConfig,
     on_event: Channel<TunnelEvent>,
     auto_reconnect: Option<bool>,
+    heartbeat: Option<Heartbeat>,
     state: State<'_, MobileVpnState>,
 ) -> Result<(), MobileVpnError> {
     let plugin = app.state::<VpnPlugin<R>>();
@@ -26,7 +27,7 @@ pub async fn vpn_connect<R: Runtime>(
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);
 
-    start_service(&app, &config).await?;
+    start_service(&app, &config, heartbeat).await?;
 
     let cancellation = CancellationToken::new();
     state.arm(cancellation.clone());
@@ -49,13 +50,16 @@ pub async fn vpn_connect<R: Runtime>(
 async fn start_service<R: Runtime>(
     app: &AppHandle<R>,
     config: &TunnelConfig,
+    heartbeat: Option<Heartbeat>,
 ) -> Result<(), MobileVpnError> {
     let handle = app.clone();
     let config = config.clone();
 
-    tauri::async_runtime::spawn_blocking(move || handle.state::<VpnPlugin<R>>().start(&config))
-        .await
-        .map_err(|error| MobileVpnError::Service(error.to_string()))?
+    tauri::async_runtime::spawn_blocking(move || {
+        handle.state::<VpnPlugin<R>>().start(&config, heartbeat)
+    })
+    .await
+    .map_err(|error| MobileVpnError::Service(error.to_string()))?
 }
 
 #[tauri::command]

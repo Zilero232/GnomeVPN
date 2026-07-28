@@ -16,6 +16,7 @@ export type RustCommands = {
       onEvent: Channel<TunnelEvent>;
       autoReconnect: boolean;
       split?: SplitConfig;
+      heartbeat?: { apiUrl: string; token: string; deviceId: string };
     };
     result: null;
   };
