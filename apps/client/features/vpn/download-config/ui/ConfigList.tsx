@@ -72,10 +72,17 @@ export const ConfigList = ({ className }: ConfigListProps) => {
             </Text>
           </header>
 
+          {!hasAccess && (
+            <Text className={s.expiredNotice} size="xs" tone="danger">
+              {t('expiredNotice')}
+            </Text>
+          )}
+
           <div className={s.rows}>
             {configs.map((config) => (
               <ConfigRow
                 config={config}
+                isBlocked={!hasAccess}
                 isPending={isPending}
                 key={config.id}
                 onCopy={() =>

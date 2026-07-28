@@ -50,6 +50,10 @@
   color: var(--color-text-muted);
 }
 
+.expiredNotice {
+  margin-bottom: 10px;
+}
+
 .rows {
   display: flex;
   flex-direction: column;

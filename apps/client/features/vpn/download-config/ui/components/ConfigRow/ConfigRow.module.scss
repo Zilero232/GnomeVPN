@@ -16,6 +16,14 @@
   }
 }
 
+.blocked {
+  border-style: dashed;
+
+  .body {
+    opacity: 0.55;
+  }
+}
+
 .body {
   display: flex;
   flex: 1;
