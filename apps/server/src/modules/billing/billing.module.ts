@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { AppConfigService } from '../../config/config.module';
 import { makeYooKassaClient, YooKassaClient } from '../../lib';
+import { ConfigsModule } from '../configs';
 import { BillingController } from './billing.controller';
 import { WebhookIpGuard } from './guards';
 import {
@@ -19,6 +20,7 @@ const yooKassaProvider = {
 };
 
 @Module({
+  imports: [ConfigsModule],
   controllers: [BillingController],
   providers: [
     BillingSharedService,

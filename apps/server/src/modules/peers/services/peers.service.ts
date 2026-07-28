@@ -30,7 +30,7 @@ export class PeersService {
     try {
       await persist(created);
     } catch (error) {
-      await this.discard({ node: input.node, email: created.email, protocol: created.protocol });
+      await this.discard({ node: input.node, email: created.email });
 
       throw error;
     }
@@ -113,7 +113,10 @@ export class PeersService {
     }
   }
 
-  async release(peer: PeerRef): Promise<boolean> {
+  private async onNode(
+    peer: PeerRef,
+    run: (client: ReturnType<typeof xrayClientForNode>) => Promise<void>,
+  ): Promise<boolean> {
     const node = await this.prisma.node.findUnique({
       where: { id: peer.nodeId },
       select: { apiUrl: true, apiTokenEnvVar: true },
@@ -123,20 +126,37 @@ export class PeersService {
       return false;
     }
 
-    const email = peerClientName(peer);
-
     try {
-      await xrayClientForNode(node).removePeer({
-        email,
-        protocol: peer.protocol,
-      });
+      await run(xrayClientForNode(node));
 
       return true;
     } catch (error) {
-      this.logger.warn(`Failed to release peer ${email}: ${describeError(error)}`);
+      this.logger.warn(`node op failed for peer ${peer.id}: ${describeError(error)}`);
 
       return false;
     }
+  }
+
+  async release(peer: PeerRef): Promise<boolean> {
+    return this.onNode(peer, (client) => client.removePeer({ email: peerClientName(peer) }));
+  }
+
+  async setEnabled(peer: PeerRef, enabled: boolean): Promise<boolean> {
+    return this.onNode(peer, (client) =>
+      client.setPeerEnabled({ email: peerClientName(peer), enabled }),
+    );
+  }
+
+  async setEnabledMany(peers: PeerRef[], enabled: boolean): Promise<ReleaseManyResult> {
+    let kept = 0;
+
+    for (const peer of peers) {
+      if (!(await this.setEnabled(peer, enabled))) {
+        kept += 1;
+      }
+    }
+
+    return { released: peers.length - kept, kept };
   }
 
   async releaseMany(peers: PeerRef[]): Promise<ReleaseManyResult> {
@@ -153,9 +173,9 @@ export class PeersService {
     return { released: released.length, kept: peers.length - released.length };
   }
 
-  async discard({ node, email, protocol }: DiscardPeerInput): Promise<void> {
+  async discard({ node, email }: DiscardPeerInput): Promise<void> {
     await xrayClientForNode(node)
-      .removePeer({ email, protocol: protocol ?? TUNNEL_PROTOCOL.hysteria2 })
+      .removePeer({ email })
       .catch(() => undefined);
   }
 

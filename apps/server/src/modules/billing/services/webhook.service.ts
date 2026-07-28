@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { describeError } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { YooKassaClient } from '../../../lib';
+import { ConfigAccessService } from '../../configs';
 import { BillingSharedService } from './billing-shared.service';
 
 import type { WebhookEvent } from '@gnomevpn/schemas';
@@ -15,6 +16,7 @@ export class WebhookService {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly shared: BillingSharedService,
+    private readonly configs: ConfigAccessService,
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
@@ -75,7 +77,7 @@ export class WebhookService {
       return;
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    const activated = await this.prisma.$transaction(async (tx) => {
       const claimed = await tx.payment.updateMany({
         where: { id: row.id, status: 'pending' },
         data: { status: 'succeeded' },
@@ -84,13 +86,13 @@ export class WebhookService {
       if (claimed.count === 0) {
         this.logger.debug(`payment ${paymentId} was claimed by a concurrent webhook`);
 
-        return;
+        return false;
       }
 
       if (row.kind === 'extraDevices') {
         await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
 
-        return;
+        return false;
       }
 
       await this.shared.activate(
@@ -103,7 +105,13 @@ export class WebhookService {
         },
         tx,
       );
+
+      return true;
     });
+
+    if (activated) {
+      await this.configs.setEnabledAll(row.userId, true);
+    }
   }
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {

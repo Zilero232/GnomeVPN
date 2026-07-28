@@ -8,6 +8,11 @@ export const PEER_PREFIX = {
   config: 'cfg-',
 } as const;
 
+export const PEER_RETRY = {
+  attempts: 3,
+  delayMs: 2_000,
+} as const;
+
 export const WG = {
   listenPort: 51820,
   mtu: 1420,

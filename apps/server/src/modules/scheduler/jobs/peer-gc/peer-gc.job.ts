@@ -48,7 +48,7 @@ export class PeerGcJob {
       return;
     }
 
-    await xray.removePeer({ email, protocol: peer.protocol });
+    await xray.removePeer({ email });
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
-import { PEER_REF_SELECT, PeersService } from '../../peers';
+import { PEER_REF_SELECT, PEER_RETRY, PeersService, retryUntilCleared } from '../../peers';
 
 import type { RevokeConfigInput } from '../configs.service.types';
 
@@ -38,6 +38,21 @@ export class ConfigAccessService {
 
     if (kept > 0) {
       this.logger.warn(`Kept ${kept} config row(s) for ${userId}: peers still live`);
+    }
+  }
+
+  async setEnabledAll(userId: string, enabled: boolean): Promise<void> {
+    const rows = await this.peers.findRefs({ userId, kind: 'config' });
+
+    const kept = await retryUntilCleared({
+      ...PEER_RETRY,
+      run: () => this.peers.setEnabledMany(rows, enabled),
+    });
+
+    if (kept > 0) {
+      this.logger.warn(
+        `Could not toggle ${kept} config peer(s) after ${PEER_RETRY.attempts} tries`,
+      );
     }
   }
 }

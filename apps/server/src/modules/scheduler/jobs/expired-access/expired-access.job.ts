@@ -57,7 +57,7 @@ export class ExpiredAccessJob {
       unique(),
     );
 
-    await Promise.allSettled(expired.map((userId) => this.configs.revokeAll(userId)));
+    await Promise.allSettled(expired.map((userId) => this.configs.setEnabledAll(userId, false)));
 
     return expired;
   }

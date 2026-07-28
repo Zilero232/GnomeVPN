@@ -1,4 +1,4 @@
-import type { TunnelConfig, TunnelProtocol } from '@gnomevpn/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 
 export type RenderConfigInput = {
   config: TunnelConfig;
@@ -7,7 +7,6 @@ export type RenderConfigInput = {
 };
 
 export type ConfigFileNameInput = {
-  countryCode: string;
-  protocol: TunnelProtocol;
+  country: string;
   deviceName?: string;
 };

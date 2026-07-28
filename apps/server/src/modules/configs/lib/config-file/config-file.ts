@@ -1,21 +1,15 @@
-import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import slugify from '@sindresorhus/slugify';
-
-import { WIREGUARD_FILE_SUFFIX } from '../../config';
 
 import type { ConfigFileNameInput, RenderConfigInput } from './config-file.types';
 
-export const configFileName = ({
-  countryCode,
-  protocol,
-  deviceName,
-}: ConfigFileNameInput): string =>
-  [
-    'GnomeVPN',
-    slugify(countryCode).toUpperCase(),
-    deviceName ? slugify(deviceName) : '',
-    protocol === TUNNEL_PROTOCOL.wireguard ? WIREGUARD_FILE_SUFFIX : '',
-  ]
+const titleCase = (value: string): string =>
+  slugify(value)
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+
+export const configFileName = ({ country, deviceName }: ConfigFileNameInput): string =>
+  ['GnomeVPN', titleCase(country), deviceName ? titleCase(deviceName) : '']
     .filter(Boolean)
     .join('-');
 

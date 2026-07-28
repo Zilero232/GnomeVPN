@@ -1,8 +1,6 @@
-import { setTimeout as delay } from 'node:timers/promises';
 import { Injectable, Logger } from '@nestjs/common';
 
-import { PeersService } from '../../peers';
-import { RELEASE_RETRIES, RELEASE_RETRY_DELAY_MS } from '../config';
+import { PEER_RETRY, PeersService, retryUntilCleared } from '../../peers';
 
 import type { PeerRef } from '../../peers';
 
@@ -13,21 +11,16 @@ export class SessionAccessService {
   constructor(private readonly peers: PeersService) {}
 
   private async releaseWithRetry(peers: PeerRef[]): Promise<void> {
-    for (let attempt = 1; attempt <= RELEASE_RETRIES; attempt += 1) {
-      const { kept } = await this.peers.releaseMany(peers);
+    const kept = await retryUntilCleared({
+      ...PEER_RETRY,
+      run: () => this.peers.releaseMany(peers),
+    });
 
-      if (kept === 0) {
-        return;
-      }
-
-      if (attempt < RELEASE_RETRIES) {
-        await delay(RELEASE_RETRY_DELAY_MS * attempt);
-      }
+    if (kept > 0) {
+      this.logger.warn(
+        `Could not release ${kept} peer(s) on the node after ${PEER_RETRY.attempts} attempts`,
+      );
     }
-
-    this.logger.warn(
-      `Could not release ${peers.length} peer(s) on the node after ${RELEASE_RETRIES} attempts`,
-    );
   }
 
   async releaseAll(peers: PeerRef[]): Promise<void> {

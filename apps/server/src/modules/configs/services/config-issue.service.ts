@@ -125,16 +125,16 @@ export class ConfigIssueService {
     });
 
     return {
-      fileName: this.fileName({ countryCode: node.countryCode, name, protocol }),
+      fileName: this.fileName({ country: node.country, name, protocol }),
       content: this.render({ config, deviceName: name, country: node.country, protocol }),
     };
   }
 
-  private fileName({ countryCode, name, protocol }: ConfigFileNameInput): string {
+  private fileName({ country, name, protocol }: ConfigFileNameInput): string {
     const extension =
       protocol === TUNNEL_PROTOCOL.wireguard ? WIREGUARD_FILE_EXTENSION : HYSTERIA2_FILE_EXTENSION;
 
-    return `${configFileName({ countryCode, deviceName: name, protocol })}.${extension}`;
+    return `${configFileName({ country, deviceName: name })}.${extension}`;
   }
 
   private render({ config, deviceName, country, protocol }: ConfigContentInput): string {

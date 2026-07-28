@@ -46,7 +46,6 @@ export type IssueWireguardPeerInput = {
 export type DiscardPeerInput = {
   node: PeerNode;
   email: string;
-  protocol?: TunnelProtocol;
 };
 
 export type FindPeersInput = {

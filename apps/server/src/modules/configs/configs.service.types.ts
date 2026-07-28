@@ -13,7 +13,7 @@ export type ConfigContentInput = {
 };
 
 export type ConfigFileNameInput = {
-  countryCode: string;
+  country: string;
   name: string;
   protocol: TunnelProtocol;
 };
