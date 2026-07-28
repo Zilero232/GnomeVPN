@@ -8,9 +8,10 @@ const env = validateEnv(process.env);
 
 const globalForPrisma = globalThis as unknown as { basePrisma?: PrismaClient };
 
-const adapter = new PrismaPg(createPool(env.DATABASE_URL));
+const createBasePrisma = (): PrismaClient =>
+  new PrismaClient({ adapter: new PrismaPg(createPool(env.DATABASE_URL)) });
 
-export const basePrisma = globalForPrisma.basePrisma ?? new PrismaClient({ adapter });
+export const basePrisma = globalForPrisma.basePrisma ?? createBasePrisma();
 
 if (env.NODE_ENV === 'development') {
   globalForPrisma.basePrisma = basePrisma;
