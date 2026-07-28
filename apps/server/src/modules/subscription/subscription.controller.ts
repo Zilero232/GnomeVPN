@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUserId } from '../../common/decorators';
 import { SubscriptionStatusDto } from './dto/subscription.dto';
 import { SubscriptionService } from './services';
 
@@ -11,7 +11,7 @@ export class SubscriptionController {
 
   @Get('status')
   @ZodResponse({ type: SubscriptionStatusDto })
-  getStatus(@CurrentUser() userId: string) {
+  getStatus(@CurrentUserId() userId: string) {
     return this.subscription.getStatus(userId);
   }
 }

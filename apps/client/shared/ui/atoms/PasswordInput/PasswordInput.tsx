@@ -10,7 +10,13 @@ import s from './PasswordInput.module.scss';
 
 import type { PasswordInputProps } from './PasswordInput.types';
 
-export const PasswordInput = ({ className, disabled, ...props }: PasswordInputProps) => {
+export const PasswordInput = ({
+  className,
+  disabled,
+  showLabel,
+  hideLabel,
+  ...props
+}: PasswordInputProps) => {
   const [isVisible, toggleVisible] = useBoolean(false);
 
   return (
@@ -23,7 +29,7 @@ export const PasswordInput = ({ className, disabled, ...props }: PasswordInputPr
       />
 
       <button
-        aria-label={isVisible ? 'Скрыть пароль' : 'Показать пароль'}
+        aria-label={isVisible ? hideLabel : showLabel}
         className={s.toggle}
         disabled={disabled}
         tabIndex={-1}

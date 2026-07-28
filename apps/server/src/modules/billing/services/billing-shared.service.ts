@@ -52,7 +52,7 @@ export class BillingSharedService {
     });
   }
 
-  private resolveAutoRenew({ hasMethod, wasCancelled }: AutoRenewInput): boolean {
+  private resolveCancelAtPeriodEnd({ hasMethod, wasCancelled }: AutoRenewInput): boolean {
     if (!this.isRecurringEnabled() || !hasMethod) {
       return true;
     }
@@ -82,7 +82,7 @@ export class BillingSharedService {
     const data = {
       plan: paidPlan,
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
-      cancelAtPeriodEnd: this.resolveAutoRenew({
+      cancelAtPeriodEnd: this.resolveCancelAtPeriodEnd({
         hasMethod: Boolean(method?.id ?? subscription?.savedCardId),
         wasCancelled: subscription?.cancelAtPeriodEnd ?? false,
       }),

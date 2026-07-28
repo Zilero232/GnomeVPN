@@ -7,12 +7,12 @@ export const retryUntilCleared = async ({
   delayMs,
   run,
 }: RetryUntilClearedInput): Promise<number> => {
-  let kept = 0;
+  let failed = 0;
 
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    kept = (await run()).kept;
+    failed = (await run()).failed;
 
-    if (kept === 0) {
+    if (failed === 0) {
       return 0;
     }
 
@@ -21,5 +21,5 @@ export const retryUntilCleared = async ({
     }
   }
 
-  return kept;
+  return failed;
 };

@@ -111,7 +111,7 @@ export class SessionConnectService {
         if (existing) {
           await this.prisma.peer.update({
             where: { id: existing.id },
-            data: { ...data, trafficBytes: 0n, lastActiveAt: null },
+            data: { ...data, lastActiveAt: null },
           });
 
           return;

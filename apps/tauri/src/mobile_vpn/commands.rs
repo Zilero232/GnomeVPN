@@ -5,7 +5,7 @@ use tun2proxy::CancellationToken;
 
 use super::counters::report;
 use super::engine;
-use super::plugin::VpnPlugin;
+use super::plugin::{TrafficResult, VpnPlugin};
 use super::state::MobileVpnState;
 use super::MobileVpnError;
 
@@ -116,6 +116,11 @@ pub async fn vpn_request_permission<R: Runtime>(app: AppHandle<R>) -> Result<boo
     })
     .await
     .map_err(|error| MobileVpnError::Service(error.to_string()))?
+}
+
+#[tauri::command]
+pub async fn vpn_traffic<R: Runtime>(app: AppHandle<R>) -> Result<TrafficResult, MobileVpnError> {
+    app.state::<VpnPlugin<R>>().traffic()
 }
 
 #[tauri::command]

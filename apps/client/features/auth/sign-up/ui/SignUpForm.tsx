@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useFieldError } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
 import { type SignUpValues, signUpSchema, useSignUp } from '../model/use-sign-up';
 
@@ -21,6 +21,7 @@ const DEFAULT_VALUES: SignUpValues = {
 export const SignUpForm = () => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useSignUp();
 
   const {
@@ -53,7 +54,12 @@ export const SignUpForm = () => {
         htmlFor="signup-password"
         label={t('fields.password')}
       >
-        <PasswordInput autoComplete="new-password" id="signup-password" {...register('password')} />
+        <PasswordInput
+          autoComplete="new-password"
+          id="signup-password"
+          {...passwordLabels}
+          {...register('password')}
+        />
       </FormField>
 
       <FormField
@@ -64,6 +70,7 @@ export const SignUpForm = () => {
         <PasswordInput
           autoComplete="new-password"
           id="signup-confirm"
+          {...passwordLabels}
           {...register('confirmPassword')}
         />
       </FormField>

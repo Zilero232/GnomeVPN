@@ -36,7 +36,7 @@ export class RecurringChargeJob {
     return pending !== null;
   }
 
-  private async charge(subscription: DueSubscription): Promise<void> {
+  private async chargeIfDue(subscription: DueSubscription): Promise<void> {
     if (!subscription.savedCardId) {
       return;
     }
@@ -77,7 +77,7 @@ export class RecurringChargeJob {
 
     for (const subscription of due) {
       try {
-        await this.charge(subscription);
+        await this.chargeIfDue(subscription);
       } catch (error) {
         this.logger.warn(
           `Recurring charge failed for ${subscription.userId}: ${describeError(error)}`,

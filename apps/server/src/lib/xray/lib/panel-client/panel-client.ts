@@ -6,7 +6,6 @@ import type {
   PanelInbound,
   PanelResponse,
   PanelServerStatus,
-  PanelTraffic,
 } from './panel-client.types';
 
 export class PanelClient {
@@ -84,10 +83,6 @@ export class PanelClient {
 
   serverStatus(): Promise<PanelServerStatus> {
     return this.get(PANEL_ROUTES.serverStatus);
-  }
-
-  async clientTraffic(email: string): Promise<PanelTraffic | null> {
-    return this.get<PanelTraffic | null>(PANEL_ROUTES.clientTraffic(email));
   }
 
   async deleteClient(email: string): Promise<void> {

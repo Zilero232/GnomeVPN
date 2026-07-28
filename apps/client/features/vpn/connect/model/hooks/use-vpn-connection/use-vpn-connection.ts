@@ -96,6 +96,7 @@ export const useVpnConnection = () => {
       tunnel.markAdopted(nodeId);
       events.markConnected();
     },
+    onTraffic: tunnel.setTraffic,
   });
 
   const connect = async ({ nodeId, protocol, country = '', isAutomatic = false }: ConnectInput) => {

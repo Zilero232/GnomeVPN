@@ -52,11 +52,7 @@ export type NewWireguardClientInput = {
   assignedIp: string;
 };
 
-export type RemovePeerInput = {
-  email: string;
-};
-
-export type SetPeerEnabledInput = {
+export type SetClientEnabledInput = {
   email: string;
   enabled: boolean;
 };

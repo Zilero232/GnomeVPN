@@ -23,6 +23,7 @@ export type RustCommands = {
   list_running_processes: { args: never; result: { name: string; path: string }[] };
   vpn_disconnect: { args: never; result: null };
   vpn_status: { args: never; result: string };
+  vpn_traffic: { args: never; result: { rx: number; tx: number } };
   vpn_service_available: { args: never; result: boolean };
   vpn_take_tile_request: { args: never; result: boolean };
   vpn_hide_window: { args: never; result: null };

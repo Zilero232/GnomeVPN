@@ -11,14 +11,14 @@ export class SessionAccessService {
   constructor(private readonly peers: PeersService) {}
 
   private async releaseWithRetry(peers: PeerRef[]): Promise<void> {
-    const kept = await retryUntilCleared({
+    const failed = await retryUntilCleared({
       ...PEER_RETRY,
       run: () => this.peers.releaseMany(peers),
     });
 
-    if (kept > 0) {
+    if (failed > 0) {
       this.logger.warn(
-        `Could not release ${kept} peer(s) on the node after ${PEER_RETRY.attempts} attempts`,
+        `Could not release ${failed} peer(s) on the node after ${PEER_RETRY.attempts} attempts`,
       );
     }
   }

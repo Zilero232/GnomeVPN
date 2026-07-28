@@ -28,8 +28,7 @@ import type {
   CreateClientResult,
   HysteriaClient,
   NewWireguardClientInput,
-  RemovePeerInput,
-  SetPeerEnabledInput,
+  SetClientEnabledInput,
   WireguardClient,
   WriteInboundClientsInput,
   XrayClientOptions,
@@ -280,28 +279,12 @@ export class XrayClient {
     });
   }
 
-  async removePeer({ email }: RemovePeerInput): Promise<void> {
-    return serializeByKey(this.nodeKey, () => this.panel.deleteClient(email));
-  }
-
-  async setPeerEnabled({ email, enabled }: SetPeerEnabledInput): Promise<void> {
+  async setClientEnabled({ email, enabled }: SetClientEnabledInput): Promise<void> {
     return serializeByKey(this.nodeKey, () => this.panel.setClientsEnabled([email], enabled));
   }
 
   async deleteOrphanClients(): Promise<number> {
     return serializeByKey(this.nodeKey, () => this.panel.deleteOrphanClients());
-  }
-
-  async getClientTraffic(email: string): Promise<number | null> {
-    try {
-      const traffic = await this.panel.clientTraffic(email);
-
-      return traffic ? traffic.up + traffic.down : null;
-    } catch (error) {
-      XrayClient.logger.warn(`traffic lookup failed for ${email} on ${this.nodeKey}: ${error}`);
-
-      return null;
-    }
   }
 
   async isReachable(): Promise<boolean> {

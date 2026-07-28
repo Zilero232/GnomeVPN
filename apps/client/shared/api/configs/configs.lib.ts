@@ -9,3 +9,5 @@ export const parseFileName = (contentDisposition: unknown): string => {
 
   return FILENAME_PATTERN.exec(contentDisposition)?.[1] ?? FALLBACK_FILE_NAME;
 };
+
+export const readConfigText = async (blob: Blob): Promise<string> => (await blob.text()).trim();

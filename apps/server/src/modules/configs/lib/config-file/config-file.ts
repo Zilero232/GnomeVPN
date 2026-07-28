@@ -13,13 +13,22 @@ export const configFileName = ({ country, deviceName }: ConfigFileNameInput): st
     .filter(Boolean)
     .join('-');
 
-export const renderConfigFile = ({ config, deviceName, country }: RenderConfigInput): string => {
-  const params = new URLSearchParams({
-    sni: config.serverName,
-    ...(config.insecure ? { insecure: '1' } : {}),
-  });
+export const renderHysteria2Config = ({
+  config,
+  deviceName,
+  country,
+}: RenderConfigInput): string => {
+  const url = new URL(`hy2://${config.server}`);
+  url.username = config.auth;
+  url.port = String(config.port);
+  url.pathname = '/';
+  url.searchParams.set('sni', config.serverName);
 
-  const label = encodeURIComponent(`GnomeVPN ${country} · ${deviceName}`);
+  if (config.insecure) {
+    url.searchParams.set('insecure', '1');
+  }
 
-  return `hy2://${config.auth}@${config.server}:${config.port}?${params}#${label}\n`;
+  url.hash = `GnomeVPN ${country} · ${deviceName}`;
+
+  return `${url.toString()}\n`;
 };

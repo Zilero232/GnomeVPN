@@ -10,4 +10,4 @@ export { PeersModule } from './peers.module';
 export { PeersService } from './services';
 
 export type { TunnelNode } from './lib';
-export type { PeerRef } from './peers.service.types';
+export type { CreatedPeer, PeerRef } from './peers.service.types';

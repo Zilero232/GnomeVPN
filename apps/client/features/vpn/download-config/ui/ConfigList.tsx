@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { Stack, Text } from '@/shared/ui';
-import { useConfigs, useCopyConfig, useIssueConfig, useRevokeConfig } from '../model/hooks';
+import { useConfigs, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigRow } from './components';
 
 import s from './ConfigList.module.scss';
@@ -19,11 +19,8 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
   const { hasAccess, limits } = useSubscriptionStatus();
 
-  const issue = useIssueConfig();
-  const copy = useCopyConfig();
   const revoke = useRevokeConfig();
 
-  const isPending = issue.isPending || copy.isPending || revoke.isPending;
   const isFull = configs.length >= limits.configLimit;
 
   if (isLoadingNodes || isLoadingConfigs || nodes.length === 0) {
@@ -45,7 +42,7 @@ export const ConfigList = ({ className }: ConfigListProps) => {
           {hasAccess && (
             <AddConfigForm
               configs={configs}
-              isDisabled={isPending}
+              isDisabled={revoke.isPending}
               isFull={isFull}
               key={configs.length}
               nodes={nodes}
@@ -83,22 +80,8 @@ export const ConfigList = ({ className }: ConfigListProps) => {
               <ConfigRow
                 config={config}
                 isBlocked={!hasAccess}
-                isPending={isPending}
+                isRevoking={revoke.isPending}
                 key={config.id}
-                onCopy={() =>
-                  copy.mutate({
-                    nodeId: config.nodeId,
-                    name: config.name,
-                    protocol: config.protocol,
-                  })
-                }
-                onRedownload={() =>
-                  issue.mutate({
-                    nodeId: config.nodeId,
-                    name: config.name,
-                    protocol: config.protocol,
-                  })
-                }
                 onRevoke={() => revoke.mutate(config.id)}
               />
             ))}

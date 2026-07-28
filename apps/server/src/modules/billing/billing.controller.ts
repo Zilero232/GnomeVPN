@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUserId } from '../../common/decorators';
 import {
   BindCardDto,
   BindCardResultDto,
@@ -25,37 +25,37 @@ export class BillingController {
 
   @Post('checkout')
   @ZodResponse({ type: CheckoutResultDto })
-  createCheckout(@Body() body: CreateCheckoutDto, @CurrentUser() userId: string) {
+  createCheckout(@Body() body: CreateCheckoutDto, @CurrentUserId() userId: string) {
     return this.checkout.createCheckout(userId, body.planId, body.client);
   }
 
   @Post('extra-devices')
   @ZodResponse({ type: CheckoutResultDto })
-  buyExtraDevices(@Body() body: BuyExtraDevicesDto, @CurrentUser() userId: string) {
+  buyExtraDevices(@Body() body: BuyExtraDevicesDto, @CurrentUserId() userId: string) {
     return this.checkout.buyExtraDevices({ userId, quantity: body.quantity, client: body.client });
   }
 
   @Post('cancel')
   @HttpCode(204)
-  cancelAutoRenew(@CurrentUser() userId: string) {
+  cancelAutoRenew(@CurrentUserId() userId: string) {
     return this.autoRenew.cancelAutoRenew(userId);
   }
 
   @Post('resume')
   @HttpCode(204)
-  resumeAutoRenew(@CurrentUser() userId: string) {
+  resumeAutoRenew(@CurrentUserId() userId: string) {
     return this.autoRenew.resumeAutoRenew(userId);
   }
 
   @Post('bind-card')
   @ZodResponse({ type: BindCardResultDto })
-  bindCard(@Body() body: BindCardDto, @CurrentUser() userId: string) {
+  bindCard(@Body() body: BindCardDto, @CurrentUserId() userId: string) {
     return this.card.bindCard(userId, body.client);
   }
 
   @Post('unbind-card')
   @HttpCode(204)
-  unbindCard(@CurrentUser() userId: string) {
+  unbindCard(@CurrentUserId() userId: string) {
     return this.card.unbindCard(userId);
   }
 

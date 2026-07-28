@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useFieldError } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, PasswordInput, SubmitButton } from '@/shared/ui';
 import { type ResetPasswordValues, resetPasswordSchema, useResetPassword } from '../model/hooks';
 
@@ -18,6 +18,7 @@ const DEFAULT_VALUES: ResetPasswordValues = { newPassword: '', confirmPassword: 
 export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useResetPassword();
 
   const {
@@ -52,6 +53,7 @@ export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => 
         <PasswordInput
           autoComplete="new-password"
           id="reset-password"
+          {...passwordLabels}
           {...register('newPassword')}
         />
       </FormField>
@@ -64,6 +66,7 @@ export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => 
         <PasswordInput
           autoComplete="new-password"
           id="reset-confirm-password"
+          {...passwordLabels}
           {...register('confirmPassword')}
         />
       </FormField>

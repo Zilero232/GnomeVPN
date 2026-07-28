@@ -2,28 +2,35 @@
 
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { clsx } from 'clsx';
-import { Copy, Download, Share2, Trash2 } from 'lucide-react';
+import { Copy, Download, QrCode, Share2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import { isTauriMobile } from '@/shared/lib';
 import { Badge, Button, CountryFlag, Text } from '@/shared/ui';
+import { useConfigMaterial } from '../../../model/hooks';
+import { ConfigQrDialog } from '../ConfigQrDialog';
 
 import s from './ConfigRow.module.scss';
 
 import type { ConfigRowProps } from './ConfigRow.types';
 
-export const ConfigRow = ({
-  config,
-  isPending,
-  isBlocked = false,
-  onCopy,
-  onRedownload,
-  onRevoke,
-}: ConfigRowProps) => {
+export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: ConfigRowProps) => {
   const t = useTranslations('configs');
+  const { content, isPending, download, copyToClipboard, prepareQr } = useConfigMaterial({
+    config,
+  });
+  const [isQrOpen, setIsQrOpen] = useState(false);
 
   const isWireguard = config.protocol === TUNNEL_PROTOCOL.wireguard;
   const ShareOrDownload = isTauriMobile() ? Share2 : Download;
+
+  const isBusy = isPending || isRevoking;
+
+  const openQr = () => {
+    setIsQrOpen(true);
+    prepareQr();
+  };
 
   return (
     <div className={clsx(s.root, isBlocked && s.blocked)}>
@@ -50,23 +57,33 @@ export const ConfigRow = ({
       </div>
 
       <div className={s.actions}>
+        <Button
+          aria-label={t('qr')}
+          disabled={isBusy || isBlocked}
+          size="icon"
+          variant="ghost"
+          onClick={openQr}
+        >
+          <QrCode aria-hidden size={15} />
+        </Button>
+
         {isWireguard ? (
           <Button
             aria-label={t(isTauriMobile() ? 'share' : 'redownload')}
-            disabled={isPending || isBlocked}
+            disabled={isBusy || isBlocked}
             size="icon"
             variant="ghost"
-            onClick={onRedownload}
+            onClick={download}
           >
             <ShareOrDownload aria-hidden size={15} />
           </Button>
         ) : (
           <Button
             aria-label={t('copy')}
-            disabled={isPending || isBlocked}
+            disabled={isBusy || isBlocked}
             size="icon"
             variant="ghost"
-            onClick={onCopy}
+            onClick={copyToClipboard}
           >
             <Copy aria-hidden size={15} />
           </Button>
@@ -74,7 +91,7 @@ export const ConfigRow = ({
 
         <Button
           aria-label={t('revoke')}
-          disabled={isPending}
+          disabled={isBusy}
           size="icon"
           variant="ghost"
           onClick={onRevoke}
@@ -82,6 +99,13 @@ export const ConfigRow = ({
           <Trash2 aria-hidden size={15} />
         </Button>
       </div>
+
+      <ConfigQrDialog
+        config={config}
+        content={content}
+        isOpen={isQrOpen}
+        onOpenChange={setIsQrOpen}
+      />
     </div>
   );
 };

@@ -37,7 +37,7 @@ export type CreatedPeer = {
   wgPrivateKey?: string;
 };
 
-export type IssueWireguardPeerInput = {
+export type CreateWireguardClientInput = {
   node: PeerNode;
   nodeId: string;
   email: string;
@@ -54,7 +54,7 @@ export type FindPeersInput = {
   name?: string;
 };
 
-export type ReleaseManyResult = {
-  released: number;
-  kept: number;
+export type BulkPeerResult = {
+  succeeded: number;
+  failed: number;
 };

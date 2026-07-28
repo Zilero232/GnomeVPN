@@ -8,14 +8,14 @@ import { WG } from '../config';
 import { generateWireguardKeys, nextWireguardIp, PEER_REF_SELECT, peerClientName } from '../lib';
 
 import type {
+  BulkPeerResult,
   CreatedPeer,
+  CreateWireguardClientInput,
   DiscardPeerInput,
   FindPeersInput,
   IssueAndPersistInput,
   IssuePeerInput,
-  IssueWireguardPeerInput,
   PeerRef,
-  ReleaseManyResult,
 } from '../peers.service.types';
 
 @Injectable()
@@ -23,6 +23,10 @@ export class PeersService {
   private readonly logger = new Logger(PeersService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async findRefs(where: FindPeersInput): Promise<PeerRef[]> {
+    return this.prisma.peer.findMany({ where, select: PEER_REF_SELECT });
+  }
 
   async issueAndPersist({ persist, ...input }: IssueAndPersistInput): Promise<CreatedPeer> {
     const created = await this.issue(input);
@@ -53,7 +57,7 @@ export class PeersService {
         throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard needs a node');
       }
 
-      return this.issueWireguard({ node, nodeId, email });
+      return this.createWireguardClient({ node, nodeId, email });
     }
 
     try {
@@ -76,11 +80,11 @@ export class PeersService {
     return rows.map((row) => row.wgAssignedIp).filter((ip): ip is string => Boolean(ip));
   }
 
-  private async issueWireguard({
+  private async createWireguardClient({
     node,
     nodeId,
     email,
-  }: IssueWireguardPeerInput): Promise<CreatedPeer> {
+  }: CreateWireguardClientInput): Promise<CreatedPeer> {
     if (!node.wgPublicKey) {
       throw new AppServiceUnavailableException(
         'NODE_UNAVAILABLE',
@@ -138,28 +142,28 @@ export class PeersService {
   }
 
   async release(peer: PeerRef): Promise<boolean> {
-    return this.onNode(peer, (client) => client.removePeer({ email: peerClientName(peer) }));
+    return this.onNode(peer, (client) => client.deleteClient(peerClientName(peer)));
   }
 
   async setEnabled(peer: PeerRef, enabled: boolean): Promise<boolean> {
     return this.onNode(peer, (client) =>
-      client.setPeerEnabled({ email: peerClientName(peer), enabled }),
+      client.setClientEnabled({ email: peerClientName(peer), enabled }),
     );
   }
 
-  async setEnabledMany(peers: PeerRef[], enabled: boolean): Promise<ReleaseManyResult> {
-    let kept = 0;
+  async setEnabledMany(peers: PeerRef[], enabled: boolean): Promise<BulkPeerResult> {
+    let failed = 0;
 
     for (const peer of peers) {
       if (!(await this.setEnabled(peer, enabled))) {
-        kept += 1;
+        failed += 1;
       }
     }
 
-    return { released: peers.length - kept, kept };
+    return { succeeded: peers.length - failed, failed };
   }
 
-  async releaseMany(peers: PeerRef[]): Promise<ReleaseManyResult> {
+  async releaseMany(peers: PeerRef[]): Promise<BulkPeerResult> {
     const released: string[] = [];
 
     for (const peer of peers) {
@@ -170,17 +174,13 @@ export class PeersService {
 
     await this.remove(released);
 
-    return { released: released.length, kept: peers.length - released.length };
+    return { succeeded: released.length, failed: peers.length - released.length };
   }
 
   async discard({ node, email }: DiscardPeerInput): Promise<void> {
     await xrayClientForNode(node)
-      .removePeer({ email })
+      .deleteClient(email)
       .catch(() => undefined);
-  }
-
-  async findRefs(where: FindPeersInput): Promise<PeerRef[]> {
-    return this.prisma.peer.findMany({ where, select: PEER_REF_SELECT });
   }
 
   async remove(ids: string[]): Promise<void> {

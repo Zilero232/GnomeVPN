@@ -5,5 +5,4 @@ export type {
   PanelInbound,
   PanelResponse,
   PanelServerStatus,
-  PanelTraffic,
 } from './panel-client.types';
