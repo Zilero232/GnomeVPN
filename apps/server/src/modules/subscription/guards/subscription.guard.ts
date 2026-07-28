@@ -1,6 +1,6 @@
 import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
 
-import { AppPaymentRequiredException } from '../../../common/exceptions';
+import { AppPaymentRequiredException, AppUnauthorizedException } from '../../../common/exceptions';
 import { SubscriptionService } from '../services';
 
 import type { UserSession } from '@thallesp/nestjs-better-auth';
@@ -11,7 +11,12 @@ export class SubscriptionGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<{ session?: UserSession }>();
-    const userId = request.session?.user.id ?? '';
+    const userId = request.session?.user.id;
+
+    if (!userId) {
+      throw new AppUnauthorizedException('UNAUTHORIZED', 'Authentication required');
+    }
+
     const hasAccess = await this.subscription.hasActiveAccess(userId);
 
     if (!hasAccess) {

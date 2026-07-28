@@ -270,6 +270,21 @@ export class XrayClient {
         client.publicKey === peer.publicKey ||
         client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
 
+      const evicted = clients.filter(
+        (client) => client.email !== peer.email && conflictsWithPeer(client),
+      );
+
+      if (evicted.length > 0) {
+        XrayClient.logger.error(
+          `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`,
+        );
+
+        throw new AppServiceUnavailableException(
+          'NODE_UNAVAILABLE',
+          'wireguard client collision on the node',
+        );
+      }
+
       const kept = clients.filter((client) => !conflictsWithPeer(client));
 
       await this.writeWireguardClients([...kept, peer]);
