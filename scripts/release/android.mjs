@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } fro
 import { join } from 'node:path';
 
 import { requireEnv } from '../lib/env.mjs';
-import { $, reporter, requireGh, workspace } from '../lib/shell.mjs';
+import { $, isWindows, reporter, requireGh, workspace } from '../lib/shell.mjs';
 import { releaseTag, releaseVersion } from './version.mjs';
 
 const log = reporter('release:android');
@@ -148,5 +148,8 @@ log.step(`upload apk + aab to ${tag}`);
 await $`${gh} release upload ${tag} ${named.map((file) => file.to)} --clobber`;
 
 log.info(`android published to ${tag}`);
+
+log.step('stop the gradle daemon so the process can exit');
+await $`${join(gen, isWindows ? 'gradlew.bat' : 'gradlew')} --stop`.cwd(gen).nothrow().quiet();
 
 process.exit(0);
