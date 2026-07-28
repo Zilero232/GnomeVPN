@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useErrorMessage, useFieldError } from '@/entities/app/locale';
+import { useErrorMessage, useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { useChangePassword } from '@/entities/auth/user';
 import { FormField, PasswordInput, SubmitButton } from '@/shared/ui';
 
@@ -23,6 +23,7 @@ const DEFAULT_VALUES: ChangePasswordValues = {
 export const ChangePasswordForm = () => {
   const t = useTranslations('account.profile');
   const fieldError = useFieldError();
+  const passwordLabels = usePasswordLabels();
   const errorMessage = useErrorMessage();
 
   const { isPending, mutate } = useChangePassword();
@@ -58,6 +59,7 @@ export const ChangePasswordForm = () => {
         <PasswordInput
           autoComplete="current-password"
           id="profile-current-password"
+          {...passwordLabels}
           {...register('currentPassword')}
         />
       </FormField>
@@ -72,6 +74,7 @@ export const ChangePasswordForm = () => {
         <PasswordInput
           autoComplete="new-password"
           id="profile-new-password"
+          {...passwordLabels}
           {...register('newPassword')}
         />
       </FormField>
@@ -85,6 +88,7 @@ export const ChangePasswordForm = () => {
         <PasswordInput
           autoComplete="new-password"
           id="profile-confirm-password"
+          {...passwordLabels}
           {...register('confirmPassword')}
         />
       </FormField>

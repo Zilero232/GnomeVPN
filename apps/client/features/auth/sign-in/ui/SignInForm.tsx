@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useFieldError } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
 import { type SignInValues, signInSchema, useSignIn } from '../model/use-sign-in';
 
@@ -18,6 +18,7 @@ const DEFAULT_VALUES: SignInValues = { email: '', password: '' };
 export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useSignIn();
 
   const {
@@ -49,6 +50,7 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
         <PasswordInput
           autoComplete="current-password"
           id="signin-password"
+          {...passwordLabels}
           {...register('password')}
         />
       </FormField>
