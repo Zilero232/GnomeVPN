@@ -78,10 +78,9 @@ const findArtifact = (extension) => {
       return entry.isDirectory() ? walk(path) : [path];
     });
 
-  const universal = walk(gen).filter(
-    (path) => path.endsWith(extension) && /universal.*release/i.test(path),
-  );
-  const release = walk(gen).filter((path) => path.endsWith(extension) && /release/i.test(path));
+  const isFinal = (path) => path.endsWith(extension) && /[/\\]outputs[/\\]/.test(path);
+  const universal = walk(gen).filter((path) => isFinal(path) && /universal.*release/i.test(path));
+  const release = walk(gen).filter((path) => isFinal(path) && /release/i.test(path));
   const match = universal[0] ?? release[0];
 
   if (!match) {
