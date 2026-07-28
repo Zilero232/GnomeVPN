@@ -34,24 +34,24 @@ export class ConfigAccessService {
 
   async revokeAll(userId: string): Promise<void> {
     const rows = await this.peers.findRefs({ userId, kind: 'config' });
-    const { kept } = await this.peers.releaseMany(rows);
+    const { failed } = await this.peers.releaseMany(rows);
 
-    if (kept > 0) {
-      this.logger.warn(`Kept ${kept} config row(s) for ${userId}: peers still live`);
+    if (failed > 0) {
+      this.logger.warn(`Kept ${failed} config row(s) for ${userId}: peers still live`);
     }
   }
 
   async setEnabledAll(userId: string, enabled: boolean): Promise<void> {
     const rows = await this.peers.findRefs({ userId, kind: 'config' });
 
-    const kept = await retryUntilCleared({
+    const failed = await retryUntilCleared({
       ...PEER_RETRY,
       run: () => this.peers.setEnabledMany(rows, enabled),
     });
 
-    if (kept > 0) {
+    if (failed > 0) {
       this.logger.warn(
-        `Could not toggle ${kept} config peer(s) after ${PEER_RETRY.attempts} tries`,
+        `Could not toggle ${failed} config peer(s) after ${PEER_RETRY.attempts} tries`,
       );
     }
   }

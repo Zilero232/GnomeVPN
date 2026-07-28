@@ -6,15 +6,16 @@ import { PrismaService } from '../../../core';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
-import { HYSTERIA2_FILE_EXTENSION, WIREGUARD_FILE_EXTENSION } from '../config';
-import { configFileName, renderConfigFile, renderWireguardConfigFile } from '../lib';
+import { renderConfig } from '../lib';
 
 import type { DownloadedConfig } from '@gnomevpn/schemas';
 import type {
-  ConfigContentInput,
+  BuildConfigFileInput,
   ConfigFile,
-  ConfigFileNameInput,
+  ConfigPeerKey,
   IssueConfigInput,
+  PersistConfigPeerInput,
+  RebuildWireguardInput,
 } from '../configs.service.types';
 
 @Injectable()
@@ -54,21 +55,22 @@ export class ConfigIssueService {
   async issue({ userId, nodeId, name, protocol }: IssueConfigInput): Promise<ConfigFile> {
     const node = await this.nodes.getNodeForConnect(nodeId);
 
-    const findExisting = () =>
-      this.prisma.peer.findUnique({
-        where: {
-          userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
-        },
-      });
-
     const [existing, { configLimit }, count] = await Promise.all([
-      findExisting(),
+      this.findConfigPeer({ userId, nodeId, name, protocol }),
       this.subscription.getLimits(userId),
       this.prisma.peer.count({ where: { userId, kind: 'config' } }),
     ]);
 
     if (!existing && count >= configLimit) {
       throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${configLimit} configs`);
+    }
+
+    if (protocol === TUNNEL_PROTOCOL.wireguard && existing) {
+      const reused = this.rebuildWireguardConfig({ node, name, peer: existing });
+
+      if (reused) {
+        return reused;
+      }
     }
 
     const created = await this.peers.issueAndPersist({
@@ -79,67 +81,89 @@ export class ConfigIssueService {
       protocol,
       name,
       persist: (peer) =>
-        this.prisma.$transaction(
-          async (tx) => {
-            const current = await tx.peer.findUnique({
-              where: {
-                userId_kind_name_nodeId_protocol: {
-                  userId,
-                  kind: 'config',
-                  name,
-                  nodeId,
-                  protocol,
-                },
-              },
-            });
-
-            const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
-
-            if (current) {
-              await tx.peer.update({ where: { id: current.id }, data });
-
-              return;
-            }
-
-            if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
-              throw new AppBadRequestException(
-                'CONFIG_LIMIT_REACHED',
-                `At most ${configLimit} configs`,
-              );
-            }
-
-            await tx.peer.create({
-              data: { userId, kind: 'config', protocol, name, ...data },
-            });
-          },
-          { isolationLevel: 'Serializable' },
-        ),
+        this.persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer }),
     });
 
-    const config = buildTunnelConfig({
+    return this.buildFile({
       node,
+      name,
       protocol,
       auth: created.nodeCredential,
       wgPrivateKey: created.wgPrivateKey,
       wgAssignedIp: created.wgAssignedIp,
     });
-
-    return {
-      fileName: this.fileName({ country: node.country, name, protocol }),
-      content: this.render({ config, deviceName: name, country: node.country, protocol }),
-    };
   }
 
-  private fileName({ country, name, protocol }: ConfigFileNameInput): string {
-    const extension =
-      protocol === TUNNEL_PROTOCOL.wireguard ? WIREGUARD_FILE_EXTENSION : HYSTERIA2_FILE_EXTENSION;
-
-    return `${configFileName({ country, deviceName: name })}.${extension}`;
+  private findConfigPeer({ userId, nodeId, name, protocol }: ConfigPeerKey) {
+    return this.prisma.peer.findUnique({
+      where: {
+        userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
+      },
+    });
   }
 
-  private render({ config, deviceName, country, protocol }: ConfigContentInput): string {
-    return protocol === TUNNEL_PROTOCOL.wireguard
-      ? renderWireguardConfigFile({ config })
-      : renderConfigFile({ config, deviceName, country });
+  private rebuildWireguardConfig({ node, name, peer }: RebuildWireguardInput): ConfigFile | null {
+    if (!peer.wgPrivateKey || !peer.wgAssignedIp) {
+      return null;
+    }
+
+    return this.buildFile({
+      node,
+      name,
+      protocol: TUNNEL_PROTOCOL.wireguard,
+      auth: peer.nodeCredential,
+      wgPrivateKey: peer.wgPrivateKey,
+      wgAssignedIp: peer.wgAssignedIp,
+    });
+  }
+
+  private persistConfigPeer({
+    userId,
+    nodeId,
+    name,
+    protocol,
+    configLimit,
+    peer,
+  }: PersistConfigPeerInput): Promise<void> {
+    const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
+
+    return this.prisma.$transaction(
+      async (tx) => {
+        const current = await tx.peer.findUnique({
+          where: {
+            userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
+          },
+        });
+
+        if (current) {
+          await tx.peer.update({ where: { id: current.id }, data });
+
+          return;
+        }
+
+        if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
+          throw new AppBadRequestException(
+            'CONFIG_LIMIT_REACHED',
+            `At most ${configLimit} configs`,
+          );
+        }
+
+        await tx.peer.create({ data: { userId, kind: 'config', protocol, name, ...data } });
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
+
+  private buildFile({
+    node,
+    name,
+    protocol,
+    auth,
+    wgPrivateKey,
+    wgAssignedIp,
+  }: BuildConfigFileInput): ConfigFile {
+    const config = buildTunnelConfig({ node, protocol, auth, wgPrivateKey, wgAssignedIp });
+
+    return renderConfig({ config, protocol, country: node.country, deviceName: name });
   }
 }

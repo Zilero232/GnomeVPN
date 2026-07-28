@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Post, Res, UseGuards } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUserId } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import { CONFIG_FILE_CONTENT_TYPE } from './config';
 import { DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/configs.dto';
@@ -19,7 +19,7 @@ export class ConfigsController {
 
   @Get()
   @ZodResponse({ type: [DownloadedConfigDto] })
-  list(@CurrentUser() userId: string) {
+  list(@CurrentUserId() userId: string) {
     return this.configIssue.list(userId);
   }
 
@@ -27,7 +27,7 @@ export class ConfigsController {
   @UseGuards(SubscriptionGuard)
   async issue(
     @Body() body: IssueConfigDto,
-    @CurrentUser() userId: string,
+    @CurrentUserId() userId: string,
     @Res() res: Response,
   ): Promise<void> {
     const file = await this.configIssue.issue({
@@ -45,7 +45,7 @@ export class ConfigsController {
 
   @Delete()
   @HttpCode(204)
-  async revoke(@Body() body: RevokeConfigDto, @CurrentUser() userId: string) {
+  async revoke(@Body() body: RevokeConfigDto, @CurrentUserId() userId: string) {
     await this.configAccess.revoke({ userId, id: body.id });
   }
 }

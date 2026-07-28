@@ -20,8 +20,8 @@ model Peer {
   nodeCredential String @map("node_credential")
 
   wgAssignedIp String? @map("wg_assigned_ip")
+  wgPrivateKey String? @map("wg_private_key")
 
-  trafficBytes BigInt    @default(0) @map("traffic_bytes")
   lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(3)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 

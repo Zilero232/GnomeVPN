@@ -42,6 +42,7 @@
     "next": "^16.2.11",
     "next-intl": "^4.13.4",
     "pretty-bytes": "^7.1.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.81.0",

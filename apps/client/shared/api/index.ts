@@ -14,7 +14,7 @@ export {
   resumeAutoRenew,
   unbindCard,
 } from './billing';
-export { issueConfig, listConfigs, revokeConfig } from './configs';
+export { issueConfig, listConfigs, readConfigText, revokeConfig } from './configs';
 export { ApiError, api, apiErrorCode, toApiError } from './http';
 export { listNodeEndpoints, listNodes } from './nodes';
 export { queryClient } from './query-client';
