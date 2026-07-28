@@ -15,28 +15,25 @@ import org.json.JSONObject
 
 data class TunnelSnapshot(
     val server: String,
-    val port: Int,
-    val auth: String,
-    val serverName: String,
-    val insecure: Boolean,
     val dns: List<String>,
+    val tunAddress: String,
+    val configJson: String,
 ) {
-    fun toJson(): String = JSONObject().apply {
+    fun toJson(): String = configJson
+
+    fun toStorageJson(): String = JSONObject().apply {
         put(FIELD_SERVER, server)
-        put(FIELD_PORT, port)
-        put(FIELD_AUTH, auth)
-        put(FIELD_SERVER_NAME, serverName)
-        put(FIELD_INSECURE, insecure)
         put(FIELD_DNS, JSONArray(dns))
+        put(FIELD_TUN_ADDRESS, tunAddress)
+        put(FIELD_CONFIG_JSON, configJson)
     }.toString()
 
     companion object {
         private const val FIELD_SERVER = "server"
-        private const val FIELD_PORT = "port"
-        private const val FIELD_AUTH = "auth"
-        private const val FIELD_SERVER_NAME = "serverName"
-        private const val FIELD_INSECURE = "insecure"
         private const val FIELD_DNS = "dns"
+        private const val FIELD_TUN_ADDRESS = "tunAddress"
+        private const val FIELD_CONFIG_JSON = "configJson"
+        private const val DEFAULT_TUN_ADDRESS = "10.8.0.2"
 
         fun fromJson(raw: String): TunnelSnapshot? = runCatching {
             val json = JSONObject(raw)
@@ -44,11 +41,9 @@ data class TunnelSnapshot(
 
             TunnelSnapshot(
                 server = json.getString(FIELD_SERVER),
-                port = json.getInt(FIELD_PORT),
-                auth = json.getString(FIELD_AUTH),
-                serverName = json.getString(FIELD_SERVER_NAME),
-                insecure = json.optBoolean(FIELD_INSECURE, true),
                 dns = (0 until dns.length()).map(dns::getString),
+                tunAddress = json.optString(FIELD_TUN_ADDRESS, DEFAULT_TUN_ADDRESS),
+                configJson = json.optString(FIELD_CONFIG_JSON, ""),
             )
         }.getOrNull()
     }
@@ -66,7 +61,7 @@ object TunnelStore {
     private const val IV_BYTES = 12
 
     fun save(context: Context, snapshot: TunnelSnapshot) {
-        val sealed = runCatching { seal(snapshot.toJson()) }.getOrElse { error ->
+        val sealed = runCatching { seal(snapshot.toStorageJson()) }.getOrElse { error ->
             Log.w(TAG, "cannot seal the tunnel config", error)
 
             return
@@ -118,15 +113,13 @@ object TunnelStore {
 
     private fun open(sealed: String): String {
         val payload = Base64.decode(sealed, Base64.NO_WRAP)
+        val iv = payload.copyOfRange(0, IV_BYTES)
+        val ciphertext = payload.copyOfRange(IV_BYTES, payload.size)
+
         val cipher = Cipher.getInstance(TRANSFORMATION)
+        cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(TAG_BITS, iv))
 
-        cipher.init(
-            Cipher.DECRYPT_MODE,
-            key(),
-            GCMParameterSpec(TAG_BITS, payload, 0, IV_BYTES),
-        )
-
-        return String(cipher.doFinal(payload, IV_BYTES, payload.size - IV_BYTES))
+        return String(cipher.doFinal(ciphertext))
     }
 
     private fun key(): SecretKey {

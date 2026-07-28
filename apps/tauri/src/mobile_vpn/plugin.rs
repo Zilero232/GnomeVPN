@@ -1,25 +1,31 @@
 use std::path::PathBuf;
 
-use gnomevpn_ipc::TunnelConfig;
+use gnomevpn_ipc::{TunnelConfig, TunnelProtocol};
 use serde::{Deserialize, Serialize};
 use tauri::plugin::{Builder, PluginApi, PluginHandle, TauriPlugin};
 use tauri::{Manager, Runtime};
 
+use super::engine;
 use super::MobileVpnError;
 
 const PLUGIN_NAME: &str = "gnomevpn";
 const PLUGIN_IDENTIFIER: &str = "ru.gnomevpn.app";
 const PLUGIN_CLASS: &str = "VpnPlugin";
 
+fn tun_address(config: &TunnelConfig) -> String {
+    match (config.protocol, config.wireguard.as_ref()) {
+        (TunnelProtocol::Wireguard, Some(wireguard)) => wireguard.address.clone(),
+        _ => engine::assigned_ip(config),
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StartArgs {
     server: String,
-    port: u16,
-    auth: String,
-    server_name: String,
-    insecure: bool,
     dns: Vec<String>,
+    tun_address: String,
+    config_json: String,
 }
 
 #[derive(Deserialize)]
@@ -87,16 +93,17 @@ impl<R: Runtime> VpnPlugin<R> {
     }
 
     pub fn start(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
+        let config_json = serde_json::to_string(config)
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
         self.0
             .run_mobile_plugin::<()>(
                 "start",
                 StartArgs {
                     server: config.server.clone(),
-                    port: config.port,
-                    auth: config.auth.clone(),
-                    server_name: config.server_name.clone(),
-                    insecure: config.insecure,
                     dns: config.dns.clone(),
+                    tun_address: tun_address(config),
+                    config_json,
                 },
             )
             .map_err(|error| MobileVpnError::Service(error.to_string()))

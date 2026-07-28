@@ -1,8 +1,16 @@
 {
   "$schema": "../gen/schemas/mobile-schema.json",
   "identifier": "mobile",
-  "description": "Display cutout insets — Android only",
+  "description": "Display cutout insets and config downloads — mobile only",
   "windows": ["main"],
   "platforms": ["android", "iOS"],
-  "permissions": ["safe-area-insets-css:default"]
+  "permissions": [
+    "safe-area-insets-css:default",
+    "fs:allow-write-file",
+    "fs:allow-mkdir",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$DOWNLOAD/**" }, { "path": "$DOCUMENT/**" }]
+    }
+  ]
 }

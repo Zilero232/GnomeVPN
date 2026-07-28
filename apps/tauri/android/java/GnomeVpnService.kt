@@ -53,7 +53,7 @@ class GnomeVpnService : VpnService() {
 
         return try {
             val dns = snapshot.dns.takeIf { it.isNotEmpty() }?.toTypedArray() ?: DEFAULT_DNS
-            val fd = openDescriptor(dns, snapshot.server)
+            val fd = openDescriptor(dns, snapshot.server, snapshot.tunAddress)
 
             startEngine(snapshot.toJson(), fd, TunnelStore.autoReconnect(this))
 
@@ -90,24 +90,20 @@ class GnomeVpnService : VpnService() {
                 buildNotification(),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED,
             )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                buildNotification(),
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-            )
         } else {
             startForeground(NOTIFICATION_ID, buildNotification())
         }
     }
 
-    private fun openDescriptor(dns: Array<String>, server: String): Int {
+    private fun openDescriptor(dns: Array<String>, server: String, tunAddress: String): Int {
         startVpnForeground()
+
+        val interfaceAddress = parseInterfaceAddress(tunAddress)
 
         val builder = Builder()
             .setSession(SESSION)
             .setMtu(MTU)
-            .addAddress(TUN_ADDRESS, TUN_PREFIX)
+            .addAddress(interfaceAddress.first, interfaceAddress.second)
 
         for (route in routesExcluding(server)) {
             builder.addRoute(route.first, route.second)
@@ -256,6 +252,14 @@ class GnomeVpnService : VpnService() {
         }
 
         return routes
+    }
+
+    private fun parseInterfaceAddress(address: String): Pair<String, Int> {
+        val parts = address.split('/', limit = 2)
+        val host = parts.firstOrNull()?.takeIf { it.isNotBlank() } ?: TUN_ADDRESS
+        val prefix = parts.getOrNull(1)?.toIntOrNull()?.takeIf { it in 0..32 } ?: TUN_PREFIX
+
+        return host to prefix
     }
 
     private fun intToIp(value: Long): String =
@@ -446,6 +450,17 @@ class GnomeVpnService : VpnService() {
         }
 
         @JvmStatic
+        fun start(context: Context) {
+            val intent = Intent(context, GnomeVpnService::class.java)
+                .setAction(ACTION_START_FROM_TILE)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+
         fun awaitRunning(context: Context): Boolean {
             val deadline = SystemClock.elapsedRealtime() + START_TIMEOUT_SECONDS * 1000
 

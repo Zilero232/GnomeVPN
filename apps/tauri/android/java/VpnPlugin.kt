@@ -17,11 +17,9 @@ import kotlin.concurrent.thread
 @InvokeArg
 class StartArgs {
     var server: String = ""
-    var port: Int = 0
-    var auth: String = ""
-    var serverName: String = ""
-    var insecure: Boolean = true
     var dns: List<String> = emptyList()
+    var tunAddress: String = ""
+    var configJson: String = ""
 }
 
 @InvokeArg
@@ -105,19 +103,14 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
             activity,
             TunnelSnapshot(
                 server = args.server,
-                port = args.port,
-                auth = args.auth,
-                serverName = args.serverName,
-                insecure = args.insecure,
                 dns = args.dns,
+                tunAddress = args.tunAddress,
+                configJson = args.configJson,
             ),
         )
 
-        val intent = Intent(activity, GnomeVpnService::class.java)
-            .setAction(GnomeVpnService.ACTION_START_FROM_TILE)
-
         try {
-            activity.startForegroundService(intent)
+            GnomeVpnService.start(activity)
         } catch (error: Throwable) {
             invoke.reject("cannot start the vpn service: ${error.message}")
 

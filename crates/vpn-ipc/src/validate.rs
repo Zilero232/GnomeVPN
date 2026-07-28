@@ -1,10 +1,12 @@
 use std::net::IpAddr;
 
-use crate::types::{SplitConfig, TunnelConfig};
+use crate::types::{SplitConfig, TunnelConfig, TunnelProtocol, WireguardConfig};
 
 const MAX_HOST_LEN: usize = 253;
 
 const MAX_AUTH_LEN: usize = 256;
+
+const MAX_KEY_LEN: usize = 128;
 
 const MAX_SPLIT_APPS: usize = 128;
 
@@ -89,6 +91,16 @@ fn check_dns(values: &[String]) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn is_windows_drive_path(path: &str) -> bool {
+    let mut chars = path.chars();
+
+    chars
+        .next()
+        .is_some_and(|drive| drive.is_ascii_alphabetic())
+        && chars.next() == Some(':')
+        && chars.next() == Some('\\')
+}
+
 fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), ValidationError> {
     if paths.len() > MAX_SPLIT_APPS {
         return Err(reject(field, "too many entries"));
@@ -107,11 +119,7 @@ fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), Valid
             return Err(reject(field, format!("suspicious path: {path}")));
         }
 
-        let is_absolute = path.starts_with(r"\\")
-            || path
-                .as_bytes()
-                .get(1..3)
-                .is_some_and(|prefix| prefix == br":\");
+        let is_absolute = path.starts_with(r"\\") || is_windows_drive_path(path);
 
         if !is_absolute {
             return Err(reject(field, format!("not an absolute path: {path}")));
@@ -160,6 +168,35 @@ pub fn validate_split(split: &SplitConfig) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn check_key(field: &'static str, value: &str) -> Result<(), ValidationError> {
+    if value.is_empty() {
+        return Err(reject(field, "must not be empty"));
+    }
+
+    if value.len() > MAX_KEY_LEN {
+        return Err(reject(field, "too long"));
+    }
+
+    Ok(())
+}
+
+fn validate_wireguard(wireguard: &WireguardConfig) -> Result<(), ValidationError> {
+    check_key("wireguard.privateKey", &wireguard.private_key)?;
+    check_key("wireguard.peerPublicKey", &wireguard.peer_public_key)?;
+
+    if let Some(pre_shared_key) = &wireguard.pre_shared_key {
+        check_key("wireguard.preSharedKey", pre_shared_key)?;
+    }
+
+    if !is_valid_cidr(&wireguard.address) {
+        return Err(reject("wireguard.address", "not an ip or cidr"));
+    }
+
+    validate_ip_cidrs("wireguard.allowedIps", &wireguard.allowed_ips)?;
+
+    Ok(())
+}
+
 pub fn validate_tunnel_config(config: &TunnelConfig) -> Result<(), ValidationError> {
     check_host("server", &config.server)?;
 
@@ -167,9 +204,22 @@ pub fn validate_tunnel_config(config: &TunnelConfig) -> Result<(), ValidationErr
         return Err(reject("port", "must not be zero"));
     }
 
-    check_auth(&config.auth)?;
-    check_host("serverName", &config.server_name)?;
     check_dns(&config.dns)?;
+
+    match config.protocol {
+        TunnelProtocol::Hysteria2 => {
+            check_auth(&config.auth)?;
+            check_host("serverName", &config.server_name)?;
+        }
+        TunnelProtocol::Wireguard => {
+            let wireguard = config
+                .wireguard
+                .as_ref()
+                .ok_or_else(|| reject("wireguard", "must be present"))?;
+
+            validate_wireguard(wireguard)?;
+        }
+    }
 
     Ok(())
 }

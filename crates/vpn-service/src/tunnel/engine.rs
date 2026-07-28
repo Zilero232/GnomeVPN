@@ -93,11 +93,10 @@ pub async fn run_tunnel(
     mut stop: oneshot::Receiver<()>,
 ) -> Result<(), TunnelError> {
     log::info!(
-        "connect requested: server={}:{} protocol=hysteria2 sni={} insecure={} dns={:?} split_rules={}",
+        "connect requested: server={}:{} protocol={} dns={:?} split_rules={}",
         config.server,
         config.port,
-        config.server_name,
-        config.insecure,
+        config.protocol.tag(),
         config.dns,
         !split.is_empty()
     );

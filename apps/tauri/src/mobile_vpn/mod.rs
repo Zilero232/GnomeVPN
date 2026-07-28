@@ -4,6 +4,7 @@ pub mod engine;
 pub mod jni;
 pub mod plugin;
 pub mod state;
+pub mod wireguard;
 
 #[derive(Debug, thiserror::Error)]
 pub enum MobileVpnError {
@@ -13,6 +14,8 @@ pub enum MobileVpnError {
     Hysteria(String),
     #[error("tunnel error: {0}")]
     Tunnel(String),
+    #[error("wireguard error: {0}")]
+    Wireguard(String),
 }
 
 impl serde::Serialize for MobileVpnError {

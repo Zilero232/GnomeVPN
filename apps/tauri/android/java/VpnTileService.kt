@@ -43,10 +43,7 @@ class VpnTileService : TileService() {
             return
         }
 
-        startForegroundService(
-            Intent(this, GnomeVpnService::class.java)
-                .setAction(GnomeVpnService.ACTION_START_FROM_TILE),
-        )
+        GnomeVpnService.start(this)
 
         render(isActive = true)
     }

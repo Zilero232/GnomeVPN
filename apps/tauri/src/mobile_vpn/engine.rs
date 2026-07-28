@@ -3,11 +3,12 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::Mutex;
 
-use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig};
+use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig, TunnelProtocol};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
 use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 
+use super::wireguard;
 use super::MobileVpnError;
 
 const MTU: u16 = 1420;
@@ -58,8 +59,11 @@ fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
     Ok(path)
 }
 
-pub fn assigned_ip() -> &'static str {
-    TUN_ADDRESS
+pub fn assigned_ip(config: &TunnelConfig) -> String {
+    match (config.protocol, config.wireguard.as_ref()) {
+        (TunnelProtocol::Wireguard, Some(wireguard)) => wireguard::assigned_ip(wireguard),
+        _ => TUN_ADDRESS.to_string(),
+    }
 }
 
 fn free_loopback_port() -> Result<u16, MobileVpnError> {
@@ -238,6 +242,27 @@ async fn watch_hysteria(
 }
 
 async fn run_attempt<F>(
+    native_lib_dir: &Path,
+    data_dir: &Path,
+    config: &TunnelConfig,
+    fd: i32,
+    cancellation: CancellationToken,
+    on_phase: &mut F,
+) -> Result<(), MobileVpnError>
+where
+    F: FnMut(Phase) + Send,
+{
+    match config.protocol {
+        TunnelProtocol::Hysteria2 => {
+            run_hysteria_attempt(native_lib_dir, data_dir, config, fd, cancellation, on_phase).await
+        }
+        TunnelProtocol::Wireguard => {
+            wireguard::run_wireguard(config, fd, cancellation, on_phase).await
+        }
+    }
+}
+
+async fn run_hysteria_attempt<F>(
     native_lib_dir: &Path,
     data_dir: &Path,
     config: &TunnelConfig,

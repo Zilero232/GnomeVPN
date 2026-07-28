@@ -1,12 +1,14 @@
 use serde::Serialize;
 
-use crate::types::{SplitConfig, SplitMode, TunnelConfig};
+use crate::types::{SplitConfig, SplitMode, TunnelConfig, TunnelProtocol};
 
 const TUNNEL_NAME: &str = "gnomevpn0";
 const TUNNEL_ADDRESS: &str = "10.8.0.2/24";
 const MTU: u32 = 1420;
 const PROXY_TAG: &str = "proxy";
 const DIRECT_TAG: &str = "direct";
+const WG_KEEPALIVE: u32 = 25;
+const DEFAULT_ALLOWED_IPS: &str = "0.0.0.0/0";
 const TUNNEL_DNS_TAG: &str = "dns-tunnel";
 const LOCAL_DNS_TAG: &str = "dns-local";
 const FALLBACK_DNS: &str = "1.1.1.1";
@@ -67,6 +69,35 @@ enum Outbound {
         kind: String,
         tag: String,
     },
+}
+
+#[derive(Serialize)]
+struct WireguardPeer {
+    address: String,
+    port: u16,
+    #[serde(rename = "public_key")]
+    public_key: String,
+    #[serde(rename = "pre_shared_key", skip_serializing_if = "Option::is_none")]
+    pre_shared_key: Option<String>,
+    #[serde(rename = "allowed_ips")]
+    allowed_ips: Vec<String>,
+    #[serde(rename = "persistent_keepalive_interval")]
+    persistent_keepalive_interval: u32,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    reserved: Vec<u8>,
+}
+
+#[derive(Serialize)]
+struct Endpoint {
+    #[serde(rename = "type")]
+    kind: String,
+    tag: String,
+    system: bool,
+    mtu: u32,
+    address: Vec<String>,
+    #[serde(rename = "private_key")]
+    private_key: String,
+    peers: Vec<WireguardPeer>,
 }
 
 #[derive(Serialize, Default)]
@@ -237,6 +268,8 @@ struct SingboxConfig {
     dns: Dns,
     inbounds: Vec<Inbound>,
     outbounds: Vec<Outbound>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    endpoints: Vec<Endpoint>,
     route: Route,
     experimental: Experimental,
 }
@@ -354,12 +387,66 @@ fn route(split: &SplitConfig) -> Route {
     }
 }
 
+fn hysteria2_proxy(config: &TunnelConfig) -> Outbound {
+    Outbound::Hysteria2 {
+        kind: "hysteria2".to_string(),
+        tag: PROXY_TAG.to_string(),
+        server: config.server.clone(),
+        server_port: config.port,
+        password: config.auth.clone(),
+        tls: Tls {
+            enabled: true,
+            server_name: config.server_name.clone(),
+            insecure: config.insecure,
+        },
+    }
+}
+
+fn wireguard_endpoint(config: &TunnelConfig) -> Option<Endpoint> {
+    let wireguard = config.wireguard.as_ref()?;
+
+    Some(Endpoint {
+        kind: "wireguard".to_string(),
+        tag: PROXY_TAG.to_string(),
+        system: false,
+        mtu: wireguard.mtu.unwrap_or(MTU),
+        address: vec![wireguard.address.clone()],
+        private_key: wireguard.private_key.clone(),
+        peers: vec![WireguardPeer {
+            address: config.server.clone(),
+            port: config.port,
+            public_key: wireguard.peer_public_key.clone(),
+            pre_shared_key: wireguard.pre_shared_key.clone(),
+            allowed_ips: if wireguard.allowed_ips.is_empty() {
+                vec![DEFAULT_ALLOWED_IPS.to_string()]
+            } else {
+                wireguard.allowed_ips.clone()
+            },
+            persistent_keepalive_interval: WG_KEEPALIVE,
+            reserved: wireguard.reserved.clone(),
+        }],
+    })
+}
+
 pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
     let SingboxConfigInput {
         config,
         split,
         cache_path,
     } = input;
+
+    let direct = Outbound::Simple {
+        kind: "direct".to_string(),
+        tag: DIRECT_TAG.to_string(),
+    };
+
+    let (outbounds, endpoints) = match config.protocol {
+        TunnelProtocol::Hysteria2 => (vec![hysteria2_proxy(config), direct], Vec::new()),
+        TunnelProtocol::Wireguard => (
+            vec![direct],
+            wireguard_endpoint(config).into_iter().collect(),
+        ),
+    };
 
     let singbox = SingboxConfig {
         log: Log {
@@ -378,24 +465,8 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
             route_exclude_address: LOCAL_NETWORKS.iter().map(|net| net.to_string()).collect(),
             stack: "gvisor".to_string(),
         }],
-        outbounds: vec![
-            Outbound::Hysteria2 {
-                kind: "hysteria2".to_string(),
-                tag: PROXY_TAG.to_string(),
-                server: config.server.clone(),
-                server_port: config.port,
-                password: config.auth.clone(),
-                tls: Tls {
-                    enabled: true,
-                    server_name: config.server_name.clone(),
-                    insecure: config.insecure,
-                },
-            },
-            Outbound::Simple {
-                kind: "direct".to_string(),
-                tag: DIRECT_TAG.to_string(),
-            },
-        ],
+        outbounds,
+        endpoints,
         route: route(split),
         experimental: Experimental {
             cache_file: CacheFile {

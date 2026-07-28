@@ -32,7 +32,7 @@ pub async fn vpn_connect<R: Runtime>(
     state.arm(cancellation.clone());
 
     let _ = on_event.send(TunnelEvent::Connected {
-        assigned_ip: engine::assigned_ip().into(),
+        assigned_ip: engine::assigned_ip(&config),
     });
 
     let handle = app.clone();
