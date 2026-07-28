@@ -101,6 +101,11 @@ export const openSystemVpnSettings = async (): Promise<void> => {
   await callRust({ command: 'vpn_open_settings', fallback: null });
 };
 
+export const shareConfigFile = async (args: {
+  fileName: string;
+  content: string;
+}): Promise<boolean> => callRust({ command: 'vpn_share_config', args, fallback: false });
+
 export const hasVpnPermission = async (): Promise<boolean> =>
   callRust({ command: 'vpn_has_permission', fallback: true });
 

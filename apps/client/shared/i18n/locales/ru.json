@@ -223,8 +223,8 @@
       "hysteria2": "Hysteria2",
       "wireguard": "WireGuard",
       "hysteria2Tag": "Рекомендуем",
-      "hysteria2Desc": "Быстрый и устойчивый к блокировкам. Лучший выбор в сетях с ограничениями. Открывается в Hiddify, Streisand или NekoBox.",
-      "wireguardDesc": "Работает везде, где разрешён UDP. Открывается в любом клиенте WireGuard или AmneziaVPN. Хороший запасной вариант."
+      "hysteria2Desc": "Быстрый и устойчивый к блокировкам. Лучший выбор в сетях с ограничениями. ПК — Hiddify или NekoBox, телефон — Hiddify или Streisand.",
+      "wireguardDesc": "Работает везде, где разрешён UDP. Хороший запасной вариант. ПК — WireSock, телефон — AmneziaVPN."
     },
     "namePlaceholder": "Телефон",
     "limitReached": "Достигнут лимит в {limit} устройств — удалите ненужное, чтобы добавить новое.",
@@ -232,12 +232,14 @@
     "create": "Создать",
     "update": "Обновить",
     "redownload": "Скачать заново",
+    "share": "Поделиться",
     "revoke": "Удалить",
     "downloaded": "{fileName} сохранён в загрузки",
     "downloadedHint": "Откройте его и вставьте ссылку в клиент",
     "savedHint": "Файл в загрузках — откройте его в клиенте",
-    "savedToDownloads": "Сохранён в «Загрузки» — импортируйте его в клиент WireGuard",
     "issued": "Ваши конфигурации",
+    "paused": "Приостановлен",
+    "expiredNotice": "Подписка закончилась — конфигурации приостановлены. Продлите её, чтобы снова включить.",
     "copy": "Скопировать ссылку",
     "copied": "Ссылка скопирована",
     "copiedHint": "Вставьте её в v2rayNG, Hiddify или Streisand"

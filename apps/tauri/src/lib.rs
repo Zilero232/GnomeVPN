@@ -99,7 +99,6 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -159,6 +158,7 @@ pub fn run() {
             mobile_vpn::commands::vpn_take_tile_request,
             mobile_vpn::commands::vpn_hide_window,
             mobile_vpn::commands::vpn_open_settings,
+            mobile_vpn::commands::vpn_share_config,
             mobile_vpn::commands::vpn_has_permission,
             mobile_vpn::commands::vpn_request_permission,
             latency::commands::vpn_probe_latency,

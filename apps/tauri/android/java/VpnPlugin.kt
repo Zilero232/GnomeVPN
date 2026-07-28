@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.TrafficStats
 import android.net.VpnService
 import androidx.activity.result.ActivityResult
+import androidx.core.content.FileProvider
 import app.tauri.annotation.ActivityCallback
 import app.tauri.annotation.Command
 import app.tauri.annotation.InvokeArg
@@ -12,6 +13,7 @@ import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
 import app.tauri.plugin.JSObject
 import app.tauri.plugin.Plugin
+import java.io.File
 import kotlin.concurrent.thread
 
 @InvokeArg
@@ -25,6 +27,12 @@ class StartArgs {
 @InvokeArg
 class AutoReconnectArgs {
     var enabled: Boolean = true
+}
+
+@InvokeArg
+class ShareConfigArgs {
+    var fileName: String = ""
+    var content: String = ""
 }
 
 @TauriPlugin
@@ -198,6 +206,37 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
 
         invoke.resolve()
+    }
+
+    @Command
+    fun shareConfig(invoke: Invoke) {
+        val args = invoke.parseArgs(ShareConfigArgs::class.java)
+
+        val shared = runCatching {
+            val dir = File(activity.cacheDir, "shared").apply { mkdirs() }
+            val file = File(dir, args.fileName)
+            file.writeText(args.content)
+
+            val uri = FileProvider.getUriForFile(
+                activity,
+                "${activity.packageName}.fileprovider",
+                file,
+            )
+
+            val send = Intent(Intent.ACTION_SEND)
+                .setType("application/octet-stream")
+                .putExtra(Intent.EXTRA_STREAM, uri)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            val chooser = Intent.createChooser(send, args.fileName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            activity.startActivity(chooser)
+        }.isSuccess
+
+        val result = JSObject()
+        result.put("shared", shared)
+        invoke.resolve(result)
     }
 
     @Command

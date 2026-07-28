@@ -49,6 +49,18 @@ struct AutoReconnectArgs {
     enabled: bool,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ShareConfigArgs {
+    file_name: String,
+    content: String,
+}
+
+#[derive(Deserialize)]
+struct ShareResult {
+    shared: bool,
+}
+
 #[derive(Deserialize)]
 struct AutoConnectResult {
     requested: bool,
@@ -161,6 +173,15 @@ impl<R: Runtime> VpnPlugin<R> {
         self.0
             .run_mobile_plugin::<()>("stop", Empty {})
             .map_err(|error| MobileVpnError::Service(error.to_string()))
+    }
+
+    pub fn share_config(&self, file_name: String, content: String) -> Result<bool, MobileVpnError> {
+        let result: ShareResult = self
+            .0
+            .run_mobile_plugin("shareConfig", ShareConfigArgs { file_name, content })
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.shared)
     }
 }
 

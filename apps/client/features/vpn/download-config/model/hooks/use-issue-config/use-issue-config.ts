@@ -19,9 +19,11 @@ export const useIssueConfig = () => {
 
       const { target, fileName } = await saveFile(download);
 
-      toast.success(t('downloaded', { fileName }), {
-        description: target === 'downloads' ? t('savedToDownloads') : t('savedHint'),
-      });
+      if (target === 'shared') {
+        return;
+      }
+
+      toast.success(t('downloaded', { fileName }), { description: t('savedHint') });
     },
     onError: toastError,
   });

@@ -223,8 +223,8 @@
       "hysteria2": "Hysteria2",
       "wireguard": "WireGuard",
       "hysteria2Tag": "Recommended",
-      "hysteria2Desc": "Fast and hard to block. Best on restricted networks. Opens in Hiddify, Streisand or NekoBox.",
-      "wireguardDesc": "Works everywhere UDP is allowed. Opens in any WireGuard or AmneziaVPN app. A good fallback."
+      "hysteria2Desc": "Fast and hard to block. Best on restricted networks. Desktop — Hiddify or NekoBox, phone — Hiddify or Streisand.",
+      "wireguardDesc": "Works everywhere UDP is allowed. A good fallback. Desktop — WireSock, phone — AmneziaVPN."
     },
     "namePlaceholder": "Phone",
     "limitReached": "You have reached the {limit} device limit — remove one to add another.",
@@ -232,12 +232,14 @@
     "create": "Create",
     "update": "Update",
     "redownload": "Download again",
+    "share": "Share",
     "revoke": "Remove",
     "downloaded": "{fileName} saved to your downloads",
     "downloadedHint": "Open it and paste the link into your client",
     "savedHint": "Check your downloads and open it in your client",
-    "savedToDownloads": "Saved to Downloads — import it in your WireGuard client",
     "issued": "Your configs",
+    "paused": "Paused",
+    "expiredNotice": "Your subscription has ended — these configs are paused. Renew it to turn them back on.",
     "copy": "Copy link",
     "copied": "Link copied",
     "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand"

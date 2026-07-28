@@ -10,6 +10,7 @@ export {
   pickExecutable,
   probeNodeLatency,
   requestVpnPermission,
+  shareConfigFile,
   takeTileConnectRequest,
   vpnConnect,
   vpnDisconnect,

@@ -94,6 +94,15 @@ pub async fn vpn_open_settings<R: Runtime>(app: AppHandle<R>) -> Result<(), Mobi
 }
 
 #[tauri::command]
+pub async fn vpn_share_config<R: Runtime>(
+    app: AppHandle<R>,
+    file_name: String,
+    content: String,
+) -> Result<bool, MobileVpnError> {
+    app.state::<VpnPlugin<R>>().share_config(file_name, content)
+}
+
+#[tauri::command]
 pub async fn vpn_has_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
     app.state::<VpnPlugin<R>>().has_permission()
 }
