@@ -1,6 +1,3 @@
-import type { TunnelProtocol } from '@gnomevpn/schemas';
-import type { InboundConfig, ModernApiResponse } from '3xui-api-client';
-
 export type XrayClientOptions = {
   baseUrl: string;
   token: string;
@@ -14,14 +11,6 @@ export type XrayInbound = {
   settings: string | Record<string, unknown>;
   streamSettings?: string | Record<string, unknown>;
   sniffing?: string | Record<string, unknown>;
-};
-
-export type XrayApiResponse<T> = ModernApiResponse<T>;
-
-export type XrayServerStatus = {
-  xray?: {
-    state?: string;
-  };
 };
 
 export type HysteriaClient = {
@@ -50,12 +39,6 @@ export type WireguardClient = {
   enable: boolean;
 };
 
-export type WireguardInboundSettings = {
-  secretKey?: string;
-  clients?: (WireguardClient | null)[];
-  mtu?: number;
-};
-
 export type AddWireguardPeerInput = {
   email: string;
   publicKey: string;
@@ -69,15 +52,29 @@ export type NewWireguardClientInput = {
   assignedIp: string;
 };
 
-export type RemoveWireguardPeerInput = {
-  email: string;
-};
-
 export type RemovePeerInput = {
   email: string;
-  protocol: TunnelProtocol;
 };
 
-export type XrayInboundPayload = InboundConfig & {
+export type SetPeerEnabledInput = {
+  email: string;
+  enabled: boolean;
+};
+
+export type XrayInboundPayload = {
+  id?: number;
+  remark: string;
+  enable: boolean;
+  port: number;
+  protocol: string;
+  settings: string;
+  streamSettings?: string;
   sniffing?: string;
+};
+
+export type WriteInboundClientsInput = {
+  inbound: XrayInbound;
+  protocol: string;
+  settings: Record<string, unknown>;
+  remark: string;
 };
