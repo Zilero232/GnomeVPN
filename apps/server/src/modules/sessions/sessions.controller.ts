@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUserId } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import {
   ConnectDto,
@@ -16,10 +16,16 @@ import { SessionConnectService } from './services';
 export class SessionsController {
   constructor(private readonly sessions: SessionConnectService) {}
 
+  @Get('devices')
+  @ZodResponse({ type: DeviceUsageDto })
+  listDevices(@Query() query: DisconnectDto, @CurrentUserId() userId: string) {
+    return this.sessions.listDevices({ userId, deviceId: query.deviceId });
+  }
+
   @Post('connect')
   @UseGuards(SubscriptionGuard)
   @ZodResponse({ type: TunnelConfigDto })
-  connect(@Body() body: ConnectDto, @CurrentUser() userId: string) {
+  connect(@Body() body: ConnectDto, @CurrentUserId() userId: string) {
     return this.sessions.connect({
       userId,
       nodeId: body.nodeId,
@@ -28,21 +34,15 @@ export class SessionsController {
     });
   }
 
-  @Post('disconnect')
-  @HttpCode(204)
-  async disconnect(@Body() body: DisconnectDto, @CurrentUser() userId: string) {
-    await this.sessions.disconnect({ userId, deviceId: body.deviceId });
-  }
-
   @Post('heartbeat')
   @HttpCode(204)
-  async heartbeat(@Body() body: HeartbeatDto, @CurrentUser() userId: string) {
+  async heartbeat(@Body() body: HeartbeatDto, @CurrentUserId() userId: string) {
     await this.sessions.heartbeat({ userId, deviceId: body.deviceId });
   }
 
-  @Get('devices')
-  @ZodResponse({ type: DeviceUsageDto })
-  listDevices(@Query() query: DisconnectDto, @CurrentUser() userId: string) {
-    return this.sessions.listDevices({ userId, deviceId: query.deviceId });
+  @Post('disconnect')
+  @HttpCode(204)
+  async disconnect(@Body() body: DisconnectDto, @CurrentUserId() userId: string) {
+    await this.sessions.disconnect({ userId, deviceId: body.deviceId });
   }
 }

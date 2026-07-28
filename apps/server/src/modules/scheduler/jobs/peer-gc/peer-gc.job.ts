@@ -29,26 +29,14 @@ export class PeerGcJob {
   }
 
   private async collect(peer: PeerRow): Promise<void> {
-    const xray = xrayClientForNode(peer.node);
-
-    const email = peerClientName({ userId: peer.userId, kind: 'session', name: peer.name });
-
-    const traffic = await xray.getClientTraffic(email);
-
-    if (traffic !== null && BigInt(traffic) !== peer.trafficBytes) {
-      await this.prisma.peer.updateMany({
-        where: { id: peer.id },
-        data: { trafficBytes: BigInt(traffic), lastActiveAt: new Date() },
-      });
-
-      return;
-    }
-
     if (!this.isStale(peer)) {
       return;
     }
 
-    await xray.removePeer({ email });
+    const xray = xrayClientForNode(peer.node);
+    const email = peerClientName({ userId: peer.userId, kind: 'session', name: peer.name });
+
+    await xray.deleteClient(email);
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
 
@@ -67,9 +55,7 @@ export class PeerGcJob {
         id: true,
         userId: true,
         name: true,
-        protocol: true,
         createdAt: true,
-        trafficBytes: true,
         lastActiveAt: true,
         node: { select: { apiUrl: true, apiTokenEnvVar: true } },
       },

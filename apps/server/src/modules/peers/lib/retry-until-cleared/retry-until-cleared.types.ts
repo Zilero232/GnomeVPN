@@ -1,5 +1,5 @@
 export type RetryUntilClearedInput = {
   attempts: number;
   delayMs: number;
-  run: () => Promise<{ kept: number }>;
+  run: () => Promise<{ failed: number }>;
 };

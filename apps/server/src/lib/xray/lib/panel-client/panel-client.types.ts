@@ -26,8 +26,3 @@ export type PanelServerStatus = {
     state?: string;
   };
 };
-
-export type PanelTraffic = {
-  up: number;
-  down: number;
-};

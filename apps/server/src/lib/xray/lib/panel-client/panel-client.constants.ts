@@ -8,7 +8,6 @@ export const PANEL_ROUTES = {
   updateInbound: (id: number) => `${INBOUNDS}/update/${id}`,
   restartCore: `${SERVER}/restartXrayService`,
   serverStatus: `${SERVER}/status`,
-  clientTraffic: (email: string) => `${CLIENTS}/traffic/${encodeURIComponent(email)}`,
   deleteClient: (email: string) => `${CLIENTS}/del/${encodeURIComponent(email)}`,
   deleteOrphans: `${CLIENTS}/delOrphans`,
   setEnabled: (enabled: boolean) => `${CLIENTS}/${enabled ? 'bulkEnable' : 'bulkDisable'}`,
