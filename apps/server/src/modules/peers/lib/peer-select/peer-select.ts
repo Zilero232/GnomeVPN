@@ -4,4 +4,6 @@ export const PEER_REF_SELECT = {
   userId: true,
   kind: true,
   name: true,
+  protocol: true,
+  nodeCredential: true,
 } as const;

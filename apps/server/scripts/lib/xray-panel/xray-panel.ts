@@ -19,3 +19,13 @@ export const ensureInbound = async ({
 
   await xray.restartCore();
 };
+
+export const ensureWireguardInbound = async ({
+  inbound,
+  ...credentials
+}: EnsureInboundInput): Promise<void> => {
+  const xray = new XrayClient(credentials);
+
+  await xray.ensureWireguardInbound(inbound);
+  await xray.restartCore();
+};

@@ -3,15 +3,23 @@ enum PeerKind {
   config
 }
 
+enum TunnelProtocol {
+  hysteria2
+  wireguard
+}
+
 model Peer {
   id     String @id @default(dbgenerated("gen_random_uuid()"))
   userId String @map("user_id")
   nodeId String @map("node_id")
 
-  kind PeerKind
-  name String?
+  kind     PeerKind
+  protocol TunnelProtocol @default(hysteria2)
+  name     String?
 
-  xrayUserId String @map("xray_user_id")
+  nodeCredential String @map("node_credential")
+
+  wgAssignedIp String? @map("wg_assigned_ip")
 
   trafficBytes BigInt    @default(0) @map("traffic_bytes")
   lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(3)
@@ -20,7 +28,8 @@ model Peer {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, kind, name])
+  @@unique([userId, kind, name, nodeId, protocol])
+  @@unique([nodeId, wgAssignedIp])
   @@index([userId])
   @@index([kind, lastActiveAt])
   @@map("peer")

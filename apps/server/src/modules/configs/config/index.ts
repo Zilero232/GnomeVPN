@@ -1,1 +1,7 @@
-export { CONFIG_FILE_CONTENT_TYPE } from './configs.config';
+export {
+  CONFIG_FILE_CONTENT_TYPE,
+  HYSTERIA2_FILE_EXTENSION,
+  WG_CONFIG_KEEPALIVE,
+  WIREGUARD_FILE_EXTENSION,
+  WIREGUARD_FILE_SUFFIX,
+} from './configs.config';

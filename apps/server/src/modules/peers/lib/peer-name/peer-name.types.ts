@@ -4,4 +4,5 @@ export type PeerNameInput = {
   userId: string;
   kind: PeerKind;
   name?: string | null;
+  nodeId?: string;
 };

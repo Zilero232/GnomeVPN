@@ -20,7 +20,12 @@ export class SessionsController {
   @UseGuards(SubscriptionGuard)
   @ZodResponse({ type: TunnelConfigDto })
   connect(@Body() body: ConnectDto, @CurrentUser() userId: string) {
-    return this.sessions.connect({ userId, nodeId: body.nodeId, deviceId: body.deviceId });
+    return this.sessions.connect({
+      userId,
+      nodeId: body.nodeId,
+      deviceId: body.deviceId,
+      protocol: body.protocol,
+    });
   }
 
   @Post('disconnect')

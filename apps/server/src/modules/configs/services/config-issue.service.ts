@@ -1,14 +1,21 @@
+import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
 import { NodesService } from '../../nodes';
-import { buildTunnelConfig, PeersService } from '../../peers';
+import { buildTunnelConfig, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
-import { configFileName, renderConfigFile } from '../lib';
+import { HYSTERIA2_FILE_EXTENSION, WIREGUARD_FILE_EXTENSION } from '../config';
+import { configFileName, renderConfigFile, renderWireguardConfigFile } from '../lib';
 
 import type { DownloadedConfig } from '@gnomevpn/schemas';
-import type { ConfigFile, IssueConfigInput } from '../configs.service.types';
+import type {
+  ConfigContentInput,
+  ConfigFile,
+  ConfigFileNameInput,
+  IssueConfigInput,
+} from '../configs.service.types';
 
 @Injectable()
 export class ConfigIssueService {
@@ -27,6 +34,7 @@ export class ConfigIssueService {
         id: true,
         name: true,
         nodeId: true,
+        protocol: true,
         createdAt: true,
         node: { select: { country: true, countryCode: true } },
       },
@@ -38,16 +46,19 @@ export class ConfigIssueService {
       nodeId: row.nodeId,
       country: row.node.country,
       countryCode: row.node.countryCode,
+      protocol: row.protocol,
       createdAt: row.createdAt.toISOString(),
     }));
   }
 
-  async issue({ userId, nodeId, name }: IssueConfigInput): Promise<ConfigFile> {
+  async issue({ userId, nodeId, name, protocol }: IssueConfigInput): Promise<ConfigFile> {
     const node = await this.nodes.getNodeForConnect(nodeId);
 
     const findExisting = () =>
       this.prisma.peer.findUnique({
-        where: { userId_kind_name: { userId, kind: 'config', name } },
+        where: {
+          userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
+        },
       });
 
     const [existing, { configLimit }, count] = await Promise.all([
@@ -60,50 +71,75 @@ export class ConfigIssueService {
       throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${configLimit} configs`);
     }
 
-    const created = await this.peers.issue({ node, userId, kind: 'config', name });
-
-    try {
-      await this.prisma.$transaction(
-        async (tx) => {
-          const current = await tx.peer.findUnique({
-            where: { userId_kind_name: { userId, kind: 'config', name } },
-          });
-
-          if (current) {
-            await tx.peer.update({
-              where: { id: current.id },
-              data: { nodeId, xrayUserId: created.xrayUserId },
+    const created = await this.peers.issueAndPersist({
+      node,
+      nodeId,
+      userId,
+      kind: 'config',
+      protocol,
+      name,
+      persist: (peer) =>
+        this.prisma.$transaction(
+          async (tx) => {
+            const current = await tx.peer.findUnique({
+              where: {
+                userId_kind_name_nodeId_protocol: {
+                  userId,
+                  kind: 'config',
+                  name,
+                  nodeId,
+                  protocol,
+                },
+              },
             });
 
-            return;
-          }
+            const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
 
-          if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
-            throw new AppBadRequestException(
-              'CONFIG_LIMIT_REACHED',
-              `At most ${configLimit} configs`,
-            );
-          }
+            if (current) {
+              await tx.peer.update({ where: { id: current.id }, data });
 
-          await tx.peer.create({
-            data: { userId, nodeId, kind: 'config', name, xrayUserId: created.xrayUserId },
-          });
-        },
-        { isolationLevel: 'Serializable' },
-      );
-    } catch (error) {
-      await this.peers.discard({ node, email: created.email });
+              return;
+            }
 
-      throw error;
-    }
+            if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
+              throw new AppBadRequestException(
+                'CONFIG_LIMIT_REACHED',
+                `At most ${configLimit} configs`,
+              );
+            }
+
+            await tx.peer.create({
+              data: { userId, kind: 'config', protocol, name, ...data },
+            });
+          },
+          { isolationLevel: 'Serializable' },
+        ),
+    });
+
+    const config = buildTunnelConfig({
+      node,
+      protocol,
+      auth: created.nodeCredential,
+      wgPrivateKey: created.wgPrivateKey,
+      wgAssignedIp: created.wgAssignedIp,
+    });
 
     return {
-      fileName: `${configFileName({ countryCode: node.countryCode, deviceName: name })}.txt`,
-      content: renderConfigFile({
-        deviceName: name,
-        country: node.country,
-        config: buildTunnelConfig({ node, auth: created.xrayUserId }),
-      }),
+      fileName: this.fileName({ countryCode: node.countryCode, name, protocol }),
+      content: this.render({ config, deviceName: name, country: node.country, protocol }),
     };
+  }
+
+  private fileName({ countryCode, name, protocol }: ConfigFileNameInput): string {
+    const extension =
+      protocol === TUNNEL_PROTOCOL.wireguard ? WIREGUARD_FILE_EXTENSION : HYSTERIA2_FILE_EXTENSION;
+
+    return `${configFileName({ countryCode, deviceName: name, protocol })}.${extension}`;
+  }
+
+  private render({ config, deviceName, country, protocol }: ConfigContentInput): string {
+    return protocol === TUNNEL_PROTOCOL.wireguard
+      ? renderWireguardConfigFile({ config })
+      : renderConfigFile({ config, deviceName, country });
   }
 }

@@ -1,3 +1,4 @@
+import type { TunnelProtocol } from '@gnomevpn/schemas';
 import type { InboundConfig, ModernApiResponse } from '3xui-api-client';
 
 export type XrayClientOptions = {
@@ -17,6 +18,12 @@ export type XrayInbound = {
 
 export type XrayApiResponse<T> = ModernApiResponse<T>;
 
+export type XrayServerStatus = {
+  xray?: {
+    state?: string;
+  };
+};
+
 export type HysteriaClient = {
   email: string;
   auth: string;
@@ -29,8 +36,46 @@ export type HysteriaClient = {
 };
 
 export type CreateClientResult = {
-  xrayUserId: string;
+  nodeCredential: string;
   email: string;
+};
+
+export type WireguardClient = {
+  email: string;
+  id: string;
+  publicKey: string;
+  allowedIPs: string[];
+  preSharedKey: string;
+  keepAlive: number;
+  enable: boolean;
+};
+
+export type WireguardInboundSettings = {
+  secretKey?: string;
+  clients?: (WireguardClient | null)[];
+  mtu?: number;
+};
+
+export type AddWireguardPeerInput = {
+  email: string;
+  publicKey: string;
+  takenIps: string[];
+  allocateIp: (takenIps: string[]) => string | null;
+};
+
+export type NewWireguardClientInput = {
+  email: string;
+  publicKey: string;
+  assignedIp: string;
+};
+
+export type RemoveWireguardPeerInput = {
+  email: string;
+};
+
+export type RemovePeerInput = {
+  email: string;
+  protocol: TunnelProtocol;
 };
 
 export type XrayInboundPayload = InboundConfig & {

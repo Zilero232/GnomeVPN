@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../core';
 import { EventsService } from '../../events';
 import { NodesService } from '../../nodes';
-import { buildTunnelConfig, PEER_REF_SELECT, PeersService } from '../../peers';
+import { buildTunnelConfig, PEER_REF_SELECT, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
 import { SessionAccessService } from './session-access.service';
 
@@ -76,38 +76,64 @@ export class SessionConnectService {
     };
   }
 
-  async connect({ userId, nodeId, deviceId }: ConnectSessionInput): Promise<TunnelConfig> {
+  async connect({
+    userId,
+    nodeId,
+    deviceId,
+    protocol,
+  }: ConnectSessionInput): Promise<TunnelConfig> {
     this.logger.log(`connect requested by ${userId}/${deviceId} for node ${nodeId}`);
 
     const node = await this.nodes.getNodeForConnect(nodeId);
 
     await this.freeSlot({ userId, deviceId });
 
-    const created = await this.peers.issue({ node, userId, kind: 'session', name: deviceId });
+    const created = await this.peers.issueAndPersist({
+      node,
+      nodeId,
+      userId,
+      kind: 'session',
+      protocol,
+      name: deviceId,
+      persist: async (peer) => {
+        const existing = await this.prisma.peer.findFirst({
+          where: { userId, kind: 'session', name: deviceId },
+          select: { id: true },
+        });
 
-    try {
-      await this.prisma.peer.upsert({
-        where: { userId_kind_name: { userId, kind: 'session', name: deviceId } },
-        create: {
-          userId,
+        const data = {
           nodeId,
-          kind: 'session',
-          name: deviceId,
-          xrayUserId: created.xrayUserId,
-        },
-        update: { nodeId, xrayUserId: created.xrayUserId, trafficBytes: 0n, lastActiveAt: null },
-      });
-    } catch (error) {
-      await this.peers.discard({ node, email: created.email });
+          protocol,
+          nodeCredential: peer.nodeCredential,
+          ...peerWgData(peer),
+        };
 
-      throw error;
-    }
+        if (existing) {
+          await this.prisma.peer.update({
+            where: { id: existing.id },
+            data: { ...data, trafficBytes: 0n, lastActiveAt: null },
+          });
+
+          return;
+        }
+
+        await this.prisma.peer.create({
+          data: { userId, kind: 'session', name: deviceId, ...data },
+        });
+      },
+    });
 
     this.logger.log(`connect granted to ${userId}/${deviceId} on ${node.country} (${node.host})`);
 
     this.events.publish(userId, { type: 'devices-changed' });
 
-    return buildTunnelConfig({ node, auth: created.xrayUserId });
+    return buildTunnelConfig({
+      node,
+      protocol,
+      auth: created.nodeCredential,
+      wgPrivateKey: created.wgPrivateKey,
+      wgAssignedIp: created.wgAssignedIp,
+    });
   }
 
   async disconnect({ userId, deviceId }: DisconnectSessionInput): Promise<void> {

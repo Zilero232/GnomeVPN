@@ -1,16 +1,19 @@
+import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
-import { describeError, resolveNodeApiKey } from '../../../common/lib';
+import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService } from '../../../core';
-import { XrayClient } from '../../../lib';
-import { PEER_REF_SELECT, peerClientName } from '../lib';
+import { WG } from '../config';
+import { generateWireguardKeys, nextWireguardIp, PEER_REF_SELECT, peerClientName } from '../lib';
 
 import type {
   CreatedPeer,
   DiscardPeerInput,
   FindPeersInput,
+  IssueAndPersistInput,
   IssuePeerInput,
+  IssueWireguardPeerInput,
   PeerRef,
   ReleaseManyResult,
 } from '../peers.service.types';
@@ -21,19 +24,90 @@ export class PeersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  client(baseUrl: string, tokenRef: string): XrayClient {
-    return new XrayClient({ baseUrl, token: resolveNodeApiKey(tokenRef) });
-  }
-
-  async issue({ node, userId, kind, name }: IssuePeerInput): Promise<CreatedPeer> {
-    const email = peerClientName({ userId, kind, name });
+  async issueAndPersist({ persist, ...input }: IssueAndPersistInput): Promise<CreatedPeer> {
+    const created = await this.issue(input);
 
     try {
-      const created = await this.client(node.apiUrl, node.apiTokenEnvVar).createClient(email);
+      await persist(created);
+    } catch (error) {
+      await this.discard({ node: input.node, email: created.email, protocol: created.protocol });
 
-      return { xrayUserId: created.xrayUserId, email };
+      throw error;
+    }
+
+    return created;
+  }
+
+  async issue({
+    node,
+    nodeId,
+    userId,
+    kind,
+    protocol,
+    name,
+  }: IssuePeerInput): Promise<CreatedPeer> {
+    const email = peerClientName({ userId, kind, name, nodeId });
+
+    if (protocol === TUNNEL_PROTOCOL.wireguard) {
+      if (!nodeId) {
+        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard needs a node');
+      }
+
+      return this.issueWireguard({ node, nodeId, email });
+    }
+
+    try {
+      const created = await xrayClientForNode(node).createClient(email);
+
+      return { nodeCredential: created.nodeCredential, email, protocol: TUNNEL_PROTOCOL.hysteria2 };
     } catch (error) {
       this.logger.error(`createClient failed on ${node.apiUrl}: ${describeError(error)}`);
+
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
+    }
+  }
+
+  private async takenWireguardIps(nodeId: string): Promise<string[]> {
+    const rows = await this.prisma.peer.findMany({
+      where: { nodeId, wgAssignedIp: { not: null } },
+      select: { wgAssignedIp: true },
+    });
+
+    return rows.map((row) => row.wgAssignedIp).filter((ip): ip is string => Boolean(ip));
+  }
+
+  private async issueWireguard({
+    node,
+    nodeId,
+    email,
+  }: IssueWireguardPeerInput): Promise<CreatedPeer> {
+    if (!node.wgPublicKey) {
+      throw new AppServiceUnavailableException(
+        'NODE_UNAVAILABLE',
+        'node has no wireguard endpoint',
+      );
+    }
+
+    const takenIps = await this.takenWireguardIps(nodeId);
+    const keys = generateWireguardKeys();
+
+    try {
+      const assignedIp = await xrayClientForNode(node).addWireguardPeer({
+        email,
+        publicKey: keys.publicKey,
+        takenIps,
+        allocateIp: (taken) => nextWireguardIp({ subnet: WG.subnet, taken }),
+      });
+
+      return {
+        nodeCredential: keys.publicKey,
+        email,
+        protocol: TUNNEL_PROTOCOL.wireguard,
+        wgAssignedIp: assignedIp,
+        wgPrivateKey: keys.privateKey,
+      };
+    } catch (error) {
+      this.logger.error(`addWireguardPeer failed on ${node.apiUrl}: ${describeError(error)}`);
 
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
     }
@@ -49,10 +123,13 @@ export class PeersService {
       return false;
     }
 
-    const email = peerClientName({ ...peer, name: peer.name ?? undefined });
+    const email = peerClientName(peer);
 
     try {
-      await this.client(node.apiUrl, node.apiTokenEnvVar).deleteClient(email);
+      await xrayClientForNode(node).removePeer({
+        email,
+        protocol: peer.protocol,
+      });
 
       return true;
     } catch (error) {
@@ -76,9 +153,9 @@ export class PeersService {
     return { released: released.length, kept: peers.length - released.length };
   }
 
-  async discard({ node, email }: DiscardPeerInput): Promise<void> {
-    await this.client(node.apiUrl, node.apiTokenEnvVar)
-      .deleteClient(email)
+  async discard({ node, email, protocol }: DiscardPeerInput): Promise<void> {
+    await xrayClientForNode(node)
+      .removePeer({ email, protocol: protocol ?? TUNNEL_PROTOCOL.hysteria2 })
       .catch(() => undefined);
   }
 

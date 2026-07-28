@@ -1,7 +1,8 @@
 import pWaitFor from 'p-wait-for';
 
+import { generateAuth } from '../../../src/lib/xray';
+import { WG } from '../../../src/modules/peers/config';
 import { upsertEnvGroup } from '../env-file';
-import { generateAuth } from '../hysteria-auth';
 import {
   buildHysteriaInbound,
   LISTEN_PORT,
@@ -18,12 +19,14 @@ import {
   configurePanel,
   ensureCert,
   ensureDocker,
+  ensureWireguardKeys,
   openTunnelPort,
   shipStack,
 } from '../remote-setup';
 import { SshClient } from '../ssh-client';
 import { upsertNode } from '../upsert-node';
-import { ensureInbound, isPanelReachable } from '../xray-panel';
+import { buildWireguardInbound } from '../wireguard-inbound';
+import { ensureInbound, ensureWireguardInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
 import type {
@@ -108,6 +111,18 @@ export const provisionHost = async ({
       inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST }),
     });
 
+    const wireguardKeys = await ensureWireguardKeys(ssh);
+
+    await ensureWireguardInbound({
+      baseUrl,
+      token,
+      inbound: buildWireguardInbound({
+        secretKey: wireguardKeys.privateKey,
+        listenPort: WG.listenPort,
+        mtu: WG.mtu,
+      }),
+    });
+
     await rememberNodeSecrets({
       serverEnvPath,
       countryCode: config.countryCode,
@@ -125,7 +140,8 @@ export const provisionHost = async ({
         host: config.host,
         port: LISTEN_PORT,
         serverName: MASQUERADE_HOST,
-        auth,
+        hysteriaAuth: auth,
+        wgPublicKey: wireguardKeys.publicKey,
         apiUrl: baseUrl,
         apiTokenEnvVar: nodeKeyName(config.countryCode),
       },

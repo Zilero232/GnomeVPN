@@ -63,6 +63,7 @@ export class NodesService {
         serverName: true,
         apiUrl: true,
         apiTokenEnvVar: true,
+        wgPublicKey: true,
         isAvailable: true,
         lastHealthyAt: true,
       },

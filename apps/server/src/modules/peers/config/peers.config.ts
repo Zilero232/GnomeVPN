@@ -1,7 +1,17 @@
-export const TUNNEL_INSECURE = true;
+export const TUNNEL = {
+  insecure: true,
+  dns: ['1.1.1.1', '8.8.8.8'],
+} as const;
 
-export const TUNNEL_DNS = ['1.1.1.1', '8.8.8.8'];
+export const PEER_PREFIX = {
+  session: 'app-',
+  config: 'cfg-',
+} as const;
 
-export const SESSION_PEER_PREFIX = 'app-';
-
-export const CONFIG_PEER_PREFIX = 'cfg-';
+export const WG = {
+  listenPort: 51820,
+  mtu: 1420,
+  allowedIps: ['0.0.0.0/0'],
+  subnet: '10.9.0.0/24',
+  serverHostOffset: 1,
+} as const;

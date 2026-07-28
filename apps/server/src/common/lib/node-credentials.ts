@@ -1,4 +1,7 @@
+import { XrayClient } from '../../lib';
 import { AppServiceUnavailableException } from '../exceptions';
+
+import type { NodeAccess } from './node-credentials.types';
 
 export const resolveNodeApiKey = (ref: string): string => {
   const key = process.env[ref];
@@ -12,3 +15,6 @@ export const resolveNodeApiKey = (ref: string): string => {
 
   return key;
 };
+
+export const xrayClientForNode = ({ apiUrl, apiTokenEnvVar }: NodeAccess): XrayClient =>
+  new XrayClient({ baseUrl: apiUrl, token: resolveNodeApiKey(apiTokenEnvVar) });

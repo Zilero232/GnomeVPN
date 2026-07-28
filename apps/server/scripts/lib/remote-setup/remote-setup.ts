@@ -2,7 +2,10 @@ import pWaitFor from 'p-wait-for';
 import { quote } from 'shell-quote';
 
 import { PANEL_USERNAME } from '../../../src/lib/xray';
+import { WG } from '../../../src/modules/peers/config';
+import { generateWireguardKeys } from '../../../src/modules/peers/lib/wg-keys';
 import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
+import { WG_KEY_PATH, WG_PUB_PATH } from '../wireguard-inbound';
 import {
   CONTAINER_NAME,
   DOCKER_INSTALL_URL,
@@ -12,7 +15,12 @@ import {
 } from './remote-setup.constants';
 
 import type { SshClient } from '../ssh-client';
-import type { ConfigurePanelInput, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
+import type {
+  ConfigurePanelInput,
+  ShipStackInput,
+  WaitForPanelInput,
+  WireguardKeyPair,
+} from './remote-setup.types';
 
 export const ensureDocker = async (ssh: SshClient): Promise<void> => {
   const installed = await ssh.exec('docker --version');
@@ -45,6 +53,32 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
 
   await ssh.exec(`ufw allow ${LISTEN_PORT}/udp`);
   await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
+  await ssh.exec(`ufw allow ${WG.listenPort}/udp`);
+};
+
+const readRemoteKey = async (ssh: SshClient, path: string): Promise<string> => {
+  const result = await ssh.exec(`docker exec ${CONTAINER_NAME} sh -lc 'cat ${path} 2>/dev/null'`);
+
+  return result.stdout.trim();
+};
+
+export const ensureWireguardKeys = async (ssh: SshClient): Promise<WireguardKeyPair> => {
+  const dir = WG_KEY_PATH.slice(0, WG_KEY_PATH.lastIndexOf('/'));
+
+  const existingPrivate = await readRemoteKey(ssh, WG_KEY_PATH);
+  const existingPublic = await readRemoteKey(ssh, WG_PUB_PATH);
+
+  if (existingPrivate && existingPublic) {
+    return { privateKey: existingPrivate, publicKey: existingPublic };
+  }
+
+  const { privateKey, publicKey } = generateWireguardKeys();
+
+  await ssh.exec(
+    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && printf "%s" ${quote([privateKey])} > ${WG_KEY_PATH} && printf "%s" ${quote([publicKey])} > ${WG_PUB_PATH}'`,
+  );
+
+  return { privateKey, publicKey };
 };
 
 const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void> => {

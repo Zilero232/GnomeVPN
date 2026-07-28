@@ -1,7 +1,10 @@
+import type { TunnelProtocol } from '@gnomevpn/schemas';
+
 export type ConnectSessionInput = {
   userId: string;
   nodeId: string;
   deviceId: string;
+  protocol: TunnelProtocol;
 };
 
 export type DisconnectSessionInput = {

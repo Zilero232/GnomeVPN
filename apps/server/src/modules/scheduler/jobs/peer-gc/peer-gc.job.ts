@@ -2,9 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { isBefore, subMilliseconds } from 'date-fns';
 
-import { describeError, resolveNodeApiKey } from '../../../../common/lib';
+import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { XrayClient } from '../../../../lib';
 import { EventsService } from '../../../events';
 import { peerClientName } from '../../../peers';
 import { BOOT_GRACE_MS, NEVER_CONNECTED_GRACE_MS, STALE_MS } from '../../config';
@@ -30,16 +29,9 @@ export class PeerGcJob {
   }
 
   private async collect(peer: PeerRow): Promise<void> {
-    const xray = new XrayClient({
-      baseUrl: peer.node.apiUrl,
-      token: resolveNodeApiKey(peer.node.apiTokenEnvVar),
-    });
+    const xray = xrayClientForNode(peer.node);
 
-    const email = peerClientName({
-      userId: peer.userId,
-      kind: 'session',
-      name: peer.name ?? undefined,
-    });
+    const email = peerClientName({ userId: peer.userId, kind: 'session', name: peer.name });
 
     const traffic = await xray.getClientTraffic(email);
 
@@ -56,7 +48,7 @@ export class PeerGcJob {
       return;
     }
 
-    await xray.deleteClient(email);
+    await xray.removePeer({ email, protocol: peer.protocol });
 
     await this.prisma.peer.deleteMany({ where: { id: peer.id } });
 
@@ -75,6 +67,7 @@ export class PeerGcJob {
         id: true,
         userId: true,
         name: true,
+        protocol: true,
         createdAt: true,
         trafficBytes: true,
         lastActiveAt: true,

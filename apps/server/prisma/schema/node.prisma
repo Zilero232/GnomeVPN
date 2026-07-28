@@ -8,8 +8,10 @@ model Node {
   host String
   port Int    @default(443)
 
-  serverName String @map("server_name")
-  auth       String @map("auth")
+  serverName    String @map("server_name")
+  hysteriaAuth  String @map("hysteria_auth")
+
+  wgPublicKey String? @map("wg_public_key")
 
   apiUrl          String @map("api_url")
   apiTokenEnvVar  String @map("api_token_env_var")

@@ -1,5 +1,4 @@
-export { TUNNEL_DNS } from './config';
-export { buildTunnelConfig, PEER_REF_SELECT, peerClientName } from './lib';
+export { buildTunnelConfig, PEER_REF_SELECT, peerClientName, peerWgData } from './lib';
 export { PeersModule } from './peers.module';
 export { PeersService } from './services';
 

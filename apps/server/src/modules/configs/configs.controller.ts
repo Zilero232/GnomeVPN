@@ -30,7 +30,12 @@ export class ConfigsController {
     @CurrentUser() userId: string,
     @Res() res: Response,
   ): Promise<void> {
-    const file = await this.configIssue.issue({ userId, nodeId: body.nodeId, name: body.name });
+    const file = await this.configIssue.issue({
+      userId,
+      nodeId: body.nodeId,
+      name: body.name,
+      protocol: body.protocol,
+    });
 
     res
       .type(CONFIG_FILE_CONTENT_TYPE)

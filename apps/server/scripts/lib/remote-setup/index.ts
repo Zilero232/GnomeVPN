@@ -2,6 +2,7 @@ export {
   configurePanel,
   ensureCert,
   ensureDocker,
+  ensureWireguardKeys,
   openTunnelPort,
   shipStack,
 } from './remote-setup';

@@ -24,7 +24,13 @@ COPY apps/client/package.json ./apps/client/package.json
 COPY apps/tauri/package.json ./apps/tauri/package.json
 # `bun install` would trigger the server's postinstall (prisma generate) before
 # the schema is copied, so lifecycle scripts are disabled and generate runs later.
-RUN bun install --frozen-lockfile --ignore-scripts
+# A retry loop that wipes the download cache between attempts survives transient
+# registry hiccups that corrupt a tarball mid-download (IntegrityCheckFailed).
+RUN for attempt in 1 2 3; do \
+      bun install --frozen-lockfile --ignore-scripts && break; \
+      echo "bun install attempt $attempt failed; clearing cache and retrying"; \
+      rm -rf /root/.bun/install/cache ~/.bun/install/cache; \
+    done
 
 FROM base AS runner
 ENV NODE_ENV=production

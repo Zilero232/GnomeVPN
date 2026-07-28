@@ -1,3 +1,9 @@
-export { currentClients, parseSettings, parseStreamSettings } from './current-clients';
+export {
+  currentClients,
+  parseSettings,
+  parseSniffing,
+  parseStreamSettings,
+  parseWireguardSettings,
+} from './current-clients';
 
-export type { XrayInboundSettings } from './current-clients.types';
+export type { XrayInboundSettings, XrayWireguardSettings } from './current-clients.types';

@@ -1,11 +1,12 @@
 import slugify from '@sindresorhus/slugify';
 
-import { CONFIG_PEER_PREFIX, SESSION_PEER_PREFIX } from '../../config';
+import { PEER_PREFIX } from '../../config';
 
 import type { PeerNameInput } from './peer-name.types';
 
-export const peerClientName = ({ userId, kind, name }: PeerNameInput): string => {
-  const prefix = kind === 'session' ? SESSION_PEER_PREFIX : CONFIG_PEER_PREFIX;
+export const peerClientName = ({ userId, kind, name, nodeId }: PeerNameInput): string => {
+  const prefix = kind === 'session' ? PEER_PREFIX.session : PEER_PREFIX.config;
+  const base = `${prefix}${userId}-${slugify(name ?? '')}`;
 
-  return `${prefix}${userId}-${slugify(name ?? '')}`;
+  return kind === 'config' && nodeId ? `${base}-${nodeId}` : base;
 };

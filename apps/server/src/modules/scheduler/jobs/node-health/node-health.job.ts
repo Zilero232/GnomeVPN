@@ -1,9 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { describeError, resolveNodeApiKey } from '../../../../common/lib';
+import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { XrayClient } from '../../../../lib';
 
 import type { ProbeNodeRow } from './node-health.job.types';
 
@@ -14,14 +13,11 @@ export class NodeHealthJob {
   constructor(private readonly prisma: PrismaService) {}
 
   private async probe(node: ProbeNodeRow): Promise<void> {
-    const xray = new XrayClient({
-      baseUrl: node.apiUrl,
-      token: resolveNodeApiKey(node.apiTokenEnvVar),
-    });
-
-    const isHealthy = await xray.health().catch((error: unknown) => {
-      throw new Error(`${node.apiUrl}: ${describeError(error)}`);
-    });
+    const isHealthy = await xrayClientForNode(node)
+      .health()
+      .catch((error: unknown) => {
+        throw new Error(`${node.apiUrl}: ${describeError(error)}`);
+      });
 
     if (!isHealthy) {
       this.logger.warn(`node ${node.apiUrl} answered but its inbound is disabled`);
