@@ -154,6 +154,7 @@ pub fn run() {
             mobile_vpn::commands::vpn_connect,
             mobile_vpn::commands::vpn_disconnect,
             mobile_vpn::commands::vpn_status,
+            mobile_vpn::commands::vpn_traffic,
             mobile_vpn::commands::vpn_service_available,
             mobile_vpn::commands::vpn_take_tile_request,
             mobile_vpn::commands::vpn_hide_window,

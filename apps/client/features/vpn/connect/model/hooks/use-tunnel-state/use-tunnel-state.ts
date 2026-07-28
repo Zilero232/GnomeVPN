@@ -29,6 +29,7 @@ export const useTunnelState = () => {
   const markAdopted = (nodeId: string | null) => {
     setStatus('connected');
     setActiveNodeId(nodeId);
+    setConnectedAt((current) => current ?? new Date());
   };
 
   const reset = () => {

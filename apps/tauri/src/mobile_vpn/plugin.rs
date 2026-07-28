@@ -38,7 +38,7 @@ struct NativeDirResult {
     path: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct TrafficResult {
     pub rx: u64,
     pub tx: u64,
