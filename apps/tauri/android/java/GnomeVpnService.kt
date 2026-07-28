@@ -83,20 +83,20 @@ class GnomeVpnService : VpnService() {
         }
     }
 
-    private fun startVpnForeground() {
+    private fun startVpnForeground(server: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
-                buildNotification(),
+                buildNotification(server),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED,
             )
         } else {
-            startForeground(NOTIFICATION_ID, buildNotification())
+            startForeground(NOTIFICATION_ID, buildNotification(server))
         }
     }
 
     private fun openDescriptor(dns: Array<String>, server: String, tunAddress: String): Int {
-        startVpnForeground()
+        startVpnForeground(server)
 
         val interfaceAddress = parseInterfaceAddress(tunAddress)
 
@@ -265,7 +265,10 @@ class GnomeVpnService : VpnService() {
     private fun intToIp(value: Long): String =
         "${(value shr 24) and 0xFF}.${(value shr 16) and 0xFF}.${(value shr 8) and 0xFF}.${value and 0xFF}"
 
-    private fun buildNotification(): Notification {
+    private fun connectedLabel(): String =
+        if (java.util.Locale.getDefault().language == "ru") "Подключено" else "Connected"
+
+    private fun buildNotification(server: String): Notification {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationManager().createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW),
@@ -292,7 +295,7 @@ class GnomeVpnService : VpnService() {
 
         return builder
             .setContentTitle(SESSION)
-            .setContentText(NOTIFICATION_TEXT)
+            .setContentText("${connectedLabel()} · $server")
             .setSmallIcon(android.R.drawable.ic_lock_lock)
             .setContentIntent(open)
             .setOngoing(true)
@@ -390,7 +393,6 @@ class GnomeVpnService : VpnService() {
         private const val SESSION = "GnomeVPN"
         private const val CHANNEL_ID = "gnomevpn.tunnel"
         private const val CHANNEL_NAME = "Tunnel"
-        private const val NOTIFICATION_TEXT = "Tunnel is active"
         private const val NOTIFICATION_ID = 1
         private const val START_TIMEOUT_SECONDS = 15L
         private const val POLL_INTERVAL_MS = 150L

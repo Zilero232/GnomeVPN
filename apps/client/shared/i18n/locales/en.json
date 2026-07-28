@@ -230,6 +230,8 @@
     "limitReached": "You have reached the {limit} device limit — remove one to add another.",
     "download": "Download",
     "create": "Create",
+    "created": "Config created",
+    "createdHint": "Download, share or scan it below",
     "redownload": "Download again",
     "share": "Share",
     "qr": "QR code",
