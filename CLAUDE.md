@@ -68,6 +68,24 @@ tunnel survive the user swiping the app away. `build_hysteria_config` lives in
 - **[apps/tauri/CLAUDE.md](apps/tauri/CLAUDE.md)** — Tauri commands, capabilities, service client
 - **[crates/vpn-service/CLAUDE.md](crates/vpn-service/CLAUDE.md)** — tunnel engine, routing, security boundary
 
+## Shared versions live in the catalog
+
+A dependency used by more than one workspace is pinned once, in the
+`workspaces.catalog` block of the root `package.json`, and referenced as
+`"remeda": "catalog:"` from each package that needs it. That is what keeps the
+client and the server from drifting apart — `remeda` was already shipping as two
+copies (`2.17` and `2.39`) before the catalog existed.
+
+Bumping a shared version means editing the catalog, not the packages. Adding a
+new shared dependency means adding it to the catalog **and** pointing each
+consumer at `catalog:`.
+
+The Rust side works the same way: `[workspace.dependencies]` in the root
+`Cargo.toml` owns the version of anything two crates share (`serde`, `tokio`,
+`thiserror`, …), and each crate writes `serde.workspace = true`. Per-crate
+feature flags still go on the crate — features are additive, so
+`tokio = { workspace = true, features = ["fs"] }` is the normal shape.
+
 ## Reuse over reinvention
 
 Before writing a helper by hand, check whether an installed library already covers it.
@@ -121,15 +139,17 @@ The repo has no `unsafe` blocks. Keep it that way.
 Run before claiming anything works:
 
 ```bash
-bun run typecheck         # all three TS packages
-bun lint                  # ESLint
-bun run format:check      # Prettier
-bun run lint:css          # Stylelint
-cargo clippy --workspace  # Rust
-cargo fmt --all --check
+bun run verify            # everything below, in one command
 ```
 
-There is no CI — run this set locally before every commit; nothing else will.
+That is the whole set — typecheck (all three TS packages), ESLint, Prettier,
+Stylelint, `cargo fmt --check` and `cargo clippy -D warnings`. `bun run fix`
+is its counterpart: every autofixer in the same order.
+
+The individual scripts (`typecheck`, `lint`, `format:check`, `lint:css`,
+`format:rust:check`, `lint:rust`) still exist when you want one of them alone.
+
+There is no CI — run `bun run verify` locally before every commit; nothing else will.
 
 ## Things that have already bitten us
 

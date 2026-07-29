@@ -32,31 +32,31 @@
     "@react-email/render": "^2.1.0",
     "@sindresorhus/slugify": "^3.0.0",
     "@thallesp/nestjs-better-auth": "2.7.0",
-    "better-auth": "^1.6.25",
-    "date-fns": "^4.4.0",
+    "better-auth": "catalog:",
+    "date-fns": "catalog:",
     "express": "^4.21.0",
     "helmet": "^8.0.0",
     "nestjs-zod": "5.4.0",
     "nodemailer": "^9.0.3",
     "p-wait-for": "^6.0.0",
     "pg": "^8.13.0",
-    "react": "^19.2.8",
+    "react": "catalog:",
     "react-email": "^6.9.1",
     "reflect-metadata": "^0.2.2",
-    "remeda": "^2.17.0",
+    "remeda": "catalog:",
     "rxjs": "^7.8.1",
     "shell-quote": "^1.10.0",
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/express": "^4.17.21",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
-    "@types/react": "^19.2.17",
+    "@types/react": "catalog:",
     "@types/shell-quote": "^1.7.5",
     "dotenv": "^17.2.0",
     "prisma": "^7.9.0",
-    "typescript": "~6.0.3"
+    "typescript": "catalog:"
   }
 }

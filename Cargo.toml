@@ -2,6 +2,19 @@
 members = ["apps/tauri", "crates/vpn-ipc", "crates/vpn-service"]
 resolver = "2"
 
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+gnomevpn-ipc = { path = "crates/vpn-ipc" }
+log = "0.4"
+parking_lot = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1" }
+
 # Measured on the service crate, relinking after a dependency change: fat LTO
 # with one codegen unit takes 48s and produces 3.35 MB, thin takes 10s and
 # produces 3.95 MB. The 600 KB is noise next to the 20 MB hysteria binary the

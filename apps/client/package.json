@@ -30,10 +30,10 @@
     "@tauri-apps/plugin-updater": "^2.10.1",
     "@types/semver": "^7.7.1",
     "axios": "^1.18.1",
-    "better-auth": "^1.6.25",
+    "better-auth": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
+    "date-fns": "catalog:",
     "file-saver": "^2.0.5",
     "flag-icons": "^7.5.0",
     "lucide-react": "^0.500.0",
@@ -43,21 +43,21 @@
     "next-intl": "^4.13.4",
     "pretty-bytes": "^7.1.1",
     "qrcode.react": "^4.2.0",
-    "react": "^19.2.8",
+    "react": "catalog:",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.81.0",
-    "remeda": "^2.39.0",
+    "remeda": "catalog:",
     "semver": "^7.8.5",
     "sonner": "^2.0.0",
     "ts-pattern": "^5.9.0",
-    "zod": "^4.4.3"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22",
-    "@types/react": "^19",
+    "@types/react": "catalog:",
     "@types/react-dom": "^19",
     "sass-embedded": "^1.100.0",
-    "typescript": "~6.0.3"
+    "typescript": "catalog:"
   }
 }
