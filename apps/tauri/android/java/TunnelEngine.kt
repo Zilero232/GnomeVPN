@@ -16,4 +16,8 @@ object TunnelEngine {
     external fun nativeStop()
 
     external fun nativeNetworkChanged()
+
+    external fun nativeTrafficRx(): Long
+
+    external fun nativeTrafficTx(): Long
 }

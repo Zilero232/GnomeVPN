@@ -13,6 +13,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.VpnService
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.SystemClock
@@ -26,6 +28,7 @@ class GnomeVpnService : VpnService() {
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var activeNetwork: Network? = null
     private var isStopping = false
+    private val trafficHandler = Handler(Looper.getMainLooper())
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
@@ -141,6 +144,7 @@ class GnomeVpnService : VpnService() {
         cancelRevival()
         acquireWakeLock()
         watchNetwork()
+        publishTraffic()
         VpnTileService.requestUpdate(this)
 
         return opened.fd
@@ -153,11 +157,6 @@ class GnomeVpnService : VpnService() {
 
         val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
 
-        // registerDefaultNetworkCallback always delivers the current network
-        // straight away. That first delivery is the starting state, not a switch
-        // — treating it as one restarted the tunnel about 50ms after it came up,
-        // every single time, on every launch. Seeding from manager.activeNetwork
-        // does not help: by the time this runs, establish() has already happened.
         var isFirstDelivery = true
 
         val callback = object : ConnectivityManager.NetworkCallback() {
@@ -308,7 +307,25 @@ class GnomeVpnService : VpnService() {
             .build()
     }
 
+    private fun publishTraffic() {
+        val ticker = object : Runnable {
+            override fun run() {
+                if (descriptor == null) {
+                    return
+                }
+
+                TunnelTraffic.publish(this@GnomeVpnService)
+                trafficHandler.postDelayed(this, TRAFFIC_INTERVAL_MS)
+            }
+        }
+
+        trafficHandler.removeCallbacksAndMessages(null)
+        trafficHandler.post(ticker)
+    }
+
     private fun teardown() {
+        trafficHandler.removeCallbacksAndMessages(null)
+        TunnelTraffic.clear(this)
         unwatchNetwork()
         releaseWakeLock()
         runCatching { TunnelEngine.nativeStop() }
@@ -406,6 +423,7 @@ class GnomeVpnService : VpnService() {
         private const val TUN_ADDRESS = "10.8.0.2"
         private const val TUN_PREFIX = 24
         private const val MTU = 1420
+        private const val TRAFFIC_INTERVAL_MS = 1_000L
 
         // Half routes rather than 0.0.0.0/0: replacing the physical default
         // route strands the device if the tunnel dies before it is torn down.

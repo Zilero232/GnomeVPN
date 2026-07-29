@@ -3,7 +3,7 @@ use std::sync::{Mutex, Once};
 
 use gnomevpn_ipc::TunnelConfig;
 use jni::objects::{JClass, JString};
-use jni::sys::{jboolean, jint};
+use jni::sys::{jboolean, jint, jlong};
 use jni::JNIEnv;
 use tokio::runtime::Runtime;
 use tun2proxy::CancellationToken;
@@ -123,4 +123,20 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStop(_env: JNIEnv
             session.runtime.shutdown_background();
         }
     }
+}
+
+#[no_mangle]
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficRx(
+    _env: JNIEnv,
+    _class: JClass,
+) -> jlong {
+    engine::traffic().rx as jlong
+}
+
+#[no_mangle]
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficTx(
+    _env: JNIEnv,
+    _class: JClass,
+) -> jlong {
+    engine::traffic().tx as jlong
 }

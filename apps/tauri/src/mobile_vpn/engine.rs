@@ -22,8 +22,6 @@ const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
 const LOG_MAX_BYTES: u64 = 2 * 1024 * 1024;
 const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
-const STALL_TIMEOUT: Duration = Duration::from_secs(60);
-const STALL_MIN_BYTES: u64 = 32 * 1024;
 
 static ATTEMPT: Mutex<Option<CancellationToken>> = Mutex::new(None);
 
@@ -37,6 +35,10 @@ fn disarm_attempt() {
     if let Ok(mut guard) = ATTEMPT.lock() {
         *guard = None;
     }
+}
+
+pub fn traffic() -> counters::Traffic {
+    counters::read()
 }
 
 pub fn restart_attempt() {
@@ -222,71 +224,11 @@ pub async fn run_tun2proxy(
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
 }
 
-/// Decides whether the tunnel has gone deaf.
-///
-/// **Silence is not a fault.** A phone left alone sends nothing for minutes at a
-/// time — measured at 145s of complete quiet on a healthy tunnel — and the QUIC
-/// keepalive never crosses the TUN, because hysteria dials the node from outside
-/// it. Tearing the tunnel down on idle would break exactly the case that must
-/// keep working: the phone in a pocket overnight.
-///
-/// What does mean the session is dead is traffic going out with nothing coming
-/// back: the apps are asking and the tunnel is swallowing it. Only sustained tx
-/// against a completely flat rx counts.
-#[derive(Default)]
-struct StallDetector {
-    last_seen: Option<counters::Traffic>,
-    deaf_for: Duration,
-    asked: u64,
-}
-
-impl StallDetector {
-    fn observe(&mut self, current: counters::Traffic) -> Option<String> {
-        let previous = self.last_seen.replace(current)?;
-
-        if current.rx > previous.rx {
-            self.deaf_for = Duration::ZERO;
-            self.asked = 0;
-
-            return None;
-        }
-
-        let sent = current.tx.saturating_sub(previous.tx);
-
-        if sent == 0 {
-            return None;
-        }
-
-        self.asked = self.asked.saturating_add(sent);
-        self.deaf_for += LIVENESS_INTERVAL;
-
-        if self.deaf_for < STALL_TIMEOUT || self.asked < STALL_MIN_BYTES {
-            return None;
-        }
-
-        Some(format!(
-            "sent {} bytes over {}s with no reply",
-            self.asked,
-            self.deaf_for.as_secs()
-        ))
-    }
-}
-
-/// Watches the tunnel for both ways it can die.
-///
-/// A crashed hysteria is the obvious one. The silent one is a live process whose
-/// QUIC session is gone: `try_wait()` still reports it running, so nothing ever
-/// triggers a reconnect and the app keeps claiming it is connected while nothing
-/// loads. `StallDetector` covers that case.
-///
-/// Unreadable counters mean "cannot tell", never "stalled", so a tunnel is never
-/// torn down on missing evidence.
 async fn watch_hysteria(
     hysteria: &mut Hysteria,
     cancellation: CancellationToken,
 ) -> MobileVpnError {
     let mut ticker = interval(LIVENESS_INTERVAL);
-    let mut detector = StallDetector::default();
 
     loop {
         tokio::select! {
@@ -295,15 +237,6 @@ async fn watch_hysteria(
             }
             _ = ticker.tick() => {
                 if let Some(reason) = hysteria.has_exited() {
-                    cancellation.cancel();
-                    return MobileVpnError::Hysteria(reason);
-                }
-
-                let Some(current) = counters::read() else {
-                    continue;
-                };
-
-                if let Some(reason) = detector.observe(current) {
                     cancellation.cancel();
                     return MobileVpnError::Hysteria(reason);
                 }
@@ -388,6 +321,9 @@ where
     let mut delay = RECONNECT_MIN_DELAY;
     let mut generation = 0u32;
 
+    counters::install();
+    counters::reset();
+
     loop {
         if cancellation.is_cancelled() {
             return Ok(());
@@ -427,54 +363,5 @@ where
         }
 
         delay = (delay * 2).min(RECONNECT_MAX_DELAY);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn feed(samples: impl IntoIterator<Item = (u64, u64)>) -> Option<String> {
-        let mut detector = StallDetector::default();
-
-        for (rx, tx) in samples {
-            if let Some(reason) = detector.observe(counters::Traffic { rx, tx }) {
-                return Some(reason);
-            }
-        }
-
-        None
-    }
-
-    #[test]
-    fn an_idle_phone_is_never_a_stall() {
-        assert!(feed(std::iter::repeat_n((9_613_555, 2_246_843), 200)).is_none());
-    }
-
-    #[test]
-    fn two_way_traffic_is_healthy() {
-        let samples = (1..=200).map(|step| (9_613_232 + step * 540, 2_246_519 + step * 327));
-
-        assert!(feed(samples).is_none());
-    }
-
-    #[test]
-    fn sending_with_no_reply_is_a_stall() {
-        let samples = (1..=200).map(|step| (9_613_232, 2_246_519 + step * 2_000));
-
-        assert!(feed(samples).is_some());
-    }
-
-    #[test]
-    fn a_trickle_alone_does_not_condemn_the_tunnel() {
-        assert!(feed((1..=200).map(|step| (100, 100 + step * 10))).is_none());
-    }
-
-    #[test]
-    fn a_single_reply_clears_the_count() {
-        let one_way = (1..=20).map(|step| (100, 100 + step * 3_000));
-        let recovered = (1..=100).map(|step| (100 + step * 3_000, 160_000 + step * 3_000));
-
-        assert!(feed(one_way.chain(recovered)).is_none());
     }
 }
