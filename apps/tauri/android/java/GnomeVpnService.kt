@@ -11,7 +11,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.Network
-import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -154,18 +153,12 @@ class GnomeVpnService : VpnService() {
 
         val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
 
-        activeNetwork = runCatching {
-            manager.allNetworks.firstOrNull { candidate ->
-                val caps = manager.getNetworkCapabilities(candidate)
-
-                caps != null &&
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-            }
-        }.getOrNull()
-
-        activeNetwork?.let(::bindUnderlying)
+        // registerDefaultNetworkCallback always delivers the current network
+        // straight away. That first delivery is the starting state, not a switch
+        // — treating it as one restarted the tunnel about 50ms after it came up,
+        // every single time, on every launch. Seeding from manager.activeNetwork
+        // does not help: by the time this runs, establish() has already happened.
+        var isFirstDelivery = true
 
         val callback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
@@ -173,11 +166,13 @@ class GnomeVpnService : VpnService() {
                     return
                 }
 
-                val previous = activeNetwork
+                val isSwitch = !isFirstDelivery
+
+                isFirstDelivery = false
                 activeNetwork = network
                 bindUnderlying(network)
 
-                if (previous != null) {
+                if (isSwitch) {
                     Log.i(TAG, "underlying network changed; restarting the engine")
                     TunnelEngine.nativeNetworkChanged()
                 }

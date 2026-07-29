@@ -117,11 +117,35 @@ The wake-lock is not the whole story either. What actually dropped the tunnel a
 few minutes after the screen locked was the Hysteria2 **QUIC connection idling
 out**: without `keepAlivePeriod` the client's default idle timeout (~30s) closes
 the connection the moment Doze batches the radio and no packets flow, and
-`watch_hysteria` only checks whether the _process_ exited — a live process with a
-dead connection never triggers a reconnect. `build_hysteria_config` sets
+`watch_hysteria` only checked whether the _process_ exited — a live process with a
+dead connection never triggered a reconnect. `build_hysteria_config` sets
 `quic.keepAlivePeriod: 10s` (plus an explicit `maxIdleTimeout: 30s`); the 10s
 heartbeat keeps the session alive across Doze's maintenance windows. This is the
 same reason WireGuard/OpenVPN clients survive Doze — they keepalive by default.
+
+**The keepalive only prevents the idle-out; it does not detect a session that
+died anyway** — a roaming network, a restarted node, a panel that dropped the
+client. For that `watch_hysteria` also runs a `StallDetector` over the tunnel
+interface counters (`mobile_vpn/counters.rs` reads `/proc/net/dev`).
+
+**Idle is not death, and this distinction is the whole design.** A phone left
+alone puts nothing through the TUN for minutes — 145s of complete silence was
+measured on a healthy tunnel — and the QUIC keepalive never appears there at all,
+because hysteria dials the node from _outside_ the TUN. A detector that fired on
+silence would kill the tunnel of a phone in a pocket, which is the one case that
+must survive ten hours untouched.
+
+What proves the session is dead is **tx climbing while rx stays perfectly flat**:
+the apps are asking and the tunnel is swallowing it. Only that, sustained for
+`STALL_TIMEOUT` (60s) and past `STALL_MIN_BYTES` (32 KB), cancels the attempt and
+hands over to the existing reconnect loop. Unreadable counters mean "cannot tell",
+never "stalled".
+
+**Never measure the tunnel with `TrafficStats.getUidRxBytes()`.** It counts every
+socket the app owns, so it keeps climbing from ordinary API calls while the
+tunnel is dead — which is exactly how a broken tunnel looked healthy: status
+`connected`, counters rising, nothing loading. `TunnelTraffic` reads the same
+per-interface counters the engine watches.
 
 A battery-optimization exemption (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) was
 tried and **removed**: a foreground `VpnService` is already exempt enough that

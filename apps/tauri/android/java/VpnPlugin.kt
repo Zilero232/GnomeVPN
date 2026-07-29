@@ -2,7 +2,6 @@ package ru.gnomevpn.app
 
 import android.app.Activity
 import android.content.Intent
-import android.net.TrafficStats
 import android.net.VpnService
 import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
@@ -136,15 +135,16 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    // TrafficStats counts the whole app, and every socket the tunnel opens
-    // belongs to it, so the totals track the tunnel for as long as it runs.
+    // Kernel counters for the tunnel interface, not for the app. TrafficStats
+    // counts every socket the app owns, so it keeps climbing from ordinary API
+    // calls while the tunnel is dead — a broken tunnel then looks healthy.
     @Command
     fun traffic(invoke: Invoke) {
-        val uid = activity.applicationInfo.uid
+        val counters = TunnelTraffic.read()
         val result = JSObject()
 
-        result.put("rx", TrafficStats.getUidRxBytes(uid).coerceAtLeast(0))
-        result.put("tx", TrafficStats.getUidTxBytes(uid).coerceAtLeast(0))
+        result.put("rx", counters.rx)
+        result.put("tx", counters.tx)
         invoke.resolve(result)
     }
 
