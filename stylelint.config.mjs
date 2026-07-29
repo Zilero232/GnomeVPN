@@ -5,17 +5,24 @@ export default {
   ignoreFiles: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/out/**', '**/target/**'],
   rules: {
     ...stylelint.rules,
-    'selector-class-pattern': null,
+
+    // Prettier owns blank lines. Stylelint inserts one before a nested rule,
+    // prettier strips it again, and the two never converge — lint:css and
+    // format:check could not both pass until this yielded.
+    'rule-empty-line-before': null,
+
+    // CSS-Modules syntax the shared config does not know about.
+    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global', 'local'] }],
+
+    // Names here are camelCase because they are read as `s.srOnly` from TSX;
+    // the shared config asks for snake_case.
     'keyframes-name-pattern': null,
     'scss/at-mixin-pattern': null,
-    'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global', 'local'] }],
-    'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
-    'rule-empty-line-before': null,
-    'comment-empty-line-before': null,
-    'custom-property-empty-line-before': null
+    'selector-class-pattern': null
   },
   overrides: [
     {
+      // The toaster overrides Sonner's inline styles, which nothing else can do.
       files: ['apps/client/app/globals.scss'],
       rules: {
         'declaration-no-important': null

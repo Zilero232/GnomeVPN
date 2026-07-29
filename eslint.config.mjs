@@ -19,30 +19,37 @@ export default eslint(
       '**/*.md/**'
     ]
   },
-  {
-    name: 'gnomevpn/rules',
-    files: ['**/*.?([cm])[jt]s?(x)'],
-    rules: {
-      'ts/no-explicit-any': 'error',
-      'ts/consistent-type-definitions': ['error', 'type'],
-      'style/lines-between-class-members': 'off',
-      'node/prefer-global/process': 'off',
-      'node/prefer-global/buffer': 'off',
-      'unicorn/filename-case': 'off'
-    }
-  },
+
+  // The shared config applies these to every language it parses, and they throw
+  // on JSON/YAML ("rules do not support the language jsonc/x") — without this
+  // block eslint refuses to start at all.
   {
     name: 'gnomevpn/data-files',
     files: ['**/*.json', '**/*.json5', '**/*.jsonc', '**/*.yaml', '**/*.yml', '**/*.toml'],
     rules: {
-      'unicorn/no-typeof-undefined': 'off',
-      'unicorn/no-useless-spread': 'off',
-      'prefer-template': 'off',
       'arrow-body-style': 'off',
+      'import/newline-after-import': 'off',
       'no-console': 'off',
-      'import/newline-after-import': 'off'
+      'prefer-template': 'off',
+      'unicorn/no-typeof-undefined': 'off',
+      'unicorn/no-useless-spread': 'off'
     }
   },
+
+  {
+    name: 'gnomevpn/typescript',
+    files: ['**/*.?([cm])[jt]s?(x)'],
+    rules: {
+      // `type` everywhere, never `interface` — see the root CLAUDE.md.
+      'ts/consistent-type-definitions': ['error', 'type'],
+      // Bun and Node both provide these as globals; the rule wants a CJS
+      // require() that has no place in an ESM workspace.
+      'node/prefer-global/buffer': 'off',
+      'node/prefer-global/process': 'off'
+    }
+  },
+
+  // Sorting manifest keys is pure churn and fights the conventional field order.
   {
     name: 'gnomevpn/manifests',
     files: ['**/package.json', '**/tsconfig*.json'],
@@ -50,27 +57,23 @@ export default eslint(
       'jsonc/sort-keys': 'off'
     }
   },
-  {
-    name: 'gnomevpn/client-ui',
-    files: ['apps/client/shared/ui/**', 'apps/client/scripts/**'],
-    rules: {
-      'no-console': 'off'
-    }
-  },
+
   {
     name: 'gnomevpn/server',
     files: ['apps/server/**'],
     rules: {
+      // Nest resolves dependencies from decorator metadata, which `import type`
+      // erases — the app then fails to boot with "Nest can't resolve".
       'ts/consistent-type-imports': 'off',
-      'ts/no-extraneous-class': 'off',
-      'new-cap': 'off',
-      'antfu/no-top-level-await': 'off',
-      'react/no-unnecessary-use-prefix': 'off'
+      // main.ts is an ESM entrypoint Bun runs directly.
+      'antfu/no-top-level-await': 'off'
     }
   },
+
+  // Console is the output channel of a CLI script, not a leftover debug line.
   {
     name: 'gnomevpn/scripts',
-    files: ['scripts/**', '**/*.mjs', 'apps/*/scripts/**'],
+    files: ['**/scripts/**'],
     rules: {
       'no-console': 'off'
     }
