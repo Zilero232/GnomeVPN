@@ -117,7 +117,7 @@ The wake-lock is not the whole story either. What actually dropped the tunnel a
 few minutes after the screen locked was the Hysteria2 **QUIC connection idling
 out**: without `keepAlivePeriod` the client's default idle timeout (~30s) closes
 the connection the moment Doze batches the radio and no packets flow, and
-`watch_hysteria` only checks whether the *process* exited — a live process with a
+`watch_hysteria` only checks whether the _process_ exited — a live process with a
 dead connection never triggers a reconnect. `build_hysteria_config` sets
 `quic.keepAlivePeriod: 10s` (plus an explicit `maxIdleTimeout: 30s`); the 10s
 heartbeat keeps the session alive across Doze's maintenance windows. This is the

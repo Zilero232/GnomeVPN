@@ -8,6 +8,6 @@ export const generateWireguardKeys = (): WireguardKeyPair => {
 
   return {
     privateKey: Buffer.from(privateKey).toString('base64'),
-    publicKey: Buffer.from(publicKey).toString('base64'),
+    publicKey: Buffer.from(publicKey).toString('base64')
   };
 };

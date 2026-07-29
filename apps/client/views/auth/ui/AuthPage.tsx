@@ -10,9 +10,9 @@ import { SignInForm } from '@/features/auth/sign-in';
 import { SignUpForm } from '@/features/auth/sign-up';
 import { BrandMark, Text } from '@/shared/ui';
 
-import s from './AuthPage.module.scss';
-
 import type { AuthMode } from './AuthPage.types';
+
+import s from './AuthPage.module.scss';
 
 export const AuthPage = () => {
   const t = useTranslations('auth');
@@ -35,7 +35,7 @@ export const AuthPage = () => {
           <LocaleSwitcher />
         </div>
 
-        <Text as="h1" className={s.title}>
+        <Text as='h1' className={s.title}>
           {title}
         </Text>
 
@@ -48,11 +48,11 @@ export const AuthPage = () => {
         </div>
 
         {mode !== 'forgot' && (
-          <Text align="center" size="sm" tone="muted">
+          <Text align='center' size='sm' tone='muted'>
             {isSignUp ? t('hasAccount') : t('noAccount')}{' '}
             <button
               className={s.toggleButton}
-              type="button"
+              type='button'
               onClick={() => setMode(isSignUp ? 'signin' : 'signup')}
             >
               {isSignUp ? t('toggleSignIn') : t('toggleSignUp')}

@@ -15,17 +15,17 @@ export const useServiceStatus = () => {
     queryFn: isVpnServiceAvailable,
     enabled: isTauriDesktop(),
     refetchInterval: (query) => (query.state.data === false ? RECHECK_INTERVAL_MS : false),
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: true
   });
 
   const repair = useMutation({
     mutationFn: repairVpnService,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.serviceStatus() }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.serviceStatus() })
   });
 
   return {
     isServiceMissing: isTauriDesktop() && !isAvailable,
     repair: repair.mutate,
-    isRepairing: repair.isPending,
+    isRepairing: repair.isPending
   };
 };

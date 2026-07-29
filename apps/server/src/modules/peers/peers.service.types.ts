@@ -1,4 +1,4 @@
-import type { PeerKind, TunnelProtocol } from '../../../generated';
+import type { PeerKind, Prisma, TunnelProtocol } from '../../../generated';
 
 export type PeerNode = {
   apiUrl: string;
@@ -54,7 +54,7 @@ export type FindPeersInput = {
   name?: string;
 };
 
-export type BulkPeerResult = {
-  succeeded: number;
-  failed: number;
+export type SetPeerEnabledInput = {
+  where: Prisma.PeerWhereInput;
+  enabled: boolean;
 };

@@ -1,8 +1,9 @@
+import type { DownloadedConfig, IssueConfigRequest } from '@gnomevpn/schemas';
+
+import type { ConfigDownload } from './configs.types';
+
 import { api } from '../http';
 import { parseFileName } from './configs.lib';
-
-import type { DownloadedConfig, IssueConfigRequest } from '@gnomevpn/schemas';
-import type { ConfigDownload } from './configs.types';
 
 export const listConfigs = async (): Promise<DownloadedConfig[]> => {
   const { data } = await api.get('/configs');
@@ -15,7 +16,7 @@ export const issueConfig = async (input: IssueConfigRequest): Promise<ConfigDown
 
   return {
     blob: response.data as Blob,
-    fileName: parseFileName(response.headers['content-disposition']),
+    fileName: parseFileName(response.headers['content-disposition'])
   };
 };
 

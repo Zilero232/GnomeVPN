@@ -2,11 +2,11 @@
 
 .root {
   display: flex;
+  min-height: var(--viewport-height);
   flex-direction: column;
-  gap: 20px;
   align-items: center;
   justify-content: center;
-  min-height: var(--viewport-height);
+  gap: 20px;
   text-align: center;
 
   @include safe-padding(24px);
@@ -14,14 +14,14 @@
 
 .icon {
   display: grid;
-  place-items: center;
   width: 68px;
   height: 68px;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-lg);
-  color: var(--color-accent);
   background-color: var(--color-surface);
   box-shadow: 0 0 50px -18px var(--color-accent);
+  color: var(--color-accent);
+  place-items: center;
 }
 
 .title {
@@ -35,15 +35,15 @@
 .body {
   max-width: 46ch;
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.6;
-  color: var(--color-text-muted);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
   margin-top: 6px;
+  gap: 12px;
 }

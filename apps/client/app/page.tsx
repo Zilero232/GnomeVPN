@@ -5,7 +5,7 @@ import { LandingPage } from '@/views/landing';
 export const metadata = createPageMetadata({
   title: SITE.title,
   description: SITE.description,
-  path: '/',
+  path: '/'
 });
 
 const Page = () => <LandingPage />;

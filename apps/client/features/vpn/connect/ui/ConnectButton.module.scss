@@ -1,16 +1,16 @@
 .wrap {
   position: relative;
   display: grid;
-  place-items: center;
   width: 212px;
   height: 212px;
+  place-items: center;
 }
 
 .ring {
   position: absolute;
-  inset: 12px;
   border: 1px solid var(--color-border-bright);
   border-radius: 50%;
+  inset: 12px;
 }
 
 .ringOuter {
@@ -18,22 +18,22 @@
 }
 
 .root {
-  cursor: pointer;
   position: relative;
   z-index: 1;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
   width: 148px;
   height: 148px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--color-border-bright);
   border-radius: 50%;
+  cursor: pointer;
   font-family: var(--font-mono);
   font-size: 12px;
-  text-transform: uppercase;
+  gap: 10px;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
   transition:
     box-shadow 0.3s ease,
     background-color 0.3s ease,
@@ -52,35 +52,35 @@
 }
 
 .disconnected {
-  color: var(--color-text);
   background-color: var(--color-surface);
   box-shadow: 0 0 30px -18px var(--color-accent);
+  color: var(--color-text);
 
   &:hover:not(:disabled) {
     border-color: var(--color-accent-dim);
-    color: var(--color-accent);
     box-shadow: 0 0 50px -10px var(--color-accent);
+    color: var(--color-accent);
   }
 }
 
 .connecting {
   border-color: var(--color-warning);
-  color: var(--color-warning);
   background-color: var(--color-surface);
   box-shadow: 0 0 38px -10px var(--color-warning);
+  color: var(--color-warning);
 }
 
 .connected {
   border-color: var(--color-accent);
-  color: var(--color-bg-deep);
   background-color: var(--color-accent);
   box-shadow: 0 0 60px -10px var(--color-accent);
+  color: var(--color-bg-deep);
 }
 
 .halo {
-  pointer-events: none;
   position: absolute;
-  inset: 42px;
   border: 1px solid var(--color-accent);
   border-radius: 50%;
+  inset: 42px;
+  pointer-events: none;
 }

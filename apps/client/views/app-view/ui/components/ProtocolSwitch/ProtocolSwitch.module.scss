@@ -3,16 +3,16 @@
 }
 
 .trigger {
-  cursor: pointer;
   display: flex;
-  gap: 6px;
-  align-items: center;
   height: 30px;
+  align-items: center;
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: 999px;
-  color: var(--color-text);
   background-color: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  gap: 6px;
   transition:
     border-color 0.15s ease,
     background-color 0.15s ease;
@@ -50,44 +50,44 @@
   z-index: 20;
   top: calc(100% + 8px);
   left: 0;
-  transform-origin: top left;
   overflow: hidden;
   min-width: 168px;
-  margin: 0;
   padding: 6px;
   border: 1px solid rgb(230 240 236 / 9%);
   border-radius: 14px;
-  list-style: none;
+  margin: 0;
+  backdrop-filter: blur(22px) saturate(160%);
   background-color: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
   background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
-  backdrop-filter: blur(22px) saturate(160%);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 8%) inset,
     0 0 0 1px rgb(0 0 0 / 40%),
     0 28px 60px -24px rgb(0 0 0 / 90%);
+  list-style: none;
+  transform-origin: top left;
 }
 
 .option {
-  cursor: pointer;
   display: flex;
-  gap: 12px;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
   padding: 9px 11px;
   border: 0;
   border-radius: 9px;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: var(--color-text-muted);
-  background-color: transparent;
+  gap: 12px;
   transition:
     color 0.14s ease,
     background-color 0.14s ease;
 
   &:hover {
-    color: var(--color-text);
     background-color: color-mix(in srgb, var(--color-text) 6%, transparent);
+    color: var(--color-text);
   }
 }
 

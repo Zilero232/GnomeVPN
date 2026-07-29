@@ -18,19 +18,19 @@ export class ExpiredAccessJob {
     private readonly prisma: PrismaService,
     private readonly sessions: SessionAccessService,
     private readonly configs: ConfigAccessService,
-    private readonly events: EventsService,
+    private readonly events: EventsService
   ) {}
 
   private async revokeExpiredSessions(): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
       where: { kind: 'session', user: lapsedBefore(new Date()) },
-      select: { userId: true },
+      select: { userId: true }
     });
 
     const expired = pipe(
       peers,
       map((peer) => peer.userId),
-      unique(),
+      unique()
     );
 
     await Promise.allSettled(expired.map((userId) => this.sessions.disconnectAll(userId)));
@@ -46,18 +46,20 @@ export class ExpiredAccessJob {
     const configs = await this.prisma.peer.findMany({
       where: {
         kind: 'config',
-        user: lapsedBefore(subHours(new Date(), CONFIG_GRACE_HOURS)),
+        user: lapsedBefore(subHours(new Date(), CONFIG_GRACE_HOURS))
       },
-      select: { userId: true },
+      select: { userId: true }
     });
 
     const expired = pipe(
       configs,
       map((config) => config.userId),
-      unique(),
+      unique()
     );
 
-    await Promise.allSettled(expired.map((userId) => this.configs.setEnabledAll(userId, false)));
+    await Promise.allSettled(
+      expired.map((userId) => this.configs.setEnabledAll({ userId, enabled: false }))
+    );
 
     return expired;
   }
@@ -66,12 +68,12 @@ export class ExpiredAccessJob {
   async run(): Promise<void> {
     const [sessions, configs] = await Promise.all([
       this.revokeExpiredSessions(),
-      this.revokeExpiredConfigs(),
+      this.revokeExpiredConfigs()
     ]);
 
     if (sessions.length > 0 || configs.length > 0) {
       this.logger.log(
-        `Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`,
+        `Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`
       );
     }
   }

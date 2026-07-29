@@ -6,6 +6,6 @@ export {
   isKnownRoute,
   isPublicRoute,
   isWebOnlyRoute,
-  ROUTES,
+  ROUTES
 } from './routes';
 export { STORAGE_KEYS } from './storage-keys';

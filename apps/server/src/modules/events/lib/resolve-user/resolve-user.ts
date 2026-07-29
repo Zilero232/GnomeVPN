@@ -6,7 +6,7 @@ export const resolveUser = async (token: string | undefined): Promise<string | n
   }
 
   const session = await auth.api.getSession({
-    headers: new Headers({ authorization: `Bearer ${token}` }),
+    headers: new Headers({ authorization: `Bearer ${token}` })
   });
 
   return session?.user.id ?? null;

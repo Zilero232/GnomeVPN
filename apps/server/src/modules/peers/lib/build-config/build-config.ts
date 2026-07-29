@@ -1,10 +1,11 @@
+import type { TunnelConfig } from '@gnomevpn/schemas';
+
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
+
+import type { BuildConfigInput } from './build-config.types';
 
 import { AppServiceUnavailableException } from '../../../../common/exceptions';
 import { TUNNEL, WG } from '../../config';
-
-import type { TunnelConfig } from '@gnomevpn/schemas';
-import type { BuildConfigInput } from './build-config.types';
 
 const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig => ({
   protocol: TUNNEL_PROTOCOL.hysteria2,
@@ -13,13 +14,13 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
   auth,
   serverName: node.serverName,
   insecure: TUNNEL.insecure,
-  dns: [...TUNNEL.dns],
+  dns: [...TUNNEL.dns]
 });
 
 const buildWireguardConfig = ({
   node,
   wgPrivateKey,
-  wgAssignedIp,
+  wgAssignedIp
 }: BuildConfigInput): TunnelConfig => {
   if (!node.wgPublicKey || !wgPrivateKey || !wgAssignedIp) {
     throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no wireguard endpoint');
@@ -39,8 +40,8 @@ const buildWireguardConfig = ({
       peerPublicKey: node.wgPublicKey,
       allowedIps: [...WG.allowedIps],
       reserved: [],
-      mtu: WG.mtu,
-    },
+      mtu: WG.mtu
+    }
   };
 };
 

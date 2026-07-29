@@ -1,8 +1,8 @@
 .sentinel {
-  pointer-events: none;
   position: absolute;
   top: 0;
   height: 1px;
+  pointer-events: none;
 }
 
 .root {
@@ -18,23 +18,23 @@
 
 .scrolled {
   border-bottom-color: var(--color-border);
-  background-color: rgb(7 11 10 / 82%);
   backdrop-filter: blur(12px);
+  background-color: rgb(7 11 10 / 82%);
 }
 
 .inner {
   display: flex;
-  gap: 20px;
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
   max-width: 1080px;
-  margin: 0 auto;
+  align-items: center;
+  justify-content: space-between;
   padding: 14px 24px;
+  margin: 0 auto;
+  gap: 20px;
 
   @media (width <= 560px) {
-    gap: 10px;
     padding: 10px 12px;
+    gap: 10px;
   }
 }
 
@@ -52,8 +52,8 @@
 
 .nav {
   display: flex;
-  gap: 26px;
   align-items: center;
+  gap: 26px;
 
   @media (width <= 760px) {
     display: none;
@@ -61,9 +61,9 @@
 }
 
 .navLink {
+  color: var(--color-text-muted);
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--color-text-muted);
   text-decoration: none;
   transition: color 0.16s ease;
 
@@ -80,8 +80,8 @@
 
 .actions {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 10px;
 
   @media (width <= 560px) {
     gap: 6px;

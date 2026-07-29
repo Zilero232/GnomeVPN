@@ -12,8 +12,8 @@
 }
 
 @mixin safe-screen($top, $right: $top, $bottom: $top, $left: $right) {
-  box-sizing: border-box;
   min-height: var(--viewport-height);
+  box-sizing: border-box;
 
   @include safe-padding($top, $right, $bottom, $left);
 }
@@ -25,20 +25,20 @@
 }
 
 @mixin menu-item {
-  cursor: pointer;
   position: relative;
   display: flex;
-  gap: 11px;
-  align-items: center;
   width: 100%;
+  align-items: center;
   padding: 10px 11px;
   border: 1px solid transparent;
   border-radius: 10px;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--color-text);
+  gap: 11px;
   text-align: left;
-  background: none;
   transition:
     border-color 0.16s ease,
     background-color 0.16s ease,
@@ -46,8 +46,8 @@
 
   &:hover:not(:disabled) {
     border-color: rgb(230 240 236 / 10%);
-    color: var(--color-text);
     background-color: rgb(230 240 236 / 7%);
+    color: var(--color-text);
   }
 
   &:active:not(:disabled) {

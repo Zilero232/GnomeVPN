@@ -15,5 +15,5 @@ export {
   setManuallyDisconnected,
   setProtocol,
   setSplitConfig,
-  wasManuallyDisconnected,
+  wasManuallyDisconnected
 } from './app-settings';

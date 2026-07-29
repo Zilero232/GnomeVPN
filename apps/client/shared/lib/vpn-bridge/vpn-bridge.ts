@@ -1,31 +1,32 @@
+import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
+
 import { SPLIT_MODE } from '@gnomevpn/schemas';
 import { Channel } from '@tauri-apps/api/core';
 import { mapToObj } from 'remeda';
 
-import { callRust } from '../ipc';
-import { isTauriDesktop } from '../tauri-platform';
-
-import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
 import type { TunnelEvent } from '../ipc';
 import type {
   InstalledApp,
   LatencyByNode,
   ProbeLatencyInput,
   VpnConnectInput,
-  VpnTraffic,
+  VpnTraffic
 } from './vpn-bridge.types';
+
+import { callRust } from '../ipc';
+import { isTauriDesktop } from '../tauri-platform';
 
 export const emptySplitConfig = (): SplitConfig => ({
   appsMode: SPLIT_MODE.allowed,
   apps: [],
   ipsMode: SPLIT_MODE.allowed,
-  ips: [],
+  ips: []
 });
 
 const asMode = (value: unknown): SplitMode =>
   value === SPLIT_MODE.disallowed ? SPLIT_MODE.disallowed : SPLIT_MODE.allowed;
 
-const asList = (value: unknown): string[] =>
+const asList = (value: unknown) =>
   Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
 
 export const normalizeSplitConfig = (value: unknown): SplitConfig => {
@@ -35,7 +36,7 @@ export const normalizeSplitConfig = (value: unknown): SplitConfig => {
     appsMode: asMode(source.appsMode),
     apps: asList(source.apps),
     ipsMode: asMode(source.ipsMode),
-    ips: asList(source.ips),
+    ips: asList(source.ips)
   };
 };
 
@@ -43,20 +44,19 @@ export const vpnConnect = async ({
   config,
   onEvent,
   autoReconnect,
-  split = emptySplitConfig(),
-  heartbeat,
+  split = emptySplitConfig()
 }: VpnConnectInput): Promise<void> => {
   const channel = new Channel<TunnelEvent>();
   channel.onmessage = onEvent;
 
   const args = isTauriDesktop()
     ? { config, onEvent: channel, autoReconnect, split }
-    : { config, onEvent: channel, autoReconnect, heartbeat };
+    : { config, onEvent: channel, autoReconnect };
 
   await callRust({
     command: 'vpn_connect',
     args,
-    fallback: null,
+    fallback: null
   });
 };
 
@@ -76,7 +76,7 @@ export const pickExecutable = async (): Promise<string | null> => {
   const selected = await open({
     multiple: false,
     directory: false,
-    filters: [{ name: 'Executable', extensions: ['exe'] }],
+    filters: [{ name: 'Executable', extensions: ['exe'] }]
   });
 
   return typeof selected === 'string' ? selected : null;
@@ -121,7 +121,7 @@ export const probeNodeLatency = async ({ targets }: ProbeLatencyInput): Promise<
   const outcomes = await callRust({
     command: 'vpn_probe_latency',
     args: { targets },
-    fallback: [],
+    fallback: []
   });
 
   return mapToObj(outcomes, ({ id, rttMs }) => [id, rttMs]);

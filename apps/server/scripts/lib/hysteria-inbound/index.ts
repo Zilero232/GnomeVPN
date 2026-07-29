@@ -6,7 +6,7 @@ export {
   KEY_PATH,
   LISTEN_PORT,
   MASQUERADE_HOST,
-  PANEL_PORT,
+  PANEL_PORT
 } from './hysteria-inbound.constants';
 
 export type { BuildInboundInput } from './hysteria-inbound.types';

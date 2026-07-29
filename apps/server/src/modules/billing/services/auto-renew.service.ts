@@ -8,7 +8,7 @@ import { BillingSharedService } from './billing-shared.service';
 export class AutoRenewService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly shared: BillingSharedService,
+    private readonly shared: BillingSharedService
   ) {}
 
   async cancelAutoRenew(userId: string): Promise<void> {
@@ -18,7 +18,7 @@ export class AutoRenewService {
   async resumeAutoRenew(userId: string): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { savedCardId: true },
+      select: { savedCardId: true }
     });
 
     if (!subscription?.savedCardId) {

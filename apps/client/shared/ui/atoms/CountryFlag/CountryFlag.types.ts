@@ -1,5 +1,5 @@
 export type CountryFlagProps = {
   countryCode: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'lg' | 'md' | 'sm';
   className?: string;
 };

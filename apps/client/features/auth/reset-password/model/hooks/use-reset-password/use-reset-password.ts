@@ -1,4 +1,6 @@
-import { type ResetPasswordValues, resetPasswordSchema } from '@gnomevpn/schemas';
+import type { ResetPasswordValues } from '@gnomevpn/schemas';
+
+import { resetPasswordSchema } from '@gnomevpn/schemas';
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/shared/api';
@@ -16,5 +18,5 @@ export const useResetPassword = () =>
       if (error) {
         throw new Error('errors.passwordResetFailed');
       }
-    },
+    }
   });

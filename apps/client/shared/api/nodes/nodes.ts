@@ -1,6 +1,6 @@
-import { api } from '../http';
-
 import type { Node, NodeEndpoint } from '@gnomevpn/schemas';
+
+import { api } from '../http';
 
 export const listNodes = async (): Promise<Node[]> => {
   const { data } = await api.get('/nodes');

@@ -1,13 +1,6 @@
-export { PEER_RETRY } from './config';
-export {
-  buildTunnelConfig,
-  PEER_REF_SELECT,
-  peerClientName,
-  peerWgData,
-  retryUntilCleared,
-} from './lib';
-export { PeersModule } from './peers.module';
-export { PeersService } from './services';
-
+export { buildTunnelConfig, PEER_REF_SELECT, peerClientName, peerWgData } from './lib';
 export type { TunnelNode } from './lib';
+export { PeersModule } from './peers.module';
+
 export type { CreatedPeer, PeerRef } from './peers.service.types';
+export { PeersService } from './services';

@@ -4,6 +4,6 @@ import { PeersService } from './services';
 
 @Module({
   providers: [PeersService],
-  exports: [PeersService],
+  exports: [PeersService]
 })
 export class PeersModule {}

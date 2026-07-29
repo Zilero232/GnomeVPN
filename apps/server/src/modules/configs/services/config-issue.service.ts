@@ -1,5 +1,16 @@
+import type { DownloadedConfig } from '@gnomevpn/schemas';
+
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
+
+import type {
+  BuildConfigFileInput,
+  ConfigFile,
+  ConfigPeerKey,
+  IssueConfigInput,
+  PersistConfigPeerInput,
+  RebuildWireguardInput
+} from '../configs.service.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService, withSerializableRetry } from '../../../core';
@@ -8,23 +19,13 @@ import { buildTunnelConfig, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
 import { renderConfig } from '../lib';
 
-import type { DownloadedConfig } from '@gnomevpn/schemas';
-import type {
-  BuildConfigFileInput,
-  ConfigFile,
-  ConfigPeerKey,
-  IssueConfigInput,
-  PersistConfigPeerInput,
-  RebuildWireguardInput,
-} from '../configs.service.types';
-
 @Injectable()
 export class ConfigIssueService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly nodes: NodesService,
     private readonly peers: PeersService,
-    private readonly subscription: SubscriptionService,
+    private readonly subscription: SubscriptionService
   ) {}
 
   async list(userId: string): Promise<DownloadedConfig[]> {
@@ -37,8 +38,8 @@ export class ConfigIssueService {
         nodeId: true,
         protocol: true,
         createdAt: true,
-        node: { select: { country: true, countryCode: true } },
-      },
+        node: { select: { country: true, countryCode: true } }
+      }
     });
 
     return rows.map((row) => ({
@@ -48,7 +49,7 @@ export class ConfigIssueService {
       country: row.node.country,
       countryCode: row.node.countryCode,
       protocol: row.protocol,
-      createdAt: row.createdAt.toISOString(),
+      createdAt: row.createdAt.toISOString()
     }));
   }
 
@@ -58,7 +59,7 @@ export class ConfigIssueService {
     const [existing, { configLimit }, count] = await Promise.all([
       this.findConfigPeer({ userId, nodeId, name, protocol }),
       this.subscription.getLimits(userId),
-      this.prisma.peer.count({ where: { userId, kind: 'config' } }),
+      this.prisma.peer.count({ where: { userId, kind: 'config' } })
     ]);
 
     if (!existing && count >= configLimit) {
@@ -81,7 +82,7 @@ export class ConfigIssueService {
       protocol,
       name,
       persist: (peer) =>
-        this.persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer }),
+        this.persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer })
     });
 
     return this.buildFile({
@@ -90,15 +91,15 @@ export class ConfigIssueService {
       protocol,
       auth: created.nodeCredential,
       wgPrivateKey: created.wgPrivateKey,
-      wgAssignedIp: created.wgAssignedIp,
+      wgAssignedIp: created.wgAssignedIp
     });
   }
 
   private findConfigPeer({ userId, nodeId, name, protocol }: ConfigPeerKey) {
     return this.prisma.peer.findUnique({
       where: {
-        userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
-      },
+        userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol }
+      }
     });
   }
 
@@ -113,7 +114,7 @@ export class ConfigIssueService {
       protocol: TUNNEL_PROTOCOL.wireguard,
       auth: peer.nodeCredential,
       wgPrivateKey: peer.wgPrivateKey,
-      wgAssignedIp: peer.wgAssignedIp,
+      wgAssignedIp: peer.wgAssignedIp
     });
   }
 
@@ -123,7 +124,7 @@ export class ConfigIssueService {
     name,
     protocol,
     configLimit,
-    peer,
+    peer
   }: PersistConfigPeerInput): Promise<void> {
     const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
 
@@ -132,8 +133,8 @@ export class ConfigIssueService {
         async (tx) => {
           const current = await tx.peer.findUnique({
             where: {
-              userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol },
-            },
+              userId_kind_name_nodeId_protocol: { userId, kind: 'config', name, nodeId, protocol }
+            }
           });
 
           if (current) {
@@ -145,14 +146,14 @@ export class ConfigIssueService {
           if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
             throw new AppBadRequestException(
               'CONFIG_LIMIT_REACHED',
-              `At most ${configLimit} configs`,
+              `At most ${configLimit} configs`
             );
           }
 
           await tx.peer.create({ data: { userId, kind: 'config', protocol, name, ...data } });
         },
-        { isolationLevel: 'Serializable' },
-      ),
+        { isolationLevel: 'Serializable' }
+      )
     );
   }
 
@@ -162,7 +163,7 @@ export class ConfigIssueService {
     protocol,
     auth,
     wgPrivateKey,
-    wgAssignedIp,
+    wgAssignedIp
   }: BuildConfigFileInput): ConfigFile {
     const config = buildTunnelConfig({ node, protocol, auth, wgPrivateKey, wgAssignedIp });
 

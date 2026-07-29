@@ -3,7 +3,7 @@ export {
   clearToken,
   getAuthToken,
   restoreTokenFromVault,
-  saveAuthToken,
+  saveAuthToken
 } from './auth/auth-client';
 export { unwrapAuth } from './auth/unwrap-auth';
 export {
@@ -12,14 +12,14 @@ export {
   cancelAutoRenew,
   createCheckout,
   resumeAutoRenew,
-  unbindCard,
+  unbindCard
 } from './billing';
 export { issueConfig, listConfigs, readConfigText, revokeConfig } from './configs';
-export { ApiError, api, apiErrorCode, toApiError } from './http';
+export type { ConfigDownload } from './configs';
+export { api, ApiError, apiErrorCode, toApiError } from './http';
 export { listNodeEndpoints, listNodes } from './nodes';
 export { queryClient } from './query-client';
 export { getLatestRelease } from './release';
 export { getSubscriptionStatus } from './subscription';
-export { connectTunnel, disconnectTunnel, getDeviceUsage, sendHeartbeat } from './tunnel';
 
-export type { ConfigDownload } from './configs';
+export { connectTunnel, disconnectTunnel, getDeviceUsage } from './tunnel';

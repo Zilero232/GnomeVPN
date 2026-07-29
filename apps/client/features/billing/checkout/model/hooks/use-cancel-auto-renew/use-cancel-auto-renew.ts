@@ -8,6 +8,6 @@ export const useCancelAutoRenew = () => {
 
   return useMutation({
     mutationFn: cancelAutoRenew,
-    onSuccess: invalidateSubscription,
+    onSuccess: invalidateSubscription
   });
 };

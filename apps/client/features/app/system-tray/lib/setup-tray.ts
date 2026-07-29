@@ -1,9 +1,10 @@
 import { TrayIcon } from '@tauri-apps/api/tray';
 
 import { logger, resolveBundledResource, toggleMainWindow } from '@/shared/lib';
-import { TRAY_ICON, TRAY_ID } from '../config';
 
 import type { SetupTrayInput } from './setup-tray.types';
+
+import { TRAY_ICON, TRAY_ID } from '../config';
 
 const iconFor = async (isConnected: boolean): Promise<string> =>
   resolveBundledResource(isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected);
@@ -31,7 +32,7 @@ export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) 
       if (event.type === 'Click' && event.button === 'Left' && event.buttonState === 'Up') {
         await toggleMainWindow();
       }
-    },
+    }
   });
 
   return {
@@ -43,7 +44,7 @@ export const setupTray = async ({ tooltip, menu, isConnected }: SetupTrayInput) 
     },
     dispose: async () => {
       await tray.close();
-    },
+    }
   };
 };
 

@@ -2,10 +2,10 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+import type { SyncableNode, SyncToProductionInput } from './node-sync.types';
+
 import { SshClient } from '../ssh-client';
 import { SSH_KEY_NAMES } from './node-sync.constants';
-
-import type { SyncableNode, SyncToProductionInput } from './node-sync.types';
 
 const defaultKeyPath = (): string | undefined =>
   SSH_KEY_NAMES.map((name) => join(homedir(), '.ssh', name)).find((path) => existsSync(path));
@@ -25,7 +25,7 @@ const row = (node: SyncableNode): string =>
     quote(node.wgPublicKey),
     quote(node.apiUrl),
     quote(node.apiTokenEnvVar),
-    String(node.displayOrder),
+    String(node.displayOrder)
   ].join(', ');
 
 const buildNodeSync = (nodes: SyncableNode[]): string => {
@@ -72,13 +72,13 @@ const buildNodeSync = (nodes: SyncableNode[]): string => {
     'FROM incoming_node i',
     'WHERE NOT EXISTS (SELECT 1 FROM node n WHERE n.host = i.host);',
     '',
-    'COMMIT;',
+    'COMMIT;'
   ].join('\n');
 };
 
 export const syncToProduction = async ({
   nodes,
-  envNodes,
+  envNodes
 }: SyncToProductionInput): Promise<string> => {
   const host = process.env.PROVISION_SSH_HOST;
   const username = process.env.PROVISION_SSH_USER ?? 'root';
@@ -104,9 +104,9 @@ export const syncToProduction = async ({
       [
         `cd ${deployPath} &&`,
         'docker compose exec -T postgres',
-        `sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`,
-        `<<'SQL'\n${buildNodeSync(nodes)}\nSQL`,
-      ].join(' '),
+        'sh -c \'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"\'',
+        `<<'SQL'\n${buildNodeSync(nodes)}\nSQL`
+      ].join(' ')
     );
 
     if (applied.exitCode !== 0) {

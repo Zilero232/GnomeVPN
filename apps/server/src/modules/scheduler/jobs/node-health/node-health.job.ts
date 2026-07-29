@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
+import type { ProbeNodeRow } from './node-health.job.types';
+
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-
-import type { ProbeNodeRow } from './node-health.job.types';
 
 @Injectable()
 export class NodeHealthJob {
@@ -27,7 +27,7 @@ export class NodeHealthJob {
 
     await this.prisma.node.update({
       where: { id: node.id },
-      data: { lastHealthyAt: new Date() },
+      data: { lastHealthyAt: new Date() }
     });
   }
 
@@ -35,7 +35,7 @@ export class NodeHealthJob {
   async run(): Promise<void> {
     const nodes = await this.prisma.node.findMany({
       where: { isAvailable: true },
-      select: { id: true, apiUrl: true, apiTokenEnvVar: true },
+      select: { id: true, apiUrl: true, apiTokenEnvVar: true }
     });
 
     const results = await Promise.allSettled(nodes.map((node) => this.probe(node)));

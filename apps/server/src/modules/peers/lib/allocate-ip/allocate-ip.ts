@@ -1,6 +1,6 @@
-import { WG } from '../../config';
-
 import type { NextWireguardIpInput } from './allocate-ip.types';
+
+import { WG } from '../../config';
 
 const FIRST_HOST = WG.serverHostOffset + 1;
 const LAST_HOST = 254;

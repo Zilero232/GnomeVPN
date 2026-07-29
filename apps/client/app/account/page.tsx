@@ -6,7 +6,7 @@ export const metadata = createPageMetadata({
   description: 'Статус подписки, оплата и управление автопродлением.',
   path: '/account',
   index: false,
-  follow: false,
+  follow: false
 });
 
 const Page = () => <AccountPage />;

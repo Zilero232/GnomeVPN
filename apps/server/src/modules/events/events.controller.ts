@@ -1,12 +1,12 @@
+import type { MessageEvent } from '@nestjs/common';
+import type { Observable } from 'rxjs';
+
 import { Controller, Query, Sse, UnauthorizedException } from '@nestjs/common';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { from, interval, map, merge, switchMap } from 'rxjs';
 
 import { resolveUser } from './lib';
 import { EventsService } from './services';
-
-import type { MessageEvent } from '@nestjs/common';
-import type { Observable } from 'rxjs';
 
 const KEEP_ALIVE_MS = 25_000;
 
@@ -28,11 +28,11 @@ export class EventsController {
           .pipe(map((event): MessageEvent => ({ data: event })));
 
         const keepAlive = interval(KEEP_ALIVE_MS).pipe(
-          map((): MessageEvent => ({ type: 'ping', data: '' })),
+          map((): MessageEvent => ({ type: 'ping', data: '' }))
         );
 
         return merge(events, keepAlive);
-      }),
+      })
     );
   }
 }

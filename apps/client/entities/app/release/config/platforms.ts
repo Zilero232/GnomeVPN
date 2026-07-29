@@ -1,6 +1,6 @@
-import { AppWindow, Smartphone } from 'lucide-react';
-
 import type { ReleasePlatform } from '@gnomevpn/schemas';
+
+import { AppWindow, Smartphone } from 'lucide-react';
 
 export type DownloadPlatformConfig = {
   Icon: typeof AppWindow;
@@ -10,5 +10,5 @@ export type DownloadPlatformConfig = {
 
 export const DOWNLOAD_PLATFORMS: DownloadPlatformConfig[] = [
   { id: 'windows', labelKey: 'windows', Icon: AppWindow },
-  { id: 'android', labelKey: 'android', Icon: Smartphone },
+  { id: 'android', labelKey: 'android', Icon: Smartphone }
 ];

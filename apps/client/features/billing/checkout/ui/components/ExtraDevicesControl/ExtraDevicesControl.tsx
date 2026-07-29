@@ -6,11 +6,12 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { Button } from '@/shared/ui';
+
+import type { ExtraDevicesControlProps, SlotState } from './ExtraDevicesControl.types';
+
 import { useBuyExtraDevices } from '../../../model/hooks';
 
 import s from './ExtraDevicesControl.module.scss';
-
-import type { ExtraDevicesControlProps, SlotState } from './ExtraDevicesControl.types';
 
 export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
   const t = useTranslations('account');
@@ -61,7 +62,7 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
                 aria-label={t('extraDevicesLess')}
                 className={s.step}
                 disabled={quantity <= 1 || buy.isPending}
-                type="button"
+                type='button'
                 onClick={() => setQuantity((value) => Math.max(1, value - 1))}
               >
                 −
@@ -73,14 +74,14 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
                 aria-label={t('extraDevicesMore')}
                 className={s.step}
                 disabled={quantity >= remaining || buy.isPending}
-                type="button"
+                type='button'
                 onClick={() => setQuantity((value) => Math.min(remaining, value + 1))}
               >
                 +
               </button>
             </div>
 
-            <Button disabled={buy.isPending} size="md" onClick={() => buy.mutate(quantity)}>
+            <Button disabled={buy.isPending} size='md' onClick={() => buy.mutate(quantity)}>
               {t('extraDevicesBuy', { price: extraDevicesPriceRub(quantity) })}
             </Button>
           </div>

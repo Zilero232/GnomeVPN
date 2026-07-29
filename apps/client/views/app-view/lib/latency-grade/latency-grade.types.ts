@@ -1,1 +1,1 @@
-export type LatencyGrade = 'fast' | 'fair' | 'slow';
+export type LatencyGrade = 'fair' | 'fast' | 'slow';

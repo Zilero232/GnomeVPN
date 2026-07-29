@@ -1,7 +1,7 @@
+import { $ } from 'bun';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { $ } from 'bun';
 
 export const workspace = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
@@ -11,7 +11,6 @@ $.cwd(workspace);
 $.throws(true);
 
 const write = (stream, scope, message) => {
-  // biome-ignore lint/suspicious/noConsole: standalone CLI scripts, console is the output channel
   console[stream](`[${scope}] ${message}`);
 };
 
@@ -22,7 +21,7 @@ export const reporter = (scope) => ({
   fail: (message, code = 1) => {
     write('error', scope, message);
     process.exit(code);
-  },
+  }
 });
 
 const has = async (command) => {
@@ -46,8 +45,8 @@ export const findGh = () =>
     command: 'gh',
     knownPaths: [
       join(process.env.ProgramFiles ?? 'C:\\Program Files', 'GitHub CLI', 'gh.exe'),
-      join(process.env.LOCALAPPDATA ?? '', 'Microsoft', 'WinGet', 'Links', 'gh.exe'),
-    ],
+      join(process.env.LOCALAPPDATA ?? '', 'Microsoft', 'WinGet', 'Links', 'gh.exe')
+    ]
   });
 
 export const requireGh = async (log) => {

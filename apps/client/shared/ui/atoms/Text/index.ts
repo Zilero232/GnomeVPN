@@ -6,5 +6,5 @@ export type {
   TextProps,
   TextSize,
   TextTone,
-  TextWeight,
+  TextWeight
 } from './Text.types';

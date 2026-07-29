@@ -5,16 +5,17 @@ import { useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
 import { Button, Text } from '@/shared/ui';
+
+import type { AutoRenewControlProps } from './AutoRenewControl.types';
+
 import {
   useBindCard,
   useCancelAutoRenew,
   useResumeAutoRenew,
-  useUnbindCard,
+  useUnbindCard
 } from '../../../model/hooks';
 
 import s from './AutoRenewControl.module.scss';
-
-import type { AutoRenewControlProps } from './AutoRenewControl.types';
 
 export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   const t = useTranslations('account');
@@ -33,11 +34,11 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       </span>
 
       <div className={s.cardText}>
-        <Text as="span" className={s.cardTitle}>
+        <Text as='span' className={s.cardTitle}>
           {savedCardTitle ?? t('cardBound')}
         </Text>
 
-        <Text as="span" className={s.cardNote}>
+        <Text as='span' className={s.cardNote}>
           {cancelAtPeriodEnd ? t('autoRenewOff') : t('autoRenewOn')}
         </Text>
       </div>
@@ -45,7 +46,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       <Button
         className={s.unbind}
         disabled={unbind.isPending}
-        variant="ghost"
+        variant='ghost'
         onClick={() => unbind.mutate()}
       >
         {t('unbindCard')}
@@ -57,11 +58,11 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
     .with({ isRecurringAvailable: false }, () => null)
     .with({ hasPaymentMethod: false }, () => (
       <div className={s.root}>
-        <Text size="xs" tone="muted">
+        <Text size='xs' tone='muted'>
           {t('noPaymentMethod')}
         </Text>
 
-        <Button disabled={bind.isPending} variant="ghost" onClick={() => bind.mutate()}>
+        <Button disabled={bind.isPending} variant='ghost' onClick={() => bind.mutate()}>
           {t('bindCard')}
         </Button>
       </div>
@@ -70,7 +71,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       <div className={s.root}>
         {card}
 
-        <Button disabled={resume.isPending} variant="ghost" onClick={() => resume.mutate()}>
+        <Button disabled={resume.isPending} variant='ghost' onClick={() => resume.mutate()}>
           {t('resumeAutoRenew')}
         </Button>
       </div>
@@ -79,7 +80,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
       <div className={s.root}>
         {card}
 
-        <Button disabled={cancel.isPending} variant="ghost" onClick={() => cancel.mutate()}>
+        <Button disabled={cancel.isPending} variant='ghost' onClick={() => cancel.mutate()}>
           {t('cancelAutoRenew')}
         </Button>
       </div>

@@ -7,7 +7,7 @@ export const siteJsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE.url}/#website`,
       url: SITE.url,
-      name: SITE.name,
-    },
-  ],
+      name: SITE.name
+    }
+  ]
 } as const;

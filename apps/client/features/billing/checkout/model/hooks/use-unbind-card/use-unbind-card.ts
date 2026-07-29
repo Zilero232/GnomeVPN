@@ -11,6 +11,6 @@ export const useUnbindCard = () => {
   return useMutation({
     mutationFn: unbindCard,
     onSuccess: invalidateSubscription,
-    onError: toastError,
+    onError: toastError
   });
 };

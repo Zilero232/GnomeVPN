@@ -18,6 +18,6 @@ export const useIssueConfig = () => {
 
       toast.success(t('created'), { description: t('createdHint') });
     },
-    onError: toastError,
+    onError: toastError
   });
 };

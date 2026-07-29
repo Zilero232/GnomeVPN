@@ -8,6 +8,6 @@ import { NodesService } from './services';
   imports: [SubscriptionModule],
   controllers: [NodesController],
   providers: [NodesService],
-  exports: [NodesService],
+  exports: [NodesService]
 })
 export class NodesModule {}

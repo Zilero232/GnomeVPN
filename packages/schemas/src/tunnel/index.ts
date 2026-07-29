@@ -1,9 +1,8 @@
 export {
   connectInputSchema,
   disconnectInputSchema,
-  heartbeatInputSchema,
   issueConfigSchema,
-  revokeConfigSchema,
+  revokeConfigSchema
 } from './inputs';
 export {
   DEFAULT_TUNNEL_PROTOCOL,
@@ -15,7 +14,7 @@ export {
   TUNNEL_PROTOCOL,
   tunnelConfigSchema,
   tunnelProtocolSchema,
-  wireguardConfigSchema,
+  wireguardConfigSchema
 } from './outputs';
 
 export type {
@@ -23,12 +22,11 @@ export type {
   DeviceUsage,
   DisconnectRequest,
   DownloadedConfig,
-  HeartbeatRequest,
   IssueConfigRequest,
   RevokeConfigRequest,
   SplitConfig,
   SplitMode,
   TunnelConfig,
   TunnelProtocol,
-  WireguardConfig,
+  WireguardConfig
 } from './types';

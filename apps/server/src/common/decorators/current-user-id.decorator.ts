@@ -1,8 +1,9 @@
-import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
+
+import { createParamDecorator } from '@nestjs/common';
 
 import { AppUnauthorizedException } from '../exceptions';
-
-import type { UserSession } from '@thallesp/nestjs-better-auth';
 
 export const CurrentUserId = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): string => {
@@ -14,5 +15,5 @@ export const CurrentUserId = createParamDecorator(
     }
 
     return userId;
-  },
+  }
 );

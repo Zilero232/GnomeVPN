@@ -9,7 +9,7 @@ import {
   BuyExtraDevicesDto,
   CheckoutResultDto,
   CreateCheckoutDto,
-  WebhookEventDto,
+  WebhookEventDto
 } from './dto/billing.dto';
 import { WebhookIpGuard } from './guards';
 import { AutoRenewService, CardService, CheckoutService, WebhookService } from './services';
@@ -20,7 +20,7 @@ export class BillingController {
     private readonly checkout: CheckoutService,
     private readonly autoRenew: AutoRenewService,
     private readonly card: CardService,
-    private readonly webhook: WebhookService,
+    private readonly webhook: WebhookService
   ) {}
 
   @Post('checkout')

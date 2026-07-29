@@ -20,5 +20,5 @@ export const apiErrorCodeSchema = z.enum([
   'CONFIG_LIMIT_REACHED',
   'DEVICE_LIMIT_REACHED',
   'SUBSCRIPTION_REQUIRED',
-  'EXTRA_DEVICES_LIMIT',
+  'EXTRA_DEVICES_LIMIT'
 ]);

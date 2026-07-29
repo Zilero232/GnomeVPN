@@ -5,15 +5,11 @@ import { DEFAULT_TUNNEL_PROTOCOL, tunnelProtocolSchema } from './outputs';
 export const connectInputSchema = z.object({
   nodeId: z.uuid(),
   deviceId: z.uuid(),
-  protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
+  protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL)
 });
 
 export const disconnectInputSchema = z.object({
-  deviceId: z.uuid(),
-});
-
-export const heartbeatInputSchema = z.object({
-  deviceId: z.uuid(),
+  deviceId: z.uuid()
 });
 
 export const issueConfigSchema = z.object({
@@ -24,9 +20,9 @@ export const issueConfigSchema = z.object({
     .min(1, 'validation.nameRequired')
     .max(32, 'validation.nameMax')
     .transform((value) => value.replace(/\s+/g, ' ')),
-  protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
+  protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL)
 });
 
 export const revokeConfigSchema = z.object({
-  id: z.uuid(),
+  id: z.uuid()
 });

@@ -1,10 +1,13 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 
 import { VpnConnectionProvider } from '@/features/vpn/connect';
 import { queryClient } from '@/shared/api';
+
 import { AuthProvider } from './AuthProvider';
 import { DesktopShell } from './DesktopShell';
 import { DismissToastOnClick } from './DismissToastOnClick';
@@ -13,12 +16,10 @@ import { MobileInsets } from './MobileInsets';
 import { TrayProvider } from './TrayProvider';
 import { VaultProvider } from './VaultProvider';
 
-import type { ReactNode } from 'react';
-
 const TOAST_OPTIONS = {
   style: {
-    fontFamily: 'var(--font-sans)',
-  },
+    fontFamily: 'var(--font-sans)'
+  }
 };
 
 export const AppProviders = ({ children }: { children: ReactNode }) => (
@@ -38,10 +39,10 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
       <DismissToastOnClick />
 
       <Toaster
-        className="gnomevpn-toaster"
+        className='gnomevpn-toaster'
         gap={8}
-        position="top-center"
-        theme="dark"
+        position='top-center'
+        theme='dark'
         toastOptions={TOAST_OPTIONS}
       />
     </I18nProvider>

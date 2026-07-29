@@ -19,14 +19,6 @@ fn tun_address(config: &TunnelConfig) -> String {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Heartbeat {
-    pub api_url: String,
-    pub token: String,
-    pub device_id: String,
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StartArgs {
@@ -34,8 +26,6 @@ struct StartArgs {
     dns: Vec<String>,
     tun_address: String,
     config_json: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    heartbeat: Option<Heartbeat>,
 }
 
 #[derive(Deserialize)]
@@ -114,11 +104,7 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(PathBuf::from(result.path))
     }
 
-    pub fn start(
-        &self,
-        config: &TunnelConfig,
-        heartbeat: Option<Heartbeat>,
-    ) -> Result<(), MobileVpnError> {
+    pub fn start(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
         let config_json = serde_json::to_string(config)
             .map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
@@ -130,7 +116,6 @@ impl<R: Runtime> VpnPlugin<R> {
                     dns: config.dns.clone(),
                     tun_address: tun_address(config),
                     config_json,
-                    heartbeat,
                 },
             )
             .map_err(|error| MobileVpnError::Service(error.to_string()))

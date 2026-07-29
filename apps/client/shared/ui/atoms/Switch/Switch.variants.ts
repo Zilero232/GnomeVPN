@@ -4,7 +4,7 @@ import s from './Switch.module.scss';
 
 export const switchTrack = cva(s.root, {
   variants: {
-    isChecked: { true: s.checked, false: '' },
+    isChecked: { true: s.checked, false: '' }
   },
-  defaultVariants: { isChecked: false },
+  defaultVariants: { isChecked: false }
 });

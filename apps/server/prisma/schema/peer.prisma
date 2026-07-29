@@ -8,6 +8,12 @@ enum TunnelProtocol {
   wireguard
 }
 
+enum PeerState {
+  active
+  disabled
+  revoked
+}
+
 model Peer {
   id     String @id @default(dbgenerated("gen_random_uuid()"))
   userId String @map("user_id")
@@ -17,13 +23,14 @@ model Peer {
   protocol TunnelProtocol @default(hysteria2)
   name     String?
 
+  state PeerState @default(active)
+
   nodeCredential String @map("node_credential")
 
   wgAssignedIp String? @map("wg_assigned_ip")
   wgPrivateKey String? @map("wg_private_key")
 
-  lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(3)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
@@ -31,6 +38,6 @@ model Peer {
   @@unique([userId, kind, name, nodeId, protocol])
   @@unique([nodeId, wgAssignedIp])
   @@index([userId])
-  @@index([kind, lastActiveAt])
+  @@index([nodeId, state])
   @@map("peer")
 }

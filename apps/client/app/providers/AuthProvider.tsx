@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { match } from 'ts-pattern';
@@ -11,11 +13,9 @@ import {
   isKnownRoute,
   isPublicRoute,
   isWebOnlyRoute,
-  ROUTES,
+  ROUTES
 } from '@/shared/constants';
 import { AppSplash } from '@/shared/ui';
-
-import type { ReactNode } from 'react';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isOpen,
     isGuestOnly,
     isWebOnly,
-    isAuthenticated,
+    isAuthenticated
   })
     .with({ isPending: true }, () => null)
     .with({ isWebOnly: true }, () => home)
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     .with({ isGuestOnly: true, isAuthenticated: true }, () => home)
     .otherwise(() => null);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: redirect must fire only on target change; router is a stable ref
+  // redirect must fire only on target change; router is a stable ref
   useEffect(() => {
     if (target) {
       router.replace(target);

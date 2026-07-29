@@ -2,32 +2,32 @@
 
 .root {
   display: flex;
+  min-height: var(--viewport-height);
   align-items: center;
   justify-content: center;
-  min-height: var(--viewport-height);
 
   @include safe-padding(24px);
 }
 
 .panel {
   display: flex;
-  flex-direction: column;
-  gap: 22px;
   width: 100%;
   max-width: 400px;
+  flex-direction: column;
   padding: 34px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+  animation: rise 0.5s ease both;
   background-color: var(--color-surface);
   box-shadow: 0 30px 80px -40px rgb(0 0 0 / 80%);
-  animation: rise 0.5s ease both;
+  gap: 22px;
 }
 
 .head {
   display: flex;
-  gap: 12px;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
 
 .title {
@@ -38,12 +38,12 @@
 }
 
 .toggleButton {
-  cursor: pointer;
   padding: 0;
   border: none;
-  font: inherit;
-  color: var(--color-accent);
   background: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  font: inherit;
 
   &:hover {
     text-decoration: underline;
@@ -52,12 +52,12 @@
 
 @keyframes rise {
   from {
-    transform: translateY(12px);
     opacity: 0;
+    transform: translateY(12px);
   }
 
   to {
-    transform: none;
     opacity: 1;
+    transform: none;
   }
 }

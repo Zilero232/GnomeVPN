@@ -13,5 +13,5 @@ export const useRelease = (enabled = true) =>
     queryFn: getLatestRelease,
     enabled,
     retry: 1,
-    staleTime: STALE_TIME_MS,
+    staleTime: STALE_TIME_MS
   });

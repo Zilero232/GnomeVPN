@@ -26,3 +26,10 @@ export type PanelServerStatus = {
     state?: string;
   };
 };
+
+export type PanelOnlines = Record<string, string[]> | string[] | null;
+
+export type SetClientsEnabledInput = {
+  emails: string[];
+  enabled: boolean;
+};

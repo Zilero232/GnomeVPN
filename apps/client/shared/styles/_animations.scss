@@ -20,12 +20,12 @@
 
 @keyframes gnomevpn-rise {
   from {
-    transform: translateY(var(--gnomevpn-rise-distance, 12px));
     opacity: 0;
+    transform: translateY(var(--gnomevpn-rise-distance, 12px));
   }
 
   to {
-    transform: none;
     opacity: 1;
+    transform: none;
   }
 }

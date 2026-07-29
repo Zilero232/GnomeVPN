@@ -11,7 +11,7 @@ export type SegmentedProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   options: SegmentedOption<T>[];
-  size?: 'sm' | 'md';
+  size?: 'md' | 'sm';
   indicatorTone?: 'accent' | 'muted';
   className?: string;
   'aria-label'?: string;

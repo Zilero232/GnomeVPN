@@ -1,9 +1,10 @@
 'use client';
 
 import { UserRound } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { isNonNullish } from 'remeda';
 
 import { usePlatform } from '@/entities/app/platform';
 import { useServerEvents } from '@/entities/app/server-events';
@@ -17,12 +18,13 @@ import { VpnPermissionBanner } from '@/features/app/vpn-permission';
 import {
   ConnectButton,
   useProtocolSelection,
-  useVpnConnectionContext,
+  useVpnConnectionContext
 } from '@/features/vpn/connect';
 import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Text } from '@/shared/ui';
+
 import { useNodeSelection } from '../model/hooks';
 import { AppMenu, NodePicker, ProtocolSwitch, TunnelStats } from './components';
 
@@ -49,7 +51,7 @@ export const AppView = () => {
   const { usage } = useDeviceUsage({ status });
 
   const isDeviceLimitReached =
-    usage !== null &&
+    isNonNullish(usage) &&
     usage.used >= usage.limit &&
     !usage.devices.some((device) => device.isCurrent);
 
@@ -87,7 +89,7 @@ export const AppView = () => {
         )}
 
         <div className={s.headRight}>
-          <Text as="span" className={s.version}>
+          <Text as='span' className={s.version}>
             v{env.NEXT_PUBLIC_APP_VERSION}
           </Text>
 
@@ -103,15 +105,15 @@ export const AppView = () => {
 
       <div className={s.body}>
         <ConnectButton
-          status={status}
           disabled={
             hasAccess &&
             (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))
           }
+          status={status}
           onToggle={onToggle}
         />
 
-        {!hasAccess && <Text tone="muted">{t('gateHint')}</Text>}
+        {!hasAccess && <Text tone='muted'>{t('gateHint')}</Text>}
 
         <NodePicker
           activeNodeId={selection.nodeId}
@@ -124,7 +126,7 @@ export const AppView = () => {
         />
 
         {hasAccess && usage && (
-          <Text size="xs" tone={isDeviceLimitReached ? 'danger' : 'muted'}>
+          <Text size='xs' tone={isDeviceLimitReached ? 'danger' : 'muted'}>
             {isDeviceLimitReached
               ? t('devicesFull', { limit: usage.limit })
               : t('devicesUsed', { used: usage.used, limit: usage.limit })}

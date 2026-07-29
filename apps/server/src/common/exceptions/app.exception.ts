@@ -1,13 +1,13 @@
+import type { ApiErrorCode } from '@gnomevpn/schemas';
+
 import {
   BadRequestException,
   ForbiddenException,
   HttpException,
   NotFoundException,
   ServiceUnavailableException,
-  UnauthorizedException,
+  UnauthorizedException
 } from '@nestjs/common';
-
-import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 const body = (code: ApiErrorCode, error: string) => ({ error, code });
 

@@ -1,9 +1,10 @@
-import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
+import type { UserSession } from '@thallesp/nestjs-better-auth';
+
+import { Injectable } from '@nestjs/common';
 
 import { AppPaymentRequiredException, AppUnauthorizedException } from '../../../common/exceptions';
 import { SubscriptionService } from '../services';
-
-import type { UserSession } from '@thallesp/nestjs-better-auth';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {

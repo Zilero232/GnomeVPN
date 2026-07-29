@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { ROUTES } from '@/shared/constants';
 import { Button, StatusScreen } from '@/shared/ui';
@@ -15,7 +15,7 @@ export const NotFoundView = () => {
         <Button>{t('home')}</Button>
       </Link>
       <Link href={ROUTES.account}>
-        <Button variant="ghost">{t('account')}</Button>
+        <Button variant='ghost'>{t('account')}</Button>
       </Link>
     </StatusScreen>
   );

@@ -2,7 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 
 import { logger } from '../logger';
 
-const safeWindow = async (label: string, fn: () => Promise<void>): Promise<void> => {
+const safeWindow = async (label: string, fn: () => Promise<void>) => {
   try {
     await fn();
   } catch (error) {

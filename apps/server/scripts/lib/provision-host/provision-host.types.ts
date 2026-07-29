@@ -1,7 +1,7 @@
 import type { NodeConfig } from '../nodes-config';
 import type { PrismaLike } from '../upsert-node';
 
-export type ProvisionStatus = 'provisioned' | 'updated' | 'failed';
+export type ProvisionStatus = 'failed' | 'provisioned' | 'updated';
 
 export type ProvisionResult = {
   host: string;

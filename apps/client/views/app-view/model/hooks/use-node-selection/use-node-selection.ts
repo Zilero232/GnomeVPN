@@ -16,6 +16,6 @@ export const useNodeSelection = ({ nodes, activeNodeId }: UseNodeSelectionInput)
     node,
     country: node?.country ?? '',
     isReachable: node?.status !== undefined && node.status !== 'offline',
-    select: setSelectedNodeId,
+    select: setSelectedNodeId
   };
 };

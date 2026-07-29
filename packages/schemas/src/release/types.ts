@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { releaseAssetSchema, releasePlatformSchema, releaseSchema } from './outputs';
 
 export type Release = z.infer<typeof releaseSchema>;

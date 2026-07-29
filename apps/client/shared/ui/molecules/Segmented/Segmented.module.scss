@@ -1,40 +1,40 @@
 .root {
   position: relative;
   display: flex;
-  gap: 4px;
   min-width: 0;
-  margin: 0;
   padding: 4px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  margin: 0;
   background-color: var(--color-bg-deep);
+  gap: 4px;
 
   &[data-size='sm'] {
-    gap: 2px;
     padding: 3px;
     border-radius: var(--radius-sm);
+    gap: 2px;
   }
 }
 
 .option {
-  cursor: pointer;
   position: relative;
   z-index: 1;
   display: flex;
   flex: 1 1 0;
-  gap: 7px;
   align-items: center;
   justify-content: center;
   padding: 9px 12px;
   border: none;
   border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  background-color: transparent;
+  gap: 7px;
   transition: color 0.18s ease;
+  white-space: nowrap;
 
   svg {
     opacity: 0.7;
@@ -58,25 +58,26 @@
   }
 
   .root[data-size='sm'] & {
-    gap: 5px;
     padding: 4px 10px;
     border-radius: calc(var(--radius-sm) - 2px);
     font-size: 11px;
+    gap: 5px;
   }
 }
 
 /* stylelint-disable plugin/no-low-performance-animation-properties */
+
 .indicator {
   position: absolute;
   z-index: 0;
   top: 4px;
   bottom: 4px;
   left: 0;
-  transform: translateX(var(--segment-offset, 0));
   width: var(--segment-width, 0);
   border-radius: var(--radius-sm);
-  opacity: 0;
   background-color: var(--color-accent);
+  opacity: 0;
+  transform: translateX(var(--segment-offset, 0));
   transition:
     transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
     background-color 0.18s ease;
@@ -95,4 +96,5 @@
     border-radius: calc(var(--radius-sm) - 2px);
   }
 }
+
 /* stylelint-enable plugin/no-low-performance-animation-properties */

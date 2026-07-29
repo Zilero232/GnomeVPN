@@ -1,6 +1,6 @@
-import { logger } from '../logger';
-
 import type { SettleAllInput } from './settle.types';
+
+import { logger } from '../logger';
 
 export const settleAll = async ({ label, tasks }: SettleAllInput): Promise<void> => {
   const results = await Promise.allSettled(tasks);

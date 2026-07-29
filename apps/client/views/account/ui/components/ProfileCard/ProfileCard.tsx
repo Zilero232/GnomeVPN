@@ -22,7 +22,7 @@ export const ProfileCard = () => {
 
       <hr className={s.divider} />
 
-      <Text as="h3" className={s.subtitle}>
+      <Text as='h3' className={s.subtitle}>
         {t('security')}
       </Text>
 

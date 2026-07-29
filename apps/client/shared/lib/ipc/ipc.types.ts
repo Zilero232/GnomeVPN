@@ -2,12 +2,12 @@ import type { SplitConfig, TunnelConfig } from '@gnomevpn/schemas';
 import type { Channel } from '@tauri-apps/api/core';
 
 export type TunnelEvent =
-  | { type: 'connecting' }
-  | { type: 'handshake' }
-  | { type: 'connected'; assignedIp: string }
   | { type: 'bytesUpdate'; rx: number; tx: number }
+  | { type: 'connected'; assignedIp: string }
+  | { type: 'connecting' }
   | { type: 'disconnected' }
-  | { type: 'error'; message: string };
+  | { type: 'error'; message: string }
+  | { type: 'handshake' };
 
 export type RustCommands = {
   vpn_connect: {
@@ -16,7 +16,6 @@ export type RustCommands = {
       onEvent: Channel<TunnelEvent>;
       autoReconnect: boolean;
       split?: SplitConfig;
-      heartbeat?: { apiUrl: string; token: string; deviceId: string };
     };
     result: null;
   };

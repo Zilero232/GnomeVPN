@@ -36,7 +36,7 @@ export const CheckUpdateButton = () => {
 
   return (
     <>
-      <button className={s.root} disabled={isFetching} type="button" onClick={onClick}>
+      <button className={s.root} disabled={isFetching} type='button' onClick={onClick}>
         <RefreshCw className={clsx(s.icon, isFetching && s.spinning)} size={14} />
         {isFetching ? t('checking') : t('check')}
       </button>

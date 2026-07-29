@@ -4,7 +4,7 @@ import s from './Badge.module.scss';
 
 export const badge = cva(s.root, {
   variants: {
-    tone: { accent: s.accent, muted: s.muted },
+    tone: { accent: s.accent, muted: s.muted }
   },
-  defaultVariants: { tone: 'accent' },
+  defaultVariants: { tone: 'accent' }
 });

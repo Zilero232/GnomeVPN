@@ -1,6 +1,6 @@
-import { stack } from './Stack.variants';
-
 import type { StackProps } from './Stack.types';
+
+import { stack } from './Stack.variants';
 
 export const Stack = ({
   as: Tag = 'div',

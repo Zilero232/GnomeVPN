@@ -5,10 +5,10 @@ import { BillingModule } from '../billing';
 import { ConfigsModule } from '../configs';
 import { EventsModule } from '../events';
 import { SessionsModule } from '../sessions';
-import { ExpiredAccessJob, NodeHealthJob, PeerGcJob, RecurringChargeJob } from './jobs';
+import { ExpiredAccessJob, NodeHealthJob, ReconcilePeersJob, RecurringChargeJob } from './jobs';
 
 @Module({
   imports: [ScheduleModule.forRoot(), BillingModule, SessionsModule, ConfigsModule, EventsModule],
-  providers: [ExpiredAccessJob, NodeHealthJob, PeerGcJob, RecurringChargeJob],
+  providers: [ExpiredAccessJob, NodeHealthJob, ReconcilePeersJob, RecurringChargeJob]
 })
 export class SchedulerModule {}

@@ -14,7 +14,7 @@ const creds = requireEnv([
   'ANDROID_KEY_PASSWORD',
   'ANDROID_KEY_BASE64',
   'ANDROID_HOME',
-  'NEXT_PUBLIC_API_URL',
+  'NEXT_PUBLIC_API_URL'
 ]);
 
 const gh = await requireGh(log);
@@ -34,8 +34,8 @@ const writeKeystore = () => {
       `keyAlias=${creds.ANDROID_KEY_ALIAS}`,
       `password=${creds.ANDROID_KEY_PASSWORD}`,
       'storeFile=../gnomevpn.keystore',
-      '',
-    ].join('\n'),
+      ''
+    ].join('\n')
   );
 };
 
@@ -45,14 +45,14 @@ const patchGradle = () => {
   if (!gradle.includes('import java.io.FileInputStream')) {
     gradle = gradle.replace(
       'import java.util.Properties',
-      'import java.io.FileInputStream\nimport java.util.Properties',
+      'import java.io.FileInputStream\nimport java.util.Properties'
     );
   }
 
   if (gradle.includes('signingConfigs')) {
     gradle = gradle.replace(
       / {4}signingConfigs \{[\s\S]*?\r?\n {4}\}\r?\n/,
-      readFileSync(signingSnippet, 'utf8'),
+      readFileSync(signingSnippet, 'utf8')
     );
   } else {
     const snippet = readFileSync(signingSnippet, 'utf8');
@@ -62,7 +62,7 @@ const patchGradle = () => {
   if (!gradle.includes('signingConfig = signingConfigs.getByName("release")')) {
     gradle = gradle.replace(
       'getByName("release") {',
-      'getByName("release") {\n            signingConfig = signingConfigs.getByName("release")',
+      'getByName("release") {\n            signingConfig = signingConfigs.getByName("release")'
     );
   }
 
@@ -93,7 +93,7 @@ const findArtifact = (extension) => {
 const buildEnv = {
   ...process.env,
   NODE_ENV: 'production',
-  NEXT_PUBLIC_API_URL: creds.NEXT_PUBLIC_API_URL,
+  NEXT_PUBLIC_API_URL: creds.NEXT_PUBLIC_API_URL
 };
 
 const androidBuild = (flag) => {
@@ -136,7 +136,7 @@ mkdirSync(staging, { recursive: true });
 
 const named = [
   { from: apk, to: join(staging, `GnomeVPN_${version}_android.apk`) },
-  { from: aab, to: join(staging, `GnomeVPN_${version}_android.aab`) },
+  { from: aab, to: join(staging, `GnomeVPN_${version}_android.aab`) }
 ];
 
 for (const { from, to } of named) {

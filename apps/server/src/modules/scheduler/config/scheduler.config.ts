@@ -1,8 +1,6 @@
-export const STALE_MS = 15 * 60_000;
-
-export const NEVER_CONNECTED_GRACE_MS = 15 * 60_000;
-
 export const BOOT_GRACE_MS = 3 * 60_000;
+
+export const RECONCILE_CRON = '*/1 * * * *';
 
 export const RENEW_WINDOW_HOURS = 24;
 

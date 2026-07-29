@@ -4,8 +4,8 @@
   @include menu-item;
 
   &:disabled {
-    cursor: default;
     color: var(--color-text-muted);
+    cursor: default;
   }
 }
 

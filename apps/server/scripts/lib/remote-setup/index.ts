@@ -4,7 +4,7 @@ export {
   ensureDocker,
   ensureWireguardKeys,
   openTunnelPort,
-  shipStack,
+  shipStack
 } from './remote-setup';
 export { CONTAINER_NAME, REMOTE_DIR } from './remote-setup.constants';
 

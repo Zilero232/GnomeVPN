@@ -1,5 +1,7 @@
 'use client';
 
+import type { TunnelProtocol } from '@gnomevpn/schemas';
+
 import { useTranslations } from 'next-intl';
 import { useRef } from 'react';
 import { toast } from 'sonner';
@@ -15,25 +17,24 @@ import {
   settleAll,
   vpnConnect,
   vpnDisconnect,
-  vpnStatus,
+  vpnStatus
 } from '@/shared/lib';
-import { buildHeartbeat } from '../../lib/build-heartbeat';
+
+import type { ConnectInput } from './use-vpn-connection.types';
+
 import { useAdoptTunnel } from '../use-adopt-tunnel';
 import { useConnectWatchdog } from '../use-connect-watchdog';
-import { useHeartbeat } from '../use-heartbeat';
+import { useTrafficPoll } from '../use-traffic-poll';
 import { useTunnelEvents } from '../use-tunnel-events';
 import { useTunnelNotifications } from '../use-tunnel-notifications';
 import { useTunnelState } from '../use-tunnel-state';
-
-import type { TunnelProtocol } from '@gnomevpn/schemas';
-import type { ConnectInput } from './use-vpn-connection.types';
 
 const DISCONNECT_POLL_MS = 150;
 const DISCONNECT_TIMEOUT_MS = 8_000;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-const waitForDisconnected = async (): Promise<void> => {
+const waitForDisconnected = async () => {
   const deadline = Date.now() + DISCONNECT_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
@@ -52,8 +53,6 @@ export const useVpnConnection = () => {
   const watchdog = useConnectWatchdog();
   const { notifyError } = useTunnelNotifications();
 
-  useHeartbeat({ status: tunnel.status });
-
   const generationRef = useRef(0);
   const countryRef = useRef('');
   const nodeIdRef = useRef<string | null>(null);
@@ -66,7 +65,7 @@ export const useVpnConnection = () => {
 
     await settleAll({
       label: 'tunnel cleanup',
-      tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()],
+      tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()]
     });
 
     tunnel.reset();
@@ -89,16 +88,20 @@ export const useVpnConnection = () => {
     },
     onTraffic: tunnel.setTraffic,
     countryRef,
-    nodeIdRef,
+    nodeIdRef
   });
 
   useAdoptTunnel({
     onAdopted: (nodeId) => {
       tunnel.markAdopted(nodeId);
       events.markConnected();
-    },
+    }
+  });
+
+  useTrafficPoll({
+    status: tunnel.status,
     onTraffic: tunnel.setTraffic,
-    onLost: tunnel.reset,
+    onLost: tunnel.reset
   });
 
   const connect = async ({ nodeId, protocol, country = '', isAutomatic = false }: ConnectInput) => {
@@ -122,14 +125,14 @@ export const useVpnConnection = () => {
 
         await teardown();
         toast.error(t('connectFailed'));
-      },
+      }
     });
 
     try {
       const [deviceId, autoReconnect, split] = await Promise.all([
         getDeviceId(),
         getAutoReconnect(),
-        getSplitConfig(),
+        getSplitConfig()
       ]);
 
       const config = await connectTunnel({ nodeId, deviceId, protocol });
@@ -138,12 +141,11 @@ export const useVpnConnection = () => {
         config,
         autoReconnect,
         split,
-        heartbeat: buildHeartbeat(deviceId),
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {
             logger.error(`tunnel event failed: ${String(error)}`);
           });
-        },
+        }
       });
     } catch (error) {
       if (generation !== generationRef.current) {
@@ -185,7 +187,7 @@ export const useVpnConnection = () => {
       nodeId,
       protocol: protocolRef.current,
       country: countryRef.current,
-      isAutomatic: true,
+      isAutomatic: true
     });
   };
 
@@ -196,6 +198,6 @@ export const useVpnConnection = () => {
     connectedAt: tunnel.connectedAt,
     connect,
     disconnect,
-    reconnect,
+    reconnect
   };
 };

@@ -57,6 +57,11 @@ export type SetClientEnabledInput = {
   enabled: boolean;
 };
 
+export type SetClientsEnabledInput = {
+  emails: string[];
+  enabled: boolean;
+};
+
 export type XrayInboundPayload = {
   id?: number;
   remark: string;

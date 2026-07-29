@@ -1,32 +1,32 @@
 .root {
-  margin-top: 88px;
   padding: 28px 0;
   border-top: 1px solid var(--color-border);
+  margin-top: 88px;
 }
 
 .inner {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 }
 
 .copy {
-  font-size: 13px;
   color: var(--color-text-muted);
+  font-size: 13px;
 }
 
 .links {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
   align-items: center;
+  gap: 20px;
 }
 
 .link {
-  font-size: 13px;
   color: var(--color-text-muted);
+  font-size: 13px;
   text-decoration: none;
   transition: color 0.15s ease;
 

@@ -11,7 +11,7 @@ import {
   logger,
   takeTileConnectRequest,
   vpnStatus,
-  wasManuallyDisconnected,
+  wasManuallyDisconnected
 } from '@/shared/lib';
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
@@ -21,7 +21,7 @@ export const useAutoConnect = ({
   hasAccess,
   isConnected,
   isReady,
-  connect,
+  connect
 }: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
   const fromTileRef = useRef(false);
@@ -46,7 +46,7 @@ export const useAutoConnect = ({
     const run = async () => {
       const [isEnabled, wasDisconnectedByUser] = await Promise.all([
         getAutoConnect(),
-        wasManuallyDisconnected(),
+        wasManuallyDisconnected()
       ]);
 
       const isFromTile = fromTileRef.current;
@@ -79,7 +79,7 @@ export const useAutoConnect = ({
         nodeId: target.id,
         protocol: await getProtocol(),
         country: target.country,
-        isAutomatic: true,
+        isAutomatic: true
       });
 
       if (isFromTile && (await vpnStatus()) === 'connected') {

@@ -16,17 +16,17 @@ if (!existsSync(paths.generated)) {
 
 const { abis, removed } = copyLibs({
   from: join(paths.android, 'libs'),
-  to: appMain,
+  to: appMain
 });
 
 const sources = copySources({
   from: join(paths.android, 'java'),
-  to: join(appMain, 'java', PACKAGE_PATH),
+  to: join(appMain, 'java', PACKAGE_PATH)
 });
 
 const resources = copyResources({
   from: join(paths.android, 'res'),
-  to: join(appMain, 'res'),
+  to: join(appMain, 'res')
 });
 
 const patched = patchManifest(join(appMain, 'AndroidManifest.xml'));
@@ -37,8 +37,8 @@ log.info(
     removed.length ? `removed: ${removed.join(', ')}` : null,
     `sources: ${sources.join(', ')}`,
     `res: ${resources.join(', ') || 'none'}`,
-    `manifest: ${patched ? 'patched' : 'already patched'}`,
+    `manifest: ${patched ? 'patched' : 'already patched'}`
   ]
     .filter(Boolean)
-    .join(' | '),
+    .join(' | ')
 );

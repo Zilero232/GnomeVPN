@@ -1,5 +1,20 @@
-import { randomBytes } from 'node:crypto';
 import { Logger } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
+import { isEmpty } from 'remeda';
+
+import type {
+  AddWireguardPeerInput,
+  CreateClientResult,
+  HysteriaClient,
+  NewWireguardClientInput,
+  SetClientEnabledInput,
+  SetClientsEnabledInput,
+  WireguardClient,
+  WriteInboundClientsInput,
+  XrayClientOptions,
+  XrayInbound,
+  XrayInboundPayload
+} from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import {
@@ -11,7 +26,7 @@ import {
   parseStreamSettings,
   parseWireguardSettings,
   serializeByKey,
-  stripCidrMask,
+  stripCidrMask
 } from './lib';
 import {
   INBOUND_REMARK,
@@ -20,21 +35,8 @@ import {
   WG_INBOUND_REMARK,
   WG_PEER_ID_BYTES,
   WG_PEER_KEEPALIVE,
-  XRAY_STATE_RUNNING,
+  XRAY_STATE_RUNNING
 } from './xray.constants';
-
-import type {
-  AddWireguardPeerInput,
-  CreateClientResult,
-  HysteriaClient,
-  NewWireguardClientInput,
-  SetClientEnabledInput,
-  WireguardClient,
-  WriteInboundClientsInput,
-  XrayClientOptions,
-  XrayInbound,
-  XrayInboundPayload,
-} from './xray.types';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -46,7 +48,7 @@ export class XrayClient {
     this.panel = new PanelClient({
       baseUrl: this.nodeKey,
       token: opts.token,
-      timeout: REQUEST_TIMEOUT_MS,
+      timeout: REQUEST_TIMEOUT_MS
     });
   }
 
@@ -76,10 +78,9 @@ export class XrayClient {
 
   private inboundPayload(
     inbound: Record<string, unknown>,
-    remark: string = INBOUND_REMARK,
+    remark: string = INBOUND_REMARK
   ): XrayInboundPayload {
-    const stringify = (value: unknown): string =>
-      value === undefined ? '' : JSON.stringify(value);
+    const stringify = (value: unknown) => (value === undefined ? '' : JSON.stringify(value));
 
     return {
       ...inbound,
@@ -89,7 +90,7 @@ export class XrayClient {
       protocol: inbound.protocol as string,
       settings: JSON.stringify(inbound.settings),
       streamSettings: stringify(inbound.streamSettings),
-      sniffing: stringify(inbound.sniffing),
+      sniffing: stringify(inbound.sniffing)
     };
   }
 
@@ -121,7 +122,7 @@ export class XrayClient {
     inbound,
     protocol,
     settings,
-    remark,
+    remark
   }: WriteInboundClientsInput): Promise<void> {
     await this.panel.updateInbound(
       inbound.id,
@@ -131,10 +132,10 @@ export class XrayClient {
           protocol,
           settings,
           streamSettings: parseStreamSettings(inbound),
-          sniffing: parseSniffing(inbound),
+          sniffing: parseSniffing(inbound)
         },
-        remark,
-      ),
+        remark
+      )
     );
   }
 
@@ -145,7 +146,7 @@ export class XrayClient {
       inbound,
       protocol: 'hysteria',
       settings: { ...parseSettings(inbound), clients },
-      remark: INBOUND_REMARK,
+      remark: INBOUND_REMARK
     });
   }
 
@@ -158,7 +159,7 @@ export class XrayClient {
       totalGB: UNLIMITED,
       expiryTime: UNLIMITED,
       tgId: UNLIMITED,
-      reset: UNLIMITED,
+      reset: UNLIMITED
     };
   }
 
@@ -168,7 +169,7 @@ export class XrayClient {
       const existing = clients.find((client) => client.email === email);
 
       if (existing) {
-        await this.panel.setClientsEnabled([email], true);
+        await this.panel.setClientsEnabled({ emails: [email], enabled: true });
 
         return { nodeCredential: existing.auth, email };
       }
@@ -189,12 +190,23 @@ export class XrayClient {
     const inbound = await this.getInbound();
 
     return (parseSettings(inbound).clients ?? []).filter((client): client is HysteriaClient =>
-      Boolean(client?.auth && client?.email),
+      Boolean(client?.auth && client?.email)
     );
   }
 
   async deleteClient(email: string): Promise<void> {
     return serializeByKey(this.nodeKey, () => this.panel.deleteClient(email));
+  }
+
+  async clientEnabledByEmail(): Promise<Map<string, boolean>> {
+    const [hysteria, wireguard] = await Promise.all([
+      this.listClients(),
+      this.listWireguardClients()
+    ]);
+
+    return new Map(
+      [...hysteria, ...wireguard].map((client) => [client.email, client.enable ?? true])
+    );
   }
 
   private async writeWireguardClients(clients: WireguardClient[]): Promise<void> {
@@ -208,7 +220,7 @@ export class XrayClient {
       inbound,
       protocol: 'wireguard',
       settings: { ...current, clients },
-      remark: WG_INBOUND_REMARK,
+      remark: WG_INBOUND_REMARK
     });
   }
 
@@ -221,14 +233,14 @@ export class XrayClient {
 
     return (parseWireguardSettings(inbound).clients ?? []).filter(
       (client): client is WireguardClient =>
-        Boolean(client?.email && client?.publicKey && client?.allowedIPs),
+        Boolean(client?.email && client?.publicKey && client?.allowedIPs)
     );
   }
 
   private newWireguardClient({
     email,
     publicKey,
-    assignedIp,
+    assignedIp
   }: NewWireguardClientInput): WireguardClient {
     return {
       email,
@@ -237,7 +249,7 @@ export class XrayClient {
       allowedIPs: [`${assignedIp}/32`],
       preSharedKey: '',
       keepAlive: WG_PEER_KEEPALIVE,
-      enable: true,
+      enable: true
     };
   }
 
@@ -249,7 +261,7 @@ export class XrayClient {
     email,
     publicKey,
     takenIps,
-    allocateIp,
+    allocateIp
   }: AddWireguardPeerInput): Promise<string> {
     return serializeByKey(this.nodeKey, async () => {
       const clients = await this.listWireguardClients();
@@ -265,23 +277,23 @@ export class XrayClient {
 
       const peer = this.newWireguardClient({ email, publicKey, assignedIp });
 
-      const conflictsWithPeer = (client: WireguardClient): boolean =>
+      const conflictsWithPeer = (client: WireguardClient) =>
         client.email === peer.email ||
         client.publicKey === peer.publicKey ||
         client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
 
       const evicted = clients.filter(
-        (client) => client.email !== peer.email && conflictsWithPeer(client),
+        (client) => client.email !== peer.email && conflictsWithPeer(client)
       );
 
-      if (evicted.length > 0) {
+      if (!isEmpty(evicted)) {
         XrayClient.logger.error(
-          `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`,
+          `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`
         );
 
         throw new AppServiceUnavailableException(
           'NODE_UNAVAILABLE',
-          'wireguard client collision on the node',
+          'wireguard client collision on the node'
         );
       }
 
@@ -295,11 +307,21 @@ export class XrayClient {
   }
 
   async setClientEnabled({ email, enabled }: SetClientEnabledInput): Promise<void> {
-    return serializeByKey(this.nodeKey, () => this.panel.setClientsEnabled([email], enabled));
+    return serializeByKey(this.nodeKey, () =>
+      this.panel.setClientsEnabled({ emails: [email], enabled })
+    );
+  }
+
+  async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {
+    return serializeByKey(this.nodeKey, () => this.panel.setClientsEnabled({ emails, enabled }));
   }
 
   async deleteOrphanClients(): Promise<number> {
     return serializeByKey(this.nodeKey, () => this.panel.deleteOrphanClients());
+  }
+
+  async onlineEmails(): Promise<Set<string>> {
+    return this.panel.onlineEmails();
   }
 
   async isReachable(): Promise<boolean> {

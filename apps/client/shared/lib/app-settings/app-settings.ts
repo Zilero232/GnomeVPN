@@ -1,12 +1,13 @@
+import type { SplitConfig, TunnelProtocol } from '@gnomevpn/schemas';
+import type { Store } from '@tauri-apps/plugin-store';
+
 import { DEFAULT_TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { isTauri } from '@tauri-apps/api/core';
 import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart';
-import { load, type Store } from '@tauri-apps/plugin-store';
+import { load } from '@tauri-apps/plugin-store';
 
 import { logger } from '../logger';
 import { emptySplitConfig, normalizeSplitConfig } from '../vpn-bridge';
-
-import type { SplitConfig, TunnelProtocol } from '@gnomevpn/schemas';
 
 const STORE_FILE = 'settings.json';
 
@@ -18,12 +19,12 @@ const KEYS = {
   deviceId: 'deviceId',
   manuallyDisconnected: 'manuallyDisconnected',
   split: 'split',
-  protocol: 'protocol',
+  protocol: 'protocol'
 } as const;
 
 let storePromise: Promise<Store> | null = null;
 
-const getStore = async (): Promise<Store> => {
+const getStore = async () => {
   storePromise ??= load(STORE_FILE, { autoSave: true });
 
   return storePromise;
@@ -45,7 +46,7 @@ const read = async <T>(key: string, fallback: T): Promise<T> => {
   }
 };
 
-const write = async (key: string, value: unknown): Promise<void> => {
+const write = async (key: string, value: unknown) => {
   if (!isTauri()) {
     return;
   }

@@ -1,18 +1,19 @@
+import type { CheckoutClient } from '@gnomevpn/schemas';
+
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 
-import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
-import { AppConfigService } from '../../../config/config.module';
-import { PrismaService } from '../../../core';
-
-import type { CheckoutClient } from '@gnomevpn/schemas';
 import type {
   ActivateInput,
   AttachMethodInput,
   AutoRenewInput,
   GrantExtraDevicesInput,
-  PrismaExecutor,
+  PrismaExecutor
 } from '../billing.types';
+
+import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
+import { AppConfigService } from '../../../config/config.module';
+import { PrismaService } from '../../../core';
 
 @Injectable()
 export class BillingSharedService {
@@ -20,7 +21,7 @@ export class BillingSharedService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: AppConfigService,
+    private readonly config: AppConfigService
   ) {}
 
   isRecurringEnabled(): boolean {
@@ -36,7 +37,7 @@ export class BillingSharedService {
   async setAutoRenew(userId: string, isEnabled: boolean): Promise<void> {
     await this.prisma.subscription.update({
       where: { userId },
-      data: { cancelAtPeriodEnd: !isEnabled },
+      data: { cancelAtPeriodEnd: !isEnabled }
     });
   }
 
@@ -47,8 +48,8 @@ export class BillingSharedService {
         savedCardId: paymentMethodId,
         savedCardTitle: title,
         pendingCardId: null,
-        cancelAtPeriodEnd: false,
-      },
+        cancelAtPeriodEnd: false
+      }
     });
   }
 
@@ -62,7 +63,7 @@ export class BillingSharedService {
 
   async activate(
     { userId, planId, method }: ActivateInput,
-    db: PrismaExecutor = this.prisma,
+    db: PrismaExecutor = this.prisma
   ): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
@@ -70,8 +71,8 @@ export class BillingSharedService {
         plan: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
-        savedCardId: true,
-      },
+        savedCardId: true
+      }
     });
 
     const plan = findPlan(planId);
@@ -84,25 +85,25 @@ export class BillingSharedService {
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
       cancelAtPeriodEnd: this.resolveCancelAtPeriodEnd({
         hasMethod: Boolean(method?.id ?? subscription?.savedCardId),
-        wasCancelled: subscription?.cancelAtPeriodEnd ?? false,
+        wasCancelled: subscription?.cancelAtPeriodEnd ?? false
       }),
-      ...(method?.id ? { savedCardId: method.id, savedCardTitle: method.title } : {}),
+      ...(method?.id ? { savedCardId: method.id, savedCardTitle: method.title } : {})
     };
 
     await db.subscription.upsert({
       where: { userId },
       create: { userId, ...data },
-      update: data,
+      update: data
     });
   }
 
   async grantExtraDevices(
     { userId, quantity }: GrantExtraDevicesInput,
-    db: PrismaExecutor = this.prisma,
+    db: PrismaExecutor = this.prisma
   ): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
-      select: { extraDevices: true },
+      select: { extraDevices: true }
     });
 
     if (!subscription) {
@@ -116,13 +117,13 @@ export class BillingSharedService {
 
     if (dropped > 0) {
       this.logger.error(
-        `extra-devices overflow for ${userId}: paid ${quantity}, granted ${granted - subscription.extraDevices}, ${dropped} dropped over MAX ${MAX_EXTRA_DEVICES} — manual review needed`,
+        `extra-devices overflow for ${userId}: paid ${quantity}, granted ${granted - subscription.extraDevices}, ${dropped} dropped over MAX ${MAX_EXTRA_DEVICES} — manual review needed`
       );
     }
 
     await db.subscription.update({
       where: { userId },
-      data: { extraDevices: granted },
+      data: { extraDevices: granted }
     });
   }
 }

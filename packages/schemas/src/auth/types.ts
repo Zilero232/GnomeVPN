@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type {
   changeEmailSchema,
   changePasswordSchema,
@@ -6,7 +7,7 @@ import type {
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
-  updateNameSchema,
+  updateNameSchema
 } from './inputs';
 
 export type SignInValues = z.infer<typeof signInSchema>;

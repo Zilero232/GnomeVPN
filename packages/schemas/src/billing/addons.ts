@@ -16,7 +16,7 @@ export const resolveLimits = (extraDevices: number | null | undefined) => {
     configLimit: DEFAULT_CONFIG_LIMIT + extra * CONFIGS_PER_DEVICE,
     extraDevices: extra,
     pricePerDeviceRub: EXTRA_DEVICE_PRICE_RUB,
-    maxExtraDevices: MAX_EXTRA_DEVICES,
+    maxExtraDevices: MAX_EXTRA_DEVICES
   };
 };
 

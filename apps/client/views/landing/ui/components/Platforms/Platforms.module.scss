@@ -1,7 +1,7 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
 .card {
@@ -24,19 +24,19 @@
 
 .badge {
   display: inline-block;
-  margin-bottom: 14px;
   padding: 3px 9px;
   border-radius: 999px;
+  margin-bottom: 14px;
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
   letter-spacing: 0.1em;
-  background-color: var(--color-bg-deep);
+  text-transform: uppercase;
 
   .card[data-native='true'] & {
-    color: var(--color-accent);
     background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    color: var(--color-accent);
   }
 }
 
@@ -48,7 +48,7 @@
 
 .body {
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.55;
-  color: var(--color-text-muted);
 }

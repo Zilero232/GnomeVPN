@@ -9,13 +9,12 @@ export const paths = {
   android: join(scripts, '..', 'android'),
   generated: join(scripts, '..', 'gen', 'android'),
   workspace: join(scripts, '..', '..', '..'),
-  target: join(scripts, '..', '..', '..', 'target'),
+  target: join(scripts, '..', '..', '..', 'target')
 };
 
 export const isWindows = process.platform === 'win32';
 
 const write = (stream, scope, message) => {
-  // biome-ignore lint/suspicious/noConsole: standalone CLI scripts, console is the output channel
   console[stream](`[${scope}] ${message}`);
 };
 
@@ -25,5 +24,5 @@ export const reporter = (scope) => ({
   fail: (message, code = 1) => {
     write('error', scope, message);
     process.exit(code);
-  },
+  }
 });

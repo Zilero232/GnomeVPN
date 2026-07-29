@@ -7,7 +7,7 @@ import { isWindows, paths, reporter } from './lib/shell.mjs';
 const SERVICE_HOLDS_ITS_BINARY = [
   'the running service holds its binary, so cargo kept the old build.',
   '  To pick up service changes, stop it from an elevated shell:',
-  '    sc.exe stop GnomeVPNService',
+  '    sc.exe stop GnomeVPNService'
 ].join('\n');
 
 const log = reporter('build-service');

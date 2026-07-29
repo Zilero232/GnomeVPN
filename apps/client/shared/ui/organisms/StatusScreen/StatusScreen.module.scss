@@ -1,24 +1,24 @@
 .root {
   position: relative;
-  overflow: hidden;
   display: flex;
+  overflow: hidden;
+  min-height: var(--viewport-height);
   flex-direction: column;
-  gap: 22px;
   align-items: center;
   justify-content: center;
-  min-height: var(--viewport-height);
   padding: 24px;
+  gap: 22px;
   text-align: center;
 }
 
 .code {
   position: relative;
+  animation: flicker 4.5s ease-in-out infinite;
   font-family: var(--font-mono);
   font-size: clamp(88px, 22vw, 190px);
   font-weight: 700;
-  line-height: 0.85;
   letter-spacing: -0.06em;
-  animation: flicker 4.5s ease-in-out infinite;
+  line-height: 0.85;
 }
 
 .codeAccent {
@@ -34,15 +34,15 @@
 .scan {
   --scan-travel: 0.8em;
 
-  pointer-events: none;
   position: absolute;
   top: 0.1em;
   right: 0;
   left: 0;
   height: 2px;
-  opacity: 0.55;
-  background: linear-gradient(90deg, transparent, currentcolor, transparent);
   animation: sweep 3.2s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, currentcolor, transparent);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .title {
@@ -56,17 +56,17 @@
 .body {
   max-width: 46ch;
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.6;
-  color: var(--color-text-muted);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
   margin-top: 8px;
+  gap: 12px;
 }
 
 @keyframes flicker {

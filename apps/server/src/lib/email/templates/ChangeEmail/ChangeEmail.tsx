@@ -1,15 +1,15 @@
 import { Text } from 'react-email';
 
+import type { ChangeEmailProps } from './ChangeEmail.types';
+
 import { BaseEmail } from '../BaseEmail';
 import { emailStyles } from '../email-styles';
 
-import type { ChangeEmailProps } from './ChangeEmail.types';
-
 export const ChangeEmail = ({ url, newEmail }: ChangeEmailProps) => (
   <BaseEmail
-    preview="Подтвердите смену почты в GnomeVPN"
-    heading="Смена почты"
     action={{ url, label: 'Подтвердить смену' }}
+    heading='Смена почты'
+    preview='Подтвердите смену почты в GnomeVPN'
   >
     <Text style={emailStyles.text}>
       Вы запросили смену адреса на <strong>{newEmail}</strong>. Подтвердите её, чтобы вход

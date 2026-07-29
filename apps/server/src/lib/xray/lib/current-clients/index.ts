@@ -3,7 +3,7 @@ export {
   parseSettings,
   parseSniffing,
   parseStreamSettings,
-  parseWireguardSettings,
+  parseWireguardSettings
 } from './current-clients';
 
 export type { XrayInboundSettings, XrayWireguardSettings } from './current-clients.types';

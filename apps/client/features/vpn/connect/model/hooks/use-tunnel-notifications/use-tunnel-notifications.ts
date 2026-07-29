@@ -11,7 +11,7 @@ export const useTunnelNotifications = () => {
     await notify({
       title: t('connectedTitle'),
       body: t('connectedBody', { country }),
-      tone: 'success',
+      tone: 'success'
     });
   };
 

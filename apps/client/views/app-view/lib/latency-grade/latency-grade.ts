@@ -1,6 +1,6 @@
-import { LATENCY_FAIR_MS, LATENCY_FAST_MS } from '../../config';
-
 import type { LatencyGrade } from './latency-grade.types';
+
+import { LATENCY_FAIR_MS, LATENCY_FAST_MS } from '../../config';
 
 export const gradeLatency = (rttMs: number): LatencyGrade => {
   if (rttMs <= LATENCY_FAST_MS) {

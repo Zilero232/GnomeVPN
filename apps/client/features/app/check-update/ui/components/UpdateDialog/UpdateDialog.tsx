@@ -3,6 +3,7 @@
 import { Download, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import prettyBytes from 'pretty-bytes';
+import { isNonNullish, isNullish } from 'remeda';
 import { toast } from 'sonner';
 
 import { env } from '@/shared/config';
@@ -12,13 +13,14 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from '@/shared/ui';
+
+import type { UpdateDialogProps } from './UpdateDialog.types';
+
 import { useInstallUpdate } from '../../../model/hooks';
 
 import s from './UpdateDialog.module.scss';
-
-import type { UpdateDialogProps } from './UpdateDialog.types';
 
 export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps) => {
   const t = useTranslations('update');
@@ -31,7 +33,7 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
 
   const onInstall = () => {
     mutate(undefined, {
-      onError: () => toast.error(t('installFailed')),
+      onError: () => toast.error(t('installFailed'))
     });
   };
 
@@ -56,11 +58,13 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
         {isPending && (
           <div className={s.progress}>
             <div className={s.progressHead}>
-              <span>{percent === null ? t('installing') : t('downloading')}</span>
+              <span>{isNullish(percent) ? t('installing') : t('downloading')}</span>
 
-              {percent !== null && (
+              {isNonNullish(percent) && (
                 <span className={s.progressValue}>
-                  {progress.totalBytes && <span>{prettyBytes(progress.downloadedBytes)}</span>}
+                  {(progress.totalBytes ?? 0) > 0 && (
+                    <span>{prettyBytes(progress.downloadedBytes)}</span>
+                  )}
                   <span>{percent}%</span>
                 </span>
               )}
@@ -68,8 +72,8 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
 
             <div className={s.track}>
               <div
-                className={percent === null ? s.barIndeterminate : s.bar}
-                style={percent === null ? undefined : { transform: `scaleX(${percent / 100})` }}
+                className={isNullish(percent) ? s.barIndeterminate : s.bar}
+                style={isNullish(percent) ? undefined : { transform: `scaleX(${percent / 100})` }}
               />
             </div>
           </div>
@@ -77,12 +81,12 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
 
         <div className={s.actions}>
           {!isPending && (
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button type='button' variant='ghost' onClick={() => onOpenChange(false)}>
               {t('later')}
             </Button>
           )}
 
-          <Button disabled={isPending} type="button" onClick={onInstall}>
+          <Button disabled={isPending} type='button' onClick={onInstall}>
             <Download size={15} />
             {isPending ? t('installing') : t('install')}
           </Button>

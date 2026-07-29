@@ -4,15 +4,15 @@
 }
 
 .mark {
-  pointer-events: none;
   position: absolute;
   z-index: -1;
   top: 24px;
   right: 0;
   border-radius: 34px;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 70px rgb(53 240 160 / 30%));
   animation: rise 0.7s ease 0.1s both;
+  filter: drop-shadow(0 0 70px rgb(53 240 160 / 30%));
+  opacity: 0.9;
+  pointer-events: none;
 
   @media (width <= 900px) {
     display: none;
@@ -21,37 +21,36 @@
 
 .eyebrow {
   display: inline-flex;
-  gap: 10px;
   align-items: center;
-  margin-bottom: 30px;
   padding: 7px 14px;
   border: 1px solid rgb(53 240 160 / 20%);
   border-radius: 100px;
+  margin-bottom: 30px;
+  animation: rise 0.6s ease both;
+  background-color: rgb(53 240 160 / 6%);
+  color: var(--color-accent);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-accent);
-  text-transform: uppercase;
+  gap: 10px;
   letter-spacing: 0.16em;
-  background-color: rgb(53 240 160 / 6%);
-  animation: rise 0.6s ease both;
+  text-transform: uppercase;
 }
 
 .title {
   max-width: 15ch;
   margin: 0 0 26px;
+  animation: rise 0.6s ease 0.08s both;
   font-size: clamp(46px, 9vw, 92px);
   font-weight: 800;
-  line-height: 0.95;
   letter-spacing: -0.045em;
-  animation: rise 0.6s ease 0.08s both;
+  line-height: 0.95;
 }
 
 .titleAccent {
   position: relative;
   color: var(--color-accent);
 
-  &::after {
-    content: '';
+  &:after {
     position: absolute;
     right: 0;
     bottom: 0.12em;
@@ -59,34 +58,35 @@
     height: 3px;
     background-color: var(--color-accent);
     box-shadow: 0 0 20px var(--color-accent);
+    content: '';
   }
 }
 
 .lead {
   max-width: 52ch;
   margin: 0 0 40px;
+  animation: rise 0.6s ease 0.16s both;
+  color: var(--color-text-muted);
   font-size: clamp(16px, 2vw, 19px);
   line-height: 1.6;
-  color: var(--color-text-muted);
-  animation: rise 0.6s ease 0.16s both;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
   align-items: center;
   animation: rise 0.6s ease 0.24s both;
+  gap: 14px;
 }
 
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 26px;
-  margin-top: 56px;
   padding-top: 44px;
   border-top: 1px solid var(--color-border);
+  margin-top: 56px;
   animation: rise 0.6s ease 0.32s both;
+  gap: 26px;
 }
 
 .metaItem {
@@ -96,28 +96,28 @@
 }
 
 .metaValue {
+  color: var(--color-accent);
   font-family: var(--font-mono);
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-accent);
 }
 
 .metaLabel {
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
   letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 @keyframes rise {
   from {
-    transform: translateY(16px);
     opacity: 0;
+    transform: translateY(16px);
   }
 
   to {
-    transform: none;
     opacity: 1;
+    transform: none;
   }
 }

@@ -10,7 +10,7 @@ export const serializeByKey = <T>(key: string, task: () => Promise<T>): Promise<
       if (chains.get(key) === next) {
         chains.delete(key);
       }
-    }),
+    })
   );
 
   return next;

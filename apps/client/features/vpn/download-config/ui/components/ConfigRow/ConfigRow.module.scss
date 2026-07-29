@@ -1,11 +1,11 @@
 .root {
   display: flex;
-  gap: 12px;
   align-items: center;
   padding: 12px 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-surface-raised);
+  gap: 12px;
   transition:
     border-color 0.16s ease,
     background-color 0.16s ease;
@@ -26,24 +26,24 @@
 
 .body {
   display: flex;
-  flex: 1;
-  gap: 10px;
-  align-items: center;
   min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
 }
 
 .info {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 3px;
-  min-width: 0;
 }
 
 .head {
   display: flex;
-  gap: 8px;
-  align-items: center;
   min-width: 0;
+  align-items: center;
+  gap: 8px;
 }
 
 .name {
@@ -57,6 +57,6 @@
 .actions {
   display: flex;
   flex-shrink: 0;
-  gap: 4px;
   align-items: center;
+  gap: 4px;
 }

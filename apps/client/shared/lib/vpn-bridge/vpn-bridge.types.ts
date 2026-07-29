@@ -1,18 +1,12 @@
 import type { NodeEndpoint, SplitConfig, TunnelConfig } from '@gnomevpn/schemas';
-import type { TunnelEvent } from '../ipc';
 
-export type VpnHeartbeat = {
-  apiUrl: string;
-  token: string;
-  deviceId: string;
-};
+import type { TunnelEvent } from '../ipc';
 
 export type VpnConnectInput = {
   config: TunnelConfig;
   onEvent: (event: TunnelEvent) => void;
   autoReconnect: boolean;
   split?: SplitConfig;
-  heartbeat?: VpnHeartbeat;
 };
 
 export type InstalledApp = {

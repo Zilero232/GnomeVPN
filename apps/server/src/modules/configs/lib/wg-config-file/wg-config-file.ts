@@ -1,6 +1,6 @@
-import { WG_CONFIG_KEEPALIVE } from '../../config';
-
 import type { RenderWireguardConfigInput } from './wg-config-file.types';
+
+import { WG_CONFIG_KEEPALIVE } from '../../config';
 
 export const renderWireguardConfigFile = ({ config }: RenderWireguardConfigInput): string => {
   const wg = config.wireguard;
@@ -14,7 +14,7 @@ export const renderWireguardConfigFile = ({ config }: RenderWireguardConfigInput
     `PrivateKey = ${wg.privateKey}`,
     `Address = ${wg.address}`,
     `DNS = ${config.dns.join(', ')}`,
-    ...(wg.mtu ? [`MTU = ${wg.mtu}`] : []),
+    ...(wg.mtu ? [`MTU = ${wg.mtu}`] : [])
   ];
 
   const peerLines = [
@@ -22,7 +22,7 @@ export const renderWireguardConfigFile = ({ config }: RenderWireguardConfigInput
     `PublicKey = ${wg.peerPublicKey}`,
     `Endpoint = ${config.server}:${config.port}`,
     `AllowedIPs = ${wg.allowedIps.join(', ')}`,
-    `PersistentKeepalive = ${WG_CONFIG_KEEPALIVE}`,
+    `PersistentKeepalive = ${WG_CONFIG_KEEPALIVE}`
   ];
 
   return `${[...interfaceLines, '', ...peerLines].join('\n')}\n`;

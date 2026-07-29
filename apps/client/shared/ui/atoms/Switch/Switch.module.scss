@@ -1,14 +1,13 @@
 .root {
   position: relative;
-  flex-shrink: 0;
   width: 30px;
   height: 17px;
+  flex-shrink: 0;
   border-radius: 100px;
   background-color: var(--color-border-bright);
   transition: background-color 0.18s ease;
 
-  &::after {
-    content: '';
+  &:after {
     position: absolute;
     top: 2px;
     left: 2px;
@@ -16,6 +15,7 @@
     height: 13px;
     border-radius: 50%;
     background-color: var(--color-text-muted);
+    content: '';
     transition:
       transform 0.18s ease,
       background-color 0.18s ease;
@@ -25,8 +25,8 @@
 .checked {
   background-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
 
-  &::after {
-    transform: translateX(13px);
+  &:after {
     background-color: var(--color-accent);
+    transform: translateX(13px);
   }
 }

@@ -4,5 +4,5 @@ export {
   NOTIFICATION_GROUP,
   NOTIFICATION_ICON,
   STATUS_NOTIFICATION_ID,
-  WINDOWS_SOUND,
+  WINDOWS_SOUND
 } from './notifications.config';

@@ -7,7 +7,7 @@ import {
   hasVpnPermission,
   isTauriMobile,
   logger,
-  requestVpnPermission,
+  requestVpnPermission
 } from '@/shared/lib';
 
 export const useVpnPermission = () => {

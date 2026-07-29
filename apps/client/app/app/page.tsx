@@ -6,7 +6,7 @@ export const metadata = createPageMetadata({
   description: 'Выбор страны и управление VPN-туннелем.',
   path: '/app',
   index: false,
-  follow: false,
+  follow: false
 });
 
 const Page = () => <AppGate />;

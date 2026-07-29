@@ -5,6 +5,6 @@ import { ReleaseService } from './services';
 
 @Module({
   controllers: [ReleaseController],
-  providers: [ReleaseService],
+  providers: [ReleaseService]
 })
 export class ReleaseModule {}

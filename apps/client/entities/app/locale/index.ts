@@ -3,5 +3,5 @@ export {
   useFieldError,
   useLocale,
   usePasswordLabels,
-  useToastError,
+  useToastError
 } from './model/hooks';

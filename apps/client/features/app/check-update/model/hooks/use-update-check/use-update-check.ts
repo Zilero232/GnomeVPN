@@ -25,5 +25,5 @@ export const useUpdateCheck = (enabled = true) =>
     enabled,
     retry: false,
     staleTime: STALE_TIME_MS,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false
   });

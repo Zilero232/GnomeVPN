@@ -4,7 +4,7 @@ const githubAssetSchema = z.object({
   id: z.number(),
   name: z.string(),
   size: z.number(),
-  browser_download_url: z.string(),
+  browser_download_url: z.string()
 });
 
 export const githubReleaseSchema = z.object({
@@ -12,7 +12,7 @@ export const githubReleaseSchema = z.object({
   html_url: z.string(),
   body: z.string().nullable(),
   published_at: z.string().nullable(),
-  assets: z.array(githubAssetSchema),
+  assets: z.array(githubAssetSchema)
 });
 
 export const updaterManifestSchema = z.object({
@@ -23,7 +23,7 @@ export const updaterManifestSchema = z.object({
     z.string(),
     z.object({
       signature: z.string(),
-      url: z.string(),
-    }),
-  ),
+      url: z.string()
+    })
+  )
 });

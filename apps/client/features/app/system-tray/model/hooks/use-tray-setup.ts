@@ -4,19 +4,20 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 
 import { isTauriDesktop, logger, settleAll } from '@/shared/lib';
-import { buildTrayMenu } from '../../lib/build-tray-menu';
-import { setupTray } from '../../lib/setup-tray';
 
 import type { TrayItems } from '../../lib/build-tray-menu';
 import type { TrayHandle } from '../../lib/setup-tray';
 import type { TraySetupInput } from '../types';
+
+import { buildTrayMenu } from '../../lib/build-tray-menu';
+import { setupTray } from '../../lib/setup-tray';
 
 export const useTraySetup = ({
   isConnected,
   country,
   onToggle,
   onOpenAccount,
-  onBeforeQuit,
+  onBeforeQuit
 }: TraySetupInput) => {
   const t = useTranslations('tray');
 
@@ -26,7 +27,7 @@ export const useTraySetup = ({
 
   actionsRef.current = { onToggle, onOpenAccount, onBeforeQuit };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the tray is created once; labels update through the effect below
+  // the tray is created once; labels update through the effect below
   useEffect(() => {
     if (!isTauriDesktop()) {
       return;
@@ -40,13 +41,13 @@ export const useTraySetup = ({
           {
             toggle: t('connect'),
             account: t('account'),
-            quit: t('quit'),
+            quit: t('quit')
           },
           {
             onToggle: () => actionsRef.current.onToggle(),
             onOpenAccount: () => actionsRef.current.onOpenAccount(),
-            onBeforeQuit: () => actionsRef.current.onBeforeQuit(),
-          },
+            onBeforeQuit: () => actionsRef.current.onBeforeQuit()
+          }
         );
 
         const tray = await setupTray({ tooltip: t('tooltip'), menu, isConnected });
@@ -90,8 +91,8 @@ export const useTraySetup = ({
       tasks: [
         items.toggle.setText(isConnected ? t('disconnect') : t('connect')),
         tray.setTooltip(tooltip),
-        tray.setConnected(isConnected),
-      ],
+        tray.setConnected(isConnected)
+      ]
     });
   }, [isConnected, country, t]);
 };

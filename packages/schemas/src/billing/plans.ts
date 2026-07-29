@@ -5,19 +5,19 @@ export const planIdSchema = z.enum(['monthly', 'halfYearly', 'yearly']);
 export const planSchema = z.object({
   id: planIdSchema,
   months: z.number().int().positive(),
-  priceRub: z.number().int().positive(),
+  priceRub: z.number().int().positive()
 });
 
 export const PLANS = [
   { id: 'monthly', months: 1, priceRub: 100 },
   { id: 'halfYearly', months: 6, priceRub: 500 },
-  { id: 'yearly', months: 12, priceRub: 900 },
+  { id: 'yearly', months: 12, priceRub: 900 }
 ] as const satisfies readonly z.infer<typeof planSchema>[];
 
 export const DEFAULT_PLAN_ID = 'monthly' as const;
 
 export const LOWEST_MONTHLY_RUB = Math.round(
-  Math.min(...PLANS.map((plan) => plan.priceRub / plan.months)),
+  Math.min(...PLANS.map((plan) => plan.priceRub / plan.months))
 );
 
 export const findPlan = (id: z.infer<typeof planIdSchema>) => {

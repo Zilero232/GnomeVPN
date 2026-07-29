@@ -1,12 +1,12 @@
+import { NodeSSH } from 'node-ssh';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { NodeSSH } from 'node-ssh';
 import pRetry from 'p-retry';
 
-import { CONNECT_ATTEMPTS, CONNECT_BACKOFF_MS, READY_TIMEOUT_MS } from './ssh-client.constants';
-
 import type { SshConnectOptions, SshExecResult } from './ssh-client.types';
+
+import { CONNECT_ATTEMPTS, CONNECT_BACKOFF_MS, READY_TIMEOUT_MS } from './ssh-client.constants';
 
 export class SshClient {
   private readonly ssh = new NodeSSH();
@@ -20,9 +20,9 @@ export class SshClient {
           ...(opts.privateKeyPath
             ? { privateKeyPath: opts.privateKeyPath }
             : { password: opts.password }),
-          readyTimeout: READY_TIMEOUT_MS,
+          readyTimeout: READY_TIMEOUT_MS
         }),
-      { retries: CONNECT_ATTEMPTS, minTimeout: CONNECT_BACKOFF_MS },
+      { retries: CONNECT_ATTEMPTS, minTimeout: CONNECT_BACKOFF_MS }
     );
   }
 

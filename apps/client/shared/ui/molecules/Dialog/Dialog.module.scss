@@ -1,10 +1,10 @@
 .overlay {
   position: fixed;
   z-index: 50;
-  inset: 0;
-  background-color: rgb(0 0 0 / 72%);
-  backdrop-filter: blur(3px);
   animation: fade-in 0.16s ease;
+  backdrop-filter: blur(3px);
+  background-color: rgb(0 0 0 / 72%);
+  inset: 0;
 }
 
 .content {
@@ -12,36 +12,36 @@
   z-index: 51;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  overflow-y: auto;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
   width: calc(100vw - 32px);
   max-width: 460px;
   max-height: calc(100vh - 64px);
+  flex-direction: column;
   padding: 26px;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-lg);
+  animation: dialog-in 0.18s ease;
   background-color: var(--color-surface-raised);
   box-shadow: 0 32px 72px -28px rgb(0 0 0 / 85%);
-  animation: dialog-in 0.18s ease;
+  gap: 20px;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
 }
 
 .close {
-  cursor: pointer;
   position: absolute;
   top: 16px;
   right: 16px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 28px;
   height: 28px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
   background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
   transition:
     color 0.16s ease,
     border-color 0.16s ease;
@@ -60,23 +60,23 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   padding-right: 32px;
+  gap: 6px;
 }
 
 .title {
   margin: 0;
+  color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 17px;
   font-weight: 700;
-  color: var(--color-text);
 }
 
 .description {
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;
-  color: var(--color-text-muted);
 }
 
 @keyframes fade-in {
@@ -91,12 +91,12 @@
 
 @keyframes dialog-in {
   from {
-    transform: translate(-50%, -46%) scale(0.97);
     opacity: 0;
+    transform: translate(-50%, -46%) scale(0.97);
   }
 
   to {
-    transform: translate(-50%, -50%) scale(1);
     opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }

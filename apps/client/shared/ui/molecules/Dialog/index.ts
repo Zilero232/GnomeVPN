@@ -4,5 +4,5 @@ export {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from './Dialog';

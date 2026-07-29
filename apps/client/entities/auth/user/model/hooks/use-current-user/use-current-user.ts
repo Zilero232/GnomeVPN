@@ -19,6 +19,6 @@ export const useCurrentUser = () => {
     isLoading: isPending,
     isAuthenticated: Boolean(user) || authenticatedDespiteFetchError,
     email: user?.email ?? '',
-    name: user?.name ?? '',
+    name: user?.name ?? ''
   };
 };

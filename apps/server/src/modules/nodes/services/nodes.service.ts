@@ -1,10 +1,10 @@
+import type { Node, NodeEndpoint } from '@gnomevpn/schemas';
+
 import { Injectable, Logger } from '@nestjs/common';
 
 import { AppNotFoundException, AppServiceUnavailableException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
 import { resolveNodeStatus } from '../lib';
-
-import type { Node, NodeEndpoint } from '@gnomevpn/schemas';
 
 @Injectable()
 export class NodesService {
@@ -22,8 +22,8 @@ export class NodesService {
         countryCode: true,
         city: true,
         isAvailable: true,
-        lastHealthyAt: true,
-      },
+        lastHealthyAt: true
+      }
     });
 
     return rows.map((r) => ({
@@ -32,7 +32,7 @@ export class NodesService {
       countryCode: r.countryCode,
       city: r.city ?? undefined,
       status: resolveNodeStatus({ isAvailable: r.isAvailable, lastHealthyAt: r.lastHealthyAt }),
-      lastHealthyAt: r.lastHealthyAt ? r.lastHealthyAt.toISOString() : null,
+      lastHealthyAt: r.lastHealthyAt ? r.lastHealthyAt.toISOString() : null
     }));
   }
 
@@ -40,14 +40,14 @@ export class NodesService {
     const rows = await this.prisma.node.findMany({
       where: { isAvailable: true },
       orderBy: { displayOrder: 'asc' },
-      select: { id: true, host: true, port: true, serverName: true },
+      select: { id: true, host: true, port: true, serverName: true }
     });
 
     return rows.map((r) => ({
       id: r.id,
       host: r.host,
       port: r.port,
-      serverName: r.serverName,
+      serverName: r.serverName
     }));
   }
 
@@ -65,8 +65,8 @@ export class NodesService {
         apiTokenEnvVar: true,
         wgPublicKey: true,
         isAvailable: true,
-        lastHealthyAt: true,
-      },
+        lastHealthyAt: true
+      }
     });
 
     if (!node) {
@@ -77,12 +77,12 @@ export class NodesService {
 
     const status = resolveNodeStatus({
       isAvailable: node.isAvailable,
-      lastHealthyAt: node.lastHealthyAt,
+      lastHealthyAt: node.lastHealthyAt
     });
 
     if (status !== 'online') {
       this.logger.warn(
-        `node ${node.country} (${node.host}) is ${status}, last healthy at ${node.lastHealthyAt?.toISOString() ?? 'never'}`,
+        `node ${node.country} (${node.host}) is ${status}, last healthy at ${node.lastHealthyAt?.toISOString() ?? 'never'}`
       );
 
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is not healthy');

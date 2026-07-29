@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+
 import type { apiErrorCodeSchema } from './codes';
 import type { apiErrorSchema } from './outputs';
 

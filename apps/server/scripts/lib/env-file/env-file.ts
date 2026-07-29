@@ -4,7 +4,7 @@ import type {
   EnvKeyInput,
   FindValueInput,
   PruneEnvKeysInput,
-  UpsertEnvGroupInput,
+  UpsertEnvGroupInput
 } from './env-file.types';
 
 const read = async (filePath: string): Promise<string> => {
@@ -51,7 +51,7 @@ export const upsertEnvGroup = async ({ filePath, entries }: UpsertEnvGroupInput)
 export const pruneEnvKeys = async ({
   filePath,
   prefix,
-  keep,
+  keep
 }: PruneEnvKeysInput): Promise<string[]> => {
   const raw = await read(filePath);
 

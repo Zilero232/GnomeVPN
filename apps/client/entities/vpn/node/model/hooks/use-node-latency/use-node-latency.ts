@@ -8,11 +8,9 @@ import { listNodeEndpoints } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 import { probeNodeLatency } from '@/shared/lib';
 
-import type { LatencyByNode } from '@/shared/lib';
-
 const REFRESH_MS = 120_000;
 
-const measure = async (): Promise<LatencyByNode> => {
+const measure = async () => {
   const targets = await listNodeEndpoints();
 
   return probeNodeLatency({ targets });
@@ -28,7 +26,7 @@ export const useNodeLatency = ({ isEnabled = true }: { isEnabled?: boolean } = {
     enabled: isAuthenticated && isEnabled && isNativeApp,
     refetchInterval: REFRESH_MS,
     refetchOnWindowFocus: false,
-    staleTime: REFRESH_MS,
+    staleTime: REFRESH_MS
   });
 
   return { latency: data ?? {}, isMeasuring: isFetching };

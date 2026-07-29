@@ -1,8 +1,9 @@
 import slugify from '@sindresorhus/slugify';
+import { isTruthy } from 'remeda';
 
 import type { ConfigFileNameInput, RenderConfigInput } from './config-file.types';
 
-const titleCase = (value: string): string =>
+const titleCase = (value: string) =>
   slugify(value)
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -10,15 +11,16 @@ const titleCase = (value: string): string =>
 
 export const configFileName = ({ country, deviceName }: ConfigFileNameInput): string =>
   ['GnomeVPN', titleCase(country), deviceName ? titleCase(deviceName) : '']
-    .filter(Boolean)
+    .filter(isTruthy)
     .join('-');
 
 export const renderHysteria2Config = ({
   config,
   deviceName,
-  country,
+  country
 }: RenderConfigInput): string => {
   const url = new URL(`hy2://${config.server}`);
+
   url.username = config.auth;
   url.port = String(config.port);
   url.pathname = '/';

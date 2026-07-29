@@ -4,6 +4,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect, useRef } from 'react';
 
 import { hideMainWindow, isTauriDesktop, logger } from '@/shared/lib';
+
 import { useCloseToTray } from './use-close-to-tray';
 
 type CloseOnWindowEventInput = {

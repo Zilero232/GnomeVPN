@@ -12,12 +12,12 @@ export const LocaleSwitcher = () => {
 
   return (
     <Segmented
-      aria-label={t('language')}
       options={LOCALES.map((option) => ({
         value: option,
         label: option,
-        'aria-label': LOCALE_LABELS[option],
+        'aria-label': LOCALE_LABELS[option]
       }))}
+      aria-label={t('language')}
       value={locale}
       onChange={setLocale}
     />

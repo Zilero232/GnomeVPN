@@ -1,7 +1,8 @@
-import { MONTH_FORMS, SUBSCRIPTION_PREFIX } from '../../config';
-
 import type { Plan } from '@gnomevpn/schemas';
+
 import type { DescribeSubscriptionInput } from './plan-description.types';
+
+import { MONTH_FORMS, SUBSCRIPTION_PREFIX } from '../../config';
 
 const rules = new Intl.PluralRules('ru-RU');
 

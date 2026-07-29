@@ -1,6 +1,10 @@
-import { randomUUID } from 'node:crypto';
+import type { CheckoutClient, CheckoutResult, PlanId } from '@gnomevpn/schemas';
+
 import { extraDevicesPriceRub, findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+
+import type { BuyExtraDevicesServiceInput, RecordPaymentInput } from '../billing.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { isPeriodActive } from '../../../common/lib';
@@ -9,32 +13,29 @@ import { YooKassaClient } from '../../../lib';
 import { describeExtraDevices, describePlan } from '../lib';
 import { BillingSharedService } from './billing-shared.service';
 
-import type { CheckoutClient, CheckoutResult, PlanId } from '@gnomevpn/schemas';
-import type { BuyExtraDevicesServiceInput, RecordPaymentInput } from '../billing.types';
-
 @Injectable()
 export class CheckoutService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
-    private readonly shared: BillingSharedService,
+    private readonly shared: BillingSharedService
   ) {}
 
   async createCheckout(
     userId: string,
     planId: PlanId,
-    client: CheckoutClient,
+    client: CheckoutClient
   ): Promise<CheckoutResult> {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { plan: true, currentPeriodEnd: true },
+      select: { plan: true, currentPeriodEnd: true }
     });
 
     if (isPeriodActive(subscription?.currentPeriodEnd) && subscription?.plan !== plan.id) {
       throw new AppBadRequestException(
         'PLAN_CHANGE_LOCKED',
-        'Plan cannot change while the current period runs',
+        'Plan cannot change while the current period runs'
       );
     }
 
@@ -43,7 +44,7 @@ export class CheckoutService {
       description: describePlan(plan),
       returnUrl: this.shared.returnUrlFor(client),
       idempotenceKey: randomUUID(),
-      savePaymentMethod: this.shared.isRecurringEnabled(),
+      savePaymentMethod: this.shared.isRecurringEnabled()
     });
 
     if (!payment.confirmationUrl) {
@@ -54,7 +55,7 @@ export class CheckoutService {
       userId,
       paymentId: payment.id,
       plan,
-      isAutoCharge: false,
+      isAutoCharge: false
     });
 
     return { confirmationUrl: payment.confirmationUrl };
@@ -63,23 +64,23 @@ export class CheckoutService {
   async buyExtraDevices({
     userId,
     quantity,
-    client,
+    client
   }: BuyExtraDevicesServiceInput): Promise<CheckoutResult> {
     const [subscription, pending] = await Promise.all([
       this.prisma.subscription.findUnique({
         where: { userId },
-        select: { extraDevices: true, currentPeriodEnd: true },
+        select: { extraDevices: true, currentPeriodEnd: true }
       }),
       this.prisma.payment.aggregate({
         where: { userId, kind: 'extraDevices', status: 'pending' },
-        _sum: { extraDevices: true },
-      }),
+        _sum: { extraDevices: true }
+      })
     ]);
 
     if (!isPeriodActive(subscription?.currentPeriodEnd)) {
       throw new AppBadRequestException(
         'SUBSCRIPTION_REQUIRED',
-        'Extra devices need an active subscription',
+        'Extra devices need an active subscription'
       );
     }
 
@@ -88,7 +89,7 @@ export class CheckoutService {
     if (claimed + quantity > MAX_EXTRA_DEVICES) {
       throw new AppBadRequestException(
         'EXTRA_DEVICES_LIMIT',
-        `At most ${MAX_EXTRA_DEVICES} extra devices`,
+        `At most ${MAX_EXTRA_DEVICES} extra devices`
       );
     }
 
@@ -97,7 +98,7 @@ export class CheckoutService {
       description: describeExtraDevices(quantity),
       returnUrl: this.shared.returnUrlFor(client),
       idempotenceKey: randomUUID(),
-      savePaymentMethod: false,
+      savePaymentMethod: false
     });
 
     if (!payment.confirmationUrl) {
@@ -111,8 +112,8 @@ export class CheckoutService {
             tx.subscription.findUnique({ where: { userId }, select: { extraDevices: true } }),
             tx.payment.aggregate({
               where: { userId, kind: 'extraDevices', status: 'pending' },
-              _sum: { extraDevices: true },
-            }),
+              _sum: { extraDevices: true }
+            })
           ]);
 
           const claimedNow = (current?.extraDevices ?? 0) + (pendingNow._sum.extraDevices ?? 0);
@@ -120,7 +121,7 @@ export class CheckoutService {
           if (claimedNow + quantity > MAX_EXTRA_DEVICES) {
             throw new AppBadRequestException(
               'EXTRA_DEVICES_LIMIT',
-              `At most ${MAX_EXTRA_DEVICES} extra devices`,
+              `At most ${MAX_EXTRA_DEVICES} extra devices`
             );
           }
 
@@ -132,12 +133,12 @@ export class CheckoutService {
               status: 'pending',
               isAutoCharge: false,
               kind: 'extraDevices',
-              extraDevices: quantity,
-            },
+              extraDevices: quantity
+            }
           });
         },
-        { isolationLevel: 'Serializable' },
-      ),
+        { isolationLevel: 'Serializable' }
+      )
     );
 
     return { confirmationUrl: payment.confirmationUrl };
@@ -147,7 +148,7 @@ export class CheckoutService {
     userId,
     paymentId,
     plan,
-    isAutoCharge,
+    isAutoCharge
   }: RecordPaymentInput): Promise<void> {
     await this.prisma.payment.upsert({
       where: { yookassaPaymentId: paymentId },
@@ -158,8 +159,8 @@ export class CheckoutService {
         amount: plan.priceRub,
         status: 'pending',
         isAutoCharge,
-        plan: plan.id,
-      },
+        plan: plan.id
+      }
     });
   }
 }

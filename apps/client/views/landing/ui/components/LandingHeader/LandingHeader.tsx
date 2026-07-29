@@ -2,14 +2,15 @@
 
 import { clsx } from 'clsx';
 import { Download } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import { DownloadAppDialog } from '@/features/app/download-app';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { DOWNLOAD_HASH, ROUTES } from '@/shared/constants';
 import { BrandMark, Button } from '@/shared/ui';
+
 import { LANDING_NAV_SECTIONS } from '../../../config';
 
 import s from './LandingHeader.module.scss';
@@ -44,12 +45,12 @@ export const LandingHeader = () => {
 
   return (
     <>
-      <div ref={sentinelRef} aria-hidden className={s.sentinel} />
+      <div aria-hidden ref={sentinelRef} className={s.sentinel} />
 
       <header className={clsx(s.root, isScrolled && s.scrolled)}>
         <div className={s.inner}>
           <Link className={s.brand} href={ROUTES.landing}>
-            <BrandMark labelClassName={s.brandLabel} size="lg" />
+            <BrandMark labelClassName={s.brandLabel} size='lg' />
           </Link>
 
           <nav aria-label={t('nav.ariaLabel')} className={s.nav}>
@@ -65,7 +66,7 @@ export const LandingHeader = () => {
 
             <Button
               aria-label={t('nav.download')}
-              variant="ghost"
+              variant='ghost'
               onClick={() => setIsDownloadOpen(true)}
             >
               <Download size={14} />

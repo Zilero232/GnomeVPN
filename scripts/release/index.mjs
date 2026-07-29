@@ -28,7 +28,7 @@ const ensureDraft = async () => {
 
   if (state === 'published') {
     log.fail(
-      `${tag} is already published — bump the version in package.json before releasing again`,
+      `${tag} is already published — bump the version in package.json before releasing again`
     );
   }
 
@@ -42,7 +42,7 @@ const ensureDraft = async () => {
     `GnomeVPN ${tag}`,
     '',
     '**Windows** — `.exe` installer (installs the tunnel service, auto-update enabled)',
-    '**Android** — `.apk` for manual install, `.aab` for Google Play',
+    '**Android** — `.apk` for manual install, `.aab` for Google Play'
   ].join('\n');
 
   log.step(`create draft ${tag}`);

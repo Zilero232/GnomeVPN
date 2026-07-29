@@ -1,6 +1,6 @@
-import { iconButton } from './IconButton.variants';
-
 import type { IconButtonProps } from './IconButton.types';
+
+import { iconButton } from './IconButton.variants';
 
 export const IconButton = ({
   size = 'md',

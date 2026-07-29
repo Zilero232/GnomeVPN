@@ -11,25 +11,8 @@ export {
   Spinner,
   Stack,
   Switch,
-  Text,
+  Text
 } from './atoms';
-export {
-  AppSplash,
-  Banner,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  FormField,
-  Segmented,
-  SelectableCard,
-  SubmitButton,
-  Tabs,
-} from './molecules';
-export { StatusScreen } from './organisms';
-
 export type {
   BadgeProps,
   BrandMarkProps,
@@ -44,8 +27,24 @@ export type {
   SpinnerProps,
   StackProps,
   SwitchProps,
-  TextProps,
+  TextProps
 } from './atoms';
+export {
+  AppSplash,
+  Banner,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  FormField,
+  Segmented,
+  SelectableCard,
+  SubmitButton,
+  Tabs
+} from './molecules';
+
 export type {
   BannerProps,
   BannerTone,
@@ -55,6 +54,7 @@ export type {
   SelectableCardProps,
   SubmitButtonProps,
   TabItem,
-  TabsProps,
+  TabsProps
 } from './molecules';
+export { StatusScreen } from './organisms';
 export type { StatusScreenProps } from './organisms';

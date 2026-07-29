@@ -3,11 +3,11 @@
 import { Field } from '@base-ui-components/react/field';
 import { clsx } from 'clsx';
 
+import type { FormFieldProps } from './FormField.types';
+
 import { Label, Text } from '../../atoms';
 
 import s from './FormField.module.scss';
-
-import type { FormFieldProps } from './FormField.types';
 
 export const FormField = ({
   label,
@@ -16,7 +16,7 @@ export const FormField = ({
   hint,
   htmlFor,
   hasFloatingError,
-  className,
+  className
 }: FormFieldProps) => (
   <Field.Root
     className={clsx(s.root, hasFloatingError && s.floatingError, className)}
@@ -27,13 +27,13 @@ export const FormField = ({
     {children}
 
     {hint && !error && (
-      <Field.Description className={s.hint} render={<Text size="xs" tone="muted" />}>
+      <Field.Description className={s.hint} render={<Text size='xs' tone='muted' />}>
         {hint}
       </Field.Description>
     )}
 
     {error && (
-      <Field.Error className={s.error} match render={<Text size="xs" tone="danger" />}>
+      <Field.Error match className={s.error} render={<Text size='xs' tone='danger' />}>
         {error}
       </Field.Error>
     )}

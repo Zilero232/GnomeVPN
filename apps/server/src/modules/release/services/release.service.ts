@@ -1,4 +1,8 @@
+import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
+
 import { Injectable, Logger } from '@nestjs/common';
+
+import type { CachedRelease, GithubRelease, UpdaterManifest } from '../release.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { describeError } from '../../../common/lib';
@@ -10,11 +14,8 @@ import {
   githubReleaseSchema,
   pickInstallers,
   rewriteManifestUrls,
-  updaterManifestSchema,
+  updaterManifestSchema
 } from '../lib';
-
-import type { Release, ReleaseAsset } from '@gnomevpn/schemas';
-import type { CachedRelease, GithubRelease, UpdaterManifest } from '../release.types';
 
 @Injectable()
 export class ReleaseService {
@@ -43,14 +44,14 @@ export class ReleaseService {
       platform,
       name: asset.name,
       sizeBytes: asset.size,
-      downloadUrl: `${apiUrl}/release/download/${asset.id}`,
+      downloadUrl: `${apiUrl}/release/download/${asset.id}`
     }));
 
     return {
       version: data.tag_name.replace(/^v/, ''),
       htmlUrl: `${this.config.get('CLIENT_URL')}/#download`,
       publishedAt: data.published_at,
-      assets,
+      assets
     };
   }
 
@@ -76,7 +77,7 @@ export class ReleaseService {
     const response = await githubFetch({
       url: GITHUB_RELEASE_URL,
       headers: this.githubHeaders('application/vnd.github+json'),
-      describe: 'GitHub releases',
+      describe: 'GitHub releases'
     }).catch((error: unknown) => {
       throw this.unavailable(describeError(error));
     });
@@ -99,7 +100,7 @@ export class ReleaseService {
       url: githubAssetUrl(assetId),
       headers: this.githubHeaders('application/octet-stream'),
       redirect: 'manual',
-      describe: `GitHub asset ${assetId}`,
+      describe: `GitHub asset ${assetId}`
     }).catch((error: unknown) => {
       throw this.unavailable(describeError(error));
     });
@@ -108,7 +109,7 @@ export class ReleaseService {
 
     if (!location) {
       throw this.unavailable(
-        `GitHub asset ${assetId} answered ${response.status} without a redirect`,
+        `GitHub asset ${assetId} answered ${response.status} without a redirect`
       );
     }
 
@@ -118,7 +119,7 @@ export class ReleaseService {
   private async fetchAssetBody(assetId: number): Promise<string> {
     const response = await githubFetch({
       url: await this.resolveAssetUrl(assetId),
-      describe: `Asset ${assetId}`,
+      describe: `Asset ${assetId}`
     }).catch((error: unknown) => {
       throw this.unavailable(describeError(error));
     });
@@ -144,7 +145,7 @@ export class ReleaseService {
     return rewriteManifestUrls({
       manifest: parsed.data,
       assets: release.assets,
-      apiUrl: this.config.get('API_URL'),
+      apiUrl: this.config.get('API_URL')
     });
   }
 }

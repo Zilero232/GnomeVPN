@@ -6,7 +6,7 @@ export const nodeConfigSchema = z.object({
   sshPassword: z.string().min(1),
   country: z.string().min(1),
   countryCode: z.string().length(2),
-  city: z.string().min(1).optional(),
+  city: z.string().min(1).optional()
 });
 
 export const nodesConfigSchema = z.array(nodeConfigSchema);

@@ -4,17 +4,17 @@
   padding: 0 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
+  background-color: var(--color-bg-deep);
+  color: var(--color-text);
   font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--color-text);
-  background-color: var(--color-bg-deep);
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 
   &::placeholder {
-    font-family: var(--font-mono);
     color: var(--color-text-muted);
+    font-family: var(--font-mono);
     opacity: 0.6;
   }
 
@@ -24,8 +24,8 @@
 
   &:focus-visible {
     border-color: var(--color-accent-dim);
-    outline: none;
     box-shadow: var(--glow-accent);
+    outline: none;
   }
 
   &:disabled {

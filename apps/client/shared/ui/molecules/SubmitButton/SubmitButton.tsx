@@ -1,10 +1,10 @@
 import { clsx } from 'clsx';
 
+import type { SubmitButtonProps } from './SubmitButton.types';
+
 import { Button, Spinner } from '../../atoms';
 
 import s from './SubmitButton.module.scss';
-
-import type { SubmitButtonProps } from './SubmitButton.types';
 
 export const SubmitButton = ({
   isPending = false,

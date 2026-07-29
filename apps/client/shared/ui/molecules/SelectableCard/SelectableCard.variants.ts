@@ -5,7 +5,7 @@ import s from './SelectableCard.module.scss';
 export const selectableCard = cva(s.root, {
   variants: {
     size: { sm: s.sm, md: s.md, lg: s.lg },
-    isSelected: { true: s.selected, false: '' },
+    isSelected: { true: s.selected, false: '' }
   },
-  defaultVariants: { size: 'md', isSelected: false },
+  defaultVariants: { size: 'md', isSelected: false }
 });

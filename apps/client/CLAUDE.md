@@ -44,13 +44,13 @@ The landing page is prerendered, the account area runs in a browser, and `/app` 
 
 Each bridge wraps `callRust` for one domain, so the name says which process answers:
 
-| Bridge | Rust commands |
-| --- | --- |
-| `vpn-bridge` | `vpn_connect`, `vpn_disconnect`, `vpn_status`, `vpn_service_available` |
-| `service-control` | `service_repair` — the Windows service, not the tunnel |
-| `vault` | `vault_save_token`, `vault_read_token`, `vault_clear_token` |
+| Bridge            | Rust commands                                                          |
+| ----------------- | ---------------------------------------------------------------------- |
+| `vpn-bridge`      | `vpn_connect`, `vpn_disconnect`, `vpn_status`, `vpn_service_available` |
+| `service-control` | `service_repair` — the Windows service, not the tunnel                 |
+| `vault`           | `vault_save_token`, `vault_read_token`, `vault_clear_token`            |
 
-`app-settings` (`plugin-store` + `plugin-autostart`), `window`, `notifications` and `open-external` wrap Tauri *plugins* rather than our own commands, so they do not go through `ipc`.
+`app-settings` (`plugin-store` + `plugin-autostart`), `window`, `notifications` and `open-external` wrap Tauri _plugins_ rather than our own commands, so they do not go through `ipc`.
 
 Every `callRust` needs a `fallback` — the same bundle renders in a browser and during prerender, where no Rust exists.
 
@@ -60,7 +60,8 @@ Settings that autoconnect reads live in `plugin-store`, not `localStorage` — a
 
 ```bash
 bunx tsc --noEmit
-bunx biome check .
+bunx eslint .
+bunx prettier --check .
 bunx stylelint "**/*.scss"
 bun --filter @gnomevpn/client build   # catches prerender-time errors
 ```

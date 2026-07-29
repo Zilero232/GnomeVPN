@@ -1,6 +1,6 @@
-import { selectableCard } from './SelectableCard.variants';
-
 import type { SelectableCardProps } from './SelectableCard.types';
+
+import { selectableCard } from './SelectableCard.variants';
 
 export const SelectableCard = ({
   isSelected = false,

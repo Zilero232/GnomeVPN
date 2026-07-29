@@ -7,7 +7,7 @@ const log = reporter('release:native');
 
 const REQUIRED = [
   join('apps', 'tauri', 'bin', 'wintun', 'wintun.dll'),
-  join('apps', 'tauri', 'bin', 'singbox', 'sing-box.exe'),
+  join('apps', 'tauri', 'bin', 'singbox', 'sing-box.exe')
 ];
 
 export const ensureNativeBinaries = () => {
@@ -17,8 +17,8 @@ export const ensureNativeBinaries = () => {
     log.fail(
       [
         `native binaries missing: ${missing.join(', ')}`,
-        '  see apps/tauri/bin/README.md — they are not committed to git',
-      ].join('\n'),
+        '  see apps/tauri/bin/README.md — they are not committed to git'
+      ].join('\n')
     );
   }
 

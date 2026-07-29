@@ -9,7 +9,7 @@ export const PRIVACY_SECTIONS = [
   'rights',
   'children',
   'changes',
-  'contact',
+  'contact'
 ] as const;
 
 export type PrivacySection = (typeof PRIVACY_SECTIONS)[number];

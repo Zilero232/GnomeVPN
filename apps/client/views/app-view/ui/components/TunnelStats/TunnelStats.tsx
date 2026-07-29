@@ -5,12 +5,12 @@ import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
+import type { TunnelStatsProps } from './TunnelStats.types';
+
 import { formatBytes, formatSpeed, formatUptime } from '../../../lib';
 import { useSpeed } from '../../../model/hooks';
 
 import s from './TunnelStats.module.scss';
-
-import type { TunnelStatsProps } from './TunnelStats.types';
 
 export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProps) => {
   const t = useTranslations('app');

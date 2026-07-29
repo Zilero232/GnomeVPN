@@ -1,9 +1,10 @@
+import type { NodeStatus } from '@gnomevpn/schemas';
+
 import { isAfter, subMilliseconds } from 'date-fns';
 
-import { DEGRADED_WINDOW_MS, ONLINE_WINDOW_MS } from '../../config';
-
-import type { NodeStatus } from '@gnomevpn/schemas';
 import type { HealthInput } from './node-status.types';
+
+import { DEGRADED_WINDOW_MS, ONLINE_WINDOW_MS } from '../../config';
 
 export const resolveNodeStatus = ({ isAvailable, lastHealthyAt }: HealthInput): NodeStatus => {
   if (!isAvailable || !lastHealthyAt) {

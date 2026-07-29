@@ -52,7 +52,7 @@ export type BindPaymentMethodInput = {
   idempotenceKey: string;
 };
 
-export type PaymentMethodStatus = 'pending' | 'active' | 'inactive';
+export type PaymentMethodStatus = 'active' | 'inactive' | 'pending';
 
 export type PaymentMethodInfo = {
   id: string;

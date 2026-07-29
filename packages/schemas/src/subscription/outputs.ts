@@ -11,5 +11,5 @@ export const subscriptionStatusSchema = z.object({
   hasPaymentMethod: z.boolean(),
   savedCardTitle: z.string().nullable(),
   isRecurringAvailable: z.boolean(),
-  limits: limitsSchema,
+  limits: limitsSchema
 });

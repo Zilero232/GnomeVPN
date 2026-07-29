@@ -2,13 +2,13 @@
 
 ## Что где работает
 
-| Компонент | Где | Как обновляется |
-|---|---|---|
-| Лендинг + кабинет | VPS, Caddy | `bun run deploy:web` |
-| API | VPS, Docker | `bun run deploy:web` |
-| База | VPS, Docker | там же |
-| Десктоп + Android | у пользователя | `bun run release` |
-| VPN-узлы | отдельные VPS | `bun run provision:nodes` |
+| Компонент         | Где            | Как обновляется           |
+| ----------------- | -------------- | ------------------------- |
+| Лендинг + кабинет | VPS, Caddy     | `bun run deploy:web`      |
+| API               | VPS, Docker    | `bun run deploy:web`      |
+| База              | VPS, Docker    | там же                    |
+| Десктоп + Android | у пользователя | `bun run release`         |
+| VPN-узлы          | отдельные VPS  | `bun run provision:nodes` |
 
 CI нет — всё собирается и выкатывается локально с рабочей машины. Образы кладутся
 в ghcr.io; **VPS ничего не собирает** — только забирает готовые образы.

@@ -1,3 +1,5 @@
+import type { Response } from 'express';
+
 import { Body, Controller, Delete, Get, HttpCode, Post, Res, UseGuards } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -8,13 +10,11 @@ import { DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/conf
 import { contentDisposition } from './lib';
 import { ConfigAccessService, ConfigIssueService } from './services';
 
-import type { Response } from 'express';
-
 @Controller('configs')
 export class ConfigsController {
   constructor(
     private readonly configIssue: ConfigIssueService,
-    private readonly configAccess: ConfigAccessService,
+    private readonly configAccess: ConfigAccessService
   ) {}
 
   @Get()
@@ -28,13 +28,13 @@ export class ConfigsController {
   async issue(
     @Body() body: IssueConfigDto,
     @CurrentUserId() userId: string,
-    @Res() res: Response,
+    @Res() res: Response
   ): Promise<void> {
     const file = await this.configIssue.issue({
       userId,
       nodeId: body.nodeId,
       name: body.name,
-      protocol: body.protocol,
+      protocol: body.protocol
     });
 
     res

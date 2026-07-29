@@ -1,4 +1,5 @@
 import type { Node } from '@gnomevpn/schemas';
+
 import type { ConnectInput } from '../use-vpn-connection/use-vpn-connection.types';
 
 export type UseAutoConnectParams = {

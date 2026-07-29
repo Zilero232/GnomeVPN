@@ -3,16 +3,17 @@
 import { Check, FolderPlus, Plus, Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { sortBy } from 'remeda';
+import { isEmpty, sortBy } from 'remeda';
 
 import { IconButton, Input } from '@/shared/ui';
+
+import type { AppSectionProps } from './AppSection.types';
+
 import { matchesQuery } from '../../../../lib';
 import { useAppSource } from '../../../../model/hooks';
 import { SplitModeToggle } from '../SplitModeToggle';
 
 import s from './AppSection.module.scss';
-
-import type { AppSectionProps } from './AppSection.types';
 
 type AppSource = 'installed' | 'running';
 
@@ -29,7 +30,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
   const visible = sortBy(
     matched,
     (app) => (draft.apps.includes(app.path) ? 0 : 1),
-    (app) => (needle && app.name.toLowerCase().includes(needle) ? 0 : 1),
+    (app) => (needle && app.name.toLowerCase().includes(needle) ? 0 : 1)
   );
 
   return (
@@ -56,7 +57,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
             <IconButton
               aria-label={t('clearSearch')}
               className={s.searchClear}
-              size="sm"
+              size='sm'
               onClick={() => setQuery('')}
             >
               <X size={13} />
@@ -64,7 +65,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
           )}
         </div>
 
-        <button className={s.browse} type="button" onClick={onPick}>
+        <button className={s.browse} type='button' onClick={onPick}>
           <FolderPlus aria-hidden size={15} />
           <span>{t('addManually')}</span>
         </button>
@@ -75,7 +76,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
           aria-pressed={source === 'installed'}
           className={s.sourceLink}
           data-active={source === 'installed'}
-          type="button"
+          type='button'
           onClick={() => setSource('installed')}
         >
           {t('sourceInstalled')}
@@ -89,7 +90,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
           aria-pressed={source === 'running'}
           className={s.sourceLink}
           data-active={source === 'running'}
-          type="button"
+          type='button'
           onClick={() => setSource('running')}
         >
           {t('sourceRunning')}
@@ -99,7 +100,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
       <div className={s.list}>
         {isLoading && <p className={s.state}>{t('loading')}</p>}
 
-        {!isLoading && visible.length === 0 && <p className={s.state}>{t('empty')}</p>}
+        {!isLoading && isEmpty(visible) && <p className={s.state}>{t('empty')}</p>}
 
         {!isLoading &&
           visible.map((app) => {
@@ -107,12 +108,12 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
 
             return (
               <button
+                key={app.path}
                 aria-pressed={isSelected}
                 className={s.row}
-                data-selected={isSelected || undefined}
                 data-mode={isSelected ? draft.appsMode : undefined}
-                key={app.path}
-                type="button"
+                data-selected={isSelected || undefined}
+                type='button'
                 onClick={() => toggleApp(app.path)}
               >
                 <span aria-hidden className={s.rail} />

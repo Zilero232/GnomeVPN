@@ -1,12 +1,12 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { useEffect, useState } from 'react';
 
 import { restoreTokenFromVault } from '@/shared/api';
 import { initAutoStartDefault, isTauriDesktop, setManuallyDisconnected } from '@/shared/lib';
 import { AppSplash } from '@/shared/ui';
-
-import type { ReactNode } from 'react';
 
 export const VaultProvider = ({ children }: { children: ReactNode }) => {
   const [isBlocking, setIsBlocking] = useState(false);

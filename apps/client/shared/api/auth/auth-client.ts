@@ -6,7 +6,7 @@ import {
   isServer,
   logger,
   readTokenFromVault,
-  saveTokenToVault,
+  saveTokenToVault
 } from '@/shared/lib';
 
 const STORAGE_KEY = 'gnomevpn.auth-token';
@@ -85,6 +85,6 @@ export const authClient = createAuthClient({
     onSuccess: (ctx) => {
       const token = ctx.response.headers.get('set-auth-token');
       saveAuthToken(token);
-    },
-  },
+    }
+  }
 });

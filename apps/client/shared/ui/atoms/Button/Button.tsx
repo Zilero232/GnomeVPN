@@ -1,6 +1,6 @@
-import { button } from './Button.variants';
-
 import type { ButtonProps } from './Button.types';
+
+import { button } from './Button.variants';
 
 export const Button = ({
   variant = 'primary',

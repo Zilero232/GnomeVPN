@@ -1,5 +1,13 @@
 import pWaitFor from 'p-wait-for';
 
+import type {
+  PanelUrlInput,
+  ProvisionHostInput,
+  ProvisionResult,
+  RememberNodeSecretsInput,
+  WaitForPanelInput
+} from './provision-host.types';
+
 import { generateAuth } from '../../../src/lib/xray';
 import { WG } from '../../../src/modules/peers/config';
 import { upsertEnvGroup } from '../env-file';
@@ -7,13 +15,13 @@ import {
   buildHysteriaInbound,
   LISTEN_PORT,
   MASQUERADE_HOST,
-  PANEL_PORT,
+  PANEL_PORT
 } from '../hysteria-inbound';
 import {
   nodeKeyName,
   panelPasswordName,
   panelPathName,
-  resolveNodeCredentials,
+  resolveNodeCredentials
 } from '../node-credentials';
 import {
   configurePanel,
@@ -21,21 +29,13 @@ import {
   ensureDocker,
   ensureWireguardKeys,
   openTunnelPort,
-  shipStack,
+  shipStack
 } from '../remote-setup';
 import { SshClient } from '../ssh-client';
 import { upsertNode } from '../upsert-node';
 import { buildWireguardInbound } from '../wireguard-inbound';
 import { ensureInbound, ensureWireguardInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
-
-import type {
-  PanelUrlInput,
-  ProvisionHostInput,
-  ProvisionResult,
-  RememberNodeSecretsInput,
-  WaitForPanelInput,
-} from './provision-host.types';
 
 const panelUrl = ({ host, panelPath }: PanelUrlInput): string =>
   `http://${host}:${PANEL_PORT}/${panelPath}`;
@@ -45,22 +45,22 @@ const rememberNodeSecrets = async ({
   countryCode,
   apiToken,
   panelPassword,
-  panelPath,
+  panelPath
 }: RememberNodeSecretsInput): Promise<void> =>
   upsertEnvGroup({
     filePath: serverEnvPath,
     entries: [
       { key: panelPathName(countryCode), value: panelPath },
       { key: panelPasswordName(countryCode), value: panelPassword },
-      { key: nodeKeyName(countryCode), value: apiToken },
-    ],
+      { key: nodeKeyName(countryCode), value: apiToken }
+    ]
   });
 
 const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> => {
   try {
     await pWaitFor(() => isPanelReachable(credentials), {
       timeout: HEALTH_TIMEOUT_MS,
-      interval: HEALTH_INTERVAL_MS,
+      interval: HEALTH_INTERVAL_MS
     });
 
     return true;
@@ -73,7 +73,7 @@ export const provisionHost = async ({
   config,
   prisma,
   serverEnvPath,
-  xrayComposeContent,
+  xrayComposeContent
 }: ProvisionHostInput): Promise<ProvisionResult> => {
   const ssh = new SshClient();
   const outcome = { host: config.host, country: config.country };
@@ -82,12 +82,12 @@ export const provisionHost = async ({
     await ssh.connect({
       host: config.host,
       username: config.sshUser,
-      password: config.sshPassword,
+      password: config.sshPassword
     });
 
     const { password, panelPath } = await resolveNodeCredentials({
       envFilePath: serverEnvPath,
-      countryCode: config.countryCode,
+      countryCode: config.countryCode
     });
 
     const auth = generateAuth();
@@ -108,7 +108,7 @@ export const provisionHost = async ({
     await ensureInbound({
       baseUrl,
       token,
-      inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST }),
+      inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST })
     });
 
     const wireguardKeys = await ensureWireguardKeys(ssh);
@@ -119,8 +119,8 @@ export const provisionHost = async ({
       inbound: buildWireguardInbound({
         secretKey: wireguardKeys.privateKey,
         listenPort: WG.listenPort,
-        mtu: WG.mtu,
-      }),
+        mtu: WG.mtu
+      })
     });
 
     await rememberNodeSecrets({
@@ -128,7 +128,7 @@ export const provisionHost = async ({
       countryCode: config.countryCode,
       apiToken: token,
       panelPassword: password,
-      panelPath,
+      panelPath
     });
 
     const { wasExisting } = await upsertNode({
@@ -143,8 +143,8 @@ export const provisionHost = async ({
         hysteriaAuth: auth,
         wgPublicKey: wireguardKeys.publicKey,
         apiUrl: baseUrl,
-        apiTokenEnvVar: nodeKeyName(config.countryCode),
-      },
+        apiTokenEnvVar: nodeKeyName(config.countryCode)
+      }
     });
 
     return { ...outcome, status: wasExisting ? 'updated' : 'provisioned' };
@@ -152,7 +152,7 @@ export const provisionHost = async ({
     return {
       ...outcome,
       status: 'failed',
-      error: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error ? error.message : String(error)
     };
   } finally {
     ssh.dispose();

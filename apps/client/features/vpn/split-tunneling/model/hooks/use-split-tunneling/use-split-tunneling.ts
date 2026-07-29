@@ -1,14 +1,15 @@
 'use client';
 
+import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
+
 import { useEffect, useState } from 'react';
 import { isDeepEqual } from 'remeda';
 
 import { emptySplitConfig, getSplitConfig, logger, setSplitConfig } from '@/shared/lib';
 
-import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
 import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 
-const toggleIn = (list: string[], value: string): string[] =>
+const toggleIn = (list: string[], value: string) =>
   list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
 export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}) => {
@@ -76,7 +77,7 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
 
   const addIp = (cidr: string) =>
     setDraft((current) =>
-      current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] },
+      current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] }
     );
 
   const removeIp = (cidr: string) =>
@@ -122,6 +123,6 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
     removeIp,
     clear,
     reset,
-    apply,
+    apply
   };
 };

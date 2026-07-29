@@ -26,7 +26,7 @@ export const useSpeed = ({ rx, tx }: UseSpeedInput): UseSpeedResult => {
 
     setSpeed({
       rx: Math.max(0, (rx - last.rx) / seconds),
-      tx: Math.max(0, (tx - last.tx) / seconds),
+      tx: Math.max(0, (tx - last.tx) / seconds)
     });
   }, [rx, tx]);
 

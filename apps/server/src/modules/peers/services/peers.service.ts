@@ -1,14 +1,9 @@
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
+import { groupBy, isEmpty } from 'remeda';
 
-import { AppServiceUnavailableException } from '../../../common/exceptions';
-import { describeError, xrayClientForNode } from '../../../common/lib';
-import { PrismaService } from '../../../core';
-import { WG } from '../config';
-import { generateWireguardKeys, nextWireguardIp, PEER_REF_SELECT, peerClientName } from '../lib';
-
+import type { Prisma } from '../../../../generated';
 import type {
-  BulkPeerResult,
   CreatedPeer,
   CreateWireguardClientInput,
   DiscardPeerInput,
@@ -16,7 +11,14 @@ import type {
   IssueAndPersistInput,
   IssuePeerInput,
   PeerRef,
+  SetPeerEnabledInput
 } from '../peers.service.types';
+
+import { AppServiceUnavailableException } from '../../../common/exceptions';
+import { describeError, xrayClientForNode } from '../../../common/lib';
+import { PrismaService } from '../../../core';
+import { WG } from '../config';
+import { generateWireguardKeys, nextWireguardIp, PEER_REF_SELECT, peerClientName } from '../lib';
 
 @Injectable()
 export class PeersService {
@@ -48,7 +50,7 @@ export class PeersService {
     userId,
     kind,
     protocol,
-    name,
+    name
   }: IssuePeerInput): Promise<CreatedPeer> {
     const email = peerClientName({ userId, kind, name, nodeId });
 
@@ -74,7 +76,7 @@ export class PeersService {
   private async takenWireguardIps(nodeId: string): Promise<string[]> {
     const rows = await this.prisma.peer.findMany({
       where: { nodeId, wgAssignedIp: { not: null } },
-      select: { wgAssignedIp: true },
+      select: { wgAssignedIp: true }
     });
 
     return rows.map((row) => row.wgAssignedIp).filter((ip): ip is string => Boolean(ip));
@@ -83,12 +85,12 @@ export class PeersService {
   private async createWireguardClient({
     node,
     nodeId,
-    email,
+    email
   }: CreateWireguardClientInput): Promise<CreatedPeer> {
     if (!node.wgPublicKey) {
       throw new AppServiceUnavailableException(
         'NODE_UNAVAILABLE',
-        'node has no wireguard endpoint',
+        'node has no wireguard endpoint'
       );
     }
 
@@ -100,7 +102,7 @@ export class PeersService {
         email,
         publicKey: keys.publicKey,
         takenIps,
-        allocateIp: (taken) => nextWireguardIp({ subnet: WG.subnet, taken }),
+        allocateIp: (taken) => nextWireguardIp({ subnet: WG.subnet, taken })
       });
 
       return {
@@ -108,7 +110,7 @@ export class PeersService {
         email,
         protocol: TUNNEL_PROTOCOL.wireguard,
         wgAssignedIp: assignedIp,
-        wgPrivateKey: keys.privateKey,
+        wgPrivateKey: keys.privateKey
       };
     } catch (error) {
       this.logger.error(`addWireguardPeer failed on ${node.apiUrl}: ${describeError(error)}`);
@@ -117,77 +119,82 @@ export class PeersService {
     }
   }
 
-  private async onNode(
-    peer: PeerRef,
-    run: (client: ReturnType<typeof xrayClientForNode>) => Promise<void>,
-  ): Promise<boolean> {
-    const node = await this.prisma.node.findUnique({
-      where: { id: peer.nodeId },
-      select: { apiUrl: true, apiTokenEnvVar: true },
+  async onlinePeerIds(peers: PeerRef[]): Promise<Set<string>> {
+    const byNode = groupBy(peers, (peer) => peer.nodeId);
+    const online = new Set<string>();
+
+    await Promise.all(
+      Object.entries(byNode).map(async ([nodeId, nodePeers]) => {
+        const node = await this.prisma.node.findUnique({
+          where: { id: nodeId },
+          select: { apiUrl: true, apiTokenEnvVar: true }
+        });
+
+        if (!node) {
+          return;
+        }
+
+        const emails = await xrayClientForNode(node)
+          .onlineEmails()
+          .catch(() => null);
+
+        for (const peer of nodePeers) {
+          if (emails === null || emails.has(peerClientName(peer))) {
+            online.add(peer.id);
+          }
+        }
+      })
+    );
+
+    return online;
+  }
+
+  async revoke(where: Prisma.PeerWhereInput): Promise<void> {
+    await this.prisma.peer.updateMany({ where, data: { state: 'revoked' } });
+  }
+
+  async releaseNow(peers: PeerRef[]): Promise<void> {
+    if (isEmpty(peers)) {
+      return;
+    }
+
+    await this.prisma.peer.updateMany({
+      where: { id: { in: peers.map((peer) => peer.id) } },
+      data: { state: 'revoked' }
     });
 
-    if (!node) {
-      return false;
-    }
+    const byNode = groupBy(peers, (peer) => peer.nodeId);
 
-    try {
-      await run(xrayClientForNode(node));
+    await Promise.all(
+      Object.entries(byNode).map(async ([nodeId, nodePeers]) => {
+        const node = await this.prisma.node.findUnique({
+          where: { id: nodeId },
+          select: { apiUrl: true, apiTokenEnvVar: true }
+        });
 
-      return true;
-    } catch (error) {
-      this.logger.warn(`node op failed for peer ${peer.id}: ${describeError(error)}`);
+        if (!node) {
+          return;
+        }
 
-      return false;
-    }
-  }
+        const client = xrayClientForNode(node);
 
-  async release(peer: PeerRef): Promise<boolean> {
-    return this.onNode(peer, (client) => client.deleteClient(peerClientName(peer)));
-  }
-
-  async setEnabled(peer: PeerRef, enabled: boolean): Promise<boolean> {
-    return this.onNode(peer, (client) =>
-      client.setClientEnabled({ email: peerClientName(peer), enabled }),
+        await Promise.all(
+          nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined))
+        );
+      })
     );
   }
 
-  async setEnabledMany(peers: PeerRef[], enabled: boolean): Promise<BulkPeerResult> {
-    let failed = 0;
-
-    for (const peer of peers) {
-      if (!(await this.setEnabled(peer, enabled))) {
-        failed += 1;
-      }
-    }
-
-    return { succeeded: peers.length - failed, failed };
-  }
-
-  async releaseMany(peers: PeerRef[]): Promise<BulkPeerResult> {
-    const released: string[] = [];
-
-    for (const peer of peers) {
-      if (await this.release(peer)) {
-        released.push(peer.id);
-      }
-    }
-
-    await this.remove(released);
-
-    return { succeeded: released.length, failed: peers.length - released.length };
+  async setEnabled({ where, enabled }: SetPeerEnabledInput): Promise<void> {
+    await this.prisma.peer.updateMany({
+      where,
+      data: { state: enabled ? 'active' : 'disabled' }
+    });
   }
 
   async discard({ node, email }: DiscardPeerInput): Promise<void> {
     await xrayClientForNode(node)
       .deleteClient(email)
       .catch(() => undefined);
-  }
-
-  async remove(ids: string[]): Promise<void> {
-    if (ids.length === 0) {
-      return;
-    }
-
-    await this.prisma.peer.deleteMany({ where: { id: { in: ids } } });
   }
 }

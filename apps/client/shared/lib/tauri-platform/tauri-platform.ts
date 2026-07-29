@@ -3,7 +3,7 @@ import { type as osType } from '@tauri-apps/plugin-os';
 
 import { isBrowser, isServer } from '../env';
 
-const isMobileUserAgent = (): boolean => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+const isMobileUserAgent = () => /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
 export const isTauriMobile = (): boolean => {
   if (isServer() || !isTauri()) {

@@ -1,7 +1,7 @@
+import type { NodeAccess } from './node-credentials.types';
+
 import { XrayClient } from '../../lib';
 import { AppServiceUnavailableException } from '../exceptions';
-
-import type { NodeAccess } from './node-credentials.types';
 
 export const resolveNodeApiKey = (ref: string): string => {
   const key = process.env[ref];
@@ -9,7 +9,7 @@ export const resolveNodeApiKey = (ref: string): string => {
   if (!key) {
     throw new AppServiceUnavailableException(
       'NODE_UNAVAILABLE',
-      `Missing ${ref} in the environment`,
+      `Missing ${ref} in the environment`
     );
   }
 

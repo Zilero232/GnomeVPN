@@ -2,7 +2,7 @@ import type { UpsertNodeArgs, UpsertNodeResult } from './upsert-node.types';
 
 export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<UpsertNodeResult> => {
   const existing = await prisma.node.findFirst({
-    where: { host: input.host },
+    where: { host: input.host }
   });
 
   if (existing) {
@@ -18,8 +18,8 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
         wgPublicKey: input.wgPublicKey,
         apiUrl: input.apiUrl,
         apiTokenEnvVar: input.apiTokenEnvVar,
-        isAvailable: true,
-      },
+        isAvailable: true
+      }
     });
 
     return { id: updated.id, wasExisting: true };
@@ -37,8 +37,8 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
       wgPublicKey: input.wgPublicKey,
       apiUrl: input.apiUrl,
       apiTokenEnvVar: input.apiTokenEnvVar,
-      isAvailable: true,
-    },
+      isAvailable: true
+    }
   });
 
   return { id: created.id, wasExisting: false };

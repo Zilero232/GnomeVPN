@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { ResetPasswordForm } from '@/features/auth/reset-password';
@@ -25,7 +25,7 @@ export const ResetPasswordPage = () => {
           <LocaleSwitcher />
         </div>
 
-        <Text as="h1" className={s.title}>
+        <Text as='h1' className={s.title}>
           {t('resetPassword')}
         </Text>
 
@@ -33,11 +33,11 @@ export const ResetPasswordPage = () => {
           <ResetPasswordForm token={token} onDone={() => router.replace(ROUTES.auth)} />
         ) : (
           <div className={s.invalid}>
-            <Text align="center" size="sm" tone="muted">
+            <Text align='center' size='sm' tone='muted'>
               {t('resetLinkInvalid')}
             </Text>
 
-            <button className={s.back} type="button" onClick={() => router.replace(ROUTES.auth)}>
+            <button className={s.back} type='button' onClick={() => router.replace(ROUTES.auth)}>
               {t('backToSignIn')}
             </button>
           </div>

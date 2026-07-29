@@ -1,11 +1,11 @@
 'use client';
 
+import type { TunnelProtocol } from '@gnomevpn/schemas';
+
 import { useEffect, useState } from 'react';
 
 import { DEFAULT_PROTOCOL } from '@/entities/vpn/protocol';
 import { getProtocol, setProtocol } from '@/shared/lib';
-
-import type { TunnelProtocol } from '@gnomevpn/schemas';
 
 export const useProtocolSelection = () => {
   const [protocol, setSelected] = useState<TunnelProtocol>(DEFAULT_PROTOCOL);

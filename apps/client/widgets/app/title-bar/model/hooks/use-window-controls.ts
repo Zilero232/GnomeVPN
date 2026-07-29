@@ -2,9 +2,7 @@
 
 import { closeMainWindow, minimizeMainWindow } from '@/shared/lib';
 
-export const useWindowControls = () => {
-  return {
-    minimize: minimizeMainWindow,
-    close: closeMainWindow,
-  };
-};
+export const useWindowControls = () => ({
+  minimize: minimizeMainWindow,
+  close: closeMainWindow
+});

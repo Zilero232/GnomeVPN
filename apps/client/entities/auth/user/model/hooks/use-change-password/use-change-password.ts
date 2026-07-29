@@ -1,10 +1,10 @@
 'use client';
 
+import type { ChangePasswordValues } from '@gnomevpn/schemas';
+
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/shared/api';
-
-import type { ChangePasswordValues } from '@gnomevpn/schemas';
 
 export const useChangePassword = () =>
   useMutation({
@@ -12,11 +12,11 @@ export const useChangePassword = () =>
       const { error } = await authClient.changePassword({
         currentPassword,
         newPassword,
-        revokeOtherSessions: true,
+        revokeOtherSessions: true
       });
 
       if (error) {
         throw new Error(error.message ?? 'Failed to change password');
       }
-    },
+    }
   });

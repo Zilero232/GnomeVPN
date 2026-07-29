@@ -9,19 +9,19 @@ export const text = cva(s.root, {
       regular: s.regular,
       medium: s.medium,
       semibold: s.semibold,
-      bold: s.bold,
+      bold: s.bold
     },
     tone: {
       default: '',
       muted: s.muted,
       accent: s.accent,
       danger: s.danger,
-      success: s.success,
+      success: s.success
     },
     align: { left: s.left, center: s.center, right: s.right },
     mono: { true: s.mono },
     uppercase: { true: s.uppercase },
-    truncate: { true: s.truncate },
+    truncate: { true: s.truncate }
   },
-  defaultVariants: { size: 'md', tone: 'default' },
+  defaultVariants: { size: 'md', tone: 'default' }
 });

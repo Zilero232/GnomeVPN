@@ -1,16 +1,16 @@
-import { api } from '../http';
-
 import type {
   BindCardResult,
   BuyExtraDevicesInput,
   CheckoutClient,
   CheckoutResult,
-  PlanId,
+  PlanId
 } from '@gnomevpn/schemas';
+
+import { api } from '../http';
 
 export const createCheckout = async (
   planId: PlanId,
-  client: CheckoutClient,
+  client: CheckoutClient
 ): Promise<CheckoutResult> => {
   const { data } = await api.post('/billing/checkout', { planId, client });
 
@@ -37,7 +37,7 @@ export const unbindCard = async (): Promise<void> => {
 
 export const buyExtraDevices = async ({
   quantity,
-  client,
+  client
 }: BuyExtraDevicesInput): Promise<CheckoutResult> => {
   const { data } = await api.post('/billing/extra-devices', { quantity, client });
 

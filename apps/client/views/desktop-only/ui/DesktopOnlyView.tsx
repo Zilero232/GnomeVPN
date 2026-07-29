@@ -1,8 +1,8 @@
 'use client';
 
 import { MonitorDown } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { ROUTES } from '@/shared/constants';
 import { Button, Text } from '@/shared/ui';
@@ -18,10 +18,10 @@ export const DesktopOnlyView = () => {
         <MonitorDown size={30} />
       </span>
 
-      <Text as="h1" className={s.title}>
+      <Text as='h1' className={s.title}>
         {t('title')}
       </Text>
-      <Text as="p" className={s.body}>
+      <Text as='p' className={s.body}>
         {t('body')}
       </Text>
 
@@ -30,7 +30,7 @@ export const DesktopOnlyView = () => {
           <Button>{t('download')}</Button>
         </Link>
         <Link href={ROUTES.account}>
-          <Button variant="ghost">{t('account')}</Button>
+          <Button variant='ghost'>{t('account')}</Button>
         </Link>
       </div>
     </main>

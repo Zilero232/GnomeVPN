@@ -17,19 +17,11 @@ import java.io.File
 import kotlin.concurrent.thread
 
 @InvokeArg
-class HeartbeatArgs {
-    var apiUrl: String = ""
-    var token: String = ""
-    var deviceId: String = ""
-}
-
-@InvokeArg
 class StartArgs {
     var server: String = ""
     var dns: List<String> = emptyList()
     var tunAddress: String = ""
     var configJson: String = ""
-    var heartbeat: HeartbeatArgs? = null
 }
 
 @InvokeArg
@@ -122,9 +114,6 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
                 dns = args.dns,
                 tunAddress = args.tunAddress,
                 configJson = args.configJson,
-                heartbeat = args.heartbeat?.let {
-                    HeartbeatInfo(apiUrl = it.apiUrl, token = it.token, deviceId = it.deviceId)
-                },
             ),
         )
 

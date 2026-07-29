@@ -32,11 +32,11 @@ import { SubscriptionModule } from './modules/subscription';
     SessionsModule,
     ConfigsModule,
     SchedulerModule,
-    EventsModule,
+    EventsModule
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+    { provide: APP_GUARD, useClass: ThrottlerGuard }
+  ]
 })
 export class AppModule {}

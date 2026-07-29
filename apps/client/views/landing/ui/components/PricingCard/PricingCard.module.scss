@@ -4,8 +4,8 @@
 
 .plans {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .plan {
@@ -26,73 +26,73 @@
   border-color: var(--color-accent);
 }
 
-.featured::before {
-  pointer-events: none;
-  content: '';
+.featured:before {
   position: absolute;
   top: -60%;
   right: -30%;
   width: 320px;
   height: 320px;
   background: radial-gradient(circle, rgb(53 240 160 / 12%) 0%, transparent 70%);
+  content: '';
+  pointer-events: none;
 }
 
 .head {
   display: flex;
-  gap: 12px;
+  height: 26px;
   align-items: center;
   justify-content: space-between;
-  height: 26px;
+  gap: 12px;
 }
 
 .term {
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-text-muted);
 }
 
 .price {
   display: flex;
-  gap: 8px;
-  align-items: baseline;
   height: 40px;
+  align-items: baseline;
   font-family: var(--font-mono);
+  gap: 8px;
 }
 
 .amount {
   font-size: 40px;
   font-weight: 700;
-  line-height: 1;
   letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .period {
-  font-size: 13px;
   color: var(--color-text-muted);
+  font-size: 13px;
 }
 
 .list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 28px;
   justify-content: center;
-  margin: 0;
   padding: 0;
+  margin: 0;
+  gap: 12px 28px;
   list-style: none;
 }
 
 .item {
   display: flex;
-  gap: 8px;
   align-items: center;
-  font-size: 14px;
   color: var(--color-text-muted);
+  font-size: 14px;
+  gap: 8px;
 }
 
 .check {
-  flex-shrink: 0;
   width: 16px;
   height: 16px;
+  flex-shrink: 0;
   color: var(--color-accent);
 }
 

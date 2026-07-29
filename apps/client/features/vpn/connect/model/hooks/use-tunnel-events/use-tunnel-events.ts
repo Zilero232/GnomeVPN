@@ -5,9 +5,10 @@ import { toast } from 'sonner';
 import { match } from 'ts-pattern';
 
 import { setLastNodeId } from '@/shared/lib';
-import { useTunnelNotifications } from '../use-tunnel-notifications';
 
 import type { HandleTunnelEventInput, UseTunnelEventsInput } from './use-tunnel-events.types';
+
+import { useTunnelNotifications } from '../use-tunnel-notifications';
 
 export const useTunnelEvents = ({
   isCurrent,
@@ -16,7 +17,7 @@ export const useTunnelEvents = ({
   onTraffic,
   onClosed,
   countryRef,
-  nodeIdRef,
+  nodeIdRef
 }: UseTunnelEventsInput) => {
   const { notifyConnected, notifyDisconnected, notifyError } = useTunnelNotifications();
 
@@ -77,6 +78,6 @@ export const useTunnelEvents = ({
     handleEvent,
     markConnected: () => {
       wasConnectedRef.current = true;
-    },
+    }
   };
 };

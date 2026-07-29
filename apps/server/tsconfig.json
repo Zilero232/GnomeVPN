@@ -1,14 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "@siberiacancode/tsconfig/tsconfig.bundler.json",
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023", "DOM"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "types": ["bun"],
     "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "types": ["bun"],
     "noEmit": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "prisma.config.ts"],

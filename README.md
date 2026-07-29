@@ -27,7 +27,7 @@ enough to drop the connection.
 GnomeVPN runs on **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3 site.
 The choice was measured, not assumed: this repository first shipped VLESS +
 XTLS-Reality, and Russian DPI equipment fingerprinted the REALITY handshake over
-*any* TCP port, killing sessions within minutes of real traffic. Plain WireGuard
+_any_ TCP port, killing sessions within minutes of real traffic. Plain WireGuard
 on UDP/51820 passed on the same network. UDP is policed differently, so the
 tunnel moved.
 
@@ -125,8 +125,8 @@ so there is nothing to elevate: the tunnel runs inside the app process, with
 
 ### Split tunneling, and why it took a rewrite
 
-Routing by *destination* is ordinary work — a route table does it. Routing by
-*process* is not: Windows will not let user space redirect a connection based on
+Routing by _destination_ is ordinary work — a route table does it. Routing by
+_process_ is not: Windows will not let user space redirect a connection based on
 who opened it. That needs a callout driver at `FWPM_LAYER_ALE_BIND_REDIRECT`,
 which needs an EV certificate.
 
@@ -152,18 +152,18 @@ TUN and opens the outgoing connection itself, so the choice between `proxy` and
 
 ## Stack
 
-| Layer | Choice |
-|---|---|
-| Web client | Next.js 16, React 19, Feature-Sliced Design |
-| Desktop | Tauri 2, Rust, wintun |
-| Mobile | Tauri 2 on Android, `VpnService` + `tun2proxy` |
-| Tunnel core | sing-box (Windows), hysteria (Android) |
-| API | NestJS on Bun, Prisma 7, better-auth |
-| Realtime | Server-Sent Events |
-| Database | PostgreSQL |
-| Shared types | Zod schemas in `packages/schemas` |
-| Payments | YooKassa |
-| Delivery | Docker, Caddy, GitHub Actions |
+| Layer        | Choice                                         |
+| ------------ | ---------------------------------------------- |
+| Web client   | Next.js 16, React 19, Feature-Sliced Design    |
+| Desktop      | Tauri 2, Rust, wintun                          |
+| Mobile       | Tauri 2 on Android, `VpnService` + `tun2proxy` |
+| Tunnel core  | sing-box (Windows), hysteria (Android)         |
+| API          | NestJS on Bun, Prisma 7, better-auth           |
+| Realtime     | Server-Sent Events                             |
+| Database     | PostgreSQL                                     |
+| Shared types | Zod schemas in `packages/schemas`              |
+| Payments     | YooKassa                                       |
+| Delivery     | Docker, Caddy, GitHub Actions                  |
 
 <br/>
 
@@ -244,19 +244,20 @@ Full walkthrough — domain, secrets, `.env`, first launch — in
 
 ## Scripts
 
-| Command | What it does |
-|---|---|
-| `bun run dev` | client + API in watch mode |
-| `bun run tauri:dev` | desktop app |
-| `bun run android:dev` | Android app |
-| `bun run typecheck` | types across all packages |
-| `bun lint` | Biome |
-| `bun run lint:css` | Stylelint |
-| `bun run tauri:build` | installers |
-| `bun run android:build` | APK / AAB |
-| `bun run release` | build, sign & publish desktop + Android |
-| `bun run deploy:web` | build images, push to ghcr, deploy web + API |
-| `bun run provision:nodes` | set up VPN nodes |
+| Command                   | What it does                                 |
+| ------------------------- | -------------------------------------------- |
+| `bun run dev`             | client + API in watch mode                   |
+| `bun run tauri:dev`       | desktop app                                  |
+| `bun run android:dev`     | Android app                                  |
+| `bun run typecheck`       | types across all packages                    |
+| `bun lint`                | ESLint                                       |
+| `bun run format`          | Prettier                                     |
+| `bun run lint:css`        | Stylelint                                    |
+| `bun run tauri:build`     | installers                                   |
+| `bun run android:build`   | APK / AAB                                    |
+| `bun run release`         | build, sign & publish desktop + Android      |
+| `bun run deploy:web`      | build images, push to ghcr, deploy web + API |
+| `bun run provision:nodes` | set up VPN nodes                             |
 
 Rust is checked with `cargo clippy --workspace` and `cargo fmt --all --check`.
 There is no CI — run the checks locally before every commit.

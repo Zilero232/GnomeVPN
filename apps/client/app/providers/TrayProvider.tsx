@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
@@ -8,8 +10,6 @@ import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray'
 import { useVpnConnectionContext } from '@/features/vpn/connect';
 import { ROUTES } from '@/shared/constants';
 import { getLastNodeId, getProtocol, showMainWindow } from '@/shared/lib';
-
-import type { ReactNode } from 'react';
 
 export const TrayProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -59,7 +59,7 @@ export const TrayProvider = ({ children }: { children: ReactNode }) => {
 
       router.push(ROUTES.account);
     },
-    onBeforeQuit: releaseOnQuit,
+    onBeforeQuit: releaseOnQuit
   });
 
   useCloseOnWindowEvent({ onBeforeQuit: releaseOnQuit });

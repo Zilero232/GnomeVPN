@@ -3,5 +3,5 @@ export {
   hideMainWindow,
   minimizeMainWindow,
   showMainWindow,
-  toggleMainWindow,
+  toggleMainWindow
 } from './window';

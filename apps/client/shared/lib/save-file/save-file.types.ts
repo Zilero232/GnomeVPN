@@ -4,6 +4,6 @@ export type SaveFileInput = {
 };
 
 export type SaveFileResult = {
-  target: 'shared' | 'browser';
+  target: 'browser' | 'shared';
   fileName: string;
 };

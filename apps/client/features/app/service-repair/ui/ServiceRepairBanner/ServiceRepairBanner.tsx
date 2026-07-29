@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Banner, Button } from '@/shared/ui';
+
 import { useServiceStatus } from '../../model/hooks';
 
 export const ServiceRepairBanner = () => {
@@ -17,21 +18,21 @@ export const ServiceRepairBanner = () => {
 
   const onRepair = () => {
     repair(undefined, {
-      onError: () => toast.error(t('repairFailed')),
+      onError: () => toast.error(t('repairFailed'))
     });
   };
 
   return (
     <Banner
       action={
-        <Button disabled={isRepairing} size="md" type="button" onClick={onRepair}>
+        <Button disabled={isRepairing} size='md' type='button' onClick={onRepair}>
           {isRepairing ? t('repairing') : t('repair')}
         </Button>
       }
       description={t('description')}
       icon={<ShieldAlert size={16} />}
       title={t('title')}
-      tone="danger"
+      tone='danger'
     />
   );
 };

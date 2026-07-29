@@ -40,7 +40,7 @@ export const copyLibs = ({ from, to }) => {
 
     const stale = removeStale({
       directory: target,
-      keep: (entry) => entry === CARGO_LIB || ours.includes(entry),
+      keep: (entry) => entry === CARGO_LIB || ours.includes(entry)
     });
 
     removed.push(...stale.map((entry) => `${abi}/${entry}`));
@@ -62,7 +62,7 @@ export const copySources = ({ from, to }) => {
   removeStale({
     directory: to,
     keep: (entry) =>
-      !entry.endsWith('.kt') || ours.includes(entry) || GENERATED_SOURCES.includes(entry),
+      !entry.endsWith('.kt') || ours.includes(entry) || GENERATED_SOURCES.includes(entry)
   });
 
   cpSync(from, to, { recursive: true });

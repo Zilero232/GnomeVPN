@@ -6,7 +6,7 @@ const nameSchema = z.string().trim().min(2, 'validation.nameMin').max(32, 'valid
 
 export const signInSchema = z.object({
   email: emailSchema,
-  password: passwordSchema,
+  password: passwordSchema
 });
 
 export const signUpSchema = z
@@ -14,42 +14,42 @@ export const signUpSchema = z
     name: nameSchema,
     email: emailSchema,
     password: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string()
   })
   .refine((values) => values.password === values.confirmPassword, {
     message: 'validation.passwordsMismatch',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });
 
 export const updateNameSchema = z.object({
-  name: nameSchema,
+  name: nameSchema
 });
 
 export const forgotPasswordSchema = z.object({
-  email: emailSchema,
+  email: emailSchema
 });
 
 export const resetPasswordSchema = z
   .object({
     newPassword: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string()
   })
   .refine((values) => values.newPassword === values.confirmPassword, {
     message: 'validation.passwordsMismatch',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });
 
 export const changeEmailSchema = z.object({
-  newEmail: emailSchema,
+  newEmail: emailSchema
 });
 
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'validation.required'),
     newPassword: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string()
   })
   .refine((values) => values.newPassword === values.confirmPassword, {
     message: 'validation.passwordsMismatch',
-    path: ['confirmPassword'],
+    path: ['confirmPassword']
   });

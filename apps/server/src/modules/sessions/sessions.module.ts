@@ -11,6 +11,6 @@ import { SessionsController } from './sessions.controller';
   imports: [NodesModule, PeersModule, SubscriptionModule, EventsModule],
   controllers: [SessionsController],
   providers: [SessionConnectService, SessionAccessService],
-  exports: [SessionAccessService],
+  exports: [SessionAccessService]
 })
 export class SessionsModule {}

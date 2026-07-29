@@ -1,62 +1,25 @@
-import cleanOrder from 'stylelint-config-clean-order';
+import { stylelint } from '@siberiacancode/stylelint';
 
-const [orderGroups, orderOptions] = cleanOrder.rules['order/properties-order'];
-
-const groupsWithoutEmptyLines = orderGroups.map((group) => ({
-  ...group,
-  emptyLineBefore: 'never',
-}));
-
-/** @type {import('stylelint').Config} */
 export default {
-  extends: ['stylelint-config-standard-scss'],
-  plugins: [
-    'stylelint-order',
-    'stylelint-declaration-block-no-ignored-properties',
-    'stylelint-high-performance-animation',
-  ],
-  ignoreFiles: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/target/**'],
+  ...stylelint,
+  ignoreFiles: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/out/**', '**/target/**'],
   rules: {
-    'order/properties-order': [
-      groupsWithoutEmptyLines,
-      {
-        ...orderOptions,
-        emptyLineBeforeUnspecified: 'never',
-        severity: 'warning',
-      },
-    ],
-
-    'plugin/declaration-block-no-ignored-properties': true,
-    'plugin/no-low-performance-animation-properties': [
-      true,
-      {
-        ignoreProperties: ['background-color', 'color', 'border-color', 'box-shadow', 'filter'],
-        severity: 'warning',
-      },
-    ],
-
-    'value-keyword-case': null,
-    'custom-property-pattern': null,
-    'custom-property-empty-line-before': null,
-    'declaration-empty-line-before': null,
-    'scss/dollar-variable-pattern': null,
-    'scss/dollar-variable-empty-line-before': null,
-    'scss/at-mixin-pattern': null,
-    'scss/no-global-function-names': null,
-
-    'hue-degree-notation': null,
-    'lightness-notation': null,
-    'alpha-value-notation': null,
-    'color-function-notation': null,
-
+    ...stylelint.rules,
     'selector-class-pattern': null,
+    'keyframes-name-pattern': null,
+    'scss/at-mixin-pattern': null,
     'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['global', 'local'] }],
     'property-no-unknown': [true, { ignoreProperties: ['composes'] }],
-
-    'property-no-vendor-prefix': [true, { ignoreProperties: ['font-smoothing'] }],
-    'value-no-vendor-prefix': true,
-    'at-rule-no-vendor-prefix': true,
-    'media-feature-name-no-vendor-prefix': true,
-    'selector-no-vendor-prefix': [true, { ignoreSelectors: ['/-webkit-scrollbar/'] }],
+    'rule-empty-line-before': null,
+    'comment-empty-line-before': null,
+    'custom-property-empty-line-before': null
   },
+  overrides: [
+    {
+      files: ['apps/client/app/globals.scss'],
+      rules: {
+        'declaration-no-important': null
+      }
+    }
+  ]
 };

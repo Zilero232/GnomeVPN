@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
-import { type InstalledApp, listInstalledApps, listRunningProcesses, logger } from '@/shared/lib';
+import type { InstalledApp } from '@/shared/lib';
+
+import { listInstalledApps, listRunningProcesses, logger } from '@/shared/lib';
 
 import type { UseAppSourceInput } from './use-app-source.types';
 

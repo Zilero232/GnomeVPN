@@ -2,9 +2,10 @@ import { Menu, MenuItem, PredefinedMenuItem } from '@tauri-apps/api/menu';
 import { exit } from '@tauri-apps/plugin-process';
 
 import { logger } from '@/shared/lib';
-import { TRAY_MENU_ID } from '../config/menu-ids';
 
 import type { TrayMenuActions, TrayMenuLabels } from '../model/types';
+
+import { TRAY_MENU_ID } from '../config/menu-ids';
 
 export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuActions) => {
   const toggle = await MenuItem.new({
@@ -16,7 +17,7 @@ export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuAct
       } catch (error) {
         logger.warn(`tray toggle failed: ${String(error)}`);
       }
-    },
+    }
   });
 
   const account = await MenuItem.new({
@@ -28,7 +29,7 @@ export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuAct
       } catch (error) {
         logger.warn(`tray account failed: ${String(error)}`);
       }
-    },
+    }
   });
 
   const quit = await MenuItem.new({
@@ -46,7 +47,7 @@ export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuAct
       } catch (error) {
         logger.warn(`tray quit failed: ${String(error)}`);
       }
-    },
+    }
   });
 
   const separator = await PredefinedMenuItem.new({ item: 'Separator' });

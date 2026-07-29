@@ -1,11 +1,11 @@
+import type { WebhookEvent } from '@gnomevpn/schemas';
+
 import { Injectable, Logger } from '@nestjs/common';
 
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { ConfigAccessService } from '../../configs';
 import { BillingSharedService } from './billing-shared.service';
-
-import type { WebhookEvent } from '@gnomevpn/schemas';
 
 @Injectable()
 export class WebhookService {
@@ -15,7 +15,7 @@ export class WebhookService {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly shared: BillingSharedService,
-    private readonly configs: ConfigAccessService,
+    private readonly configs: ConfigAccessService
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
@@ -37,8 +37,8 @@ export class WebhookService {
         status: true,
         plan: true,
         kind: true,
-        extraDevices: true,
-      },
+        extraDevices: true
+      }
     });
 
     if (!row) {
@@ -58,7 +58,7 @@ export class WebhookService {
     if (payment.status === 'canceled') {
       await this.prisma.payment.update({
         where: { id: row.id },
-        data: { status: 'canceled' },
+        data: { status: 'canceled' }
       });
 
       this.logger.log(`payment ${paymentId} was canceled`);
@@ -77,7 +77,7 @@ export class WebhookService {
         async (tx) => {
           const claimed = await tx.payment.updateMany({
             where: { id: row.id, status: 'pending' },
-            data: { status: 'succeeded' },
+            data: { status: 'succeeded' }
           });
 
           if (claimed.count === 0) {
@@ -89,7 +89,7 @@ export class WebhookService {
           if (row.kind === 'extraDevices') {
             await this.shared.grantExtraDevices(
               { userId: row.userId, quantity: row.extraDevices },
-              tx,
+              tx
             );
 
             return false;
@@ -101,26 +101,26 @@ export class WebhookService {
               planId: row.plan,
               method: payment.paymentMethodId
                 ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
-                : null,
+                : null
             },
-            tx,
+            tx
           );
 
           return true;
         },
-        { isolationLevel: 'Serializable' },
-      ),
+        { isolationLevel: 'Serializable' }
+      )
     );
 
     if (activated) {
-      await this.configs.setEnabledAll(row.userId, true);
+      await this.configs.setEnabledAll({ userId: row.userId, enabled: true });
     }
   }
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { pendingCardId: paymentMethodId },
-      select: { userId: true },
+      select: { userId: true }
     });
 
     if (!subscription) {
@@ -132,7 +132,7 @@ export class WebhookService {
     if (method.status !== 'active') {
       await this.prisma.subscription.update({
         where: { userId: subscription.userId },
-        data: { pendingCardId: null },
+        data: { pendingCardId: null }
       });
 
       return;
@@ -141,7 +141,7 @@ export class WebhookService {
     await this.shared.attachPaymentMethod({
       userId: subscription.userId,
       paymentMethodId,
-      title: method.title,
+      title: method.title
     });
   }
 }

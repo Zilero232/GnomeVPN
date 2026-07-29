@@ -1,16 +1,16 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   align-items: center;
+  gap: 16px;
 }
 
 .code {
   display: flex;
-  align-items: center;
-  justify-content: center;
   width: 272px;
   height: 272px;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
   border-radius: var(--radius-sm);
   background-color: #fff;

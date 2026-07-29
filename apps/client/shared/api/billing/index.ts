@@ -4,5 +4,5 @@ export {
   cancelAutoRenew,
   createCheckout,
   resumeAutoRenew,
-  unbindCard,
+  unbindCard
 } from './billing';

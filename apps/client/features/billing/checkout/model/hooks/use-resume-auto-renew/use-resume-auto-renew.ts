@@ -11,6 +11,6 @@ export const useResumeAutoRenew = () => {
   return useMutation({
     mutationFn: resumeAutoRenew,
     onSuccess: invalidateSubscription,
-    onError: toastError,
+    onError: toastError
   });
 };

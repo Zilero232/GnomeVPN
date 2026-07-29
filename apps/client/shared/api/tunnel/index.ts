@@ -1,1 +1,1 @@
-export { connectTunnel, disconnectTunnel, getDeviceUsage, sendHeartbeat } from './tunnel';
+export { connectTunnel, disconnectTunnel, getDeviceUsage } from './tunnel';

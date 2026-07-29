@@ -2,16 +2,18 @@
 
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
+import { isEmpty } from 'remeda';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
 import { Stack, Text } from '@/shared/ui';
+
+import type { ConfigListProps } from './ConfigList.types';
+
 import { useConfigs, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigRow } from './components';
 
 import s from './ConfigList.module.scss';
-
-import type { ConfigListProps } from './ConfigList.types';
 
 export const ConfigList = ({ className }: ConfigListProps) => {
   const t = useTranslations('configs');
@@ -23,10 +25,10 @@ export const ConfigList = ({ className }: ConfigListProps) => {
 
   const isFull = configs.length >= limits.configLimit;
 
-  if (isLoadingNodes || isLoadingConfigs || nodes.length === 0) {
+  if (isLoadingNodes || isLoadingConfigs || isEmpty(nodes)) {
     return (
       <section className={clsx(s.panel, className)}>
-        <Text tone="muted">{isLoadingNodes || isLoadingConfigs ? t('loading') : t('empty')}</Text>
+        <Text tone='muted'>{isLoadingNodes || isLoadingConfigs ? t('loading') : t('empty')}</Text>
       </section>
     );
   }
@@ -34,43 +36,43 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   return (
     <div className={clsx(s.root, className)}>
       <section className={s.panel}>
-        <Stack gap="md">
-          <Text size="xs" tone="muted">
+        <Stack gap='md'>
+          <Text size='xs' tone='muted'>
             {hasAccess ? t('hint', { limit: limits.configLimit }) : t('lockedHint')}
           </Text>
 
           {hasAccess && (
             <AddConfigForm
+              key={configs.length}
               configs={configs}
               isDisabled={revoke.isPending}
               isFull={isFull}
-              key={configs.length}
               nodes={nodes}
             />
           )}
 
           {isFull && (
-            <Text size="xs" tone="muted">
+            <Text size='xs' tone='muted'>
               {t('limitReached', { limit: limits.configLimit })}
             </Text>
           )}
         </Stack>
       </section>
 
-      {configs.length > 0 && (
+      {!isEmpty(configs) && (
         <section className={s.panel}>
           <header className={s.panelHead}>
-            <Text as="h3" className={s.panelTitle}>
+            <Text as='h3' className={s.panelTitle}>
               {t('issued')}
             </Text>
 
-            <Text as="span" className={s.counter}>
+            <Text as='span' className={s.counter}>
               {configs.length} / {limits.configLimit}
             </Text>
           </header>
 
           {!hasAccess && (
-            <Text className={s.expiredNotice} size="xs" tone="danger">
+            <Text className={s.expiredNotice} size='xs' tone='danger'>
               {t('expiredNotice')}
             </Text>
           )}
@@ -78,10 +80,10 @@ export const ConfigList = ({ className }: ConfigListProps) => {
           <div className={s.rows}>
             {configs.map((config) => (
               <ConfigRow
+                key={config.id}
                 config={config}
                 isBlocked={!hasAccess}
                 isRevoking={revoke.isPending}
-                key={config.id}
                 onRevoke={() => revoke.mutate(config.id)}
               />
             ))}

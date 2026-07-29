@@ -1,6 +1,6 @@
-import { XrayClient } from '../../../src/lib/xray';
-
 import type { EnsureInboundInput, PanelCredentials } from './xray-panel.types';
+
+import { XrayClient } from '../../../src/lib/xray';
 
 export const isPanelReachable = async (credentials: PanelCredentials): Promise<boolean> =>
   new XrayClient(credentials).isReachable();

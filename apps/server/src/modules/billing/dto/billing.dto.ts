@@ -4,7 +4,7 @@ import {
   buyExtraDevicesSchema,
   checkoutResultSchema,
   createCheckoutSchema,
-  webhookEventSchema,
+  webhookEventSchema
 } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 

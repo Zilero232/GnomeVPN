@@ -1,18 +1,19 @@
 'use client';
 
 import { SplitSquareHorizontal } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 import { useVpnConnectionContext } from '@/features/vpn/connect';
+
 import { useSplitTunneling } from '../../model/hooks';
 
 import s from './SplitTunnelingButton.module.scss';
 
 const SplitTunnelingDialog = dynamic(
   () => import('../SplitTunnelingDialog').then((module) => module.SplitTunnelingDialog),
-  { ssr: false },
+  { ssr: false }
 );
 
 export const SplitTunnelingButton = () => {
@@ -31,7 +32,7 @@ export const SplitTunnelingButton = () => {
       }
 
       void reconnect();
-    },
+    }
   });
 
   const { applied } = splitTunneling;
@@ -56,7 +57,7 @@ export const SplitTunnelingButton = () => {
         aria-label={t('open')}
         className={s.root}
         data-active={count > 0}
-        type="button"
+        type='button'
         onClick={open}
       >
         <SplitSquareHorizontal size={15} />

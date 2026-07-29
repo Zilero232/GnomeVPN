@@ -1,8 +1,8 @@
 import { isNonNullish } from 'remeda';
 
-import { COUNTRY_WIDTH, HOST_WIDTH } from './provision-report.constants';
-
 import type { ProvisionResult } from '../provision-host';
+
+import { COUNTRY_WIDTH, HOST_WIDTH } from './provision-report.constants';
 
 export const formatSummary = (results: ProvisionResult[]): string =>
   results

@@ -7,11 +7,13 @@ import { toast } from 'sonner';
 
 import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
-import { type SignInValues, signInSchema, useSignIn } from '../model/use-sign-in';
+
+import type { SignInValues } from '../model/use-sign-in';
+import type { SignInFormProps } from './SignInForm.types';
+
+import { signInSchema, useSignIn } from '../model/use-sign-in';
 
 import s from './SignInForm.module.scss';
-
-import type { SignInFormProps } from './SignInForm.types';
 
 const DEFAULT_VALUES: SignInValues = { email: '', password: '' };
 
@@ -24,38 +26,38 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
   const {
     formState: { errors },
     handleSubmit,
-    register,
+    register
   } = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
-    defaultValues: DEFAULT_VALUES,
+    defaultValues: DEFAULT_VALUES
   });
 
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
-      onError: (error: Error) => toast.error(t(error.message)),
+      onError: (error: Error) => toast.error(t(error.message))
     });
   });
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField error={fieldError(errors.email)} htmlFor="signin-email" label={t('fields.email')}>
-        <Input autoComplete="email" id="signin-email" type="email" {...register('email')} />
+      <FormField error={fieldError(errors.email)} htmlFor='signin-email' label={t('fields.email')}>
+        <Input autoComplete='email' id='signin-email' type='email' {...register('email')} />
       </FormField>
 
       <FormField
         error={fieldError(errors.password)}
-        htmlFor="signin-password"
+        htmlFor='signin-password'
         label={t('fields.password')}
       >
         <PasswordInput
-          autoComplete="current-password"
-          id="signin-password"
+          autoComplete='current-password'
+          id='signin-password'
           {...passwordLabels}
           {...register('password')}
         />
       </FormField>
 
-      <button className={s.forgot} type="button" onClick={onForgotPassword}>
+      <button className={s.forgot} type='button' onClick={onForgotPassword}>
         {t('forgotPassword')}
       </button>
 

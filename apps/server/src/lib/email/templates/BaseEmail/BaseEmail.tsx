@@ -9,15 +9,15 @@ import {
   Link,
   Preview,
   Section,
-  Text,
+  Text
 } from 'react-email';
-
-import { emailStyles } from '../email-styles';
 
 import type { BaseEmailProps } from './BaseEmail.types';
 
+import { emailStyles } from '../email-styles';
+
 export const BaseEmail = ({ preview, heading, action, children }: BaseEmailProps) => (
-  <Html lang="ru">
+  <Html lang='ru'>
     <Head />
     <Preview>{preview}</Preview>
 

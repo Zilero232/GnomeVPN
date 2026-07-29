@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type BannerTone = 'accent' | 'warning' | 'danger';
+export type BannerTone = 'accent' | 'danger' | 'warning';
 
 export type BannerProps = {
   tone: BannerTone;

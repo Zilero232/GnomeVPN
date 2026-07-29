@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 export const checkoutResultSchema = z.object({
-  confirmationUrl: z.url(),
+  confirmationUrl: z.url()
 });
 
 export const bindCardResultSchema = z.object({
   confirmationUrl: z.url().nullable(),
-  isActive: z.boolean(),
+  isActive: z.boolean()
 });
 
 export const limitsSchema = z.object({
@@ -14,5 +14,5 @@ export const limitsSchema = z.object({
   configLimit: z.number().int().positive(),
   extraDevices: z.number().int().nonnegative(),
   pricePerDeviceRub: z.number().int().positive(),
-  maxExtraDevices: z.number().int().positive(),
+  maxExtraDevices: z.number().int().positive()
 });

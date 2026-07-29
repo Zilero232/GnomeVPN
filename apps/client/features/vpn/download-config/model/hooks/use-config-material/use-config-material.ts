@@ -4,12 +4,13 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import type { ConfigDownload } from '@/shared/api';
+
 import { useToastError } from '@/entities/app/locale';
 import { issueConfig, readConfigText } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 import { saveFile } from '@/shared/lib';
 
-import type { ConfigDownload } from '@/shared/api';
 import type { UseConfigMaterialInput } from './use-config-material.types';
 
 export const useConfigMaterial = ({ config }: UseConfigMaterialInput) => {
@@ -30,7 +31,7 @@ export const useConfigMaterial = ({ config }: UseConfigMaterialInput) => {
       const download = await issueConfig({
         nodeId: config.nodeId,
         name: config.name,
-        protocol: config.protocol,
+        protocol: config.protocol
       });
 
       cache.current = download;
@@ -39,7 +40,7 @@ export const useConfigMaterial = ({ config }: UseConfigMaterialInput) => {
 
       return download;
     },
-    onError: toastError,
+    onError: toastError
   });
 
   const download = async () => {

@@ -4,9 +4,9 @@ import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import prettyBytes from 'pretty-bytes';
 
-import s from './PlatformCard.module.scss';
-
 import type { PlatformCardProps } from './PlatformCard.types';
+
+import s from './PlatformCard.module.scss';
 
 export const PlatformCard = ({ label, Icon, asset }: PlatformCardProps) => {
   const t = useTranslations('downloadApp');
@@ -26,8 +26,8 @@ export const PlatformCard = ({ label, Icon, asset }: PlatformCardProps) => {
       download
       className={clsx(s.root, s.available)}
       href={asset.downloadUrl}
-      rel="noopener noreferrer"
-      target="_blank"
+      rel='noopener noreferrer'
+      target='_blank'
     >
       <Icon className={s.icon} size={22} />
       <span className={s.name}>{label}</span>

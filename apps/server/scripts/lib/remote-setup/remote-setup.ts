@@ -1,6 +1,14 @@
 import pWaitFor from 'p-wait-for';
 import { quote } from 'shell-quote';
 
+import type { SshClient } from '../ssh-client';
+import type {
+  ConfigurePanelInput,
+  ShipStackInput,
+  WaitForPanelInput,
+  WireguardKeyPair
+} from './remote-setup.types';
+
 import { PANEL_USERNAME } from '../../../src/lib/xray';
 import { WG } from '../../../src/modules/peers/config';
 import { generateWireguardKeys } from '../../../src/modules/peers/lib/wg-keys';
@@ -11,16 +19,8 @@ import {
   DOCKER_INSTALL_URL,
   PANEL_BOOT_INTERVAL_MS,
   PANEL_BOOT_TIMEOUT_MS,
-  REMOTE_DIR,
+  REMOTE_DIR
 } from './remote-setup.constants';
-
-import type { SshClient } from '../ssh-client';
-import type {
-  ConfigurePanelInput,
-  ShipStackInput,
-  WaitForPanelInput,
-  WireguardKeyPair,
-} from './remote-setup.types';
 
 export const ensureDocker = async (ssh: SshClient): Promise<void> => {
   const installed = await ssh.exec('docker --version');
@@ -40,7 +40,7 @@ export const ensureCert = async (ssh: SshClient): Promise<void> => {
   const dir = CERT_PATH.slice(0, CERT_PATH.lastIndexOf('/'));
 
   await ssh.exec(
-    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && (test -f ${CERT_PATH} || openssl req -x509 -nodes -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -keyout ${KEY_PATH} -out ${CERT_PATH} -subj "/CN=${MASQUERADE_HOST}" -days 3650)'`,
+    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && (test -f ${CERT_PATH} || openssl req -x509 -nodes -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -keyout ${KEY_PATH} -out ${CERT_PATH} -subj "/CN=${MASQUERADE_HOST}" -days 3650)'`
   );
 };
 
@@ -75,7 +75,7 @@ export const ensureWireguardKeys = async (ssh: SshClient): Promise<WireguardKeyP
   const { privateKey, publicKey } = generateWireguardKeys();
 
   await ssh.exec(
-    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && printf "%s" ${quote([privateKey])} > ${WG_KEY_PATH} && printf "%s" ${quote([publicKey])} > ${WG_PUB_PATH}'`,
+    `docker exec ${CONTAINER_NAME} sh -lc 'mkdir -p ${dir} && printf "%s" ${quote([privateKey])} > ${WG_KEY_PATH} && printf "%s" ${quote([publicKey])} > ${WG_PUB_PATH}'`
   );
 
   return { privateKey, publicKey };
@@ -85,7 +85,7 @@ const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void
   const isUp = async (): Promise<boolean> => {
     try {
       const result = await ssh.exec(
-        `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PANEL_PORT}/${panelPath}/`,
+        `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:${PANEL_PORT}/${panelPath}/`
       );
 
       return result.stdout.trim() === '200';
@@ -97,7 +97,7 @@ const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void
   try {
     await pWaitFor(isUp, {
       timeout: PANEL_BOOT_TIMEOUT_MS,
-      interval: PANEL_BOOT_INTERVAL_MS,
+      interval: PANEL_BOOT_INTERVAL_MS
     });
   } catch {
     throw new Error('the panel did not start listening after a restart');
@@ -107,10 +107,10 @@ const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void
 export const configurePanel = async ({
   ssh,
   password,
-  panelPath,
+  panelPath
 }: ConfigurePanelInput): Promise<string> => {
   await ssh.exec(
-    `docker exec ${CONTAINER_NAME} /app/x-ui setting -username ${PANEL_USERNAME} -password ${quote([password])} -port ${PANEL_PORT} -webBasePath ${panelPath}`,
+    `docker exec ${CONTAINER_NAME} /app/x-ui setting -username ${PANEL_USERNAME} -password ${quote([password])} -port ${PANEL_PORT} -webBasePath ${panelPath}`
   );
 
   await ssh.exec(`docker restart ${CONTAINER_NAME}`);

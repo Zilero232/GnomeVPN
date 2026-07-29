@@ -14,6 +14,7 @@ import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
 import { openSystemVpnSettings } from '@/shared/lib';
 import { Switch } from '@/shared/ui';
+
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
 import { MenuItem } from './components';
 
@@ -31,7 +32,7 @@ export const AppMenu = () => {
     autoReconnect,
     toggleAutoStart,
     toggleAutoConnect,
-    toggleAutoReconnect,
+    toggleAutoReconnect
   } = useStartupSettings();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -41,14 +42,14 @@ export const AppMenu = () => {
   const signOut = useSignOut();
 
   return (
-    <div className={s.root} ref={ref}>
+    <div ref={ref} className={s.root}>
       <motion.button
         animate={{ rotate: isOpen ? 45 : 0 }}
         aria-expanded={isOpen}
         aria-label={t('menu')}
         className={s.trigger}
         transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-        type="button"
+        type='button'
         whileTap={{ scale: 0.92 }}
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -114,7 +115,7 @@ export const AppMenu = () => {
             <MenuItem
               icon={LogOut}
               label={t('signOut')}
-              tone="danger"
+              tone='danger'
               onClick={() => signOut.mutate()}
             />
           </motion.div>

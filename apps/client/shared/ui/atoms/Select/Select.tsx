@@ -5,9 +5,9 @@ import { clsx } from 'clsx';
 import { Check, ChevronDown } from 'lucide-react';
 import { isNullish } from 'remeda';
 
-import s from './Select.module.scss';
-
 import type { SelectProps } from './Select.types';
+
+import s from './Select.module.scss';
 
 export const Select = ({
   value,
@@ -17,7 +17,7 @@ export const Select = ({
   isDisabled,
   className,
   'aria-label': ariaLabel,
-  onChange,
+  onChange
 }: SelectProps) => {
   const handleChange = (next: unknown) => {
     if (isNullish(next) || next === '') {
@@ -45,9 +45,9 @@ export const Select = ({
             <BaseSelect.List className={s.list}>
               {options.map((option) => (
                 <BaseSelect.Item
+                  key={option.value}
                   className={s.item}
                   disabled={option.isDisabled}
-                  key={option.value}
                   title={option.title}
                   value={option.value}
                 >

@@ -1,12 +1,12 @@
-import { SITE } from '@/shared/config';
-
 import type { Metadata, Viewport } from 'next';
+
+import { SITE } from '@/shared/config';
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
     default: SITE.title,
-    template: `%s · ${SITE.name}`,
+    template: `%s · ${SITE.name}`
   },
   description: SITE.description,
   applicationName: SITE.name,
@@ -15,10 +15,10 @@ export const defaultMetadata: Metadata = {
   icons: {
     icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
     shortcut: '/brand/favicon.svg',
-    apple: [{ url: '/brand/logo-mark.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/brand/logo-mark.svg', type: 'image/svg+xml' }]
   },
   alternates: {
-    canonical: '/',
+    canonical: '/'
   },
   openGraph: {
     type: 'website',
@@ -27,13 +27,13 @@ export const defaultMetadata: Metadata = {
     siteName: SITE.name,
     title: SITE.title,
     description: SITE.description,
-    images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }],
+    images: [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }]
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE.title,
     description: SITE.description,
-    images: [SITE.ogImage],
+    images: [SITE.ogImage]
   },
   robots: {
     index: false,
@@ -42,19 +42,19 @@ export const defaultMetadata: Metadata = {
     googleBot: {
       index: false,
       follow: false,
-      noimageindex: true,
-    },
-  },
+      noimageindex: true
+    }
+  }
 };
 
 export const defaultViewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: SITE.themeColor.light },
-    { media: '(prefers-color-scheme: dark)', color: SITE.themeColor.dark },
+    { media: '(prefers-color-scheme: dark)', color: SITE.themeColor.dark }
   ],
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  viewportFit: 'cover',
+  viewportFit: 'cover'
 };

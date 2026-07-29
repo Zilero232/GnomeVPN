@@ -30,7 +30,7 @@ export const envSchema = z.object({
 
   CLIENT_URL: z.url().default('http://localhost:3000'),
 
-  GITHUB_TOKEN: z.string().default(''),
+  GITHUB_TOKEN: z.string().default('')
 });
 
 export type Env = z.infer<typeof envSchema>;

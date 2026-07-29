@@ -18,11 +18,8 @@ import android.os.ParcelFileDescriptor
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
-import java.net.HttpURLConnection
 import java.net.Inet4Address
 import java.net.InetAddress
-import java.net.URL
-import org.json.JSONObject
 
 class GnomeVpnService : VpnService() {
     private var descriptor: ParcelFileDescriptor? = null
@@ -30,7 +27,6 @@ class GnomeVpnService : VpnService() {
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var activeNetwork: Network? = null
     private var isStopping = false
-    private var heartbeat: Thread? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
@@ -62,7 +58,6 @@ class GnomeVpnService : VpnService() {
             startEngine(snapshot.toJson(), fd, TunnelStore.autoReconnect(this))
 
             publish(this, true)
-            startHeartbeat(snapshot.heartbeat)
             Log.i(TAG, "tunnel is up, fd=$fd")
             START_STICKY
         } catch (error: Throwable) {
@@ -319,7 +314,6 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun teardown() {
-        stopHeartbeat()
         unwatchNetwork()
         releaseWakeLock()
         runCatching { TunnelEngine.nativeStop() }
@@ -341,59 +335,6 @@ class GnomeVpnService : VpnService() {
 
     private fun notificationManager(): NotificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-    private fun startHeartbeat(info: HeartbeatInfo?) {
-        if (info == null) {
-            return
-        }
-
-        stopHeartbeat()
-
-        val thread = Thread {
-            while (!Thread.currentThread().isInterrupted) {
-                sendHeartbeat(info)
-
-                try {
-                    Thread.sleep(HEARTBEAT_INTERVAL_MS)
-                } catch (_: InterruptedException) {
-                    return@Thread
-                }
-            }
-        }
-
-        thread.isDaemon = true
-        thread.start()
-        heartbeat = thread
-    }
-
-    private fun stopHeartbeat() {
-        heartbeat?.interrupt()
-        heartbeat = null
-    }
-
-    private fun sendHeartbeat(info: HeartbeatInfo) {
-        runCatching {
-            val body = JSONObject().put("deviceId", info.deviceId).toString()
-            val connection = (URL("${info.apiUrl}/tunnel/heartbeat").openConnection() as HttpURLConnection).apply {
-                requestMethod = "POST"
-                connectTimeout = HEARTBEAT_TIMEOUT_MS
-                readTimeout = HEARTBEAT_TIMEOUT_MS
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Authorization", "Bearer ${info.token}")
-            }
-
-            connection.outputStream.use { it.write(body.toByteArray()) }
-            val code = connection.responseCode
-            connection.disconnect()
-
-            if (code !in 200..299) {
-                Log.w(TAG, "heartbeat rejected with $code")
-            }
-        }.onFailure { error ->
-            Log.w(TAG, "heartbeat failed", error)
-        }
-    }
 
     override fun onRevoke() {
         Log.w(TAG, "vpn permission revoked by the system")
@@ -466,8 +407,6 @@ class GnomeVpnService : VpnService() {
         private const val NOTIFICATION_ID = 1
         private const val START_TIMEOUT_SECONDS = 15L
         private const val POLL_INTERVAL_MS = 150L
-        private const val HEARTBEAT_INTERVAL_MS = 60_000L
-        private const val HEARTBEAT_TIMEOUT_MS = 10_000
 
         private const val TUN_ADDRESS = "10.8.0.2"
         private const val TUN_PREFIX = 24

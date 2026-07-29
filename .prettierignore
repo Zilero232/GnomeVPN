@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+generated
+target
+next-env.d.ts
+bun.lock
+apps/tauri/gen
+apps/server/prisma/migrations
+apps/server/generated
+
+.agents
+.claude
+docs
+CHANGELOG.md

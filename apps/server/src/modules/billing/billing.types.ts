@@ -1,4 +1,5 @@
 import type { CheckoutClient, Plan, PlanId } from '@gnomevpn/schemas';
+
 import type { Prisma } from '../../../generated';
 
 export type PrismaExecutor = Prisma.TransactionClient;

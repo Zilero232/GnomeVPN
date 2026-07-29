@@ -8,17 +8,18 @@ import { useState } from 'react';
 
 import { isTauriMobile } from '@/shared/lib';
 import { Badge, Button, CountryFlag, Text } from '@/shared/ui';
+
+import type { ConfigRowProps } from './ConfigRow.types';
+
 import { useConfigMaterial } from '../../../model/hooks';
 import { ConfigQrDialog } from '../ConfigQrDialog';
 
 import s from './ConfigRow.module.scss';
 
-import type { ConfigRowProps } from './ConfigRow.types';
-
 export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: ConfigRowProps) => {
   const t = useTranslations('configs');
   const { content, isPending, download, copyToClipboard, prepareQr } = useConfigMaterial({
-    config,
+    config
   });
   const [isQrOpen, setIsQrOpen] = useState(false);
 
@@ -39,18 +40,18 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
 
         <div className={s.info}>
           <span className={s.head}>
-            <Text as="span" className={s.name}>
+            <Text as='span' className={s.name}>
               {config.name}
             </Text>
 
             {isBlocked ? (
-              <Badge tone="muted">{t('paused')}</Badge>
+              <Badge tone='muted'>{t('paused')}</Badge>
             ) : (
               <Badge>{t(`protocol.${config.protocol}`)}</Badge>
             )}
           </span>
 
-          <Text size="xs" tone="muted">
+          <Text size='xs' tone='muted'>
             {config.country}
           </Text>
         </div>
@@ -60,8 +61,8 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
         <Button
           aria-label={t('qr')}
           disabled={isBusy || isBlocked}
-          size="icon"
-          variant="ghost"
+          size='icon'
+          variant='ghost'
           onClick={openQr}
         >
           <QrCode aria-hidden size={15} />
@@ -71,8 +72,8 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
           <Button
             aria-label={t(isTauriMobile() ? 'share' : 'redownload')}
             disabled={isBusy || isBlocked}
-            size="icon"
-            variant="ghost"
+            size='icon'
+            variant='ghost'
             onClick={download}
           >
             <ShareOrDownload aria-hidden size={15} />
@@ -81,8 +82,8 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
           <Button
             aria-label={t('copy')}
             disabled={isBusy || isBlocked}
-            size="icon"
-            variant="ghost"
+            size='icon'
+            variant='ghost'
             onClick={copyToClipboard}
           >
             <Copy aria-hidden size={15} />
@@ -92,8 +93,8 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
         <Button
           aria-label={t('revoke')}
           disabled={isBusy}
-          size="icon"
-          variant="ghost"
+          size='icon'
+          variant='ghost'
           onClick={onRevoke}
         >
           <Trash2 aria-hidden size={15} />

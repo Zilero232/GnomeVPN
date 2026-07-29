@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import type {
   VpnConnectionStatus,
-  VpnTraffic,
+  VpnTraffic
 } from '../use-vpn-connection/use-vpn-connection.types';
 
 const EMPTY_TRAFFIC: VpnTraffic = { rx: 0, tx: 0 };
@@ -48,6 +48,6 @@ export const useTunnelState = () => {
     markConnecting,
     markConnected,
     markAdopted,
-    reset,
+    reset
   };
 };

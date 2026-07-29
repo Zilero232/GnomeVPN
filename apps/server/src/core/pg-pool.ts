@@ -26,7 +26,7 @@ export const createPool = (connectionString: string): Pool => {
     maxLifetimeSeconds: 300,
     keepAlive: true,
     keepAliveInitialDelayMillis: 5_000,
-    allowExitOnIdle: false,
+    allowExitOnIdle: false
   });
 
   pool.on('error', (error) => {

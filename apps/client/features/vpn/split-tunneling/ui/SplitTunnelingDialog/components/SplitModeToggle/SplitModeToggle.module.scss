@@ -7,8 +7,8 @@
 .row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 10px;
   align-items: center;
+  gap: 8px 10px;
 }
 
 .lead {
@@ -16,25 +16,25 @@
 }
 
 .pill {
-  cursor: pointer;
   display: inline-flex;
-  gap: 6px;
   align-items: center;
   padding: 5px 12px;
   border: 1px solid transparent;
   border-radius: 999px;
+  cursor: pointer;
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
+  gap: 6px;
   transition:
     color 0.16s ease,
     border-color 0.16s ease,
     background-color 0.16s ease;
+  white-space: nowrap;
 
   &[data-mode='allowed'] {
-    color: var(--color-bg-deep);
     background-color: var(--color-accent);
+    color: var(--color-bg-deep);
 
     &:hover {
       box-shadow: 0 0 20px -6px color-mix(in srgb, var(--color-accent) 60%, transparent);
@@ -43,8 +43,8 @@
 
   &[data-mode='disallowed'] {
     border-color: var(--color-border-bright);
-    color: var(--color-text);
     background-color: var(--color-surface-raised);
+    color: var(--color-text);
 
     &:hover {
       border-color: var(--color-text-muted);

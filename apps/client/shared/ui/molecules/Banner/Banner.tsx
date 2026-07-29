@@ -1,6 +1,6 @@
-import s from './Banner.module.scss';
-
 import type { BannerProps } from './Banner.types';
+
+import s from './Banner.module.scss';
 
 export const Banner = ({ tone, icon, title, description, action }: BannerProps) => (
   <div

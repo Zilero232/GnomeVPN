@@ -1,14 +1,13 @@
-import { tunnelConfigSchema } from '@gnomevpn/schemas';
-
-import { api } from '../http';
-
 import type {
   ConnectRequest,
   DeviceUsage,
   DisconnectRequest,
-  HeartbeatRequest,
-  TunnelConfig,
+  TunnelConfig
 } from '@gnomevpn/schemas';
+
+import { tunnelConfigSchema } from '@gnomevpn/schemas';
+
+import { api } from '../http';
 
 export const getDeviceUsage = async (deviceId: string): Promise<DeviceUsage> => {
   const { data } = await api.get('/tunnel/devices', { params: { deviceId } });
@@ -19,7 +18,7 @@ export const getDeviceUsage = async (deviceId: string): Promise<DeviceUsage> => 
 export const connectTunnel = async ({
   nodeId,
   deviceId,
-  protocol,
+  protocol
 }: ConnectRequest): Promise<TunnelConfig> => {
   const { data } = await api.post('/tunnel/connect', { nodeId, deviceId, protocol });
 
@@ -28,8 +27,4 @@ export const connectTunnel = async ({
 
 export const disconnectTunnel = async ({ deviceId }: DisconnectRequest): Promise<void> => {
   await api.post('/tunnel/disconnect', { deviceId });
-};
-
-export const sendHeartbeat = async ({ deviceId }: HeartbeatRequest): Promise<void> => {
-  await api.post('/tunnel/heartbeat', { deviceId });
 };

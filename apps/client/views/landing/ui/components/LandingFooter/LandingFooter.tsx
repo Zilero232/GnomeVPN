@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { SITE } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';

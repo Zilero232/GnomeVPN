@@ -1,7 +1,7 @@
 .root {
   display: flex;
-  justify-content: center;
   min-height: 100dvh;
+  justify-content: center;
   padding: 48px 24px 96px;
 }
 
@@ -12,17 +12,17 @@
 
 .nav {
   display: flex;
-  gap: 16px;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 40px;
+  gap: 16px;
 }
 
 .brand {
   display: inline-flex;
-  gap: 10px;
   align-items: center;
   color: inherit;
+  gap: 10px;
   text-decoration: none;
 }
 
@@ -39,16 +39,16 @@
 
 .updated {
   margin: 0 0 20px;
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--color-text-muted);
 }
 
 .intro {
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.6;
-  color: var(--color-text-muted);
 }
 
 .section {
@@ -63,21 +63,21 @@
 
 .body {
   margin: 0;
+  color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.65;
-  color: var(--color-text-muted);
   white-space: pre-line;
 }
 
 .footer {
-  margin-top: 40px;
   padding-top: 24px;
   border-top: 1px solid var(--color-border);
+  margin-top: 40px;
 }
 
 .link {
-  font-size: 15px;
   color: var(--color-accent);
+  font-size: 15px;
   text-decoration: none;
 
   &:hover {

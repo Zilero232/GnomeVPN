@@ -6,7 +6,7 @@ export const metadata = createPageMetadata({
   description: 'Страница не найдена.',
   path: '/404',
   index: false,
-  follow: false,
+  follow: false
 });
 
 const NotFound = () => <NotFoundView />;

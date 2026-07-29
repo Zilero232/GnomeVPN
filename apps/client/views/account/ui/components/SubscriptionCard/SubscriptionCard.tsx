@@ -6,29 +6,28 @@ import { match } from 'ts-pattern';
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
 import { Text } from '@/shared/ui';
 
-import s from './SubscriptionCard.module.scss';
-
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
+
+import s from './SubscriptionCard.module.scss';
 
 export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardProps) => {
   const t = useTranslations('account');
   const locale = useLocale();
 
-  const formatDate = (iso: string): string => {
-    return new Date(iso).toLocaleDateString(locale, {
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
+      year: 'numeric'
     });
-  };
 
   const isActive = subscription?.status === 'active';
 
   return match({ isLoading, isActive })
-    .with({ isLoading: true }, () => <Text tone="muted">{t('loading')}</Text>)
+    .with({ isLoading: true }, () => <Text tone='muted'>{t('loading')}</Text>)
     .with({ isActive: true }, () => (
       <>
-        <Text as="span" className={s.status}>
+        <Text as='span' className={s.status}>
           <span className={s.dot} />
           {t('active')}
         </Text>
@@ -64,7 +63,7 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
       <>
         <div className={s.pitch}>
           <Text>{t('inactive')}</Text>
-          <Text size="xs" tone="muted">
+          <Text size='xs' tone='muted'>
             {t('pitch')}
           </Text>
         </div>

@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 
 export type ButtonProps = ComponentProps<'button'> & {
-  variant?: 'primary' | 'ghost' | 'danger';
-  size?: 'icon' | 'md' | 'lg';
+  variant?: 'danger' | 'ghost' | 'primary';
+  size?: 'icon' | 'lg' | 'md';
 };

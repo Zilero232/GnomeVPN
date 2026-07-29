@@ -1,6 +1,3 @@
-import { describeCard } from './lib';
-import { API_URL, CURRENCY } from './yookassa.constants';
-
 import type {
   BindPaymentMethodInput,
   ChargeRecurringInput,
@@ -10,8 +7,11 @@ import type {
   PaymentMethodInfo,
   PaymentMethodResponse,
   PaymentResponse,
-  YooKassaClientOptions,
+  YooKassaClientOptions
 } from './yookassa.types';
+
+import { describeCard } from './lib';
+import { API_URL, CURRENCY } from './yookassa.constants';
 
 export class YooKassaClient {
   private readonly shopId: string;
@@ -25,7 +25,7 @@ export class YooKassaClient {
   private headers(idempotenceKey?: string): Record<string, string> {
     const base: Record<string, string> = {
       'Content-Type': 'application/json',
-      Authorization: `Basic ${btoa(`${this.shopId}:${this.secretKey}`)}`,
+      Authorization: `Basic ${btoa(`${this.shopId}:${this.secretKey}`)}`
     };
 
     if (idempotenceKey) {
@@ -42,7 +42,7 @@ export class YooKassaClient {
   private async request<T>(path: string, init: RequestInit, idempotenceKey?: string): Promise<T> {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
-      headers: this.headers(idempotenceKey),
+      headers: this.headers(idempotenceKey)
     });
 
     if (!res.ok) {
@@ -64,16 +64,16 @@ export class YooKassaClient {
           amount: this.amount(input.amountRub),
           description: input.description,
           save_payment_method: input.savePaymentMethod,
-          confirmation: { type: 'redirect', return_url: input.returnUrl },
-        }),
+          confirmation: { type: 'redirect', return_url: input.returnUrl }
+        })
       },
-      input.idempotenceKey,
+      input.idempotenceKey
     );
 
     return {
       id: payload.id,
       status: payload.status,
-      confirmationUrl: payload.confirmation?.confirmation_url ?? null,
+      confirmationUrl: payload.confirmation?.confirmation_url ?? null
     };
   }
 
@@ -86,22 +86,22 @@ export class YooKassaClient {
           amount: this.amount(input.amountRub),
           description: input.description,
           capture: true,
-          payment_method_id: input.paymentMethodId,
-        }),
+          payment_method_id: input.paymentMethodId
+        })
       },
-      input.idempotenceKey,
+      input.idempotenceKey
     );
 
     return {
       id: payload.id,
       status: payload.status,
-      confirmationUrl: null,
+      confirmationUrl: null
     };
   }
 
   async getPayment(paymentId: string): Promise<PaymentInfo> {
     const payload = await this.request<PaymentResponse>(`/payments/${paymentId}`, {
-      method: 'GET',
+      method: 'GET'
     });
 
     return {
@@ -110,8 +110,8 @@ export class YooKassaClient {
       paymentMethodId: payload.payment_method?.id ?? null,
       paymentMethodTitle: describeCard({
         card: payload.payment_method?.card,
-        title: payload.payment_method?.title,
-      }),
+        title: payload.payment_method?.title
+      })
     };
   }
 
@@ -120,7 +120,7 @@ export class YooKassaClient {
       id: payload.id,
       status: payload.status,
       title: describeCard({ card: payload.card, title: payload.title }),
-      confirmationUrl: payload.confirmation?.confirmation_url ?? null,
+      confirmationUrl: payload.confirmation?.confirmation_url ?? null
     };
   }
 
@@ -131,10 +131,10 @@ export class YooKassaClient {
         method: 'POST',
         body: JSON.stringify({
           type: 'bank_card',
-          confirmation: { type: 'redirect', return_url: input.returnUrl },
-        }),
+          confirmation: { type: 'redirect', return_url: input.returnUrl }
+        })
       },
-      input.idempotenceKey,
+      input.idempotenceKey
     );
 
     return this.toPaymentMethodInfo(payload);
@@ -143,7 +143,7 @@ export class YooKassaClient {
   async getPaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
     const payload = await this.request<PaymentMethodResponse>(
       `/payment_methods/${paymentMethodId}`,
-      { method: 'GET' },
+      { method: 'GET' }
     );
 
     return this.toPaymentMethodInfo(payload);

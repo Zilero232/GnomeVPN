@@ -15,7 +15,7 @@ GnomeVPN — a commercial VPN built on Hysteria2 (QUIC/UDP). Bun-workspaces mono
 ## Why Hysteria2 and not Reality
 
 The project ran on VLESS + XTLS-Reality first. Measured on a Russian ISP in this
-repo's history: the TSPU actively fingerprints the REALITY handshake over *any*
+repo's history: the TSPU actively fingerprints the REALITY handshake over _any_
 TCP port and kills the connection within minutes of real traffic — fresh ports
 work, "burnt" ports don't, and switching donor or transport doesn't help. UDP is
 not policed the same way (plain WireGuard on UDP/51820 passes on the same
@@ -55,7 +55,7 @@ They talk over a named pipe. This is why the app never shows a UAC prompt, and w
 **Never move privileged work back into the GUI crate.** It would bring UAC back for every launch.
 
 **On Android the split is by process, not by privilege.** `GnomeVpnService` runs
-in `:tunnel` (`android:process`), opens the TUN descriptor *and* runs the engine
+in `:tunnel` (`android:process`), opens the TUN descriptor _and_ runs the engine
 on it — `src/mobile_vpn/` spawns `hysteria` under `tun2proxy` from inside that
 process. The descriptor never crosses back to the UI, which is what lets the
 tunnel survive the user swiping the app away. `build_hysteria_config` lives in
@@ -90,7 +90,31 @@ The repo has no `unsafe` blocks. Keep it that way.
   `<Fn>Input`, so a call site never has to guess argument order.
 - No tests in this repo (removed deliberately); verify by building and running
 - Everything user-visible goes through i18n, both `en.json` and `ru.json`
-- Import order: node → external → workspace → `@/` → relative → types last
+- Import order: types → builtin/external → internal (`@/`) → relative → styles →
+  side-effects. `perfectionist/sort-imports` enforces it; `bun lint:fix` sorts.
+- **Let the code breathe — group statements, don't write a wall.** A function
+  body reads as paragraphs, not one block. The formatter cannot enforce this (it
+  only preserves blank lines, never inserts them), so it is on us. Blank line between:
+  the `const`/`let` setup block and the logic that acts on it; before every
+  `return`/`throw`/`continue`/`break`; between distinct steps (validate → do →
+  publish). No blank line _inside_ a tight group of related assignments, and
+  never two blank lines in a row.
+
+  ```ts
+  // no — monolithic
+  const url = new URL(`hy2://${config.server}`);
+  url.username = config.auth;
+  url.pathname = '/';
+  return url.toString();
+
+  // yes — setup, then the block that mutates it, then the result
+  const url = new URL(`hy2://${config.server}`);
+
+  url.username = config.auth;
+  url.pathname = '/';
+
+  return url.toString();
+  ```
 
 ## Verification
 
@@ -98,8 +122,9 @@ Run before claiming anything works:
 
 ```bash
 bun run typecheck         # all three TS packages
-bun lint                  # Biome
-bunx stylelint "apps/client/**/*.scss"
+bun lint                  # ESLint
+bun run format:check      # Prettier
+bun run lint:css          # Stylelint
 cargo clippy --workspace  # Rust
 cargo fmt --all --check
 ```
@@ -113,6 +138,6 @@ There is no CI — run this set locally before every commit; nothing else will.
 - **A running service holds its own binary.** `cargo build` then silently keeps the old file — `scripts/build-service.mjs` checks for this.
 - **Health checks must probe an authenticated endpoint.** An unauthenticated 200 only proves something is listening, not that the tunnel subsystem works.
 - **A Hysteria2 client needs its full field set.** Writing `{email, auth}` alone leaves the panel storing the client but generating `clients: null` in the running core, so every connection fails auth with a 404. `enable/limitIp/totalGB/expiryTime/tgId/reset` must all be present — see `XrayClient.newClient`.
-- **The panel reports traffic counters, not handshakes.** A peer counts as alive only when its byte count *grows*; treating "has traffic" as "active now" means stale peers are never collected.
+- **The panel reports traffic counters, not handshakes.** A peer counts as alive only when its byte count _grows_; treating "has traffic" as "active now" means stale peers are never collected.
 - **Tauri plugins need an entry in `capabilities/`** or the call fails silently in the webview. Desktop-only and mobile-only permissions live in separate files — listing `updater` or `autostart` in the shared one breaks the Android build.
 - **`env(safe-area-inset-*)` is empty in the Android webview.** The values come from `tauri-plugin-safe-area-insets-css`, which `MobileInsets` writes into `--safe-area-inset-*`; the CSS variables fall back to `env()` for the browser.

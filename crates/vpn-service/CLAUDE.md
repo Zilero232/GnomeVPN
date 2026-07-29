@@ -64,7 +64,7 @@ whole network breaks, not just split:
 The TUN inbound also carries `route_exclude_address` for loopback + all RFC1918
 (`127/8`, `10/8`, `172.16/12`, `192.168/16`). The `ip_is_private → direct` rule
 alone was not enough on Windows: `strict_route` installs WFP filters that grab
-local traffic *before* the route rule runs (the docs warn it "may interfere with
+local traffic _before_ the route rule runs (the docs warn it "may interfere with
 VirtualBox"). Connecting the tunnel then killed the dev server's connection to a
 local Docker Postgres (`localhost:5433` → the WSL2 bridge on `172.19.x`) with
 `Connection terminated unexpectedly`. `route_exclude_address` keeps those ranges

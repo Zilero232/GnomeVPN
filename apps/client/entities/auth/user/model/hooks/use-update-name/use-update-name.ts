@@ -1,10 +1,10 @@
 'use client';
 
+import type { UpdateNameValues } from '@gnomevpn/schemas';
+
 import { useMutation } from '@tanstack/react-query';
 
 import { authClient } from '@/shared/api';
-
-import type { UpdateNameValues } from '@gnomevpn/schemas';
 
 export const useUpdateName = () =>
   useMutation({
@@ -14,5 +14,5 @@ export const useUpdateName = () =>
       if (error) {
         throw new Error(error.message ?? 'Failed to update name');
       }
-    },
+    }
   });

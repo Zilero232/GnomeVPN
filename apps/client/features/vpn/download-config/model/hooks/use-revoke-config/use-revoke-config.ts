@@ -13,6 +13,6 @@ export const useRevokeConfig = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
     },
-    onError: toastError,
+    onError: toastError
   });
 };

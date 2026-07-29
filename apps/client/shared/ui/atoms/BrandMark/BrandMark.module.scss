@@ -1,12 +1,12 @@
 .root {
   display: flex;
-  gap: 9px;
   align-items: center;
+  color: var(--color-text);
   font-family: var(--font-mono);
   font-weight: 700;
-  color: var(--color-text);
-  text-transform: uppercase;
+  gap: 9px;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .logo {
@@ -15,8 +15,8 @@
 }
 
 .sm {
-  gap: 8px;
   font-size: 11px;
+  gap: 8px;
 }
 
 .md {
@@ -24,8 +24,8 @@
 }
 
 .lg {
-  gap: 11px;
   font-size: 15px;
+  gap: 11px;
 }
 
 .muted {

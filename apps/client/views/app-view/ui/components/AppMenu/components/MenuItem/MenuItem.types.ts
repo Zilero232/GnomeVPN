@@ -5,7 +5,7 @@ export type MenuItemProps = {
   label: string;
   icon?: LucideIcon;
   trailing?: ReactNode;
-  tone?: 'default' | 'danger';
+  tone?: 'danger' | 'default';
   isPressed?: boolean;
   onClick: () => void;
 };

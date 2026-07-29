@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 
 export type IconButtonProps = ComponentProps<'button'> & {
-  size?: 'sm' | 'md';
-  tone?: 'muted' | 'danger';
+  size?: 'md' | 'sm';
+  tone?: 'danger' | 'muted';
   'aria-label': string;
 };

@@ -9,5 +9,5 @@ export type {
   PaymentInfo,
   PaymentMethodInfo,
   PaymentMethodStatus,
-  YooKassaClientOptions,
+  YooKassaClientOptions
 } from './yookassa.types';

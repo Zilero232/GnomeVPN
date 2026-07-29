@@ -2,16 +2,16 @@ import { isTauri } from '@tauri-apps/api/core';
 import {
   isPermissionGranted,
   requestPermission,
-  sendNotification,
+  sendNotification
 } from '@tauri-apps/plugin-notification';
+
+import type { NotifyInput } from './model';
 
 import { logger } from '../logger';
 import { resolveBundledResource } from '../resource-path';
 import { isTauriDesktop } from '../tauri-platform';
 import { NOTIFICATION_GROUP, NOTIFICATION_ICON, STATUS_NOTIFICATION_ID } from './config';
 import { resolveSound } from './lib';
-
-import type { NotifyInput } from './model';
 
 export const ensureNotificationPermission = async (): Promise<boolean> => {
   if (!isTauri()) {
@@ -47,7 +47,7 @@ export const notify = async ({ title, body, tone = 'info' }: NotifyInput): Promi
       body,
       group: NOTIFICATION_GROUP,
       icon: await resolveBundledResource(NOTIFICATION_ICON),
-      sound: resolveSound(tone),
+      sound: resolveSound(tone)
     });
   } catch (error) {
     logger.warn(`notification failed: ${String(error)}`);

@@ -9,7 +9,7 @@ import {
   logger,
   setAutoConnect as persistAutoConnect,
   setAutoReconnect as persistAutoReconnect,
-  setAutoStart as persistAutoStart,
+  setAutoStart as persistAutoStart
 } from '@/shared/lib';
 
 import type { UseStartupSettings } from './use-startup-settings.types';
@@ -25,7 +25,7 @@ export const useStartupSettings = (): UseStartupSettings => {
       const [start, connect, reconnect] = await Promise.all([
         isAutoStartEnabled(),
         getAutoConnect(),
-        getAutoReconnect(),
+        getAutoReconnect()
       ]);
 
       setAutoStartState(start);
@@ -64,6 +64,6 @@ export const useStartupSettings = (): UseStartupSettings => {
     isLoading,
     toggleAutoStart,
     toggleAutoConnect,
-    toggleAutoReconnect,
+    toggleAutoReconnect
   };
 };

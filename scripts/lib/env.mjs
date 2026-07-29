@@ -9,8 +9,8 @@ export const requireEnv = (keys) => {
     log.fail(
       [
         `missing: ${missing.join(', ')}`,
-        '  values come from .env and .env.release (run `bun run setup:release`)',
-      ].join('\n'),
+        '  values come from .env and .env.release (run `bun run setup:release`)'
+      ].join('\n')
     );
   }
 

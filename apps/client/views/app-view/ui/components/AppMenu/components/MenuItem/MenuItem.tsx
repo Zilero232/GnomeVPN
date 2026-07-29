@@ -3,11 +3,11 @@
 import { clsx } from 'clsx';
 import { motion } from 'motion/react';
 
+import type { MenuItemProps } from './MenuItem.types';
+
 import { MENU_ITEM_MOTION } from '../../AppMenu.motion';
 
 import s from './MenuItem.module.scss';
-
-import type { MenuItemProps } from './MenuItem.types';
 
 export const MenuItem = ({
   label,
@@ -15,12 +15,12 @@ export const MenuItem = ({
   trailing,
   tone = 'default',
   isPressed,
-  onClick,
+  onClick
 }: MenuItemProps) => (
   <motion.button
     aria-pressed={isPressed}
     className={clsx(s.root, tone === 'danger' && s.danger)}
-    type="button"
+    type='button'
     variants={MENU_ITEM_MOTION}
     onClick={onClick}
   >

@@ -1,7 +1,8 @@
-import { text } from './Text.variants';
-
 import type { ElementType } from 'react';
+
 import type { TextElement, TextProps } from './Text.types';
+
+import { text } from './Text.variants';
 
 export const Text = <As extends TextElement = 'p'>({
   as,

@@ -13,7 +13,7 @@ services:
     volumes:
       - gnomevpn-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U gnomevpn -d gnomevpn']
+      test: [CMD-SHELL, pg_isready -U gnomevpn -d gnomevpn]
       interval: 5s
       timeout: 5s
       retries: 10

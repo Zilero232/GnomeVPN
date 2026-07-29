@@ -1,12 +1,17 @@
-import { AppServiceUnavailableException } from '../../../../common/exceptions';
-import { PANEL_ROUTES } from './panel-client.constants';
+import { isEmpty } from 'remeda';
 
 import type {
   PanelClientInput,
   PanelInbound,
+  PanelOnlines,
   PanelResponse,
   PanelServerStatus,
+  SetClientsEnabledInput
 } from './panel-client.types';
+
+import { AppServiceUnavailableException } from '../../../../common/exceptions';
+import { collectOnlineEmails } from '../collect-online-emails';
+import { PANEL_ROUTES } from './panel-client.constants';
 
 export class PanelClient {
   private readonly baseUrl: string;
@@ -30,15 +35,15 @@ export class PanelClient {
         headers: {
           Authorization: `Bearer ${this.token}`,
           Accept: 'application/json',
-          ...(body ? { 'Content-Type': 'application/json' } : {}),
+          ...(body ? { 'Content-Type': 'application/json' } : {})
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: body ? JSON.stringify(body) : undefined
       });
 
       if (!response.ok) {
         throw new AppServiceUnavailableException(
           'NODE_UNAVAILABLE',
-          `panel ${path} returned ${response.status}`,
+          `panel ${path} returned ${response.status}`
         );
       }
 
@@ -47,7 +52,7 @@ export class PanelClient {
       if (!payload.success) {
         throw new AppServiceUnavailableException(
           'NODE_UNAVAILABLE',
-          `panel ${path}: ${payload.msg}`,
+          `panel ${path}: ${payload.msg}`
         );
       }
 
@@ -95,11 +100,17 @@ export class PanelClient {
     return result.deleted ?? 0;
   }
 
-  async setClientsEnabled(emails: string[], enabled: boolean): Promise<void> {
-    if (emails.length === 0) {
+  async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {
+    if (isEmpty(emails)) {
       return;
     }
 
     await this.post(PANEL_ROUTES.setEnabled(enabled), { emails });
+  }
+
+  async onlineEmails(): Promise<Set<string>> {
+    const payload = await this.post<PanelOnlines>(PANEL_ROUTES.onlines);
+
+    return collectOnlineEmails(payload);
   }
 }

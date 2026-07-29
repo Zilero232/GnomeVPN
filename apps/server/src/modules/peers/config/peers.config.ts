@@ -1,16 +1,11 @@
 export const TUNNEL = {
   insecure: true,
-  dns: ['1.1.1.1', '8.8.8.8'],
+  dns: ['1.1.1.1', '8.8.8.8']
 } as const;
 
 export const PEER_PREFIX = {
   session: 'app-',
-  config: 'cfg-',
-} as const;
-
-export const PEER_RETRY = {
-  attempts: 3,
-  delayMs: 2_000,
+  config: 'cfg-'
 } as const;
 
 export const WG = {
@@ -18,5 +13,5 @@ export const WG = {
   mtu: 1420,
   allowedIps: ['0.0.0.0/0'],
   subnet: '10.9.0.0/24',
-  serverHostOffset: 1,
+  serverHostOffset: 1
 } as const;

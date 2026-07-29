@@ -25,9 +25,9 @@ export const auth = betterAuth({
       await sendEmail({
         to: user.email,
         subject: 'Сброс пароля GnomeVPN',
-        react: createElement(ResetPassword, { url }),
+        react: createElement(ResetPassword, { url })
       });
-    },
+    }
   },
   emailVerification: {
     sendOnSignUp: true,
@@ -37,11 +37,11 @@ export const auth = betterAuth({
       sendEmail({
         to: user.email,
         subject: 'Подтвердите почту GnomeVPN',
-        react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') }),
+        react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') })
       }).catch((error) => {
         logger.error(`verification email to ${user.email} failed`, error);
       });
-    },
+    }
   },
   user: {
     changeEmail: {
@@ -52,23 +52,23 @@ export const auth = betterAuth({
           subject: 'Подтвердите смену почты GnomeVPN',
           react: createElement(ChangeEmail, {
             newEmail,
-            url: withClientCallback(url, '/account'),
-          }),
+            url: withClientCallback(url, '/account')
+          })
         });
-      },
-    },
+      }
+    }
   },
   databaseHooks: {
     user: {
       create: {
         after: async (user) => {
           await basePrisma.subscription.create({
-            data: { userId: user.id },
+            data: { userId: user.id }
           });
-        },
-      },
-    },
+        }
+      }
+    }
   },
   plugins: [bearer()],
-  database: prismaAdapter(basePrisma, { provider: 'postgresql' }),
+  database: prismaAdapter(basePrisma, { provider: 'postgresql' })
 });

@@ -1,22 +1,22 @@
 .root {
-  cursor: pointer;
   position: relative;
   display: inline-flex;
-  gap: 8px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
+  cursor: pointer;
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 700;
+  gap: 8px;
   letter-spacing: 0.01em;
-  white-space: nowrap;
   transition:
     transform 0.12s ease,
     box-shadow 0.2s ease,
     background-color 0.2s ease,
     border-color 0.2s ease;
+  white-space: nowrap;
 
   &:active:not(:disabled) {
     transform: translateY(1px);
@@ -47,8 +47,8 @@
 }
 
 .primary {
-  color: var(--color-bg-deep);
   background-color: var(--color-accent);
+  color: var(--color-bg-deep);
 
   &:hover:not(:disabled) {
     box-shadow: 0 0 28px -6px rgb(53 240 160 / 55%);
@@ -57,8 +57,8 @@
 
 .ghost {
   border-color: var(--color-border-bright);
-  color: var(--color-text);
   background-color: transparent;
+  color: var(--color-text);
 
   &:hover:not(:disabled) {
     border-color: var(--color-accent-dim);
@@ -67,8 +67,8 @@
 }
 
 .danger {
-  color: #fff;
   background-color: var(--color-danger);
+  color: #fff;
 
   &:hover:not(:disabled) {
     box-shadow: 0 0 24px -6px rgb(255 77 94 / 55%);

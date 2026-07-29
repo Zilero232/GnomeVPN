@@ -5,7 +5,7 @@ export const metadata = createPageMetadata({
   title: 'Вход',
   description: 'Войдите в GnomeVPN или создайте аккаунт, чтобы оформить подписку и подключиться.',
   path: '/auth',
-  index: false,
+  index: false
 });
 
 const Page = () => <AuthPage />;

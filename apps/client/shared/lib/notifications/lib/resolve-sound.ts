@@ -1,9 +1,9 @@
 import { platform } from '@tauri-apps/plugin-os';
 import { match } from 'ts-pattern';
 
-import { LINUX_SOUND, MACOS_SOUND, WINDOWS_SOUND } from '../config';
-
 import type { NotifyTone } from '../model';
+
+import { LINUX_SOUND, MACOS_SOUND, WINDOWS_SOUND } from '../config';
 
 export const resolveSound = (tone: NotifyTone): string | undefined => {
   try {

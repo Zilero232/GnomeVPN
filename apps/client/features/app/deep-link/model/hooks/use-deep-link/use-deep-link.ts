@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { isTauriDesktop, logger } from '@/shared/lib';
+
 import { routeForDeepLink } from './use-deep-link.lib';
 
 export const useDeepLink = () => {

@@ -1,5 +1,4 @@
 .root {
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7,6 +6,7 @@
   border: none;
   border-radius: 50%;
   background-color: transparent;
+  cursor: pointer;
   transition:
     color 0.16s ease,
     background-color 0.16s ease;
@@ -36,8 +36,8 @@
   color: var(--color-text-muted);
 
   &:hover:not(:disabled) {
-    color: var(--color-bg-deep);
     background-color: var(--color-text-muted);
+    color: var(--color-bg-deep);
   }
 }
 
@@ -45,7 +45,7 @@
   color: var(--color-text-muted);
 
   &:hover:not(:disabled) {
-    color: var(--color-bg-deep);
     background-color: var(--color-danger);
+    color: var(--color-bg-deep);
   }
 }

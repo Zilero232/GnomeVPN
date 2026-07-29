@@ -32,25 +32,25 @@ export const useInstallUpdate = () => {
       await update.downloadAndInstall((event) => {
         match(event)
           .with({ event: 'Started' }, ({ data }) =>
-            setProgress({ downloadedBytes: 0, totalBytes: data.contentLength ?? null }),
+            setProgress({ downloadedBytes: 0, totalBytes: data.contentLength ?? null })
           )
           .with({ event: 'Progress' }, ({ data }) =>
             setProgress((current) => ({
               ...current,
-              downloadedBytes: current.downloadedBytes + data.chunkLength,
-            })),
+              downloadedBytes: current.downloadedBytes + data.chunkLength
+            }))
           )
           .with({ event: 'Finished' }, () =>
             setProgress((current) => ({
               ...current,
-              downloadedBytes: current.totalBytes ?? current.downloadedBytes,
-            })),
+              downloadedBytes: current.totalBytes ?? current.downloadedBytes
+            }))
           )
           .exhaustive();
       });
 
       await relaunch();
-    },
+    }
   });
 
   return { ...mutation, progress };

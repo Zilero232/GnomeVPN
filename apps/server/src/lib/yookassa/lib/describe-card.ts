@@ -1,3 +1,5 @@
+import { isTruthy } from 'remeda';
+
 import type { DescribeCardInput } from './describe-card.types';
 
 export const describeCard = ({ card, title }: DescribeCardInput): string | null => {
@@ -5,5 +7,5 @@ export const describeCard = ({ card, title }: DescribeCardInput): string | null 
     return title ?? null;
   }
 
-  return [card.card_type, `•••• ${card.last4}`].filter(Boolean).join(' ');
+  return [card.card_type, `•••• ${card.last4}`].filter(isTruthy).join(' ');
 };

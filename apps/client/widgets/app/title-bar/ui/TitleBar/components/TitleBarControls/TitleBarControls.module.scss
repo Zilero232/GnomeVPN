@@ -1,26 +1,26 @@
 .root {
   display: flex;
-  align-items: stretch;
   height: 100%;
+  align-items: stretch;
 }
 
 .button {
-  cursor: pointer;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 42px;
   height: 100%;
+  align-items: center;
+  justify-content: center;
   border: none;
-  color: var(--color-text-muted);
   background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
   transition:
     color 0.15s ease,
     background-color 0.15s ease;
 
   &:hover {
-    color: var(--color-text);
     background-color: var(--color-surface-raised);
+    color: var(--color-text);
   }
 
   &:focus-visible {
@@ -32,8 +32,8 @@
 .closeButton {
   &:hover,
   &:focus-visible {
-    color: #fff;
     background-color: var(--color-danger);
+    color: #fff;
   }
 }
 

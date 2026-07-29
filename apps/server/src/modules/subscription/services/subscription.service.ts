@@ -1,23 +1,24 @@
+import type { Limits, SubscriptionStatus } from '@gnomevpn/schemas';
+
 import { DEFAULT_PLAN_ID, resolveLimits } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
+import { isNonNullish } from 'remeda';
 
 import { isPeriodActive, resolveStatus } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { PrismaService } from '../../../core';
 
-import type { Limits, SubscriptionStatus } from '@gnomevpn/schemas';
-
 @Injectable()
 export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: AppConfigService,
+    private readonly config: AppConfigService
   ) {}
 
   async hasActiveAccess(userId: string): Promise<boolean> {
     const row = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { currentPeriodEnd: true },
+      select: { currentPeriodEnd: true }
     });
 
     return isPeriodActive(row?.currentPeriodEnd);
@@ -26,7 +27,7 @@ export class SubscriptionService {
   async getLimits(userId: string): Promise<Limits> {
     const row = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { extraDevices: true, currentPeriodEnd: true },
+      select: { extraDevices: true, currentPeriodEnd: true }
     });
 
     return resolveLimits(isPeriodActive(row?.currentPeriodEnd) ? row?.extraDevices : 0);
@@ -43,8 +44,8 @@ export class SubscriptionService {
         cancelAtPeriodEnd: true,
         savedCardId: true,
         savedCardTitle: true,
-        extraDevices: true,
-      },
+        extraDevices: true
+      }
     });
 
     if (!row) {
@@ -56,7 +57,7 @@ export class SubscriptionService {
         hasPaymentMethod: false,
         savedCardTitle: null,
         isRecurringAvailable,
-        limits: resolveLimits(0),
+        limits: resolveLimits(0)
       };
     }
 
@@ -65,10 +66,10 @@ export class SubscriptionService {
       plan: row.plan,
       currentPeriodEnd: row.currentPeriodEnd ? row.currentPeriodEnd.toISOString() : null,
       cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-      hasPaymentMethod: row.savedCardId !== null,
+      hasPaymentMethod: isNonNullish(row.savedCardId),
       savedCardTitle: row.savedCardTitle,
       isRecurringAvailable,
-      limits: resolveLimits(isPeriodActive(row.currentPeriodEnd) ? row.extraDevices : 0),
+      limits: resolveLimits(isPeriodActive(row.currentPeriodEnd) ? row.extraDevices : 0)
     };
   }
 }

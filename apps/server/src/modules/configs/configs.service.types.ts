@@ -1,4 +1,5 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
+
 import type { Peer } from '../../../generated';
 import type { CreatedPeer } from '../peers';
 
@@ -52,4 +53,9 @@ export type IssueConfigInput = {
 export type RevokeConfigInput = {
   userId: string;
   id: string;
+};
+
+export type SetEnabledAllInput = {
+  userId: string;
+  enabled: boolean;
 };

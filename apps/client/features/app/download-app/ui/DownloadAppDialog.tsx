@@ -9,13 +9,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Spinner,
+  Spinner
 } from '@/shared/ui';
+
+import type { DownloadAppDialogProps } from './DownloadAppDialog.types';
+
 import { PlatformCard } from './components';
 
 import s from './DownloadAppDialog.module.scss';
-
-import type { DownloadAppDialogProps } from './DownloadAppDialog.types';
 
 const RELEASES_URL = 'https://github.com/Zilero232/GnomeVPN/releases';
 
@@ -40,7 +41,7 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
         {isError && (
           <div className={s.state}>
             <span>{t('loadFailed')}</span>
-            <a className={s.link} href={RELEASES_URL} rel="noopener noreferrer" target="_blank">
+            <a className={s.link} href={RELEASES_URL} rel='noopener noreferrer' target='_blank'>
               {t('openReleases')}
             </a>
           </div>
@@ -52,8 +53,8 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
               {DOWNLOAD_PLATFORMS.map(({ id, labelKey, Icon }) => (
                 <PlatformCard
                   key={id}
-                  Icon={Icon}
                   asset={release.assets.find((asset) => asset.platform === id)}
+                  Icon={Icon}
                   label={t(`platforms.${labelKey}`)}
                 />
               ))}

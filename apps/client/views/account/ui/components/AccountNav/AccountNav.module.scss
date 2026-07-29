@@ -1,18 +1,18 @@
 .root {
   display: flex;
-  gap: 12px;
   align-items: center;
   justify-content: space-between;
   padding-bottom: 8px;
+  gap: 12px;
 }
 
 .back {
   display: inline-flex;
-  gap: 7px;
   align-items: center;
+  color: var(--color-text-muted);
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--color-text-muted);
+  gap: 7px;
   text-decoration: none;
   transition: color 0.16s ease;
 
@@ -32,5 +32,3 @@
     display: none;
   }
 }
-
-

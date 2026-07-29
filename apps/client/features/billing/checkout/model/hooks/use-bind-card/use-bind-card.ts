@@ -4,6 +4,7 @@ import { useToastError } from '@/entities/app/locale';
 import { useInvalidateSubscription } from '@/entities/billing/subscription';
 import { bindCard } from '@/shared/api';
 import { clientKind } from '@/shared/lib';
+
 import { redirectToConfirmation } from '../../lib';
 
 export const useBindCard = () => {
@@ -17,6 +18,6 @@ export const useBindCard = () => {
         invalidateSubscription();
       }
     },
-    onError: toastError,
+    onError: toastError
   });
 };

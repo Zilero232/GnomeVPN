@@ -4,11 +4,11 @@ import { useBoolean } from '@siberiacancode/reactuse';
 import { clsx } from 'clsx';
 import { Eye, EyeOff } from 'lucide-react';
 
+import type { PasswordInputProps } from './PasswordInput.types';
+
 import { Input } from '../Input';
 
 import s from './PasswordInput.module.scss';
-
-import type { PasswordInputProps } from './PasswordInput.types';
 
 export const PasswordInput = ({
   className,
@@ -33,7 +33,7 @@ export const PasswordInput = ({
         className={s.toggle}
         disabled={disabled}
         tabIndex={-1}
-        type="button"
+        type='button'
         onClick={() => toggleVisible()}
       >
         {isVisible ? <EyeOff className={s.icon} /> : <Eye className={s.icon} />}

@@ -1,4 +1,5 @@
 import type { TunnelEvent } from '@/shared/lib';
+
 import type { VpnTraffic } from '../use-vpn-connection/use-vpn-connection.types';
 
 export type UseTunnelEventsInput = {

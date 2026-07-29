@@ -3,9 +3,9 @@
 .root {
   position: relative;
   display: flex;
+  min-height: var(--viewport-height);
   flex-direction: column;
   align-items: center;
-  min-height: var(--viewport-height);
 
   @include safe-padding(16px, 24px, 18px);
 
@@ -16,46 +16,46 @@
 
 .body {
   display: flex;
+  width: 100%;
   flex: 1;
   flex-direction: column;
-  gap: 22px;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  gap: 22px;
 }
 
 .head {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
   width: 100%;
   max-width: 460px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .headRight {
   display: flex;
-  gap: 9px;
   align-items: center;
+  gap: 9px;
 }
 
 .version {
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--color-text-muted);
   letter-spacing: 0.04em;
 }
 
 .accountLink {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 32px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
   background-color: var(--color-surface);
+  color: var(--color-text-muted);
   transition:
     color 0.16s ease,
     border-color 0.16s ease;

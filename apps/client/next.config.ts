@@ -1,10 +1,10 @@
+import type { NextConfig } from 'next';
+
+import createNextIntlPlugin from 'next-intl/plugin';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import createNextIntlPlugin from 'next-intl/plugin';
 
 import rootPackage from '../../package.json' with { type: 'json' };
-
-import type { NextConfig } from 'next';
 
 const clientRoot = path.resolve(import.meta.dirname);
 
@@ -30,7 +30,7 @@ const withNextIntl = createNextIntlPlugin('./shared/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_APP_VERSION: rootPackage.version,
+    NEXT_PUBLIC_APP_VERSION: rootPackage.version
   },
   output: 'export',
   reactCompiler: true,
@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
   images: { unoptimized: true },
   experimental: { optimizePackageImports: ['lucide-react', 'remeda', 'date-fns'] },
   sassOptions: { implementation: 'sass-embedded', loadPaths: [clientRoot] },
-  turbopack: { resolveAlias: { '@': clientRoot } },
+  turbopack: { resolveAlias: { '@': clientRoot } }
 };
 
 export default withNextIntl(nextConfig);

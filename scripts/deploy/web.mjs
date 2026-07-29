@@ -12,7 +12,7 @@ const creds = requireEnv([
   'PROVISION_SSH_HOST',
   'PROVISION_SSH_USER',
   'PROVISION_SSH_PASSWORD',
-  'PROVISION_DEPLOY_PATH',
+  'PROVISION_DEPLOY_PATH'
 ]);
 
 const owner = creds.GHCR_OWNER;
@@ -48,7 +48,7 @@ const remote = async () => {
     host: creds.PROVISION_SSH_HOST,
     port: Number(port),
     username: creds.PROVISION_SSH_USER,
-    password: creds.PROVISION_SSH_PASSWORD,
+    password: creds.PROVISION_SSH_PASSWORD
   });
 
   const path = creds.PROVISION_DEPLOY_PATH;
@@ -72,13 +72,13 @@ const remote = async () => {
 
   await exec(
     'pull images and restart',
-    'touch .env.nodes && docker compose pull web server && docker compose up -d && docker image prune -f',
+    'touch .env.nodes && docker compose pull web server && docker compose up -d && docker image prune -f'
   );
 
   if (await hasMigrations()) {
     await exec(
       'baseline migration history',
-      'docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true',
+      'docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true'
     );
     await exec('apply migrations', 'docker compose exec -T server bunx prisma migrate deploy');
   } else {
@@ -92,7 +92,7 @@ await dockerLogin();
 await buildAndPush({
   image: webImage,
   dockerfile: 'apps/client/Dockerfile',
-  buildArgs: [`NEXT_PUBLIC_API_URL=${apiUrl}`],
+  buildArgs: [`NEXT_PUBLIC_API_URL=${apiUrl}`]
 });
 await buildAndPush({ image: apiImage, dockerfile: 'apps/server/Dockerfile', buildArgs: [] });
 await remote();

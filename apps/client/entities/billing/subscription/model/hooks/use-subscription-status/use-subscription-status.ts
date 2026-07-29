@@ -25,7 +25,7 @@ export const useSubscriptionStatus = () => {
       }
 
       return query.state.data?.status === 'active' ? ACTIVE_POLL_MS : INACTIVE_POLL_MS;
-    },
+    }
   });
 
   const hasAccess = data?.status === 'active';
@@ -36,6 +36,6 @@ export const useSubscriptionStatus = () => {
     isError,
     refetch,
     hasAccess,
-    limits: data?.limits ?? resolveLimits(0),
+    limits: data?.limits ?? resolveLimits(0)
   };
 };

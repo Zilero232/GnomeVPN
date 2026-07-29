@@ -4,21 +4,21 @@
   @include menu-item;
 
   &:hover:not(:disabled) .icon {
-    color: var(--color-accent);
     background-color: rgb(53 240 160 / 12%);
+    color: var(--color-accent);
   }
 }
 
 .icon {
   display: flex;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
   border-radius: 8px;
-  color: var(--color-text-muted);
   background-color: rgb(230 240 236 / 5%);
+  color: var(--color-text-muted);
   transition:
     color 0.16s ease,
     background-color 0.16s ease;
@@ -37,8 +37,8 @@
   }
 
   &:hover:not(:disabled) .icon {
-    color: var(--color-danger);
     background-color: rgb(255 77 94 / 14%);
+    color: var(--color-danger);
   }
 }
 

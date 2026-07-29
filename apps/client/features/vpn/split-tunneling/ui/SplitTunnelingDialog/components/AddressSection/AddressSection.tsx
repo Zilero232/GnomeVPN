@@ -3,13 +3,15 @@
 import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { isEmpty } from 'remeda';
 
 import { Button, IconButton, Input } from '@/shared/ui';
+
+import type { AddressSectionProps } from './AddressSection.types';
+
 import { SplitModeToggle } from '../SplitModeToggle';
 
 import s from './AddressSection.module.scss';
-
-import type { AddressSectionProps } from './AddressSection.types';
 
 export const AddressSection = ({ draft, setIpsMode, addIp, removeIp }: AddressSectionProps) => {
   const t = useTranslations('splitTunneling');
@@ -50,19 +52,19 @@ export const AddressSection = ({ draft, setIpsMode, addIp, removeIp }: AddressSe
           }}
         />
 
-        <Button disabled={!ipValue.trim()} type="button" variant="ghost" onClick={commitIp}>
+        <Button disabled={!ipValue.trim()} type='button' variant='ghost' onClick={commitIp}>
           <Plus aria-hidden size={14} />
           {t('addIp')}
         </Button>
       </div>
 
-      {draft.ips.length > 0 && (
+      {!isEmpty(draft.ips) && (
         <div className={s.ipList}>
           {draft.ips.map((cidr) => (
-            <span className={s.ipChip} data-mode={draft.ipsMode} key={cidr}>
+            <span key={cidr} className={s.ipChip} data-mode={draft.ipsMode}>
               <span className={s.ipCidr}>{cidr}</span>
 
-              <IconButton aria-label={t('removeIp')} size="sm" onClick={() => removeIp(cidr)}>
+              <IconButton aria-label={t('removeIp')} size='sm' onClick={() => removeIp(cidr)}>
                 <X size={12} />
               </IconButton>
             </span>

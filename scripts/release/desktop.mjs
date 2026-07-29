@@ -21,7 +21,7 @@ const bundleDir = join(workspace, 'target', 'release', 'bundle');
 
 if (!existsSync(signingKey)) {
   log.fail(
-    `signing key not found at ${signingKey} — run \`bun run --filter @gnomevpn/tauri signer:generate\``,
+    `signing key not found at ${signingKey} — run \`bun run --filter @gnomevpn/tauri signer:generate\``
   );
 }
 
@@ -60,9 +60,9 @@ const writeUpdaterManifest = (artifacts) => {
     platforms: {
       'windows-x86_64': {
         signature: readFileSync(signaturePath, 'utf8'),
-        url: `https://github.com/${creds.GHCR_OWNER}/GnomeVPN/releases/download/${tag}/${fileName}`,
-      },
-    },
+        url: `https://github.com/${creds.GHCR_OWNER}/GnomeVPN/releases/download/${tag}/${fileName}`
+      }
+    }
   };
 
   const manifestPath = join(bundleDir, 'nsis', 'latest.json');
@@ -77,7 +77,7 @@ const buildEnv = {
   NODE_ENV: 'production',
   NEXT_PUBLIC_API_URL: creds.NEXT_PUBLIC_API_URL,
   TAURI_SIGNING_PRIVATE_KEY: readFileSync(signingKey, 'utf8'),
-  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: '',
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
 };
 
 ensureNativeBinaries();

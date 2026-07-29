@@ -5,7 +5,7 @@ export {
   resetPasswordSchema,
   signInSchema,
   signUpSchema,
-  updateNameSchema,
+  updateNameSchema
 } from './inputs';
 
 export type {
@@ -15,5 +15,5 @@ export type {
   ResetPasswordValues,
   SignInValues,
   SignUpValues,
-  UpdateNameValues,
+  UpdateNameValues
 } from './types';

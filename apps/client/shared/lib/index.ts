@@ -13,14 +13,16 @@ export {
   setManuallyDisconnected,
   setProtocol,
   setSplitConfig,
-  wasManuallyDisconnected,
+  wasManuallyDisconnected
 } from './app-settings';
 export { clientKind } from './client-kind';
 export { getDeviceId, useDeviceId } from './device-id';
 export { isBrowser, isServer } from './env';
 export { callRust } from './ipc';
+export type { RustCommand, RustCommands, TunnelEvent } from './ipc';
 export { logger } from './logger';
 export { ensureNotificationPermission, notify } from './notifications';
+export type { NotifyInput, NotifyTone } from './notifications';
 export { openExternal } from './open-external';
 export { resolveBundledResource } from './resource-path';
 export { saveFile } from './save-file';
@@ -28,6 +30,7 @@ export { repairVpnService } from './service-control';
 export { settleAll } from './settle';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
 export { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from './vault';
+
 export {
   emptySplitConfig,
   hasVpnPermission,
@@ -45,23 +48,19 @@ export {
   vpnConnect,
   vpnDisconnect,
   vpnStatus,
-  vpnTraffic,
+  vpnTraffic
+} from './vpn-bridge';
+export type {
+  InstalledApp,
+  LatencyByNode,
+  ProbeLatencyInput,
+  VpnConnectInput,
+  VpnTraffic
 } from './vpn-bridge';
 export {
   closeMainWindow,
   hideMainWindow,
   minimizeMainWindow,
   showMainWindow,
-  toggleMainWindow,
+  toggleMainWindow
 } from './window';
-
-export type { RustCommand, RustCommands, TunnelEvent } from './ipc';
-export type { NotifyInput, NotifyTone } from './notifications';
-export type {
-  InstalledApp,
-  LatencyByNode,
-  ProbeLatencyInput,
-  VpnConnectInput,
-  VpnHeartbeat,
-  VpnTraffic,
-} from './vpn-bridge';

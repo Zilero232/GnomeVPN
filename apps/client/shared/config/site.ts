@@ -9,12 +9,12 @@ export const SITE = {
   lang: 'ru-RU',
   themeColor: {
     light: '#070b0a',
-    dark: '#070b0a',
+    dark: '#070b0a'
   },
   en: {
     title: 'GnomeVPN',
     description: 'GnomeVPN account.',
     locale: 'en_US',
-    lang: 'en-US',
-  },
+    lang: 'en-US'
+  }
 } as const;

@@ -1,6 +1,6 @@
-import { GITHUB_TIMEOUT_MS } from '../../config';
-
 import type { GithubFetchInput } from './github-fetch.types';
+
+import { GITHUB_TIMEOUT_MS } from '../../config';
 
 export class GithubFetchError extends Error {}
 
@@ -8,7 +8,7 @@ export const githubFetch = async ({
   url,
   headers,
   redirect,
-  describe,
+  describe
 }: GithubFetchInput): Promise<Response> => {
   let response: Response;
 
@@ -16,7 +16,7 @@ export const githubFetch = async ({
     response = await fetch(url, {
       headers,
       redirect,
-      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
+      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS)
     });
   } catch (error) {
     throw new GithubFetchError(`${describe} unreachable: ${String(error)}`);

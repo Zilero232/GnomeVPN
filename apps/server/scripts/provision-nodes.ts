@@ -3,15 +3,15 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prop } from 'remeda';
 
+import type { NodeConfig } from './lib/nodes-config';
+import type { ProvisionResult } from './lib/provision-host';
+
 import { basePrisma } from '../src/core';
 import { syncToProduction } from './lib/node-sync';
 import { loadNodesConfig } from './lib/nodes-config';
 import { provisionHost } from './lib/provision-host';
 import { formatSummary } from './lib/provision-report';
 import { pruneNodes } from './lib/prune-nodes';
-
-import type { NodeConfig } from './lib/nodes-config';
-import type { ProvisionResult } from './lib/provision-host';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 const NODES_CONFIG_PATH = resolve(HERE, '..', 'nodes.json');
@@ -33,7 +33,7 @@ const provisionAll = async (nodes: NodeConfig[]): Promise<ProvisionResult[]> => 
       config,
       prisma: basePrisma,
       serverEnvPath: SERVER_ENV_PATH,
-      xrayComposeContent,
+      xrayComposeContent
     });
 
     results.push(result);
@@ -47,7 +47,7 @@ const pruneStale = async (nodes: NodeConfig[]): Promise<void> => {
   const { removedKeys, removedNodes } = await pruneNodes({
     prisma: basePrisma,
     nodes,
-    serverEnvPath: SERVER_ENV_PATH,
+    serverEnvPath: SERVER_ENV_PATH
   });
 
   if (removedKeys.length > 0) {
@@ -56,7 +56,7 @@ const pruneStale = async (nodes: NodeConfig[]): Promise<void> => {
 
   if (removedNodes.length > 0) {
     write(
-      `Removed ${removedNodes.length} node(s) missing from nodes.json: ${removedNodes.join(', ')}`,
+      `Removed ${removedNodes.length} node(s) missing from nodes.json: ${removedNodes.join(', ')}`
     );
   }
 };

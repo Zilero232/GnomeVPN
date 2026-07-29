@@ -15,7 +15,7 @@ export {
   vpnConnect,
   vpnDisconnect,
   vpnStatus,
-  vpnTraffic,
+  vpnTraffic
 } from './vpn-bridge';
 
 export type {
@@ -23,6 +23,5 @@ export type {
   LatencyByNode,
   ProbeLatencyInput,
   VpnConnectInput,
-  VpnHeartbeat,
-  VpnTraffic,
+  VpnTraffic
 } from './vpn-bridge.types';

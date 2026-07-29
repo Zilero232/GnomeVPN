@@ -18,7 +18,6 @@ data class TunnelSnapshot(
     val dns: List<String>,
     val tunAddress: String,
     val configJson: String,
-    val heartbeat: HeartbeatInfo? = null,
 ) {
     fun toJson(): String = configJson
 
@@ -27,7 +26,6 @@ data class TunnelSnapshot(
         put(FIELD_DNS, JSONArray(dns))
         put(FIELD_TUN_ADDRESS, tunAddress)
         put(FIELD_CONFIG_JSON, configJson)
-        heartbeat?.let { put(FIELD_HEARTBEAT, it.toJson()) }
     }.toString()
 
     companion object {
@@ -35,7 +33,6 @@ data class TunnelSnapshot(
         private const val FIELD_DNS = "dns"
         private const val FIELD_TUN_ADDRESS = "tunAddress"
         private const val FIELD_CONFIG_JSON = "configJson"
-        private const val FIELD_HEARTBEAT = "heartbeat"
         private const val DEFAULT_TUN_ADDRESS = "10.8.0.2"
 
         fun fromJson(raw: String): TunnelSnapshot? = runCatching {
@@ -47,33 +44,6 @@ data class TunnelSnapshot(
                 dns = (0 until dns.length()).map(dns::getString),
                 tunAddress = json.optString(FIELD_TUN_ADDRESS, DEFAULT_TUN_ADDRESS),
                 configJson = json.optString(FIELD_CONFIG_JSON, ""),
-                heartbeat = json.optJSONObject(FIELD_HEARTBEAT)?.let(HeartbeatInfo::fromJson),
-            )
-        }.getOrNull()
-    }
-}
-
-data class HeartbeatInfo(
-    val apiUrl: String,
-    val token: String,
-    val deviceId: String,
-) {
-    fun toJson(): JSONObject = JSONObject().apply {
-        put(FIELD_API_URL, apiUrl)
-        put(FIELD_TOKEN, token)
-        put(FIELD_DEVICE_ID, deviceId)
-    }
-
-    companion object {
-        private const val FIELD_API_URL = "apiUrl"
-        private const val FIELD_TOKEN = "token"
-        private const val FIELD_DEVICE_ID = "deviceId"
-
-        fun fromJson(json: JSONObject): HeartbeatInfo? = runCatching {
-            HeartbeatInfo(
-                apiUrl = json.getString(FIELD_API_URL),
-                token = json.getString(FIELD_TOKEN),
-                deviceId = json.getString(FIELD_DEVICE_ID),
             )
         }.getOrNull()
     }

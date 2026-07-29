@@ -10,13 +10,13 @@ import {
   BillingSharedService,
   CardService,
   CheckoutService,
-  WebhookService,
+  WebhookService
 } from './services';
 
 const yooKassaProvider = {
   provide: YooKassaClient,
   useFactory: (config: AppConfigService) => makeYooKassaClient(config),
-  inject: [AppConfigService],
+  inject: [AppConfigService]
 };
 
 @Module({
@@ -29,8 +29,8 @@ const yooKassaProvider = {
     AutoRenewService,
     CardService,
     WebhookIpGuard,
-    yooKassaProvider,
+    yooKassaProvider
   ],
-  exports: [CheckoutService, WebhookService, YooKassaClient],
+  exports: [CheckoutService, WebhookService, YooKassaClient]
 })
 export class BillingModule {}

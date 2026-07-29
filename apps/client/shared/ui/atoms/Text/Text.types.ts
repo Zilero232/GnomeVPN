@@ -1,14 +1,14 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
-export type TextElement = 'p' | 'span' | 'div' | 'label' | 'h1' | 'h2' | 'h3' | 'h4';
+export type TextElement = 'div' | 'h1' | 'h2' | 'h3' | 'h4' | 'label' | 'p' | 'span';
 
-export type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type TextSize = 'lg' | 'md' | 'sm' | 'xl' | 'xs';
 
-export type TextWeight = 'regular' | 'medium' | 'semibold' | 'bold';
+export type TextWeight = 'bold' | 'medium' | 'regular' | 'semibold';
 
-export type TextTone = 'default' | 'muted' | 'accent' | 'danger' | 'success';
+export type TextTone = 'accent' | 'danger' | 'default' | 'muted' | 'success';
 
-export type TextAlign = 'left' | 'center' | 'right';
+export type TextAlign = 'center' | 'left' | 'right';
 
 export type TextProps<As extends TextElement = 'p'> = {
   as?: As;
@@ -21,4 +21,4 @@ export type TextProps<As extends TextElement = 'p'> = {
   truncate?: boolean;
   className?: string;
   children?: ReactNode;
-} & Omit<ComponentPropsWithoutRef<As>, 'className' | 'color' | 'children'>;
+} & Omit<ComponentPropsWithoutRef<As>, 'children' | 'className' | 'color'>;

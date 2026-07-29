@@ -8,7 +8,7 @@ export const metadata = createPageMetadata({
   description: 'Задайте новый пароль для входа в GnomeVPN.',
   path: '/reset-password',
   index: false,
-  follow: false,
+  follow: false
 });
 
 const Page = () => (

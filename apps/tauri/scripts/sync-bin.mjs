@@ -9,7 +9,7 @@ import { isWindows, paths, reporter } from './lib/shell.mjs';
 // subfolder they live in under bin/.
 const BINARIES = [
   { from: join('wintun', 'wintun.dll'), name: 'wintun.dll' },
-  { from: join('singbox', 'sing-box.exe'), name: 'sing-box.exe' },
+  { from: join('singbox', 'sing-box.exe'), name: 'sing-box.exe' }
 ];
 
 const PROFILES = ['debug', 'release'];

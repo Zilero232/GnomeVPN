@@ -5,5 +5,5 @@ export {
   GITHUB_TIMEOUT_MS,
   githubAssetUrl,
   PLATFORM_EXTENSION_PRIORITY,
-  UPDATER_MANIFEST_NAME,
+  UPDATER_MANIFEST_NAME
 } from './release.config';

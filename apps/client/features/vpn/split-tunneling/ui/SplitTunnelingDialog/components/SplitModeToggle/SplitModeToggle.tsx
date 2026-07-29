@@ -7,16 +7,16 @@ import { match } from 'ts-pattern';
 
 import { Text } from '@/shared/ui';
 
-import s from './SplitModeToggle.module.scss';
-
 import type { SplitModeToggleProps } from './SplitModeToggle.types';
+
+import s from './SplitModeToggle.module.scss';
 
 export const SplitModeToggle = ({
   label,
   lead,
   mode,
   onModeChange,
-  aside,
+  aside
 }: SplitModeToggleProps) => {
   const t = useTranslations('splitTunneling');
 
@@ -31,7 +31,7 @@ export const SplitModeToggle = ({
   return (
     <div className={s.mode}>
       <div className={s.row}>
-        <Text as="span" className={s.lead} size="sm">
+        <Text as='span' className={s.lead} size='sm'>
           {lead}
         </Text>
 
@@ -39,7 +39,7 @@ export const SplitModeToggle = ({
           aria-label={label}
           className={s.pill}
           data-mode={mode}
-          type="button"
+          type='button'
           onClick={toggle}
         >
           {isAllowed ? <ArrowRight aria-hidden size={13} /> : <ShieldOff aria-hidden size={13} />}
@@ -49,7 +49,7 @@ export const SplitModeToggle = ({
         {aside && <div className={s.aside}>{aside}</div>}
       </div>
 
-      <Text as="p" className={s.hint} size="xs" tone="muted">
+      <Text as='p' className={s.hint} size='xs' tone='muted'>
         {hint}
       </Text>
     </div>

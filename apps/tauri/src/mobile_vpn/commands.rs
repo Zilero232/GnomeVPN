@@ -1,11 +1,9 @@
 use gnomevpn_ipc::{TunnelConfig, TunnelEvent};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime, State};
-use tun2proxy::CancellationToken;
 
-use super::counters::report;
 use super::engine;
-use super::plugin::{Heartbeat, TrafficResult, VpnPlugin};
+use super::plugin::{TrafficResult, VpnPlugin};
 use super::state::MobileVpnState;
 use super::MobileVpnError;
 
@@ -15,10 +13,10 @@ pub async fn vpn_connect<R: Runtime>(
     config: TunnelConfig,
     on_event: Channel<TunnelEvent>,
     auto_reconnect: Option<bool>,
-    heartbeat: Option<Heartbeat>,
     state: State<'_, MobileVpnState>,
 ) -> Result<(), MobileVpnError> {
     let plugin = app.state::<VpnPlugin<R>>();
+    let _ = &state;
 
     if let Err(error) = plugin.set_auto_reconnect(auto_reconnect.unwrap_or(true)) {
         log::warn!("cannot store the auto-reconnect preference: {error}");
@@ -27,21 +25,10 @@ pub async fn vpn_connect<R: Runtime>(
     log::info!("vpn_connect: opening the android tunnel");
     let _ = on_event.send(TunnelEvent::Connecting);
 
-    start_service(&app, &config, heartbeat).await?;
-
-    let cancellation = CancellationToken::new();
-    state.arm(cancellation.clone());
+    start_service(&app, &config).await?;
 
     let _ = on_event.send(TunnelEvent::Connected {
         assigned_ip: engine::assigned_ip(&config),
-    });
-
-    let handle = app.clone();
-
-    tauri::async_runtime::spawn(async move {
-        report(handle, on_event.clone(), cancellation).await;
-
-        let _ = on_event.send(TunnelEvent::Disconnected);
     });
 
     Ok(())
@@ -50,16 +37,13 @@ pub async fn vpn_connect<R: Runtime>(
 async fn start_service<R: Runtime>(
     app: &AppHandle<R>,
     config: &TunnelConfig,
-    heartbeat: Option<Heartbeat>,
 ) -> Result<(), MobileVpnError> {
     let handle = app.clone();
     let config = config.clone();
 
-    tauri::async_runtime::spawn_blocking(move || {
-        handle.state::<VpnPlugin<R>>().start(&config, heartbeat)
-    })
-    .await
-    .map_err(|error| MobileVpnError::Service(error.to_string()))?
+    tauri::async_runtime::spawn_blocking(move || handle.state::<VpnPlugin<R>>().start(&config))
+        .await
+        .map_err(|error| MobileVpnError::Service(error.to_string()))?
 }
 
 #[tauri::command]

@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
-import { nodesConfigSchema } from './nodes-config.schema';
-
 import type { NodeConfigIssues } from './nodes-config.types';
+
+import { nodesConfigSchema } from './nodes-config.schema';
 
 const formatIssues = (issues: NodeConfigIssues): string =>
   issues
     .map(
       (issue) =>
-        `index ${String(issue.path[0])}: ${issue.path.slice(1).join('.')} — ${issue.message}`,
+        `index ${String(issue.path[0])}: ${issue.path.slice(1).join('.')} — ${issue.message}`
     )
     .join('\n');
 

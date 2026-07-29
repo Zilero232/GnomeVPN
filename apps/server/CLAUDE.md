@@ -33,11 +33,11 @@ A module is `x.module.ts` + `x.controller.ts` + `services/`, plus `dto/`, `guard
 
 **Nothing but the class lives in a service or controller file.** Constants, lookup tables and pure functions go elsewhere, so the file reads as behaviour rather than a mix of data and logic:
 
-| What | Where |
-| --- | --- |
-| Constants, timeouts, lookup tables | `config/x.config.ts` |
-| Pure functions | `lib/<name>/` — one folder per function, with its own `index.ts` and `<name>.types.ts` |
-| Types | `x.types.ts` next to the file that owns them |
+| What                               | Where                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------- |
+| Constants, timeouts, lookup tables | `config/x.config.ts`                                                                   |
+| Pure functions                     | `lib/<name>/` — one folder per function, with its own `index.ts` and `<name>.types.ts` |
+| Types                              | `x.types.ts` next to the file that owns them                                           |
 
 `lib/` is never a pile of loose files: each helper gets a folder, so its types
 sit beside it and the barrel re-exports both.
@@ -54,7 +54,7 @@ import { CACHE_TTL_MS, EXTENSION_TO_PLATFORM } from './config';
 Every module has an `index.ts` — its public API. **Import from the barrel across module boundaries**, never reach into another module's files:
 
 ```ts
-import { SubscriptionGuard } from '../subscription';       // yes
+import { SubscriptionGuard } from '../subscription'; // yes
 import { SubscriptionGuard } from '../subscription/guards/subscription.guard'; // no
 ```
 
@@ -74,7 +74,7 @@ The schema itself belongs in [`packages/schemas`](../../packages/schemas) — th
 
 `config/env.schema.ts` validates on boot and **throws** on a missing variable. That is deliberate: a server that starts without `DATABASE_URL` fails later, in a harder-to-read way.
 
-Node panel passwords are the exception. The `node` table stores the *name* of an env var (`apiTokenEnvVar`), never the password:
+Node panel passwords are the exception. The `node` table stores the _name_ of an env var (`apiTokenEnvVar`), never the password:
 
 ```ts
 const key = process.env[node.apiTokenEnvVar];
@@ -98,8 +98,8 @@ Prices live in `PLANS` ([`packages/schemas`](../../packages/schemas)), not in th
 
 Two flags decide what auto-renewal does, and they are not the same thing:
 
-- **`YOOKASSA_RECURRING`** — whether the shop *can* charge recurrently at all. YooKassa enables this per shop by hand, on request to support; there is no dashboard toggle. Until they do, `save_payment_method` and `POST /v3/payment_methods` both answer `forbidden`, so checkout fails outright. It defaults to `false`.
-- **`subscription.cancelAtPeriodEnd`** — whether *this user* wants renewal. Theirs to flip.
+- **`YOOKASSA_RECURRING`** — whether the shop _can_ charge recurrently at all. YooKassa enables this per shop by hand, on request to support; there is no dashboard toggle. Until they do, `save_payment_method` and `POST /v3/payment_methods` both answer `forbidden`, so checkout fails outright. It defaults to `false`.
+- **`subscription.cancelAtPeriodEnd`** — whether _this user_ wants renewal. Theirs to flip.
 
 Renewal also needs a card on file (`savedCardId`). Without one the job has nothing to charge, so `resumeAutoRenew` refuses rather than promising a renewal that never happens — the client offers `bindCard` instead.
 
@@ -121,10 +121,10 @@ xray client email unique per device (`app-<userId>-<deviceId>`).
 
 Reconnecting from a known device reuses its slot. A third device evicts the least
 recently used one rather than being refused — `freeSlot` orders by
-`lastActiveAt` and frees space *before* the new client is created.
+`lastActiveAt` and frees space _before_ the new client is created.
 
 Order matters: `createClient` deletes any client with the same email first,
-because the panel rejects duplicates. Releasing the old peer *after* creating the
+because the panel rejects duplicates. Releasing the old peer _after_ creating the
 new one would delete the client that was just handed out — that bug cost a
 "NODE_UNAVAILABLE" that had nothing to do with the node being down.
 
@@ -161,7 +161,7 @@ Schema is split across `prisma/schema/`. The generated client lands in `generate
 
 Both Prisma clients (`PrismaService` for the API, `basePrisma` for better-auth)
 build their pool through `core/pg-pool.ts` — one place, with a `pool.on('error')`
-listener (pg *requires* one, or a dropped idle connection crashes the process)
+listener (pg _requires_ one, or a dropped idle connection crashes the process)
 and `maxLifetimeSeconds: 300`. A pooled connection left open for hours eventually
 gets reset by the network in between, and the next query on it throws
 `Connection terminated unexpectedly` — which surfaced from the scheduler jobs

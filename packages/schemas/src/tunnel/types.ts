@@ -1,10 +1,10 @@
 import type { z } from 'zod';
+
 import type {
   connectInputSchema,
   disconnectInputSchema,
-  heartbeatInputSchema,
   issueConfigSchema,
-  revokeConfigSchema,
+  revokeConfigSchema
 } from './inputs';
 import type {
   deviceUsageSchema,
@@ -13,12 +13,11 @@ import type {
   splitModeSchema,
   tunnelConfigSchema,
   tunnelProtocolSchema,
-  wireguardConfigSchema,
+  wireguardConfigSchema
 } from './outputs';
 
 export type ConnectRequest = z.infer<typeof connectInputSchema>;
 export type DisconnectRequest = z.infer<typeof disconnectInputSchema>;
-export type HeartbeatRequest = z.infer<typeof heartbeatInputSchema>;
 export type TunnelConfig = z.infer<typeof tunnelConfigSchema>;
 export type TunnelProtocol = z.infer<typeof tunnelProtocolSchema>;
 export type WireguardConfig = z.infer<typeof wireguardConfigSchema>;

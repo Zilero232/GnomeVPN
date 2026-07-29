@@ -13,19 +13,20 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  Tabs,
+  Tabs
 } from '@/shared/ui';
+
+import type { SplitTunnelingDialogProps } from './SplitTunnelingDialog.types';
+
 import { AddressSection, AppSection } from './components';
 
 import s from './SplitTunnelingDialog.module.scss';
-
-import type { SplitTunnelingDialogProps } from './SplitTunnelingDialog.types';
 
 export const SplitTunnelingDialog = ({
   isConnected,
   isOpen,
   splitTunneling,
-  onOpenChange,
+  onOpenChange
 }: SplitTunnelingDialogProps) => {
   const t = useTranslations('splitTunneling');
   const {
@@ -38,7 +39,7 @@ export const SplitTunnelingDialog = ({
     addIp,
     removeIp,
     clear,
-    apply,
+    apply
   } = splitTunneling;
 
   const appsTotal = draft.apps.length;
@@ -82,7 +83,7 @@ export const SplitTunnelingDialog = ({
               label: (
                 <span className={s.tab}>
                   {t('tabApps')}
-                  {appsTotal > 0 && <Badge tone="accent">{appsTotal}</Badge>}
+                  {appsTotal > 0 && <Badge tone='accent'>{appsTotal}</Badge>}
                 </span>
               ),
               content: (
@@ -93,14 +94,14 @@ export const SplitTunnelingDialog = ({
                   toggleApp={toggleApp}
                   onPick={pick}
                 />
-              ),
+              )
             },
             {
               value: 'addresses',
               label: (
                 <span className={s.tab}>
                   {t('tabAddresses')}
-                  {ipsTotal > 0 && <Badge tone="accent">{ipsTotal}</Badge>}
+                  {ipsTotal > 0 && <Badge tone='accent'>{ipsTotal}</Badge>}
                 </span>
               ),
               content: (
@@ -110,13 +111,13 @@ export const SplitTunnelingDialog = ({
                   removeIp={removeIp}
                   setIpsMode={setIpsMode}
                 />
-              ),
-            },
+              )
+            }
           ]}
         />
 
         {isDirty && isConnected && (
-          <p className={s.warning} role="status">
+          <p className={s.warning} role='status'>
             <Loader2 aria-hidden size={13} />
             {t('reconnectWarning')}
           </p>
@@ -127,13 +128,13 @@ export const SplitTunnelingDialog = ({
             <button
               className={s.reset}
               disabled={total === 0 || isApplying}
-              type="button"
+              type='button'
               onClick={clear}
             >
               {t('clear')}
             </button>
 
-            <Button disabled={!isDirty || isApplying} type="button" onClick={submit}>
+            <Button disabled={!isDirty || isApplying} type='button' onClick={submit}>
               {isApplying ? (
                 <Loader2 aria-hidden className={s.spinner} size={14} />
               ) : (

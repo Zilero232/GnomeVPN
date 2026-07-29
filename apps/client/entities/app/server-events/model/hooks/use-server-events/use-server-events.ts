@@ -40,7 +40,7 @@ export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
       if (parsed?.type === 'devices-changed') {
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.deviceUsage() });
       }
-    },
+    }
   });
 
   const sourceRef = useRef(source);

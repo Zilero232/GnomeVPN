@@ -3,6 +3,7 @@
 import { clsx } from 'clsx';
 
 import { BrandMark } from '@/shared/ui';
+
 import { useWindowControls, useWindowPlatform } from '../../model/hooks';
 import { TitleBarControls } from './components';
 
@@ -20,8 +21,8 @@ export const TitleBar = () => {
 
   return (
     <div className={clsx(s.root, isMacos && s.rootMacos)}>
-      <div className={s.dragRegion} data-tauri-drag-region>
-        <BrandMark className={s.brand} size="sm" tone="muted" />
+      <div data-tauri-drag-region className={s.dragRegion}>
+        <BrandMark className={s.brand} size='sm' tone='muted' />
       </div>
 
       {!isMacos && <TitleBarControls onClose={close} onMinimize={minimize} />}

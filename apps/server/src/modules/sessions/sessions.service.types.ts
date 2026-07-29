@@ -1,5 +1,7 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
 
+import type { CreatedPeer } from '../peers';
+
 export type ConnectSessionInput = {
   userId: string;
   nodeId: string;
@@ -12,7 +14,11 @@ export type DisconnectSessionInput = {
   deviceId: string;
 };
 
-export type HeartbeatSessionInput = {
+export type PersistSessionInput = {
   userId: string;
+  nodeId: string;
   deviceId: string;
+  protocol: TunnelProtocol;
+  peer: CreatedPeer;
+  deviceLimit: number;
 };

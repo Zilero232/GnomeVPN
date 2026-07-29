@@ -3,15 +3,15 @@
 import { Tabs as BaseTabs } from '@base-ui-components/react/tabs';
 import { clsx } from 'clsx';
 
-import s from './Tabs.module.scss';
-
 import type { TabsProps } from './Tabs.types';
+
+import s from './Tabs.module.scss';
 
 export const Tabs = ({ items, defaultValue, className, panelClassName }: TabsProps) => (
   <BaseTabs.Root className={clsx(s.root, className)} defaultValue={defaultValue ?? items[0]?.value}>
     <BaseTabs.List className={s.list}>
       {items.map((item) => (
-        <BaseTabs.Tab className={s.tab} key={item.value} value={item.value}>
+        <BaseTabs.Tab key={item.value} className={s.tab} value={item.value}>
           {item.label}
         </BaseTabs.Tab>
       ))}
@@ -21,8 +21,8 @@ export const Tabs = ({ items, defaultValue, className, panelClassName }: TabsPro
 
     {items.map((item) => (
       <BaseTabs.Panel
-        className={clsx(s.panel, !item.isBare && panelClassName)}
         key={item.value}
+        className={clsx(s.panel, !item.isBare && panelClassName)}
         value={item.value}
       >
         {item.content}

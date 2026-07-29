@@ -6,11 +6,11 @@ import { QUERY_KEYS } from '@/shared/constants';
 export const useConfigs = () => {
   const { data, isLoading } = useQuery({
     queryKey: QUERY_KEYS.configs(),
-    queryFn: listConfigs,
+    queryFn: listConfigs
   });
 
   return {
     configs: data ?? [],
-    isLoading,
+    isLoading
   };
 };

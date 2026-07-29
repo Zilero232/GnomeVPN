@@ -1,10 +1,11 @@
 import type { z } from 'zod';
+
 import type {
   bindCardSchema,
   buyExtraDevicesSchema,
   checkoutClientSchema,
   createCheckoutSchema,
-  webhookEventSchema,
+  webhookEventSchema
 } from './inputs';
 import type { bindCardResultSchema, checkoutResultSchema, limitsSchema } from './outputs';
 import type { planIdSchema, planSchema } from './plans';

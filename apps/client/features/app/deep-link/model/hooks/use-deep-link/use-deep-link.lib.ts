@@ -2,10 +2,10 @@ import { ROUTES } from '@/shared/constants';
 
 const HOST_TO_ROUTE: Record<string, string> = {
   account: ROUTES.account,
-  app: ROUTES.app,
+  app: ROUTES.app
 };
 
-export const routeForDeepLink = (urls: string[] | null): string | null => {
+export const routeForDeepLink = (urls: string[] | null) => {
   const raw = urls?.[0];
 
   if (!raw) {

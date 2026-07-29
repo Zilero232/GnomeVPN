@@ -55,7 +55,7 @@ services:
     networks:
       - gnomevpn
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      test: [CMD-SHELL, 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 30s
       timeout: 5s
       retries: 5
@@ -89,12 +89,11 @@ services:
       - gnomevpn
     healthcheck:
       test:
-        [
-          'CMD',
-          'bun',
-          '-e',
-          "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
-        ]
+        - CMD
+        - bun
+        - -e
+        - "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
       interval: 30s
       timeout: 5s
       retries: 3

@@ -2,6 +2,9 @@ import { findPlan } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { addHours, subHours } from 'date-fns';
+import { isNonNullish } from 'remeda';
+
+import type { DueSubscription } from './recurring-charge.job.types';
 
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
@@ -10,11 +13,9 @@ import {
   CheckoutService,
   describeRenewal,
   renewalIdempotenceKey,
-  WebhookService,
+  WebhookService
 } from '../../../billing';
 import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../../config';
-
-import type { DueSubscription } from './recurring-charge.job.types';
 
 @Injectable()
 export class RecurringChargeJob {
@@ -24,7 +25,7 @@ export class RecurringChargeJob {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly checkout: CheckoutService,
-    private readonly webhook: WebhookService,
+    private readonly webhook: WebhookService
   ) {}
 
   private async hasChargeInFlight(userId: string): Promise<boolean> {
@@ -33,12 +34,12 @@ export class RecurringChargeJob {
         userId,
         isAutoCharge: true,
         status: 'pending',
-        createdAt: { gt: subHours(new Date(), IN_FLIGHT_WINDOW_HOURS) },
+        createdAt: { gt: subHours(new Date(), IN_FLIGHT_WINDOW_HOURS) }
       },
-      select: { id: true },
+      select: { id: true }
     });
 
-    return pending !== null;
+    return isNonNullish(pending);
   }
 
   private async chargeIfDue(subscription: DueSubscription): Promise<void> {
@@ -58,15 +59,15 @@ export class RecurringChargeJob {
       paymentMethodId: subscription.savedCardId,
       idempotenceKey: renewalIdempotenceKey({
         userId: subscription.userId,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-      }),
+        currentPeriodEnd: subscription.currentPeriodEnd
+      })
     });
 
     await this.checkout.recordPendingPayment({
       userId: subscription.userId,
       paymentId: payment.id,
       plan,
-      isAutoCharge: true,
+      isAutoCharge: true
     });
 
     if (payment.status === 'succeeded') {
@@ -81,10 +82,10 @@ export class RecurringChargeJob {
         cancelAtPeriodEnd: false,
         currentPeriodEnd: {
           gt: new Date(),
-          lt: addHours(new Date(), RENEW_WINDOW_HOURS),
-        },
+          lt: addHours(new Date(), RENEW_WINDOW_HOURS)
+        }
       },
-      select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true },
+      select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true }
     });
 
     for (const subscription of due) {
@@ -92,7 +93,7 @@ export class RecurringChargeJob {
         await this.chargeIfDue(subscription);
       } catch (error) {
         this.logger.warn(
-          `Recurring charge failed for ${subscription.userId}: ${describeError(error)}`,
+          `Recurring charge failed for ${subscription.userId}: ${describeError(error)}`
         );
       }
     }

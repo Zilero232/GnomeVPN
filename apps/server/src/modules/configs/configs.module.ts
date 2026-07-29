@@ -10,6 +10,6 @@ import { ConfigAccessService, ConfigIssueService } from './services';
   imports: [NodesModule, PeersModule, SubscriptionModule],
   controllers: [ConfigsController],
   providers: [ConfigIssueService, ConfigAccessService],
-  exports: [ConfigAccessService],
+  exports: [ConfigAccessService]
 })
 export class ConfigsModule {}

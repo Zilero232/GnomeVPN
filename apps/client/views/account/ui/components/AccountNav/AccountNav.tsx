@@ -1,8 +1,8 @@
 'use client';
 
 import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { usePlatform } from '@/entities/app/platform';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
@@ -24,7 +24,7 @@ export const AccountNav = () => {
         </Link>
       ) : (
         <Link className={s.brand} href={ROUTES.landing}>
-          <BrandMark labelClassName={s.brandLabel} size="lg" />
+          <BrandMark labelClassName={s.brandLabel} size='lg' />
         </Link>
       )}
 

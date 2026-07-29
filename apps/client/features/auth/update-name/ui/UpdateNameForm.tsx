@@ -1,5 +1,7 @@
 'use client';
 
+import type { UpdateNameValues } from '@gnomevpn/schemas';
+
 import { updateNameSchema } from '@gnomevpn/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -11,8 +13,6 @@ import { useCurrentUser, useUpdateName } from '@/entities/auth/user';
 import { FormField, Input, SubmitButton } from '@/shared/ui';
 
 import s from './UpdateNameForm.module.scss';
-
-import type { UpdateNameValues } from '@gnomevpn/schemas';
 
 export const UpdateNameForm = () => {
   const t = useTranslations('account.profile');
@@ -26,11 +26,11 @@ export const UpdateNameForm = () => {
     formState: { errors, isDirty },
     handleSubmit,
     register,
-    reset,
+    reset
   } = useForm<UpdateNameValues>({
     resolver: zodResolver(updateNameSchema),
     values: { name },
-    resetOptions: { keepDirtyValues: true, keepErrors: true },
+    resetOptions: { keepDirtyValues: true, keepErrors: true }
   });
 
   const onSubmit = handleSubmit((values) => {
@@ -39,7 +39,7 @@ export const UpdateNameForm = () => {
         toast.success(t('nameUpdated'));
         reset(values);
       },
-      onError: (error: Error) => toast.error(errorMessage(error)),
+      onError: (error: Error) => toast.error(errorMessage(error))
     });
   });
 
@@ -48,13 +48,13 @@ export const UpdateNameForm = () => {
       <FormField
         className={s.field}
         error={fieldError(errors.name)}
-        htmlFor="profile-name"
+        htmlFor='profile-name'
         label={t('nameLabel')}
       >
-        <Input autoComplete="name" id="profile-name" {...register('name')} />
+        <Input autoComplete='name' id='profile-name' {...register('name')} />
       </FormField>
 
-      <SubmitButton disabled={!isDirty} isPending={isPending} size="md">
+      <SubmitButton disabled={!isDirty} isPending={isPending} size='md'>
         {t('saveName')}
       </SubmitButton>
     </form>
