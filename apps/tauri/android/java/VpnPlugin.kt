@@ -135,12 +135,9 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
-    // Kernel counters for the tunnel interface, not for the app. TrafficStats
-    // counts every socket the app owns, so it keeps climbing from ordinary API
-    // calls while the tunnel is dead — a broken tunnel then looks healthy.
     @Command
     fun traffic(invoke: Invoke) {
-        val counters = TunnelTraffic.read()
+        val counters = TunnelTraffic.read(activity)
         val result = JSObject()
 
         result.put("rx", counters.rx)
@@ -187,25 +184,6 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         val result = JSObject()
         result.put("running", GnomeVpnService.isRunning(activity))
         invoke.resolve(result)
-    }
-
-    @Command
-    fun openVpnSettings(invoke: Invoke) {
-        val intent = Intent("android.net.vpn.SETTINGS")
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-        val opened = runCatching { activity.startActivity(intent) }.isSuccess
-
-        if (!opened) {
-            runCatching {
-                activity.startActivity(
-                    Intent(android.provider.Settings.ACTION_SETTINGS)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                )
-            }
-        }
-
-        invoke.resolve()
     }
 
     @Command

@@ -265,7 +265,6 @@
     "autoStart": "Launch at startup",
     "autoConnect": "Connect automatically",
     "autoReconnect": "Reconnect automatically",
-    "alwaysOnVpn": "Always-on VPN in settings",
     "language": "Language"
   },
   "notifications": {

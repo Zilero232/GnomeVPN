@@ -102,10 +102,6 @@ export const hideAppWindow = async (): Promise<void> => {
   await callRust({ command: 'vpn_hide_window', fallback: null });
 };
 
-export const openSystemVpnSettings = async (): Promise<void> => {
-  await callRust({ command: 'vpn_open_settings', fallback: null });
-};
-
 export const shareConfigFile = async (args: {
   fileName: string;
   content: string;

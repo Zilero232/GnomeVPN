@@ -151,12 +151,6 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(result.granted)
     }
 
-    pub fn open_vpn_settings(&self) -> Result<(), MobileVpnError> {
-        self.0
-            .run_mobile_plugin::<()>("openVpnSettings", Empty {})
-            .map_err(|error| MobileVpnError::Service(error.to_string()))
-    }
-
     pub fn move_to_background(&self) -> Result<(), MobileVpnError> {
         self.0
             .run_mobile_plugin::<()>("moveToBackground", Empty {})

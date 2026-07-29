@@ -77,11 +77,6 @@ pub async fn vpn_hide_window<R: Runtime>(app: AppHandle<R>) -> Result<(), Mobile
 }
 
 #[tauri::command]
-pub async fn vpn_open_settings<R: Runtime>(app: AppHandle<R>) -> Result<(), MobileVpnError> {
-    app.state::<VpnPlugin<R>>().open_vpn_settings()
-}
-
-#[tauri::command]
 pub async fn vpn_share_config<R: Runtime>(
     app: AppHandle<R>,
     file_name: String,
