@@ -7,7 +7,8 @@ const PERMISSIONS = [
   'FOREGROUND_SERVICE_SYSTEM_EXEMPTED',
   'POST_NOTIFICATIONS',
   'WAKE_LOCK',
-  'ACCESS_NETWORK_STATE'
+  'ACCESS_NETWORK_STATE',
+  'RECEIVE_BOOT_COMPLETED'
 ];
 
 const PERMISSION_ANCHOR = '<uses-permission android:name="android.permission.INTERNET" />';
@@ -36,6 +37,17 @@ const TILE_SERVICE = `<service
             </intent-filter>
         </service>`;
 
+const BOOT_RECEIVER = `<receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>`;
+
 const permissionStep = (permission) => ({
   has: permission,
   find: PERMISSION_ANCHOR,
@@ -50,6 +62,11 @@ const STEPS = [
     has: 'extractNativeLibs',
     find: '    <application',
     put: '    <application\n        android:extractNativeLibs="true"'
+  },
+  {
+    has: 'BootReceiver',
+    find: APPLICATION_END,
+    put: `        ${BOOT_RECEIVER}\n${APPLICATION_END}`
   },
   {
     has: 'GnomeVpnService',

@@ -22,6 +22,8 @@ const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
 const LOG_MAX_BYTES: u64 = 2 * 1024 * 1024;
 const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
+const STALL_TIMEOUT: Duration = Duration::from_secs(60);
+const STALL_MIN_BYTES: u64 = 32 * 1024;
 
 static ATTEMPT: Mutex<Option<CancellationToken>> = Mutex::new(None);
 
@@ -224,11 +226,51 @@ pub async fn run_tun2proxy(
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
 }
 
+#[derive(Default)]
+struct StallDetector {
+    last_seen: Option<counters::Traffic>,
+    deaf_for: Duration,
+    asked: u64,
+}
+
+impl StallDetector {
+    fn observe(&mut self, current: counters::Traffic) -> Option<String> {
+        let previous = self.last_seen.replace(current)?;
+
+        if current.rx > previous.rx {
+            self.deaf_for = Duration::ZERO;
+            self.asked = 0;
+
+            return None;
+        }
+
+        let sent = current.tx.saturating_sub(previous.tx);
+
+        if sent == 0 {
+            return None;
+        }
+
+        self.asked = self.asked.saturating_add(sent);
+        self.deaf_for += LIVENESS_INTERVAL;
+
+        if self.deaf_for < STALL_TIMEOUT || self.asked < STALL_MIN_BYTES {
+            return None;
+        }
+
+        Some(format!(
+            "sent {} bytes over {}s with no reply",
+            self.asked,
+            self.deaf_for.as_secs()
+        ))
+    }
+}
+
 async fn watch_hysteria(
     hysteria: &mut Hysteria,
     cancellation: CancellationToken,
 ) -> MobileVpnError {
     let mut ticker = interval(LIVENESS_INTERVAL);
+    let mut detector = StallDetector::default();
 
     loop {
         tokio::select! {
@@ -237,6 +279,11 @@ async fn watch_hysteria(
             }
             _ = ticker.tick() => {
                 if let Some(reason) = hysteria.has_exited() {
+                    cancellation.cancel();
+                    return MobileVpnError::Hysteria(reason);
+                }
+
+                if let Some(reason) = detector.observe(counters::read()) {
                     cancellation.cancel();
                     return MobileVpnError::Hysteria(reason);
                 }

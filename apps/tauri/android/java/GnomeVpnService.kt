@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.Handler
@@ -177,10 +178,22 @@ class GnomeVpnService : VpnService() {
                 }
             }
 
-            override fun onLost(network: Network) {
+            override fun onCapabilitiesChanged(
+                network: Network,
+                capabilities: NetworkCapabilities,
+            ) {
                 if (activeNetwork == network) {
-                    activeNetwork = null
+                    bindUnderlying(network)
                 }
+            }
+
+            override fun onLost(network: Network) {
+                if (activeNetwork != network) {
+                    return
+                }
+
+                activeNetwork = null
+                runCatching { setUnderlyingNetworks(null) }
             }
         }
 
@@ -364,12 +377,12 @@ class GnomeVpnService : VpnService() {
 
         val pending = revivalIntent(PendingIntent.FLAG_UPDATE_CURRENT) ?: return
 
+        val at = SystemClock.elapsedRealtime() + REVIVAL_DELAY_MS
+
         runCatching {
-            manager.set(
-                AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + REVIVAL_DELAY_MS,
-                pending,
-            )
+            manager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, pending)
+        }.recoverCatching {
+            manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, at, pending)
         }.onFailure { error -> Log.w(TAG, "cannot schedule a revival", error) }
     }
 

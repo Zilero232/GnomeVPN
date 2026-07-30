@@ -16,6 +16,6 @@ export const CERT_PATH = '/etc/gnomevpn/cert.pem';
 
 export const KEY_PATH = '/etc/gnomevpn/key.pem';
 
-export const UDP_IDLE_TIMEOUT = 60;
+export const UDP_IDLE_TIMEOUT = 180;
 
 export const SNIFF_PROTOCOLS = ['http', 'tls', 'quic'];
