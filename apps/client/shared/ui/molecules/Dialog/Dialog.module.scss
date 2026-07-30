@@ -13,9 +13,9 @@
   top: 50%;
   left: 50%;
   display: flex;
-  width: calc(100vw - 32px);
+  width: calc(100% - 32px);
   max-width: 460px;
-  max-height: calc(100vh - 64px);
+  max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 48px);
   flex-direction: column;
   padding: 26px;
   border: 1px solid var(--color-border-bright);

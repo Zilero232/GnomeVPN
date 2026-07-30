@@ -24,3 +24,12 @@ export const PLATFORMS = [
   { key: 'apple', name: 'macOS · iOS', isNative: false },
   { key: 'linux', name: 'Linux', isNative: false }
 ] as const;
+
+export const LOCATIONS = [
+  { code: 'nl', key: 'netherlands' },
+  { code: 'fi', key: 'finland' }
+] as const;
+
+export const COMPARISON_ROWS = ['speed', 'ads', 'blocking', 'limits'] as const;
+
+export type ComparisonRow = (typeof COMPARISON_ROWS)[number];

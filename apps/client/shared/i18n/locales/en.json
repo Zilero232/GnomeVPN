@@ -120,6 +120,30 @@
       "androidBody": "Available on Google Play. The tunnel survives being swiped away and keeps running in the background.",
       "appleBody": "Grab the config from your account and open it in Streisand, Hiddify or any Hysteria2 client.",
       "linuxBody": "The same config works in NekoBox, sing-box or the native Hysteria2 client."
+    },
+    "locations": {
+      "title": "Where the servers are",
+      "netherlandsName": "Netherlands",
+      "netherlandsCity": "Amsterdam",
+      "finlandName": "Finland",
+      "finlandCity": "Helsinki"
+    },
+    "comparison": {
+      "title": "Why not a free VPN",
+      "free": "Free ones",
+      "speedLabel": "Real bandwidth",
+      "speedHint": "The node is not shared with thousands of people at once",
+      "adsLabel": "No ads, no trackers",
+      "adsHint": "A free service has to make its money somewhere",
+      "blockingLabel": "Works under blocking",
+      "blockingHint": "Hysteria2 looks like ordinary HTTPS traffic on the wire",
+      "limitsLabel": "No traffic cap",
+      "limitsHint": "No gigabyte limits and no slowdown in the evening"
+    },
+    "guarantee": {
+      "title": "Not for you? Money back",
+      "body": "We refund the full amount within 14 days of payment, no questions asked. Just write to support.",
+      "cta": "Try it"
     }
   },
   "auth": {

@@ -3,6 +3,7 @@
 import { planDiscountPercent, PLANS } from '@gnomevpn/schemas';
 import { clsx } from 'clsx';
 import { Check } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
@@ -10,6 +11,7 @@ import { ROUTES } from '@/shared/constants';
 import { Badge, Button, Stack, Text } from '@/shared/ui';
 
 import { FEATURED_PLAN_ID, PRICING_FEATURES } from '../../../config';
+import { REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
 
 import s from './PricingCard.module.scss';
 
@@ -18,7 +20,13 @@ export const PricingCard = () => {
 
   return (
     <Stack className={s.root} gap='lg'>
-      <div className={s.plans}>
+      <motion.div
+        className={s.plans}
+        initial='hidden'
+        variants={SECTION_MOTION}
+        viewport={REVEAL_VIEWPORT}
+        whileInView='visible'
+      >
         {PLANS.map((plan) => {
           const discount = planDiscountPercent(plan.id);
 
@@ -52,7 +60,7 @@ export const PricingCard = () => {
             </Stack>
           );
         })}
-      </div>
+      </motion.div>
 
       <Stack className={s.footer} gap='md'>
         <ul className={s.list}>

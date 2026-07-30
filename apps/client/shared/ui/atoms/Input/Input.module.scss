@@ -12,6 +12,10 @@
     border-color 0.18s ease,
     box-shadow 0.18s ease;
 
+  @media (hover: none) and (pointer: coarse) {
+    font-size: 16px;
+  }
+
   &::placeholder {
     color: var(--color-text-muted);
     font-family: var(--font-mono);
