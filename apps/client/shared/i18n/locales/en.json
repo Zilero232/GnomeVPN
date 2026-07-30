@@ -269,7 +269,8 @@
     "expiredNotice": "Your subscription has ended — these configs are paused. Renew it to turn them back on.",
     "copy": "Copy link",
     "copied": "Link copied",
-    "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand"
+    "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand",
+    "revoked": "Config deleted"
   },
   "desktopOnly": {
     "title": "Connect from the app",

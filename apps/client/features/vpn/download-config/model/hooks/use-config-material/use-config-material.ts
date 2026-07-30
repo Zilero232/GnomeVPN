@@ -15,8 +15,10 @@ import type { UseConfigMaterialInput } from './use-config-material.types';
 
 export const useConfigMaterial = ({ config }: UseConfigMaterialInput) => {
   const t = useTranslations('configs');
+
   const queryClient = useQueryClient();
   const toastError = useToastError();
+
   const { copy } = useCopy();
 
   const cache = useRef<ConfigDownload | null>(null);
@@ -44,19 +46,37 @@ export const useConfigMaterial = ({ config }: UseConfigMaterialInput) => {
   });
 
   const download = async () => {
-    const { target, fileName } = await saveFile(await mutateAsync());
+    const material = await mutateAsync().catch(() => null);
 
-    if (target === 'shared') {
+    if (!material) {
       return;
     }
 
-    toast.success(t('downloaded', { fileName }), { description: t('savedHint') });
+    try {
+      const { target, fileName } = await saveFile(material);
+
+      if (target !== 'shared') {
+        toast.success(t('downloaded', { fileName }), { description: t('savedHint') });
+      }
+    } catch {
+      try {
+        await copy(await readConfigText(material.blob));
+
+        toast.success(t('copied'), { description: t('copiedHint') });
+      } catch (error) {
+        toastError(error);
+      }
+    }
   };
 
   const copyToClipboard = async () => {
-    await copy(await readConfigText((await mutateAsync()).blob));
+    try {
+      await copy(await readConfigText((await mutateAsync()).blob));
 
-    toast.success(t('copied'), { description: t('copiedHint') });
+      toast.success(t('copied'), { description: t('copiedHint') });
+    } catch (error) {
+      toastError(error);
+    }
   };
 
   const prepareQr = () => {

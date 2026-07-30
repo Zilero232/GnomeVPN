@@ -269,7 +269,8 @@
     "expiredNotice": "Подписка закончилась — конфигурации приостановлены. Продлите её, чтобы снова включить.",
     "copy": "Скопировать ссылку",
     "copied": "Ссылка скопирована",
-    "copiedHint": "Вставьте её в v2rayNG, Hiddify или Streisand"
+    "copiedHint": "Вставьте её в v2rayNG, Hiddify или Streisand",
+    "revoked": "Конфиг удалён"
   },
   "desktopOnly": {
     "title": "Подключение — в приложении",

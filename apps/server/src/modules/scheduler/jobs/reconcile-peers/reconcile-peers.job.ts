@@ -130,7 +130,7 @@ export class ReconcilePeersJob {
     const seenNow = new Set<string>();
 
     for (const email of nodeClients.keys()) {
-      if (known.has(email) || online.has(email)) {
+      if (known.has(email)) {
         continue;
       }
 

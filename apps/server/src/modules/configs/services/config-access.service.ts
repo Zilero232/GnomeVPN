@@ -11,7 +11,7 @@ export class ConfigAccessService {
   async revoke({ userId, id }: RevokeConfigInput): Promise<void> {
     const peers = await this.peers.findRefs({ id, userId, kind: 'config' });
 
-    await this.peers.releaseNow(peers);
+    await this.peers.releaseDetached(peers);
   }
 
   async setEnabledAll({ userId, enabled }: SetEnabledAllInput): Promise<void> {

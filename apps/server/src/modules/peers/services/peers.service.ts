@@ -153,16 +153,7 @@ export class PeersService {
     await this.prisma.peer.updateMany({ where, data: { state: 'revoked' } });
   }
 
-  async releaseNow(peers: PeerRef[]): Promise<void> {
-    if (isEmpty(peers)) {
-      return;
-    }
-
-    await this.prisma.peer.updateMany({
-      where: { id: { in: peers.map((peer) => peer.id) } },
-      data: { state: 'revoked' }
-    });
-
+  private async deleteFromNodes(peers: PeerRef[]): Promise<void> {
     const byNode = groupBy(peers, (peer) => peer.nodeId);
 
     await Promise.all(
@@ -183,6 +174,20 @@ export class PeersService {
         );
       })
     );
+  }
+
+  async releaseDetached(peers: PeerRef[]): Promise<void> {
+    if (isEmpty(peers)) {
+      return;
+    }
+
+    await this.prisma.peer.deleteMany({
+      where: { id: { in: peers.map((peer) => peer.id) } }
+    });
+
+    void this.deleteFromNodes(peers).catch((error: unknown) => {
+      this.logger.warn(`could not release peers on their node: ${describeError(error)}`);
+    });
   }
 
   async setEnabled({ where, enabled }: SetPeerEnabledInput): Promise<void> {

@@ -9,7 +9,7 @@ export class SessionAccessService {
   constructor(private readonly peers: PeersService) {}
 
   async releaseAll(peers: PeerRef[]): Promise<void> {
-    await this.peers.releaseNow(peers);
+    await this.peers.releaseDetached(peers);
   }
 
   async disconnectAll(userId: string): Promise<void> {
