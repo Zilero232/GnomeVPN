@@ -1,5 +1,6 @@
 export {
   configurePanel,
+  enablePortHopping,
   ensureCert,
   ensureDocker,
   ensureWireguardKeys,

@@ -95,8 +95,18 @@ pub fn build_hysteria_config(
             },
         });
 
+    let server = match config.port_range {
+        Some(range) if range.is_valid() => {
+            format!(
+                "{}:{},{}-{}",
+                config.server, config.port, range.from, range.to
+            )
+        }
+        _ => format!("{}:{}", config.server, config.port),
+    };
+
     let client = HysteriaClientConfig {
-        server: format!("{}:{}", config.server, config.port),
+        server,
         auth: config.auth.clone(),
         tls: HysteriaTls {
             sni: config.server_name.clone(),

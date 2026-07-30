@@ -1,6 +1,7 @@
 export const TUNNEL = {
   insecure: true,
-  dns: ['1.1.1.1', '8.8.8.8']
+  dns: ['1.1.1.1', '8.8.8.8'],
+  portRange: { from: 20_000, to: 45_000 }
 } as const;
 
 export const PEER_PREFIX = {

@@ -59,6 +59,8 @@ pub struct TunnelConfig {
     pub protocol: TunnelProtocol,
     pub server: String,
     pub port: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port_range: Option<PortRange>,
     #[serde(default)]
     pub auth: String,
     #[serde(default)]
@@ -70,12 +72,26 @@ pub struct TunnelConfig {
     pub wireguard: Option<WireguardConfig>,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PortRange {
+    pub from: u16,
+    pub to: u16,
+}
+
+impl PortRange {
+    pub fn is_valid(&self) -> bool {
+        self.from > 0 && self.from < self.to
+    }
+}
+
 impl fmt::Debug for TunnelConfig {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("TunnelConfig")
             .field("protocol", &self.protocol)
             .field("server", &self.server)
             .field("port", &self.port)
+            .field("port_range", &self.port_range)
             .field("auth", &"[redacted]")
             .field("server_name", &self.server_name)
             .field("insecure", &self.insecure)

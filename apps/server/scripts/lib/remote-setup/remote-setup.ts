@@ -12,7 +12,15 @@ import type {
 import { PANEL_USERNAME } from '../../../src/lib/xray';
 import { WG } from '../../../src/modules/peers/config';
 import { generateWireguardKeys } from '../../../src/modules/peers/lib/wg-keys';
-import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
+import {
+  CERT_PATH,
+  HOP_PORT_FROM,
+  HOP_PORT_TO,
+  KEY_PATH,
+  LISTEN_PORT,
+  MASQUERADE_HOST,
+  PANEL_PORT
+} from '../hysteria-inbound';
 import { WG_KEY_PATH, WG_PUB_PATH } from '../wireguard-inbound';
 import {
   CONTAINER_NAME,
@@ -54,6 +62,14 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
   await ssh.exec(`ufw allow ${LISTEN_PORT}/udp`);
   await ssh.exec(`ufw allow ${PANEL_PORT}/tcp`);
   await ssh.exec(`ufw allow ${WG.listenPort}/udp`);
+  await ssh.exec(`ufw allow ${HOP_PORT_FROM}:${HOP_PORT_TO}/udp`);
+};
+
+export const enablePortHopping = async (ssh: SshClient): Promise<void> => {
+  const rule = `PREROUTING -p udp --dport ${HOP_PORT_FROM}:${HOP_PORT_TO} -j REDIRECT --to-ports ${LISTEN_PORT}`;
+
+  await ssh.exec(`iptables -t nat -C ${rule} 2>/dev/null || iptables -t nat -I ${rule}`);
+  await ssh.exec('command -v netfilter-persistent >/dev/null && netfilter-persistent save || true');
 };
 
 const readRemoteKey = async (ssh: SshClient, path: string): Promise<string> => {

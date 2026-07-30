@@ -4,6 +4,10 @@ export const INBOUND_REMARK = 'GnomeVPN Hysteria2';
 
 export const LISTEN_PORT = 443;
 
+export const HOP_PORT_FROM = 20_000;
+
+export const HOP_PORT_TO = 45_000;
+
 export const PANEL_PORT = 2053;
 
 export const MASQUERADE_HOST = 'www.bing.com';

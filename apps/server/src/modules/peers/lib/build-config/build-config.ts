@@ -11,6 +11,7 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
   protocol: TUNNEL_PROTOCOL.hysteria2,
   server: node.host,
   port: node.port,
+  portRange: { ...TUNNEL.portRange },
   auth,
   serverName: node.serverName,
   insecure: TUNNEL.insecure,

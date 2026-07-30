@@ -25,6 +25,7 @@ import {
 } from '../node-credentials';
 import {
   configurePanel,
+  enablePortHopping,
   ensureCert,
   ensureDocker,
   ensureWireguardKeys,
@@ -94,6 +95,7 @@ export const provisionHost = async ({
 
     await ensureDocker(ssh);
     await openTunnelPort(ssh);
+    await enablePortHopping(ssh);
     await shipStack({ ssh, composeContent: xrayComposeContent });
 
     const token = await configurePanel({ ssh, password, panelPath });

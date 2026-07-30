@@ -8,6 +8,7 @@ export {
   DEFAULT_TUNNEL_PROTOCOL,
   deviceUsageSchema,
   downloadedConfigSchema,
+  portRangeSchema,
   SPLIT_MODE,
   splitConfigSchema,
   splitModeSchema,
