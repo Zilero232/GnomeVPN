@@ -10,8 +10,8 @@ export const useRevokeConfig = () => {
 
   return useMutation({
     mutationFn: revokeConfig,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
     },
     onError: toastError
   });

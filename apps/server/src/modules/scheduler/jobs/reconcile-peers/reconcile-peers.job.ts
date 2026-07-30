@@ -19,6 +19,7 @@ import { BOOT_GRACE_MS, RECONCILE_CRON } from '../../config';
 export class ReconcilePeersJob {
   private readonly logger = new Logger(ReconcilePeersJob.name);
   private readonly bootedAt = Date.now();
+  private readonly suspects = new Map<string, Set<string>>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -56,7 +57,7 @@ export class ReconcilePeersJob {
 
     await this.removeRevoked({ xray, peers, nodeClients });
     await this.syncEnabled({ xray, peers, nodeClients });
-    await this.collectOrphans({ xray, nodeId: node.id, nodeClients, online });
+    await this.collectOrphans({ xray, nodeId: node.id, peers, nodeClients, online });
   }
 
   private async removeRevoked({ xray, peers, nodeClients }: RemoveRevokedInput): Promise<void> {
@@ -114,21 +115,35 @@ export class ReconcilePeersJob {
   private async collectOrphans({
     xray,
     nodeId,
+    peers,
     nodeClients,
     online
   }: CollectOrphansInput): Promise<void> {
-    const rows = await this.prisma.peer.findMany({
-      where: { nodeId },
-      select: { userId: true, kind: true, name: true, nodeId: true }
-    });
+    if (online === null) {
+      this.suspects.delete(nodeId);
 
-    const known = new Set(rows.map((row) => this.emailOf(row)));
+      return;
+    }
+
+    const known = new Set(peers.map((peer) => this.emailOf(peer)));
+    const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
+    const seenNow = new Set<string>();
 
     for (const email of nodeClients.keys()) {
-      if (!known.has(email) && !online.has(email)) {
-        await xray.deleteClient(email);
+      if (known.has(email) || online.has(email)) {
+        continue;
       }
+
+      if (!seenBefore.has(email)) {
+        seenNow.add(email);
+
+        continue;
+      }
+
+      await xray.deleteClient(email);
     }
+
+    this.suspects.set(nodeId, seenNow);
   }
 
   @Cron(RECONCILE_CRON)

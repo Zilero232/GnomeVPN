@@ -83,8 +83,14 @@ export const ConfigList = ({ className }: ConfigListProps) => {
                 key={config.id}
                 config={config}
                 isBlocked={!hasAccess}
-                isRevoking={revoke.isPending}
-                onRevoke={() => revoke.mutate(config.id)}
+                isRevoking={revoke.isPending && revoke.variables === config.id}
+                onRevoke={() => {
+                  if (revoke.isPending) {
+                    return;
+                  }
+
+                  revoke.mutate(config.id);
+                }}
               />
             ))}
           </div>

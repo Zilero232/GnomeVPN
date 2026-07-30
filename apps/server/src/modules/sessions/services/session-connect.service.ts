@@ -73,16 +73,17 @@ export class SessionConnectService {
     ]);
 
     const online = await this.peers.onlinePeerIds(rows);
+    const devices = rows.map((row) => ({
+      name: row.name ?? '',
+      country: row.node.country,
+      isOnline: online.has(row.id),
+      isCurrent: row.name === deviceId
+    }));
 
     return {
-      used: rows.length,
+      used: devices.filter((device) => device.isOnline).length,
       limit: deviceLimit,
-      devices: rows.map((row) => ({
-        name: row.name ?? '',
-        country: row.node.country,
-        isOnline: online.has(row.id),
-        isCurrent: row.name === deviceId
-      }))
+      devices
     };
   }
 

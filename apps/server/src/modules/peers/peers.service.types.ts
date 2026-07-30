@@ -49,6 +49,7 @@ export type DiscardPeerInput = {
 };
 
 export type FindPeersInput = {
+  id?: string;
   userId: string;
   kind: PeerKind;
   name?: string;

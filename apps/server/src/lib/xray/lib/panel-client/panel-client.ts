@@ -108,7 +108,7 @@ export class PanelClient {
     await this.post(PANEL_ROUTES.setEnabled(enabled), { emails });
   }
 
-  async onlineEmails(): Promise<Set<string>> {
+  async onlineEmails(): Promise<Set<string> | null> {
     const payload = await this.post<PanelOnlines>(PANEL_ROUTES.onlines);
 
     return collectOnlineEmails(payload);

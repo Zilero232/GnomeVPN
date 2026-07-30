@@ -320,7 +320,7 @@ export class XrayClient {
     return serializeByKey(this.nodeKey, () => this.panel.deleteOrphanClients());
   }
 
-  async onlineEmails(): Promise<Set<string>> {
+  async onlineEmails(): Promise<Set<string> | null> {
     return this.panel.onlineEmails();
   }
 

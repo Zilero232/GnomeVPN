@@ -1,8 +1,8 @@
 import type { PanelOnlines } from '../panel-client';
 
-export const collectOnlineEmails = (payload: PanelOnlines): Set<string> => {
+export const collectOnlineEmails = (payload: PanelOnlines): Set<string> | null => {
   if (!payload) {
-    return new Set();
+    return null;
   }
 
   if (Array.isArray(payload)) {

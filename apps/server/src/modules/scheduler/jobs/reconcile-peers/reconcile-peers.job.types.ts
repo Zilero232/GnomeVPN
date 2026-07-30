@@ -31,6 +31,7 @@ export type SyncEnabledInput = RemoveRevokedInput;
 export type CollectOrphansInput = {
   xray: XrayClient;
   nodeId: string;
+  peers: ReconcilePeer[];
   nodeClients: Map<string, boolean>;
-  online: Set<string>;
+  online: Set<string> | null;
 };
