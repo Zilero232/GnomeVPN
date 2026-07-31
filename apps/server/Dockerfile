@@ -18,6 +18,7 @@ FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/server/package.json ./apps/server/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
+COPY packages/scripts/package.json ./packages/scripts/package.json
 # --frozen-lockfile validates the workspace topology against the lockfile, so
 # every member listed there must have its manifest present — even unused ones.
 COPY apps/client/package.json ./apps/client/package.json

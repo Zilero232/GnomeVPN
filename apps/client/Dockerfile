@@ -24,6 +24,7 @@ COPY package.json bun.lock tsconfig.json ./
 COPY apps/client/package.json ./apps/client/package.json
 COPY apps/server/package.json ./apps/server/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
+COPY packages/scripts/package.json ./packages/scripts/package.json
 # --frozen-lockfile validates the workspace topology, so the tauri manifest must
 # be present even though this image never builds the desktop app.
 COPY apps/tauri/package.json ./apps/tauri/package.json
