@@ -79,3 +79,15 @@ export type WriteInboundClientsInput = {
   settings: Record<string, unknown>;
   remark: string;
 };
+
+export type WireguardInboundInput = {
+  tag: string;
+  listen: string | null;
+  port: number;
+  protocol: string;
+  settings: {
+    secretKey: string;
+    clients: WireguardClient[];
+    mtu: number;
+  };
+};

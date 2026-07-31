@@ -1,10 +1,8 @@
 'use client';
 
-import type { MotionStyle } from 'motion/react';
-
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 
-import type { TiltCardProps } from './TiltCard.types';
+import type { GlareStyle, TiltCardProps } from './TiltCard.types';
 
 import { TILT_MAX_DEG, TILT_SPRING } from './TiltCard.constants';
 
@@ -19,8 +17,10 @@ export const TiltCard = ({ children, className }: TiltCardProps) => {
   const rotateX = useSpring(useTransform(pointerY, [0, 1], [TILT_MAX_DEG, -TILT_MAX_DEG]), TILT_SPRING);
   const rotateY = useSpring(useTransform(pointerX, [0, 1], [-TILT_MAX_DEG, TILT_MAX_DEG]), TILT_SPRING);
 
-  const glareX = useMotionTemplate`${useTransform(pointerX, (value) => value * 100)}%`;
-  const glareY = useMotionTemplate`${useTransform(pointerY, (value) => value * 100)}%`;
+  const glareStyle: GlareStyle = {
+    '--glare-x': useMotionTemplate`${useTransform(pointerX, (value) => value * 100)}%`,
+    '--glare-y': useMotionTemplate`${useTransform(pointerY, (value) => value * 100)}%`
+  };
 
   const handleMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -45,7 +45,7 @@ export const TiltCard = ({ children, className }: TiltCardProps) => {
       onPointerLeave={handleLeave}
       onPointerMove={handleMove}
     >
-      <motion.span aria-hidden className={s.glare} style={{ '--glare-x': glareX, '--glare-y': glareY } as MotionStyle} />
+      <motion.span aria-hidden className={s.glare} style={glareStyle} />
       {children}
     </motion.div>
   );

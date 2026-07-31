@@ -10,9 +10,9 @@ import { SSH_KEY_NAMES } from './node-sync.constants';
 
 const defaultKeyPath = (): string | undefined => SSH_KEY_NAMES.map((name) => join(homedir(), '.ssh', name)).find((path) => existsSync(path));
 
-const quote = (value: string | null): string => (value === null ? 'NULL' : escapeLiteral(value));
+const quote = (value: string | null) => (value === null ? 'NULL' : escapeLiteral(value));
 
-const row = (node: SyncableNode): string =>
+const row = (node: SyncableNode) =>
   [
     quote(node.country),
     quote(node.countryCode),
@@ -27,7 +27,7 @@ const row = (node: SyncableNode): string =>
     String(node.displayOrder)
   ].join(', ');
 
-const buildNodeSync = (nodes: SyncableNode[]): string => {
+const buildNodeSync = (nodes: SyncableNode[]) => {
   const values = nodes.map((node) => `  (${row(node)})`).join(',\n');
   const hosts = nodes.map((node) => quote(node.host)).join(', ');
 

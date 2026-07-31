@@ -12,7 +12,7 @@ import { CONNECT_ATTEMPTS, CONNECT_BACKOFF_MS, READY_TIMEOUT_MS } from './ssh-cl
 export class SshClient {
   private readonly ssh = new NodeSSH();
 
-  async connect(opts: SshConnectOptions): Promise<void> {
+  async connect(opts: SshConnectOptions) {
     await pRetry(
       () =>
         this.ssh.connect({
@@ -36,7 +36,7 @@ export class SshClient {
     return this.exec(`set -e; cd ${arg(cwd)}; ${script}`);
   }
 
-  async putFile(localContent: string, remotePath: string): Promise<void> {
+  async putFile(localContent: string, remotePath: string) {
     const dir = await mkdtemp(join(tmpdir(), 'gnomevpn-ssh-put-'));
     const localPath = join(dir, 'payload');
 
@@ -48,7 +48,7 @@ export class SshClient {
     }
   }
 
-  async uploadFile(localPath: string, remotePath: string): Promise<void> {
+  async uploadFile(localPath: string, remotePath: string) {
     await this.ssh.putFile(localPath, remotePath);
   }
 

@@ -47,7 +47,7 @@ const provisionAll = async (nodes: NodeConfig[]): Promise<ProvisionResult[]> => 
   return results;
 };
 
-const pruneStale = async (nodes: NodeConfig[]): Promise<void> => {
+const pruneStale = async (nodes: NodeConfig[]) => {
   const { removedKeys, removedNodes } = await pruneNodes({
     prisma: basePrisma,
     nodes,
@@ -63,7 +63,7 @@ const pruneStale = async (nodes: NodeConfig[]): Promise<void> => {
   }
 };
 
-const pushToProduction = async (): Promise<void> => {
+const pushToProduction = async () => {
   const nodes = await basePrisma.node.findMany({ orderBy: { createdAt: 'asc' } });
   const envNodes = await readFile(SERVER_ENV_PATH, 'utf8');
 
@@ -71,7 +71,7 @@ const pushToProduction = async (): Promise<void> => {
   log.info(`  ${await syncToProduction({ nodes, envNodes })}`);
 };
 
-const main = async (): Promise<void> => {
+const main = async () => {
   const nodes = await loadNodesConfig(NODES_CONFIG_PATH);
   const results = await provisionAll(nodes);
   const hasFailed = results.map(prop('status')).includes('failed');

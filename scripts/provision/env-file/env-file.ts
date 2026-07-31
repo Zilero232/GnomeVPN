@@ -25,7 +25,7 @@ const findValue = ({ raw, key }: FindValueInput): string | null => {
 
 export const readEnvValue = async ({ filePath, key }: EnvKeyInput): Promise<string | null> => findValue({ raw: await read(filePath), key });
 
-export const upsertEnvGroup = async ({ filePath, entries }: UpsertEnvGroupInput): Promise<void> => {
+export const upsertEnvGroup = async ({ filePath, entries }: UpsertEnvGroupInput) => {
   const raw = await read(filePath);
   const keys = new Set(entries.map((entry) => entry.key));
 

@@ -12,9 +12,9 @@ import { CERT_PATH, HOP_PORT_FROM, HOP_PORT_TO, KEY_PATH, LISTEN_PORT, MASQUERAD
 import { WG_KEY_PATH, WG_PUB_PATH } from '../wireguard-inbound';
 import { CONTAINER_NAME, DOCKER_INSTALL_URL, PANEL_BOOT_INTERVAL_MS, PANEL_BOOT_TIMEOUT_MS, REMOTE_DIR } from './remote-setup.constants';
 
-const inContainer = (script: string): string => dockerShell({ container: CONTAINER_NAME, script });
+const inContainer = (script: string) => dockerShell({ container: CONTAINER_NAME, script });
 
-export const ensureDocker = async (ssh: SshClient): Promise<void> => {
+export const ensureDocker = async (ssh: SshClient) => {
   const installed = await ssh.exec('docker --version');
 
   if (installed.exitCode !== 0) {
@@ -22,13 +22,13 @@ export const ensureDocker = async (ssh: SshClient): Promise<void> => {
   }
 };
 
-export const shipStack = async ({ ssh, composeContent }: ShipStackInput): Promise<void> => {
+export const shipStack = async ({ ssh, composeContent }: ShipStackInput) => {
   await ssh.exec(line(['mkdir', '-p', REMOTE_DIR]));
   await ssh.putFile(composeContent, `${REMOTE_DIR}/docker-compose.yml`);
   await ssh.exec(all([line(['cd', REMOTE_DIR]), 'docker compose up -d']));
 };
 
-export const ensureCert = async (ssh: SshClient): Promise<void> => {
+export const ensureCert = async (ssh: SshClient) => {
   const generate = line([
     'openssl req -x509 -nodes -newkey ec',
     '-pkeyopt ec_paramgen_curve:prime256v1',
@@ -41,7 +41,7 @@ export const ensureCert = async (ssh: SshClient): Promise<void> => {
   await ssh.exec(inContainer(all([line(['mkdir', '-p', dirOf(CERT_PATH)]), `(${orElse([`test -f ${CERT_PATH}`, generate])})`])));
 };
 
-export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
+export const openTunnelPort = async (ssh: SshClient) => {
   const hasUfw = await ssh.exec('command -v ufw');
 
   if (hasUfw.exitCode !== 0) {
@@ -55,7 +55,7 @@ export const openTunnelPort = async (ssh: SshClient): Promise<void> => {
   }
 };
 
-export const enablePortHopping = async (ssh: SshClient): Promise<void> => {
+export const enablePortHopping = async (ssh: SshClient) => {
   const rule = line(['PREROUTING -p udp', `--dport ${HOP_PORT_FROM}:${HOP_PORT_TO}`, `-j REDIRECT --to-ports ${LISTEN_PORT}`]);
 
   await ssh.exec(orElse([silent(`iptables -t nat -C ${rule}`), `iptables -t nat -I ${rule}`]));
@@ -91,7 +91,7 @@ export const ensureWireguardKeys = async (ssh: SshClient): Promise<EnsuredWiregu
   return { privateKey, publicKey, wasGenerated: true };
 };
 
-const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput): Promise<void> => {
+const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput) => {
   const probe = line(['curl -s -o /dev/null', "-w '%{http_code}'", `http://127.0.0.1:${PANEL_PORT}/${panelPath}/`]);
 
   const isUp = async (): Promise<boolean> => {

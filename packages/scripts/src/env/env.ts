@@ -9,5 +9,5 @@ export const requireEnv = <const K extends string>(keys: readonly K[]): Record<K
     log.fail([`missing: ${missing.join(', ')}`, '  values come from .env and .env.release (run `bun run setup:release`)'].join('\n'));
   }
 
-  return Object.fromEntries(keys.map((key) => [key, process.env[key]])) as Record<K, string>;
+  return Object.fromEntries(keys.map((key) => [key, process.env[key] ?? ''])) as Record<K, string>;
 };

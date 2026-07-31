@@ -25,7 +25,7 @@ import { buildWireguardInbound } from '../wireguard-inbound';
 import { ensureInbound, ensureWireguardInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
-const panelUrl = ({ host, panelPath }: PanelUrlInput): string => `http://${host}:${PANEL_PORT}/${panelPath}`;
+const panelUrl = ({ host, panelPath }: PanelUrlInput) => `http://${host}:${PANEL_PORT}/${panelPath}`;
 
 const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> => {
   try {
@@ -40,7 +40,7 @@ const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> =>
   }
 };
 
-const prepareHost = async ({ ssh, xrayComposeContent }: PrepareHostInput): Promise<void> => {
+const prepareHost = async ({ ssh, xrayComposeContent }: PrepareHostInput) => {
   await ensureDocker(ssh);
   await openTunnelPort(ssh);
   await enablePortHopping(ssh);
@@ -80,7 +80,7 @@ const installInbounds = async ({ ssh, panel, auth }: InstallInboundsInput): Prom
   return { wgPublicKey: keys.publicKey, wgWasGenerated: keys.wasGenerated };
 };
 
-const rememberNodeSecrets = async ({ serverEnvPath, countryCode, apiToken, panelPassword, panelPath }: RememberNodeSecretsInput): Promise<void> =>
+const rememberNodeSecrets = async ({ serverEnvPath, countryCode, apiToken, panelPassword, panelPath }: RememberNodeSecretsInput) =>
   upsertEnvGroup({
     filePath: serverEnvPath,
     entries: [

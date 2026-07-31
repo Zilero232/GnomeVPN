@@ -4,7 +4,7 @@ import type { NodeConfig, NodeConfigIssues } from './nodes-config.types';
 
 import { nodesConfigSchema } from './nodes-config.schema';
 
-const formatIssues = (issues: NodeConfigIssues): string =>
+const formatIssues = (issues: NodeConfigIssues) =>
   issues.map((issue) => `index ${String(issue.path[0])}: ${issue.path.slice(1).join('.')} — ${issue.message}`).join('\n');
 
 export const loadNodesConfig = async (filePath: string): Promise<NodeConfig[]> => {

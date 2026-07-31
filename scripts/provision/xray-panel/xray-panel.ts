@@ -1,10 +1,10 @@
-import type { EnsureInboundInput, PanelCredentials } from './xray-panel.types';
+import type { EnsureInboundInput, EnsureWireguardInboundInput, PanelCredentials } from './xray-panel.types';
 
 import { XrayClient } from '../../../apps/server/src/lib/xray';
 
 export const isPanelReachable = async (credentials: PanelCredentials): Promise<boolean> => new XrayClient(credentials).isReachable();
 
-export const ensureInbound = async ({ inbound, ...credentials }: EnsureInboundInput): Promise<void> => {
+export const ensureInbound = async ({ inbound, ...credentials }: EnsureInboundInput) => {
   const xray = new XrayClient(credentials);
 
   if (await xray.hasInbound()) {
@@ -16,7 +16,7 @@ export const ensureInbound = async ({ inbound, ...credentials }: EnsureInboundIn
   await xray.restartCore();
 };
 
-export const ensureWireguardInbound = async ({ inbound, ...credentials }: EnsureInboundInput): Promise<void> => {
+export const ensureWireguardInbound = async ({ inbound, ...credentials }: EnsureWireguardInboundInput) => {
   const xray = new XrayClient(credentials);
 
   await xray.ensureWireguardInbound(inbound);

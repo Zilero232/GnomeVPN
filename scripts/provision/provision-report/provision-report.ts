@@ -4,7 +4,7 @@ import type { ProvisionResult } from '../provision-host';
 
 import { COUNTRY_WIDTH, HOST_WIDTH } from './provision-report.constants';
 
-export const formatSummary = (results: ProvisionResult[]): string =>
+export const formatSummary = (results: ProvisionResult[]) =>
   results
     .map((result) => {
       const suffix = isNonNullish(result.error) ? ` (${result.error})` : '';

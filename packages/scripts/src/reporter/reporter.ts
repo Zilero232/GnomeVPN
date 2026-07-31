@@ -1,6 +1,6 @@
 import type { Reporter } from './reporter.types';
 
-const write = (stream: 'error' | 'log' | 'warn', scope: string, message: string): void => {
+const write = (stream: 'error' | 'log' | 'warn', scope: string, message: string) => {
   console[stream](`[${scope}] ${message}`);
 };
 

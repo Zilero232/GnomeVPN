@@ -10,6 +10,7 @@ import type {
   SetClientEnabledInput,
   SetClientsEnabledInput,
   WireguardClient,
+  WireguardInboundInput,
   WriteInboundClientsInput,
   XrayClientOptions,
   XrayInbound,
@@ -96,13 +97,29 @@ export class XrayClient {
     await this.panel.addInbound(this.inboundPayload(inbound));
   }
 
-  async ensureWireguardInbound(inbound: Record<string, unknown>): Promise<void> {
+  async ensureWireguardInbound(inbound: WireguardInboundInput) {
     return serializeByKey(this.nodeKey, async () => {
-      if (await this.hasWireguardInbound()) {
+      const current = await this.findInbound(WG_INBOUND_REMARK);
+
+      if (!current) {
+        await this.panel.addInbound(this.inboundPayload(inbound, WG_INBOUND_REMARK));
+
         return;
       }
 
-      await this.panel.addInbound(this.inboundPayload(inbound, WG_INBOUND_REMARK));
+      const { peers: _legacyPeers, ...existing } = parseWireguardSettings(current);
+      const { clients: _fresh, ...incoming } = inbound.settings;
+
+      if (existing.secretKey === incoming.secretKey) {
+        return;
+      }
+
+      await this.writeInboundClients({
+        inbound: current,
+        protocol: 'wireguard',
+        settings: { ...existing, ...incoming },
+        remark: WG_INBOUND_REMARK
+      });
     });
   }
 

@@ -42,6 +42,11 @@ export default eslint(
     rules: {
       // `type` everywhere, never `interface` — see the root CLAUDE.md.
       'ts/consistent-type-definitions': ['error', 'type'],
+      // No `as` casts. `as const` stays — it narrows literals instead of
+      // overriding the checker, which is the opposite of what a cast does.
+      // A warning, not an error: the casts that predate this rule are still
+      // being worked through, and none of them should block a build.
+      'ts/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
       // Bun and Node both provide these as globals; the rule wants a CJS
       // require() that has no place in an ESM workspace.
       'node/prefer-global/buffer': 'off',
