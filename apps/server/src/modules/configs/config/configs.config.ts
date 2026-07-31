@@ -1,4 +1,4 @@
-export const CONFIG_FILE_CONTENT_TYPE = 'text/plain; charset=utf-8';
+export const CONFIG_FILE_CONTENT_TYPE = 'application/octet-stream';
 
 export const WG_CONFIG_KEEPALIVE = 25;
 
