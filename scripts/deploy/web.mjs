@@ -1,5 +1,6 @@
 import { requireEnv } from '@gnomevpn/scripts/env';
-import { $, reporter, workspace } from '@gnomevpn/scripts/local';
+import { $, workspace } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 import { SshClient } from '@gnomevpn/scripts/ssh';
 
 const log = reporter('deploy:web');

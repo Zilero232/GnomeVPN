@@ -1,5 +1,6 @@
 import { requireEnv } from '@gnomevpn/scripts/env';
-import { $, isWindows, reporter, requireGh, workspace } from '@gnomevpn/scripts/local';
+import { $, isWindows, requireGh, workspace } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 

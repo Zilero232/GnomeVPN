@@ -1,5 +1,6 @@
 import { requireEnv } from '@gnomevpn/scripts/env';
-import { $, reporter, requireGh } from '@gnomevpn/scripts/local';
+import { $, requireGh } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 
 import { releaseTag, releaseVersion } from './version.mjs';
 

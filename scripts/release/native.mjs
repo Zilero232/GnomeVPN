@@ -1,4 +1,5 @@
-import { reporter, workspace } from '@gnomevpn/scripts/local';
+import { workspace } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 

@@ -1,4 +1,5 @@
-import { $, findGh, isWindows, reporter, workspace } from '@gnomevpn/scripts/local';
+import { $, findGh, isWindows, workspace } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 import { randomBytes } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
