@@ -33,7 +33,7 @@ const buildWireguardConfig = ({ node, wgPrivateKey, wgAssignedIp }: BuildConfigI
     dns: [...TUNNEL.dns],
     wireguard: {
       privateKey: wgPrivateKey,
-      address: `${wgAssignedIp}/32`,
+      address: `${wgAssignedIp}/${WG.addressPrefix}`,
       peerPublicKey: node.wgPublicKey,
       allowedIps: [...WG.allowedIps],
       reserved: [],
