@@ -44,14 +44,7 @@ export class PeersService {
     return created;
   }
 
-  async issue({
-    node,
-    nodeId,
-    userId,
-    kind,
-    protocol,
-    name
-  }: IssuePeerInput): Promise<CreatedPeer> {
+  async issue({ node, nodeId, userId, kind, protocol, name }: IssuePeerInput): Promise<CreatedPeer> {
     const email = peerClientName({ userId, kind, name, nodeId });
 
     if (protocol === TUNNEL_PROTOCOL.wireguard) {
@@ -82,16 +75,9 @@ export class PeersService {
     return rows.map((row) => row.wgAssignedIp).filter((ip): ip is string => Boolean(ip));
   }
 
-  private async createWireguardClient({
-    node,
-    nodeId,
-    email
-  }: CreateWireguardClientInput): Promise<CreatedPeer> {
+  private async createWireguardClient({ node, nodeId, email }: CreateWireguardClientInput): Promise<CreatedPeer> {
     if (!node.wgPublicKey) {
-      throw new AppServiceUnavailableException(
-        'NODE_UNAVAILABLE',
-        'node has no wireguard endpoint'
-      );
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no wireguard endpoint');
     }
 
     const takenIps = await this.takenWireguardIps(nodeId);
@@ -169,9 +155,7 @@ export class PeersService {
 
         const client = xrayClientForNode(node);
 
-        await Promise.all(
-          nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined))
-        );
+        await Promise.all(nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined)));
       })
     );
   }

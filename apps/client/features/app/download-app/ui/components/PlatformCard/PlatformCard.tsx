@@ -22,13 +22,7 @@ export const PlatformCard = ({ label, Icon, asset }: PlatformCardProps) => {
   }
 
   return (
-    <a
-      download
-      className={clsx(s.root, s.available)}
-      href={asset.downloadUrl}
-      rel='noopener noreferrer'
-      target='_blank'
-    >
+    <a download className={clsx(s.root, s.available)} href={asset.downloadUrl} rel='noopener noreferrer' target='_blank'>
       <Icon className={s.icon} size={22} />
       <span className={s.name}>{label}</span>
       <span className={s.hint}>{prettyBytes(asset.sizeBytes)}</span>

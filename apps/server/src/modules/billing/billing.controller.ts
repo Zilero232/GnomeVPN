@@ -3,14 +3,7 @@ import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
 import { CurrentUserId } from '../../common/decorators';
-import {
-  BindCardDto,
-  BindCardResultDto,
-  BuyExtraDevicesDto,
-  CheckoutResultDto,
-  CreateCheckoutDto,
-  WebhookEventDto
-} from './dto/billing.dto';
+import { BindCardDto, BindCardResultDto, BuyExtraDevicesDto, CheckoutResultDto, CreateCheckoutDto, WebhookEventDto } from './dto/billing.dto';
 import { WebhookIpGuard } from './guards';
 import { AutoRenewService, CardService, CheckoutService, WebhookService } from './services';
 

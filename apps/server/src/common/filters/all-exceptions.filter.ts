@@ -32,9 +32,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const res = exception.getResponse();
       const hasCode = typeof res === 'object' && isNonNullish(res) && 'code' in res;
       const status = exception.getStatus();
-      response
-        .status(status)
-        .json(hasCode ? res : { error: exception.message, code: codeForStatus(status) });
+
+      response.status(status).json(hasCode ? res : { error: exception.message, code: codeForStatus(status) });
 
       return;
     }
@@ -50,8 +49,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     this.logger.error(exception instanceof Error ? exception.stack : String(exception));
-    response
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
   }
 }

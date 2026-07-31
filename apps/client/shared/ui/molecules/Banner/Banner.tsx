@@ -3,12 +3,7 @@ import type { BannerProps } from './Banner.types';
 import s from './Banner.module.scss';
 
 export const Banner = ({ tone, icon, title, description, action }: BannerProps) => (
-  <div
-    aria-live={tone === 'accent' ? 'polite' : 'assertive'}
-    className={s.root}
-    data-tone={tone}
-    role={tone === 'accent' ? 'status' : 'alert'}
-  >
+  <div aria-live={tone === 'accent' ? 'polite' : 'assertive'} className={s.root} data-tone={tone} role={tone === 'accent' ? 'status' : 'alert'}>
     <div className={s.head}>
       <span aria-hidden className={s.badge}>
         {icon}

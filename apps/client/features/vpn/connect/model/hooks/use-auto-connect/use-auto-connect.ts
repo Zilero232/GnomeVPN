@@ -16,13 +16,7 @@ import {
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
 
-export const useAutoConnect = ({
-  nodes,
-  hasAccess,
-  isConnected,
-  isReady,
-  connect
-}: UseAutoConnectParams) => {
+export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect }: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
   const fromTileRef = useRef(false);
 
@@ -44,10 +38,7 @@ export const useAutoConnect = ({
     hasAttemptedRef.current = true;
 
     const run = async () => {
-      const [isEnabled, wasDisconnectedByUser] = await Promise.all([
-        getAutoConnect(),
-        wasManuallyDisconnected()
-      ]);
+      const [isEnabled, wasDisconnectedByUser] = await Promise.all([getAutoConnect(), wasManuallyDisconnected()]);
 
       const isFromTile = fromTileRef.current;
 
@@ -63,9 +54,7 @@ export const useAutoConnect = ({
       }
 
       const lastNodeId = await getLastNodeId();
-      const target =
-        nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ??
-        nodes.find((node) => node.status !== 'offline');
+      const target = nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ?? nodes.find((node) => node.status !== 'offline');
 
       if (!target) {
         logger.warn('autoconnect: no reachable node available');

@@ -1,9 +1,13 @@
 .list {
+  display: grid;
   width: 100%;
+  gap: var(--gap-sm);
+  grid-template-columns: 1fr;
 }
 
 .card {
   width: 100%;
+  height: 100%;
   text-align: left;
 }
 
@@ -19,6 +23,12 @@
 }
 
 .name {
-  font-size: 15px;
+  font-size: var(--step-md);
   font-weight: 600;
+}
+
+@media (width >= 900px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

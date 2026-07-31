@@ -18,10 +18,7 @@ export class CardService {
 
   async bindCard(userId: string, client: CheckoutClient): Promise<BindCardResult> {
     if (!this.shared.isRecurringEnabled()) {
-      throw new AppBadRequestException(
-        'RECURRING_UNAVAILABLE',
-        'Recurring payments are not enabled for this shop'
-      );
+      throw new AppBadRequestException('RECURRING_UNAVAILABLE', 'Recurring payments are not enabled for this shop');
     }
 
     const method = await this.yookassa.bindPaymentMethod({

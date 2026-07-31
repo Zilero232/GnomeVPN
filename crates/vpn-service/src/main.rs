@@ -23,8 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(not(target_os = "windows"))]
 fn main() {
-    eprintln!(
-        "gnomevpn-service is Windows-only; on other platforms the GUI runs the tunnel itself"
-    );
+    eprintln!("gnomevpn-service is Windows-only; on other platforms the GUI runs the tunnel itself");
     std::process::exit(1);
 }

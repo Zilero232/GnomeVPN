@@ -53,6 +53,7 @@ const write = async (key: string, value: unknown) => {
 
   try {
     const store = await getStore();
+
     await store.set(key, value);
   } catch (error) {
     logger.warn(`settings write failed for ${key}: ${String(error)}`);
@@ -61,8 +62,7 @@ const write = async (key: string, value: unknown) => {
 
 export const getAutoConnect = async (): Promise<boolean> => read(KEYS.autoConnect, true);
 
-export const setAutoConnect = async (value: boolean): Promise<void> =>
-  write(KEYS.autoConnect, value);
+export const setAutoConnect = async (value: boolean): Promise<void> => write(KEYS.autoConnect, value);
 
 export const getDeviceId = async (): Promise<string | null> => read(KEYS.deviceId, null);
 
@@ -70,30 +70,23 @@ export const setDeviceId = async (value: string): Promise<void> => write(KEYS.de
 
 export const getAutoReconnect = async (): Promise<boolean> => read(KEYS.autoReconnect, true);
 
-export const setAutoReconnect = async (value: boolean): Promise<void> =>
-  write(KEYS.autoReconnect, value);
+export const setAutoReconnect = async (value: boolean): Promise<void> => write(KEYS.autoReconnect, value);
 
-export const getSplitConfig = async (): Promise<SplitConfig> =>
-  normalizeSplitConfig(await read<unknown>(KEYS.split, emptySplitConfig()));
+export const getSplitConfig = async (): Promise<SplitConfig> => normalizeSplitConfig(await read<unknown>(KEYS.split, emptySplitConfig()));
 
 export const setSplitConfig = async (value: SplitConfig): Promise<void> => write(KEYS.split, value);
 
-export const getProtocol = async (): Promise<TunnelProtocol> =>
-  read(KEYS.protocol, DEFAULT_TUNNEL_PROTOCOL);
+export const getProtocol = async (): Promise<TunnelProtocol> => read(KEYS.protocol, DEFAULT_TUNNEL_PROTOCOL);
 
-export const setProtocol = async (value: TunnelProtocol): Promise<void> =>
-  write(KEYS.protocol, value);
+export const setProtocol = async (value: TunnelProtocol): Promise<void> => write(KEYS.protocol, value);
 
-export const wasManuallyDisconnected = async (): Promise<boolean> =>
-  read(KEYS.manuallyDisconnected, false);
+export const wasManuallyDisconnected = async (): Promise<boolean> => read(KEYS.manuallyDisconnected, false);
 
-export const setManuallyDisconnected = async (value: boolean): Promise<void> =>
-  write(KEYS.manuallyDisconnected, value);
+export const setManuallyDisconnected = async (value: boolean): Promise<void> => write(KEYS.manuallyDisconnected, value);
 
 export const getLastNodeId = async (): Promise<string | null> => read(KEYS.lastNodeId, null);
 
-export const setLastNodeId = async (nodeId: string): Promise<void> =>
-  write(KEYS.lastNodeId, nodeId);
+export const setLastNodeId = async (nodeId: string): Promise<void> => write(KEYS.lastNodeId, nodeId);
 
 export const isAutoStartEnabled = async (): Promise<boolean> => {
   if (!isTauri()) {

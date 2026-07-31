@@ -13,15 +13,9 @@ export const ProtocolPicker = ({ value, isDisabled, onChange }: ProtocolControlP
   const t = useTranslations('configs');
 
   return (
-    <Stack className={s.list} gap='sm'>
+    <div className={s.list}>
       {PROTOCOL_OPTIONS.map(({ protocol, tagKey, descKey }) => (
-        <SelectableCard
-          key={protocol}
-          className={s.card}
-          disabled={isDisabled}
-          isSelected={value === protocol}
-          onClick={() => onChange(protocol)}
-        >
+        <SelectableCard key={protocol} className={s.card} disabled={isDisabled} isSelected={value === protocol} onClick={() => onChange(protocol)}>
           <Stack className={s.body} gap='sm'>
             <span className={s.head}>
               <Text as='span' className={s.name}>
@@ -36,6 +30,6 @@ export const ProtocolPicker = ({ value, isDisabled, onChange }: ProtocolControlP
           </Stack>
         </SelectableCard>
       ))}
-    </Stack>
+    </div>
   );
 };

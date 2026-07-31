@@ -1,13 +1,7 @@
 import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
-import {
-  clearTokenFromVault,
-  isServer,
-  logger,
-  readTokenFromVault,
-  saveTokenToVault
-} from '@/shared/lib';
+import { clearTokenFromVault, isServer, logger, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
 
 const STORAGE_KEY = 'gnomevpn.auth-token';
 
@@ -84,6 +78,7 @@ export const authClient = createAuthClient({
     auth: { type: 'Bearer', token: getAuthToken },
     onSuccess: (ctx) => {
       const token = ctx.response.headers.get('set-auth-token');
+
       saveAuthToken(token);
     }
   }

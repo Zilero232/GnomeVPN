@@ -12,13 +12,7 @@ import type { TraySetupInput } from '../types';
 import { buildTrayMenu } from '../../lib/build-tray-menu';
 import { setupTray } from '../../lib/setup-tray';
 
-export const useTraySetup = ({
-  isConnected,
-  country,
-  onToggle,
-  onOpenAccount,
-  onBeforeQuit
-}: TraySetupInput) => {
+export const useTraySetup = ({ isConnected, country, onToggle, onOpenAccount, onBeforeQuit }: TraySetupInput) => {
   const t = useTranslations('tray');
 
   const itemsRef = useRef<TrayItems | null>(null);
@@ -69,6 +63,7 @@ export const useTraySetup = ({
 
     return () => {
       cancelled = true;
+
       trayRef.current?.dispose().catch((error) => {
         logger.warn(`tray dispose failed: ${String(error)}`);
       });
@@ -88,11 +83,7 @@ export const useTraySetup = ({
 
     settleAll({
       label: 'tray update',
-      tasks: [
-        items.toggle.setText(isConnected ? t('disconnect') : t('connect')),
-        tray.setTooltip(tooltip),
-        tray.setConnected(isConnected)
-      ]
+      tasks: [items.toggle.setText(isConnected ? t('disconnect') : t('connect')), tray.setTooltip(tooltip), tray.setConnected(isConnected)]
     });
   }, [isConnected, country, t]);
 };

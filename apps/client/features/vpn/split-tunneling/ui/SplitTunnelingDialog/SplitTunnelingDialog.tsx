@@ -5,16 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { logger, pickExecutable } from '@/shared/lib';
-import {
-  Badge,
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Tabs
-} from '@/shared/ui';
+import { Badge, Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Tabs } from '@/shared/ui';
 
 import type { SplitTunnelingDialogProps } from './SplitTunnelingDialog.types';
 
@@ -22,25 +13,9 @@ import { AddressSection, AppSection } from './components';
 
 import s from './SplitTunnelingDialog.module.scss';
 
-export const SplitTunnelingDialog = ({
-  isConnected,
-  isOpen,
-  splitTunneling,
-  onOpenChange
-}: SplitTunnelingDialogProps) => {
+export const SplitTunnelingDialog = ({ isConnected, isOpen, splitTunneling, onOpenChange }: SplitTunnelingDialogProps) => {
   const t = useTranslations('splitTunneling');
-  const {
-    draft,
-    isApplying,
-    isDirty,
-    setAppsMode,
-    setIpsMode,
-    toggleApp,
-    addIp,
-    removeIp,
-    clear,
-    apply
-  } = splitTunneling;
+  const { draft, isApplying, isDirty, setAppsMode, setIpsMode, toggleApp, addIp, removeIp, clear, apply } = splitTunneling;
 
   const appsTotal = draft.apps.length;
   const ipsTotal = draft.ips.length;
@@ -86,15 +61,7 @@ export const SplitTunnelingDialog = ({
                   {appsTotal > 0 && <Badge tone='accent'>{appsTotal}</Badge>}
                 </span>
               ),
-              content: (
-                <AppSection
-                  draft={draft}
-                  isOpen={isOpen}
-                  setAppsMode={setAppsMode}
-                  toggleApp={toggleApp}
-                  onPick={pick}
-                />
-              )
+              content: <AppSection draft={draft} isOpen={isOpen} setAppsMode={setAppsMode} toggleApp={toggleApp} onPick={pick} />
             },
             {
               value: 'addresses',
@@ -104,14 +71,7 @@ export const SplitTunnelingDialog = ({
                   {ipsTotal > 0 && <Badge tone='accent'>{ipsTotal}</Badge>}
                 </span>
               ),
-              content: (
-                <AddressSection
-                  addIp={addIp}
-                  draft={draft}
-                  removeIp={removeIp}
-                  setIpsMode={setIpsMode}
-                />
-              )
+              content: <AddressSection addIp={addIp} draft={draft} removeIp={removeIp} setIpsMode={setIpsMode} />
             }
           ]}
         />
@@ -125,21 +85,12 @@ export const SplitTunnelingDialog = ({
 
         <div className={s.footer}>
           <div className={s.actions}>
-            <button
-              className={s.reset}
-              disabled={total === 0 || isApplying}
-              type='button'
-              onClick={clear}
-            >
+            <button className={s.reset} disabled={total === 0 || isApplying} type='button' onClick={clear}>
               {t('clear')}
             </button>
 
             <Button disabled={!isDirty || isApplying} type='button' onClick={submit}>
-              {isApplying ? (
-                <Loader2 aria-hidden className={s.spinner} size={14} />
-              ) : (
-                <Check aria-hidden size={14} />
-              )}
+              {isApplying ? <Loader2 aria-hidden className={s.spinner} size={14} /> : <Check aria-hidden size={14} />}
               {isApplying ? t('applying') : t('apply')}
             </Button>
           </div>

@@ -56,10 +56,7 @@ fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
     let path = native_lib_dir.join(BINARY_NAME);
 
     if !path.exists() {
-        return Err(MobileVpnError::Hysteria(format!(
-            "{BINARY_NAME} not found at {}",
-            path.display()
-        )));
+        return Err(MobileVpnError::Hysteria(format!("{BINARY_NAME} not found at {}", path.display())));
     }
 
     Ok(path)
@@ -73,8 +70,7 @@ pub fn assigned_ip(config: &TunnelConfig) -> String {
 }
 
 fn free_loopback_port() -> Result<u16, MobileVpnError> {
-    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0))
-        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
+    let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0)).map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     listener
         .local_addr()
@@ -105,16 +101,11 @@ impl Hysteria {
     }
 }
 
-pub async fn spawn_hysteria(
-    native_lib_dir: &Path,
-    data_dir: &Path,
-    config: &TunnelConfig,
-) -> Result<(Hysteria, SocksCredentials), MobileVpnError> {
+pub async fn spawn_hysteria(native_lib_dir: &Path, data_dir: &Path, config: &TunnelConfig) -> Result<(Hysteria, SocksCredentials), MobileVpnError> {
     let binary = binary_path(native_lib_dir)?;
 
     let socks = SocketAddr::from((Ipv4Addr::LOCALHOST, free_loopback_port()?));
-    let credentials = SocksCredentials::generate()
-        .map_err(|error| MobileVpnError::Hysteria(format!("no randomness available: {error}")))?;
+    let credentials = SocksCredentials::generate().map_err(|error| MobileVpnError::Hysteria(format!("no randomness available: {error}")))?;
 
     let dir = data_dir.to_path_buf();
 
@@ -124,21 +115,13 @@ pub async fn spawn_hysteria(
 
     let config_path = dir.join(CONFIG_NAME);
 
-    tokio::fs::write(
-        &config_path,
-        build_hysteria_config(config, socks, &credentials),
-    )
-    .await
-    .map_err(|error| {
-        MobileVpnError::Hysteria(format!("cannot write the hysteria config: {error}"))
-    })?;
+    tokio::fs::write(&config_path, build_hysteria_config(config, socks, &credentials))
+        .await
+        .map_err(|error| MobileVpnError::Hysteria(format!("cannot write the hysteria config: {error}")))?;
 
     let log_path = dir.join(LOG_NAME);
 
-    if tokio::fs::metadata(&log_path)
-        .await
-        .is_ok_and(|meta| meta.len() > LOG_MAX_BYTES)
-    {
+    if tokio::fs::metadata(&log_path).await.is_ok_and(|meta| meta.len() > LOG_MAX_BYTES) {
         let _ = tokio::fs::remove_file(&log_path).await;
     }
 
@@ -146,13 +129,9 @@ pub async fn spawn_hysteria(
         .create(true)
         .append(true)
         .open(&log_path)
-        .map_err(|error| {
-            MobileVpnError::Hysteria(format!("cannot open the hysteria log: {error}"))
-        })?;
+        .map_err(|error| MobileVpnError::Hysteria(format!("cannot open the hysteria log: {error}")))?;
 
-    let errors = log
-        .try_clone()
-        .map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
+    let errors = log.try_clone().map_err(|error| MobileVpnError::Hysteria(error.to_string()))?;
 
     let child = Command::new(&binary)
         .arg("client")
@@ -170,10 +149,7 @@ pub async fn spawn_hysteria(
     Ok((hysteria, credentials))
 }
 
-async fn wait_until_ready(
-    socks: SocketAddr,
-    hysteria: &mut Hysteria,
-) -> Result<(), MobileVpnError> {
+async fn wait_until_ready(socks: SocketAddr, hysteria: &mut Hysteria) -> Result<(), MobileVpnError> {
     let mut ticker = interval(READY_INTERVAL);
 
     let probe = async {
@@ -213,11 +189,7 @@ pub fn proxy_args(socks: SocketAddr, credentials: &SocksCredentials, dns: &[Stri
     args
 }
 
-pub async fn run_tun2proxy(
-    mut args: Args,
-    fd: i32,
-    cancellation: CancellationToken,
-) -> Result<(), MobileVpnError> {
+pub async fn run_tun2proxy(mut args: Args, fd: i32, cancellation: CancellationToken) -> Result<(), MobileVpnError> {
     args.tun_fd(Some(fd)).close_fd_on_drop(false);
 
     tun2proxy::general_run_async(args, MTU, false, cancellation)
@@ -257,18 +229,11 @@ impl StallDetector {
             return None;
         }
 
-        Some(format!(
-            "sent {} bytes over {}s with no reply",
-            self.asked,
-            self.deaf_for.as_secs()
-        ))
+        Some(format!("sent {} bytes over {}s with no reply", self.asked, self.deaf_for.as_secs()))
     }
 }
 
-async fn watch_hysteria(
-    hysteria: &mut Hysteria,
-    cancellation: CancellationToken,
-) -> MobileVpnError {
+async fn watch_hysteria(hysteria: &mut Hysteria, cancellation: CancellationToken) -> MobileVpnError {
     let mut ticker = interval(LIVENESS_INTERVAL);
     let mut detector = StallDetector::default();
 
@@ -304,12 +269,8 @@ where
     F: FnMut(Phase) + Send,
 {
     match config.protocol {
-        TunnelProtocol::Hysteria2 => {
-            run_hysteria_attempt(native_lib_dir, data_dir, config, fd, cancellation, on_phase).await
-        }
-        TunnelProtocol::Wireguard => {
-            wireguard::run_wireguard(config, fd, cancellation, on_phase).await
-        }
+        TunnelProtocol::Hysteria2 => run_hysteria_attempt(native_lib_dir, data_dir, config, fd, cancellation, on_phase).await,
+        TunnelProtocol::Wireguard => wireguard::run_wireguard(config, fd, cancellation, on_phase).await,
     }
 }
 
@@ -383,8 +344,7 @@ where
         arm_attempt(&attempt);
         on_phase(Phase::Connecting);
 
-        let outcome =
-            run_attempt(native_lib_dir, data_dir, config, fd, attempt, &mut on_phase).await;
+        let outcome = run_attempt(native_lib_dir, data_dir, config, fd, attempt, &mut on_phase).await;
 
         disarm_attempt();
 

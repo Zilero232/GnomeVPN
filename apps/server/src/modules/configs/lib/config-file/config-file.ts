@@ -10,15 +10,9 @@ const titleCase = (value: string) =>
     .join('');
 
 export const configFileName = ({ country, deviceName }: ConfigFileNameInput): string =>
-  ['GnomeVPN', titleCase(country), deviceName ? titleCase(deviceName) : '']
-    .filter(isTruthy)
-    .join('-');
+  ['GnomeVPN', titleCase(country), deviceName ? titleCase(deviceName) : ''].filter(isTruthy).join('-');
 
-export const renderHysteria2Config = ({
-  config,
-  deviceName,
-  country
-}: RenderConfigInput): string => {
+export const renderHysteria2Config = ({ config, deviceName, country }: RenderConfigInput): string => {
   const url = new URL(`hy2://${config.server}`);
 
   url.username = config.auth;

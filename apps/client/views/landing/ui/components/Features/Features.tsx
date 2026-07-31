@@ -15,24 +15,12 @@ export const Features = () => {
   const t = useTranslations('landing.features');
 
   return (
-    <motion.div
-      className={s.grid}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {FEATURE_CARDS.map((card) => {
         const Icon = FEATURE_ICONS[card];
 
         return (
-          <motion.article
-            key={card}
-            className={s.card}
-            initial='rest'
-            variants={ITEM_MOTION}
-            whileHover='hover'
-          >
+          <motion.article key={card} className={s.card} initial='rest' variants={ITEM_MOTION} whileHover='hover'>
             <motion.span className={s.icon} variants={ICON_HOVER}>
               <Icon size={17} strokeWidth={1.8} />
             </motion.span>

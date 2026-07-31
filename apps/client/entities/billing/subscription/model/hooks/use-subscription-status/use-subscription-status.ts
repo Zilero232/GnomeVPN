@@ -11,6 +11,10 @@ const INACTIVE_POLL_MS = 3_000;
 
 const ACTIVE_POLL_MS = 60_000;
 
+const ERROR_POLL_MS = 5_000;
+
+const ERROR_RETRIES = 3;
+
 export const useSubscriptionStatus = () => {
   const { isAuthenticated } = useCurrentUser();
 
@@ -19,9 +23,10 @@ export const useSubscriptionStatus = () => {
     queryFn: getSubscriptionStatus,
     enabled: isAuthenticated,
     refetchOnWindowFocus: true,
+    retry: ERROR_RETRIES,
     refetchInterval: (query) => {
       if (query.state.error) {
-        return false;
+        return ERROR_POLL_MS;
       }
 
       return query.state.data?.status === 'active' ? ACTIVE_POLL_MS : INACTIVE_POLL_MS;

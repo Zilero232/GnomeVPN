@@ -50,18 +50,8 @@ export const ChangePasswordForm = () => {
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField
-        className={s.field}
-        error={fieldError(errors.currentPassword)}
-        htmlFor='profile-current-password'
-        label={t('currentPasswordLabel')}
-      >
-        <PasswordInput
-          autoComplete='current-password'
-          id='profile-current-password'
-          {...passwordLabels}
-          {...register('currentPassword')}
-        />
+      <FormField className={s.field} error={fieldError(errors.currentPassword)} htmlFor='profile-current-password' label={t('currentPasswordLabel')}>
+        <PasswordInput autoComplete='current-password' id='profile-current-password' {...passwordLabels} {...register('currentPassword')} />
       </FormField>
 
       <FormField
@@ -71,26 +61,11 @@ export const ChangePasswordForm = () => {
         htmlFor='profile-new-password'
         label={t('newPasswordLabel')}
       >
-        <PasswordInput
-          autoComplete='new-password'
-          id='profile-new-password'
-          {...passwordLabels}
-          {...register('newPassword')}
-        />
+        <PasswordInput autoComplete='new-password' id='profile-new-password' {...passwordLabels} {...register('newPassword')} />
       </FormField>
 
-      <FormField
-        className={s.field}
-        error={fieldError(errors.confirmPassword)}
-        htmlFor='profile-confirm-password'
-        label={t('confirmPasswordLabel')}
-      >
-        <PasswordInput
-          autoComplete='new-password'
-          id='profile-confirm-password'
-          {...passwordLabels}
-          {...register('confirmPassword')}
-        />
+      <FormField className={s.field} error={fieldError(errors.confirmPassword)} htmlFor='profile-confirm-password' label={t('confirmPasswordLabel')}>
+        <PasswordInput autoComplete='new-password' id='profile-confirm-password' {...passwordLabels} {...register('confirmPassword')} />
       </FormField>
 
       <SubmitButton disabled={!isDirty} isPending={isPending} size='md'>

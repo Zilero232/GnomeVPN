@@ -1,13 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-import {
-  Network,
-  Power,
-  RefreshCw,
-  ShieldOff,
-  Smartphone,
-  SplitSquareHorizontal
-} from 'lucide-react';
+import { Network, Power, RefreshCw, ShieldOff, Smartphone, SplitSquareHorizontal } from 'lucide-react';
 
 import type { FeatureCard } from '../../../config';
 

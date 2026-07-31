@@ -10,6 +10,6 @@ target/
 .env.nodes
 .env.release
 apps/tauri/*.keystore
-apps/server/nodes.json
+nodes.json
 apps/tauri/gen/
 .codebase-memory/

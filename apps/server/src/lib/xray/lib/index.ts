@@ -1,10 +1,4 @@
-export {
-  currentClients,
-  parseSettings,
-  parseSniffing,
-  parseStreamSettings,
-  parseWireguardSettings
-} from './current-clients';
+export { currentClients, parseSettings, parseSniffing, parseStreamSettings, parseWireguardSettings } from './current-clients';
 export type { XrayInboundSettings, XrayWireguardSettings } from './current-clients';
 export { generateAuth } from './generate-auth';
 export { PanelClient } from './panel-client';

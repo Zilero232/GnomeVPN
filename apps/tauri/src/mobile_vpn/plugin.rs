@@ -105,8 +105,7 @@ impl<R: Runtime> VpnPlugin<R> {
     }
 
     pub fn start(&self, config: &TunnelConfig) -> Result<(), MobileVpnError> {
-        let config_json = serde_json::to_string(config)
-            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+        let config_json = serde_json::to_string(config).map_err(|error| MobileVpnError::Service(error.to_string()))?;
 
         self.0
             .run_mobile_plugin::<()>(

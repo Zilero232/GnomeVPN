@@ -129,11 +129,7 @@ export const useVpnConnection = () => {
     });
 
     try {
-      const [deviceId, autoReconnect, split] = await Promise.all([
-        getDeviceId(),
-        getAutoReconnect(),
-        getSplitConfig()
-      ]);
+      const [deviceId, autoReconnect, split] = await Promise.all([getDeviceId(), getAutoReconnect(), getSplitConfig()]);
 
       const config = await connectTunnel({ nodeId, deviceId, protocol });
 
@@ -183,6 +179,7 @@ export const useVpnConnection = () => {
 
     await disconnect({ isAutomatic: true });
     await waitForDisconnected();
+
     await connect({
       nodeId,
       protocol: protocolRef.current,

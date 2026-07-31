@@ -44,6 +44,7 @@ export const useServerEvents = ({ isEnabled }: { isEnabled: boolean }) => {
   });
 
   const sourceRef = useRef(source);
+
   sourceRef.current = source;
 
   useEffect(() => {

@@ -1,9 +1,4 @@
-export {
-  connectInputSchema,
-  disconnectInputSchema,
-  issueConfigSchema,
-  revokeConfigSchema
-} from './inputs';
+export { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
 export {
   DEFAULT_TUNNEL_PROTOCOL,
   deviceUsageSchema,

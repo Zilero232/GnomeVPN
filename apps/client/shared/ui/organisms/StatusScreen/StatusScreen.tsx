@@ -4,13 +4,7 @@ import type { StatusScreenProps } from './StatusScreen.types';
 
 import s from './StatusScreen.module.scss';
 
-export const StatusScreen = ({
-  code,
-  title,
-  body,
-  children,
-  tone = 'accent'
-}: StatusScreenProps) => (
+export const StatusScreen = ({ code, title, body, children, tone = 'accent' }: StatusScreenProps) => (
   <main className={s.root}>
     <div className={clsx(s.code, tone === 'danger' ? s.codeDanger : s.codeAccent)}>
       {code}

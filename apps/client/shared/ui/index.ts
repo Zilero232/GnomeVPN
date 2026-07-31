@@ -1,18 +1,4 @@
-export {
-  Badge,
-  BrandMark,
-  Button,
-  CountryFlag,
-  IconButton,
-  Input,
-  Label,
-  PasswordInput,
-  Select,
-  Spinner,
-  Stack,
-  Switch,
-  Text
-} from './atoms';
+export { Badge, BrandMark, Button, CountryFlag, IconButton, Input, Label, PasswordInput, Select, Spinner, Stack, Switch, Text } from './atoms';
 export type {
   BadgeProps,
   BrandMarkProps,

@@ -131,21 +131,19 @@ pub fn run() {
     });
 
     #[cfg(target_os = "windows")]
-    let builder = builder
-        .manage(VpnState::default())
-        .invoke_handler(tauri::generate_handler![
-            vpn_connect,
-            vpn_disconnect,
-            vpn_status,
-            vpn_service_available,
-            service_repair,
-            apps::list_installed_apps,
-            apps::list_running_processes,
-            latency::commands::vpn_probe_latency,
-            vault_save_token,
-            vault_read_token,
-            vault_clear_token
-        ]);
+    let builder = builder.manage(VpnState::default()).invoke_handler(tauri::generate_handler![
+        vpn_connect,
+        vpn_disconnect,
+        vpn_status,
+        vpn_service_available,
+        service_repair,
+        apps::list_installed_apps,
+        apps::list_running_processes,
+        latency::commands::vpn_probe_latency,
+        vault_save_token,
+        vault_read_token,
+        vault_clear_token
+    ]);
 
     #[cfg(mobile)]
     let builder = builder
@@ -175,7 +173,5 @@ pub fn run() {
         vault_clear_token
     ]);
 
-    builder
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    builder.run(tauri::generate_context!()).expect("error while running tauri application");
 }

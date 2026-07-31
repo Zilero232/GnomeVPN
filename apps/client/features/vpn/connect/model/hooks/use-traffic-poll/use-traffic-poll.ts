@@ -11,6 +11,7 @@ const TRAFFIC_POLL_MS = 1_000;
 export const useTrafficPoll = ({ status, onTraffic, onLost }: UseTrafficPollInput) => {
   const onTrafficRef = useRef(onTraffic);
   const onLostRef = useRef(onLost);
+
   onTrafficRef.current = onTraffic;
   onLostRef.current = onLost;
 

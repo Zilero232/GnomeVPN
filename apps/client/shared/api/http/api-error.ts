@@ -21,5 +21,4 @@ export const toApiError = (data: unknown) => {
   return new ApiError(parsed.data.code, parsed.data.error);
 };
 
-export const apiErrorCode = (error: unknown): ApiErrorCode =>
-  error instanceof ApiError ? error.code : 'INTERNAL_ERROR';
+export const apiErrorCode = (error: unknown): ApiErrorCode => (error instanceof ApiError ? error.code : 'INTERNAL_ERROR');

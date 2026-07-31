@@ -12,12 +12,7 @@ const DEFAULT_ALLOWED_IPS: &str = "0.0.0.0/0";
 const TUNNEL_DNS_TAG: &str = "dns-tunnel";
 const LOCAL_DNS_TAG: &str = "dns-local";
 const FALLBACK_DNS: &str = "1.1.1.1";
-const LOCAL_NETWORKS: [&str; 4] = [
-    "127.0.0.0/8",
-    "10.0.0.0/8",
-    "172.16.0.0/12",
-    "192.168.0.0/16",
-];
+const LOCAL_NETWORKS: [&str; 4] = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"];
 
 #[derive(Serialize)]
 struct Log {
@@ -172,10 +167,7 @@ impl Rule {
 }
 
 fn process_name_of(path: &str) -> Option<String> {
-    path.rsplit(['\\', '/'])
-        .next()
-        .map(str::to_string)
-        .filter(|name| !name.is_empty())
+    path.rsplit(['\\', '/']).next().map(str::to_string).filter(|name| !name.is_empty())
 }
 
 #[derive(Serialize)]
@@ -321,11 +313,7 @@ fn dns(config: &TunnelConfig, split: &SplitConfig) -> Dns {
     if !split.apps.is_empty() && split.apps_mode == SplitMode::Disallowed {
         rules.push(DnsRule::process_paths(split.apps.clone(), LOCAL_DNS_TAG));
 
-        let names: Vec<String> = split
-            .apps
-            .iter()
-            .filter_map(|p| process_name_of(p))
-            .collect();
+        let names: Vec<String> = split.apps.iter().filter_map(|p| process_name_of(p)).collect();
 
         if !names.is_empty() {
             rules.push(DnsRule::process_names(names, LOCAL_DNS_TAG));
@@ -359,11 +347,7 @@ fn route(split: &SplitConfig) -> Route {
 
         rules.push(Rule::app_paths(split.apps.clone(), outbound));
 
-        let names: Vec<String> = split
-            .apps
-            .iter()
-            .filter_map(|p| process_name_of(p))
-            .collect();
+        let names: Vec<String> = split.apps.iter().filter_map(|p| process_name_of(p)).collect();
 
         if !names.is_empty() {
             rules.push(Rule::app_names(names, outbound));
@@ -374,8 +358,8 @@ fn route(split: &SplitConfig) -> Route {
         rules.push(Rule::ips(split.ips.clone(), tag_for(split.ips_mode)));
     }
 
-    let has_allowed = (!split.apps.is_empty() && split.apps_mode == SplitMode::Allowed)
-        || (!split.ips.is_empty() && split.ips_mode == SplitMode::Allowed);
+    let has_allowed =
+        (!split.apps.is_empty() && split.apps_mode == SplitMode::Allowed) || (!split.ips.is_empty() && split.ips_mode == SplitMode::Allowed);
 
     let final_outbound = if has_allowed { DIRECT_TAG } else { PROXY_TAG };
 
@@ -429,11 +413,7 @@ fn wireguard_endpoint(config: &TunnelConfig) -> Option<Endpoint> {
 }
 
 pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
-    let SingboxConfigInput {
-        config,
-        split,
-        cache_path,
-    } = input;
+    let SingboxConfigInput { config, split, cache_path } = input;
 
     let direct = Outbound::Simple {
         kind: "direct".to_string(),
@@ -442,10 +422,7 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
 
     let (outbounds, endpoints) = match config.protocol {
         TunnelProtocol::Hysteria2 => (vec![hysteria2_proxy(config), direct], Vec::new()),
-        TunnelProtocol::Wireguard => (
-            vec![direct],
-            wireguard_endpoint(config).into_iter().collect(),
-        ),
+        TunnelProtocol::Wireguard => (vec![direct], wireguard_endpoint(config).into_iter().collect()),
     };
 
     let singbox = SingboxConfig {

@@ -143,13 +143,15 @@ Use a raw cron string when the interval has no `CronExpression` constant. Invent
 
 ## Provisioning nodes
 
-`bun provision` reads `apps/server/nodes.json` (gitignored — it holds root SSH passwords) and sets each host up over SSH: install Docker, ship the 3x-ui compose stack, open 443/udp, configure the panel, generate the TLS cert, register the node.
+`bun provision` reads `nodes.json` from the repo root (gitignored — it holds root SSH passwords; `nodes.example.json` next to it is the committed template) and sets each host up over SSH: install Docker, ship the 3x-ui compose stack, open 443/udp, configure the panel, generate the TLS cert, register the node.
 
-The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built in `scripts/lib/hysteria-inbound`, served by the 3x-ui panel — no separate hysteria process. It listens on **443/UDP** (QUIC), so `openTunnelPort` opens udp, not tcp. `ensureCert` generates a self-signed EC cert inside the container (`/etc/gnomevpn/{cert,key}.pem`); clients accept it with `insecure: true`.
+The script is staged: `prepareHost` (docker, firewall, port hopping, compose) → `startPanel` (configure, wait for the api) → `installInbounds` (cert, Hysteria2, WireGuard) → `registerNode` (env secrets, database row). Remote commands are composed through `@gnomevpn/scripts/shell` rather than written as strings — `arg()` quotes anything untrusted, and `quiet()`/`silent()` are distinct on purpose: `quiet` hides stderr but keeps stdout, which is what reading a remote key needs.
+
+The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built in `scripts/provision/hysteria-inbound`, served by the 3x-ui panel — no separate hysteria process. It listens on **443/UDP** (QUIC), so `openTunnelPort` opens udp, not tcp. `ensureCert` generates a self-signed EC cert inside the container (`/etc/gnomevpn/{cert,key}.pem`); clients accept it with `insecure: true`.
 
 Each client has its own `auth` password, generated in `XrayClient.createClient` and stored as the peer's tunnel credential (in the `xrayUserId` column, reused as-is). `ensureInbound` **updates** an existing inbound rather than replacing it, and `updateInbound` preserves the current client list so a re-provision does not strand live sessions.
 
-The masquerade target is `MASQUERADE_HOST` in `scripts/lib/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
+The masquerade target is `MASQUERADE_HOST` in `scripts/provision/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
 
 **Verify a node end-to-end, never by "the panel returned 200".** A Hysteria2 client written without its full field set is stored by the panel but dropped from the running core (`clients: null`), and every connection then fails auth with a 404. The only trustworthy check is to run a real hysteria client against the node and confirm a request returns the node's own IP — ideally from the target network, since the whole reason for Hysteria2 is a TSPU that treats UDP/QUIC differently from TCP.
 

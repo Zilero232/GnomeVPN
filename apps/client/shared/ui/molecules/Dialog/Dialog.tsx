@@ -11,11 +11,7 @@ import s from './Dialog.module.scss';
 export const Dialog = BaseDialog.Root;
 export const DialogTrigger = BaseDialog.Trigger;
 
-export const DialogContent = ({
-  className,
-  children,
-  ...props
-}: ComponentProps<typeof BaseDialog.Popup>) => (
+export const DialogContent = ({ className, children, ...props }: ComponentProps<typeof BaseDialog.Popup>) => (
   <BaseDialog.Portal>
     <BaseDialog.Backdrop className={s.overlay} />
 
@@ -29,17 +25,12 @@ export const DialogContent = ({
   </BaseDialog.Portal>
 );
 
-export const DialogHeader = ({ className, ...props }: ComponentProps<'div'>) => (
-  <div className={clsx(s.header, className)} {...props} />
-);
+export const DialogHeader = ({ className, ...props }: ComponentProps<'div'>) => <div className={clsx(s.header, className)} {...props} />;
 
 export const DialogTitle = ({ className, ...props }: ComponentProps<typeof BaseDialog.Title>) => (
   <BaseDialog.Title className={clsx(s.title, className)} {...props} />
 );
 
-export const DialogDescription = ({
-  className,
-  ...props
-}: ComponentProps<typeof BaseDialog.Description>) => (
+export const DialogDescription = ({ className, ...props }: ComponentProps<typeof BaseDialog.Description>) => (
   <BaseDialog.Description className={clsx(s.description, className)} {...props} />
 );

@@ -87,10 +87,7 @@ export class WebhookService {
           }
 
           if (row.kind === 'extraDevices') {
-            await this.shared.grantExtraDevices(
-              { userId: row.userId, quantity: row.extraDevices },
-              tx
-            );
+            await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
 
             return false;
           }
@@ -99,9 +96,7 @@ export class WebhookService {
             {
               userId: row.userId,
               planId: row.plan,
-              method: payment.paymentMethodId
-                ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle }
-                : null
+              method: payment.paymentMethodId ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle } : null
             },
             tx
           );

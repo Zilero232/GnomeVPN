@@ -38,13 +38,7 @@ export const AppProviders = ({ children }: { children: ReactNode }) => (
       <MobileInsets />
       <DismissToastOnClick />
 
-      <Toaster
-        className='gnomevpn-toaster'
-        gap={8}
-        position='top-center'
-        theme='dark'
-        toastOptions={TOAST_OPTIONS}
-      />
+      <Toaster className='gnomevpn-toaster' gap={8} position='top-center' theme='dark' toastOptions={TOAST_OPTIONS} />
     </I18nProvider>
   </QueryClientProvider>
 );

@@ -25,14 +25,7 @@ export const AppMenu = () => {
 
   const { isDesktopApp } = usePlatform();
   const { closeToTray, setCloseToTray } = useCloseToTray();
-  const {
-    autoStart,
-    autoConnect,
-    autoReconnect,
-    toggleAutoStart,
-    toggleAutoConnect,
-    toggleAutoReconnect
-  } = useStartupSettings();
+  const { autoStart, autoConnect, autoReconnect, toggleAutoStart, toggleAutoConnect, toggleAutoReconnect } = useStartupSettings();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -103,12 +96,7 @@ export const AppMenu = () => {
 
             <div className={s.divider} />
 
-            <MenuItem
-              icon={LogOut}
-              label={t('signOut')}
-              tone='danger'
-              onClick={() => signOut.mutate()}
-            />
+            <MenuItem icon={LogOut} label={t('signOut')} tone='danger' onClick={() => signOut.mutate()} />
           </motion.div>
         )}
       </AnimatePresence>

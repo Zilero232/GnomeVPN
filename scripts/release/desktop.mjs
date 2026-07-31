@@ -1,9 +1,9 @@
+import { requireEnv } from '@gnomevpn/scripts/env';
+import { $, reporter, requireGh, workspace } from '@gnomevpn/scripts/local';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
-import { requireEnv } from '../lib/env.mjs';
-import { $, reporter, requireGh, workspace } from '../lib/shell.mjs';
 import { ensureNativeBinaries } from './native.mjs';
 import { releaseTag, releaseVersion } from './version.mjs';
 
@@ -20,9 +20,7 @@ const signingKey = join(homedir(), '.tauri', 'gnomevpn.key');
 const bundleDir = join(workspace, 'target', 'release', 'bundle');
 
 if (!existsSync(signingKey)) {
-  log.fail(
-    `signing key not found at ${signingKey} — run \`bun run --filter @gnomevpn/tauri signer:generate\``
-  );
+  log.fail(`signing key not found at ${signingKey} — run \`bun run --filter @gnomevpn/tauri signer:generate\``);
 }
 
 const collectArtifacts = () => {

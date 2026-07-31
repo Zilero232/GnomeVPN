@@ -14,13 +14,7 @@ export const Locations = () => {
   const t = useTranslations('landing.locations');
 
   return (
-    <motion.div
-      className={s.grid}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {LOCATIONS.map((location) => (
         <motion.article key={location.code} className={s.card} variants={ITEM_MOTION}>
           <motion.div className={s.inner} initial='rest' variants={CARD_HOVER} whileHover='hover'>

@@ -25,11 +25,7 @@ pub async fn vpn_connect(
     std::thread::spawn(move || events.pump_events(emit));
 
     let mut client = ServiceClient::connect()?;
-    client.connect_tunnel(
-        config,
-        auto_reconnect.unwrap_or(true),
-        split.unwrap_or_default(),
-    )?;
+    client.connect_tunnel(config, auto_reconnect.unwrap_or(true), split.unwrap_or_default())?;
 
     state.replace_connection(client);
 

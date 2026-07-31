@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.3.1",
@@ -29,7 +29,7 @@
     "dev:client": "bun --filter @gnomevpn/client dev",
     "dev:infra": "docker compose -f docker-compose.dev.yml up -d --wait",
     "dev:infra:down": "docker compose -f docker-compose.dev.yml down",
-    "setup": "bun scripts/setup.mjs",
+    "setup": "bun scripts/setup/index.mjs",
     "tauri:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel dev",
     "tauri:build": "bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri build",
     "android:init": "bun --filter @gnomevpn/tauri android:init",
@@ -41,28 +41,33 @@
     "format:check": "prettier --check .",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
-    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck",
+    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/scripts typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck && tsc -p scripts --noEmit",
     "lint:rust": "cargo clippy --workspace --all-targets -- -D warnings",
     "format:rust": "cargo fmt --all",
     "format:rust:check": "cargo fmt --all --check",
     "verify": "bun run typecheck && bun run lint && bun run format:check && bun run lint:css && bun run format:rust:check && bun run lint:rust",
     "fix": "bun run lint:fix && bun run format && bun run lint:css:fix && bun run format:rust",
-    "provision:nodes": "bun --env-file .env --env-file apps/server/.env.nodes apps/server/scripts/provision-nodes.ts",
-    "setup:release": "bun --env-file .env --env-file .env.release scripts/setup-release-env.mjs",
+    "provision:nodes": "bun --env-file .env --env-file .env.nodes scripts/provision/index.ts",
+    "setup:release": "bun --env-file .env --env-file .env.release scripts/setup/release-env.mjs",
     "deploy:web": "bun --env-file .env --env-file .env.release scripts/deploy/web.mjs",
     "release": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/index.mjs",
     "release:desktop": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/desktop.mjs",
     "release:android": "bun --env-file .env --env-file apps/tauri/.env --env-file .env.release scripts/release/android.mjs"
   },
   "dependencies": {
-    "node-ssh": "^13.2.1",
-    "p-retry": "^8.0.0"
+    "@gnomevpn/scripts": "workspace:*",
+    "p-wait-for": "^6.0.0",
+    "pg": "^8.13.0",
+    "remeda": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@siberiacancode/eslint": "^2.18.0",
     "@siberiacancode/prettier": "^1.8.0",
     "@siberiacancode/stylelint": "^1.2.0",
     "@siberiacancode/tsconfig": "^1.2.0",
+    "@types/bun": "latest",
+    "@types/pg": "^8.20.0",
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^10.8.0",
     "fkill-cli": "^9.0.0",
@@ -75,8 +80,7 @@
     "stylelint-config-idiomatic-order": "^10.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-order": "^8.1.1",
-    "typescript": "~6.0.3",
-    "zod": "^4.4.3"
+    "typescript": "~6.0.3"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [

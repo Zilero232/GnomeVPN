@@ -15,13 +15,7 @@ export const HowItWorks = () => {
   const t = useTranslations('landing.how');
 
   return (
-    <motion.div
-      className={s.grid}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {HOW_IT_WORKS_STEPS.map((step, index) => (
         <motion.article key={step} className={s.step} variants={STEP_MOTION}>
           <Text as='span' className={s.index}>

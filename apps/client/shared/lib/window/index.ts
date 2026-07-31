@@ -1,7 +1,1 @@
-export {
-  closeMainWindow,
-  hideMainWindow,
-  minimizeMainWindow,
-  showMainWindow,
-  toggleMainWindow
-} from './window';
+export { closeMainWindow, hideMainWindow, minimizeMainWindow, showMainWindow, toggleMainWindow } from './window';

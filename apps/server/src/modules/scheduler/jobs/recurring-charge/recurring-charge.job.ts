@@ -9,12 +9,7 @@ import type { DueSubscription } from './recurring-charge.job.types';
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
-import {
-  CheckoutService,
-  describeRenewal,
-  renewalIdempotenceKey,
-  WebhookService
-} from '../../../billing';
+import { CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
 import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../../config';
 
 @Injectable()
@@ -92,9 +87,7 @@ export class RecurringChargeJob {
       try {
         await this.chargeIfDue(subscription);
       } catch (error) {
-        this.logger.warn(
-          `Recurring charge failed for ${subscription.userId}: ${describeError(error)}`
-        );
+        this.logger.warn(`Recurring charge failed for ${subscription.userId}: ${describeError(error)}`);
       }
     }
   }

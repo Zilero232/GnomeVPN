@@ -14,19 +14,25 @@ export const ProfileCard = () => {
 
   return (
     <div className={s.root}>
-      <UpdateNameForm />
+      <div className={s.pair}>
+        <div className={s.section}>
+          <UpdateNameForm />
+        </div>
+
+        <div className={s.section}>
+          <ChangeEmailForm />
+        </div>
+      </div>
 
       <hr className={s.divider} />
 
-      <ChangeEmailForm />
+      <div className={s.section}>
+        <Text as='h3' className={s.subtitle}>
+          {t('security')}
+        </Text>
 
-      <hr className={s.divider} />
-
-      <Text as='h3' className={s.subtitle}>
-        {t('security')}
-      </Text>
-
-      <ChangePasswordForm />
+        <ChangePasswordForm />
+      </div>
     </div>
   );
 };

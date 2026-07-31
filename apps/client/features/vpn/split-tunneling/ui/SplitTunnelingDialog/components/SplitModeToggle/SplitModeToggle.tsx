@@ -11,13 +11,7 @@ import type { SplitModeToggleProps } from './SplitModeToggle.types';
 
 import s from './SplitModeToggle.module.scss';
 
-export const SplitModeToggle = ({
-  label,
-  lead,
-  mode,
-  onModeChange,
-  aside
-}: SplitModeToggleProps) => {
+export const SplitModeToggle = ({ label, lead, mode, onModeChange, aside }: SplitModeToggleProps) => {
   const t = useTranslations('splitTunneling');
 
   const isAllowed = mode === SPLIT_MODE.allowed;
@@ -35,13 +29,7 @@ export const SplitModeToggle = ({
           {lead}
         </Text>
 
-        <button
-          aria-label={label}
-          className={s.pill}
-          data-mode={mode}
-          type='button'
-          onClick={toggle}
-        >
+        <button aria-label={label} className={s.pill} data-mode={mode} type='button' onClick={toggle}>
           {isAllowed ? <ArrowRight aria-hidden size={13} /> : <ShieldOff aria-hidden size={13} />}
           {isAllowed ? t('modeAllowed') : t('modeDisallowed')}
         </button>

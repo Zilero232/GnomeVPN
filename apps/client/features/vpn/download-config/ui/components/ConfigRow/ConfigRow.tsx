@@ -21,6 +21,7 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
   const { content, isPending, download, copyToClipboard, prepareQr } = useConfigMaterial({
     config
   });
+
   const [isQrOpen, setIsQrOpen] = useState(false);
 
   const isWireguard = config.protocol === TUNNEL_PROTOCOL.wireguard;
@@ -44,11 +45,7 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
               {config.name}
             </Text>
 
-            {isBlocked ? (
-              <Badge tone='muted'>{t('paused')}</Badge>
-            ) : (
-              <Badge>{t(`protocol.${config.protocol}`)}</Badge>
-            )}
+            {isBlocked ? <Badge tone='muted'>{t('paused')}</Badge> : <Badge>{t(`protocol.${config.protocol}`)}</Badge>}
           </span>
 
           <Text size='xs' tone='muted'>
@@ -58,13 +55,7 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
       </div>
 
       <div className={s.actions}>
-        <Button
-          aria-label={t('qr')}
-          disabled={isBusy || isBlocked}
-          size='icon'
-          variant='ghost'
-          onClick={openQr}
-        >
+        <Button aria-label={t('qr')} disabled={isBusy || isBlocked} size='icon' variant='ghost' onClick={openQr}>
           <QrCode aria-hidden size={15} />
         </Button>
 
@@ -79,34 +70,17 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
             <ShareOrDownload aria-hidden size={15} />
           </Button>
         ) : (
-          <Button
-            aria-label={t('copy')}
-            disabled={isBusy || isBlocked}
-            size='icon'
-            variant='ghost'
-            onClick={copyToClipboard}
-          >
+          <Button aria-label={t('copy')} disabled={isBusy || isBlocked} size='icon' variant='ghost' onClick={copyToClipboard}>
             <Copy aria-hidden size={15} />
           </Button>
         )}
 
-        <Button
-          aria-label={t('revoke')}
-          disabled={isBusy}
-          size='icon'
-          variant='ghost'
-          onClick={onRevoke}
-        >
+        <Button aria-label={t('revoke')} disabled={isBusy} size='icon' variant='ghost' onClick={onRevoke}>
           <Trash2 aria-hidden size={15} />
         </Button>
       </div>
 
-      <ConfigQrDialog
-        config={config}
-        content={content}
-        isOpen={isQrOpen}
-        onOpenChange={setIsQrOpen}
-      />
+      <ConfigQrDialog config={config} content={content} isOpen={isQrOpen} onOpenChange={setIsQrOpen} />
     </div>
   );
 };

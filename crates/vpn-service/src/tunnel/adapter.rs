@@ -7,9 +7,9 @@ pub struct Traffic {
 }
 
 fn find(name: &str) -> Option<Interface> {
-    netdev::get_interfaces().into_iter().find(|interface| {
-        interface.name == name || interface.friendly_name.as_deref() == Some(name)
-    })
+    netdev::get_interfaces()
+        .into_iter()
+        .find(|interface| interface.name == name || interface.friendly_name.as_deref() == Some(name))
 }
 
 pub fn is_up(name: &str) -> bool {

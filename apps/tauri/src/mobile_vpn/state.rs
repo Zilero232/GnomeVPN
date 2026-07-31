@@ -20,9 +20,6 @@ impl MobileVpnState {
     }
 
     pub fn is_active(&self) -> bool {
-        self.inner
-            .lock()
-            .as_ref()
-            .is_some_and(|token| !token.is_cancelled())
+        self.inner.lock().as_ref().is_some_and(|token| !token.is_cancelled())
     }
 }

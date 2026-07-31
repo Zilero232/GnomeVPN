@@ -3,15 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { QRCodeSVG } from 'qrcode.react';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Spinner,
-  Text
-} from '@/shared/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Spinner, Text } from '@/shared/ui';
 
 import type { ConfigQrDialogProps } from './ConfigQrDialog.types';
 
@@ -28,13 +20,7 @@ export const ConfigQrDialog = ({ config, content, isOpen, onOpenChange }: Config
           <DialogDescription>{t('qrHint')}</DialogDescription>
         </DialogHeader>
 
-        <div className={s.code}>
-          {content ? (
-            <QRCodeSVG level='M' marginSize={2} size={240} value={content} />
-          ) : (
-            <Spinner />
-          )}
-        </div>
+        <div className={s.code}>{content ? <QRCodeSVG level='M' marginSize={2} size={240} value={content} /> : <Spinner />}</div>
 
         <Text className={s.name} size='xs' tone='muted'>
           {config.name} · {config.country}

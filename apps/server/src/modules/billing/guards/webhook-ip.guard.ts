@@ -8,9 +8,7 @@ import { isAllowedWebhookIp } from '../lib';
 @Injectable()
 export class WebhookIpGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context
-      .switchToHttp()
-      .getRequest<{ ip?: string; socket?: { remoteAddress?: string } }>();
+    const request = context.switchToHttp().getRequest<{ ip?: string; socket?: { remoteAddress?: string } }>();
 
     const ip = request.ip ?? request.socket?.remoteAddress ?? '';
 

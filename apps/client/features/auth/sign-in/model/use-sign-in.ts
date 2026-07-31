@@ -10,6 +10,5 @@ export { signInSchema };
 
 export const useSignIn = () =>
   useMutation({
-    mutationFn: async (values: SignInValues) =>
-      unwrapAuth(await authClient.signIn.email(values), 'errors.signInFailed')
+    mutationFn: async (values: SignInValues) => unwrapAuth(await authClient.signIn.email(values), 'errors.signInFailed')
   });

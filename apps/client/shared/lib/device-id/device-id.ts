@@ -11,6 +11,7 @@ const fromBrowserStorage = (): string => {
   }
 
   const created = crypto.randomUUID();
+
   window.localStorage.setItem(STORAGE_KEY, created);
 
   return created;

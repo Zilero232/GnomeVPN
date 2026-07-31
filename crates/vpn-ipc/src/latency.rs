@@ -95,15 +95,13 @@ fn client_config() -> Result<ClientConfig, LatencyError> {
 
     crypto.alpn_protocols = vec![ALPN.to_vec()];
 
-    let quic = QuicClientConfig::try_from(crypto)
-        .map_err(|error| LatencyError::Probe(error.to_string()))?;
+    let quic = QuicClientConfig::try_from(crypto).map_err(|error| LatencyError::Probe(error.to_string()))?;
 
     let mut config = ClientConfig::new(Arc::new(quic));
     let mut transport = quinn::TransportConfig::default();
 
     transport.max_idle_timeout(Some(
-        quinn::IdleTimeout::try_from(Duration::from_millis(u64::from(IDLE_TIMEOUT_MS)))
-            .map_err(|error| LatencyError::Probe(error.to_string()))?,
+        quinn::IdleTimeout::try_from(Duration::from_millis(u64::from(IDLE_TIMEOUT_MS))).map_err(|error| LatencyError::Probe(error.to_string()))?,
     ));
     transport.keep_alive_interval(None);
 
@@ -120,15 +118,10 @@ fn bind_for(remote: &SocketAddr) -> SocketAddr {
     }
 }
 
-pub async fn probe_latency(
-    host: &str,
-    port: u16,
-    server_name: &str,
-) -> Result<Duration, LatencyError> {
+pub async fn probe_latency(host: &str, port: u16, server_name: &str) -> Result<Duration, LatencyError> {
     let remote = resolve(host, port)?;
 
-    let mut endpoint = Endpoint::client(bind_for(&remote))
-        .map_err(|error| LatencyError::Probe(error.to_string()))?;
+    let mut endpoint = Endpoint::client(bind_for(&remote)).map_err(|error| LatencyError::Probe(error.to_string()))?;
 
     endpoint.set_default_client_config(client_config()?);
 

@@ -6,8 +6,7 @@ import type { SetupTrayInput } from './setup-tray.types';
 
 import { TRAY_ICON, TRAY_ID } from '../config';
 
-const iconFor = async (isConnected: boolean): Promise<string> =>
-  resolveBundledResource(isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected);
+const iconFor = async (isConnected: boolean): Promise<string> => resolveBundledResource(isConnected ? TRAY_ICON.connected : TRAY_ICON.disconnected);
 
 const dropExisting = async () => {
   try {

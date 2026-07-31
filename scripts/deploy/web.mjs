@@ -1,7 +1,6 @@
-import { NodeSSH } from 'node-ssh';
-
-import { requireEnv } from '../lib/env.mjs';
-import { $, reporter, workspace } from '../lib/shell.mjs';
+import { requireEnv } from '@gnomevpn/scripts/env';
+import { $, reporter, workspace } from '@gnomevpn/scripts/local';
+import { SshClient } from '@gnomevpn/scripts/ssh';
 
 const log = reporter('deploy:web');
 
@@ -30,6 +29,7 @@ const dockerLogin = async () => {
 const buildAndPush = async ({ image, dockerfile, buildArgs }) => {
   log.step(`build & push ${image}`);
   const args = buildArgs.flatMap((arg) => ['--build-arg', arg]);
+
   await $`docker build -f ${dockerfile} ${args} -t ${`${image}:latest`} .`;
   await $`docker push ${`${image}:latest`}`;
 };
@@ -41,9 +41,10 @@ const hasMigrations = async () => {
 };
 
 const remote = async () => {
-  const ssh = new NodeSSH();
+  const ssh = new SshClient();
 
   log.step(`ssh ${creds.PROVISION_SSH_USER}@${creds.PROVISION_SSH_HOST}`);
+
   await ssh.connect({
     host: creds.PROVISION_SSH_HOST,
     port: Number(port),
@@ -54,32 +55,26 @@ const remote = async () => {
   const path = creds.PROVISION_DEPLOY_PATH;
 
   log.step('copy docker-compose.yml to VPS');
-  await ssh.putFile(`${workspace}/docker-compose.yml`, `${path}/docker-compose.yml`);
+  await ssh.uploadFile(`${workspace}/docker-compose.yml`, `${path}/docker-compose.yml`);
 
   const exec = async (title, script) => {
     log.step(title);
-    const result = await ssh.execCommand(`set -e; cd '${path}'; ${script}`);
+    const result = await ssh.runScript({ cwd: path, script });
 
     if (result.stdout) {
       log.info(result.stdout);
     }
 
-    if (result.code !== 0) {
+    if (result.exitCode !== 0) {
       ssh.dispose();
       log.fail(result.stderr || `remote command failed: ${title}`);
     }
   };
 
-  await exec(
-    'pull images and restart',
-    'touch .env.nodes && docker compose pull web server && docker compose up -d && docker image prune -f'
-  );
+  await exec('pull images and restart', 'touch .env.nodes && docker compose pull web server && docker compose up -d && docker image prune -f');
 
   if (await hasMigrations()) {
-    await exec(
-      'baseline migration history',
-      'docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true'
-    );
+    await exec('baseline migration history', 'docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true');
     await exec('apply migrations', 'docker compose exec -T server bunx prisma migrate deploy');
   } else {
     log.warn('no migration files — skipping migrate deploy');
@@ -89,11 +84,13 @@ const remote = async () => {
 };
 
 await dockerLogin();
+
 await buildAndPush({
   image: webImage,
   dockerfile: 'apps/client/Dockerfile',
   buildArgs: [`NEXT_PUBLIC_API_URL=${apiUrl}`]
 });
+
 await buildAndPush({ image: apiImage, dockerfile: 'apps/server/Dockerfile', buildArgs: [] });
 await remote();
 

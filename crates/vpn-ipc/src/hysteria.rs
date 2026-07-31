@@ -79,28 +79,15 @@ struct HysteriaClientConfig {
     resolver: Option<HysteriaResolver>,
 }
 
-pub fn build_hysteria_config(
-    config: &TunnelConfig,
-    socks: SocketAddr,
-    credentials: &SocksCredentials,
-) -> String {
-    let resolver = config
-        .dns
-        .iter()
-        .find(|entry| !entry.is_empty())
-        .map(|entry| HysteriaResolver {
-            kind: "udp".to_string(),
-            udp: HysteriaResolverUdp {
-                addr: format!("{entry}:53"),
-            },
-        });
+pub fn build_hysteria_config(config: &TunnelConfig, socks: SocketAddr, credentials: &SocksCredentials) -> String {
+    let resolver = config.dns.iter().find(|entry| !entry.is_empty()).map(|entry| HysteriaResolver {
+        kind: "udp".to_string(),
+        udp: HysteriaResolverUdp { addr: format!("{entry}:53") },
+    });
 
     let server = match config.port_range {
         Some(range) if range.is_valid() => {
-            format!(
-                "{}:{},{}-{}",
-                config.server, config.port, range.from, range.to
-            )
+            format!("{}:{},{}-{}", config.server, config.port, range.from, range.to)
         }
         _ => format!("{}:{}", config.server, config.port),
     };

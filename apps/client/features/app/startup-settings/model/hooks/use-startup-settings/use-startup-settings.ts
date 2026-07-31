@@ -22,11 +22,7 @@ export const useStartupSettings = (): UseStartupSettings => {
 
   useEffect(() => {
     const load = async () => {
-      const [start, connect, reconnect] = await Promise.all([
-        isAutoStartEnabled(),
-        getAutoConnect(),
-        getAutoReconnect()
-      ]);
+      const [start, connect, reconnect] = await Promise.all([isAutoStartEnabled(), getAutoConnect(), getAutoReconnect()]);
 
       setAutoStartState(start);
       setAutoConnectState(connect);

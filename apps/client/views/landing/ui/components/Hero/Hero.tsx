@@ -17,14 +17,7 @@ export const Hero = () => {
   return (
     <section className={s.root}>
       {/** an inline SVG needs no next/image pipeline, and the app is a static export */}
-      <img
-        aria-hidden
-        alt=''
-        className={s.mark}
-        height={200}
-        src='/brand/logo-mark.svg'
-        width={200}
-      />
+      <img aria-hidden alt='' className={s.mark} height={200} src='/brand/logo-mark.svg' width={200} />
 
       <Text as='span' className={s.eyebrow}>
         {t('eyebrow')}

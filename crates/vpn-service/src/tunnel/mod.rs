@@ -15,12 +15,7 @@ const MIN_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(2);
 const MAX_RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(30);
 const MAX_RETRIES: usize = 5;
 
-pub fn spawn(
-    runtime: &Handle,
-    supervisor: Arc<Supervisor>,
-    config: TunnelConfig,
-    split: SplitConfig,
-) {
+pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig, split: SplitConfig) {
     let Some(stop) = supervisor.take_stop_receiver() else {
         log::error!("spawn called without a reserved tunnel slot");
         supervisor.finish();
@@ -32,8 +27,7 @@ pub fn spawn(
 
     runtime.spawn(async move {
         let emitter = Arc::clone(&supervisor);
-        let emit: Arc<dyn Fn(TunnelEvent) + Send + Sync> =
-            Arc::new(move |event| emitter.publish(event));
+        let emit: Arc<dyn Fn(TunnelEvent) + Send + Sync> = Arc::new(move |event| emitter.publish(event));
 
         let (stop_tx, stop_rx) = tokio::sync::watch::channel(false);
 
@@ -88,9 +82,7 @@ pub fn spawn(
 
         if let Err(error) = &result {
             if !*stop_rx.borrow() {
-                supervisor.publish(TunnelEvent::Error {
-                    message: error.to_string(),
-                });
+                supervisor.publish(TunnelEvent::Error { message: error.to_string() });
             }
         }
 

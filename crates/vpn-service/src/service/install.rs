@@ -1,9 +1,7 @@
 use std::ffi::{OsStr, OsString};
 use std::time::{Duration, Instant};
 
-use windows_service::service::{
-    ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceState, ServiceType,
-};
+use windows_service::service::{ServiceAccess, ServiceErrorControl, ServiceInfo, ServiceStartType, ServiceState, ServiceType};
 use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
 
 use super::{DESCRIPTION, DISPLAY_NAME, SERVICE_NAME};
@@ -27,17 +25,11 @@ fn service_info() -> windows_service::Result<ServiceInfo> {
 }
 
 pub fn install() -> windows_service::Result<()> {
-    let manager = ServiceManager::local_computer(
-        None::<&str>,
-        ServiceManagerAccess::CONNECT | ServiceManagerAccess::CREATE_SERVICE,
-    )?;
+    let manager = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT | ServiceManagerAccess::CREATE_SERVICE)?;
 
     let info = service_info()?;
 
-    let access = ServiceAccess::CHANGE_CONFIG
-        | ServiceAccess::START
-        | ServiceAccess::STOP
-        | ServiceAccess::QUERY_STATUS;
+    let access = ServiceAccess::CHANGE_CONFIG | ServiceAccess::START | ServiceAccess::STOP | ServiceAccess::QUERY_STATUS;
 
     let service = match manager.open_service(SERVICE_NAME, access) {
         Ok(existing) => {
@@ -61,10 +53,7 @@ pub fn install() -> windows_service::Result<()> {
 pub fn uninstall() -> windows_service::Result<()> {
     let manager = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
 
-    let Ok(service) = manager.open_service(
-        SERVICE_NAME,
-        ServiceAccess::STOP | ServiceAccess::DELETE | ServiceAccess::QUERY_STATUS,
-    ) else {
+    let Ok(service) = manager.open_service(SERVICE_NAME, ServiceAccess::STOP | ServiceAccess::DELETE | ServiceAccess::QUERY_STATUS) else {
         return Ok(());
     };
 

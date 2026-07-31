@@ -44,17 +44,8 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
         <Input autoComplete='email' id='signin-email' type='email' {...register('email')} />
       </FormField>
 
-      <FormField
-        error={fieldError(errors.password)}
-        htmlFor='signin-password'
-        label={t('fields.password')}
-      >
-        <PasswordInput
-          autoComplete='current-password'
-          id='signin-password'
-          {...passwordLabels}
-          {...register('password')}
-        />
+      <FormField error={fieldError(errors.password)} htmlFor='signin-password' label={t('fields.password')}>
+        <PasswordInput autoComplete='current-password' id='signin-password' {...passwordLabels} {...register('password')} />
       </FormField>
 
       <button className={s.forgot} type='button' onClick={onForgotPassword}>

@@ -23,13 +23,9 @@ export class EventsController {
           throw new UnauthorizedException();
         }
 
-        const events = this.events
-          .stream(userId)
-          .pipe(map((event): MessageEvent => ({ data: event })));
+        const events = this.events.stream(userId).pipe(map((event): MessageEvent => ({ data: event })));
 
-        const keepAlive = interval(KEEP_ALIVE_MS).pipe(
-          map((): MessageEvent => ({ type: 'ping', data: '' }))
-        );
+        const keepAlive = interval(KEEP_ALIVE_MS).pipe(map((): MessageEvent => ({ type: 'ping', data: '' })));
 
         return merge(events, keepAlive);
       })

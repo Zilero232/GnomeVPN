@@ -1,5 +1,7 @@
 'use client';
 
+import { differenceInCalendarDays } from 'date-fns';
+import { CalendarClock } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
@@ -22,31 +24,47 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
     });
 
   const isActive = subscription?.status === 'active';
+  const periodEnd = subscription?.currentPeriodEnd;
+  const daysLeft = periodEnd ? Math.max(0, differenceInCalendarDays(new Date(periodEnd), new Date())) : null;
 
   return match({ isLoading, isActive })
     .with({ isLoading: true }, () => <Text tone='muted'>{t('loading')}</Text>)
     .with({ isActive: true }, () => (
       <>
-        <Text as='span' className={s.status}>
-          <span className={s.dot} />
-          {t('active')}
-        </Text>
+        <div className={s.hero}>
+          <div className={s.heroMain}>
+            <Text as='span' className={s.status}>
+              <span className={s.dot} />
+              {t('active')}
+            </Text>
 
-        <dl className={s.meta}>
-          {subscription && (
-            <>
-              <dt className={s.label}>{t('planLabel')}</dt>
-              <dd className={s.value}>{t(`plans.${subscription.plan}`)}</dd>
-            </>
-          )}
+            {daysLeft !== null && (
+              <p className={s.countdown}>
+                <span className={s.countdownValue}>{daysLeft}</span>
+                <span className={s.countdownUnit}>{t('daysLeft', { count: daysLeft })}</span>
+              </p>
+            )}
+          </div>
 
-          {subscription?.currentPeriodEnd && (
-            <>
-              <dt className={s.label}>{t('untilLabel')}</dt>
-              <dd className={s.value}>{formatDate(subscription.currentPeriodEnd)}</dd>
-            </>
-          )}
-        </dl>
+          <dl className={s.meta}>
+            {subscription && (
+              <div className={s.metaItem}>
+                <dt className={s.label}>{t('planLabel')}</dt>
+                <dd className={s.value}>{t(`plans.${subscription.plan}`)}</dd>
+              </div>
+            )}
+
+            {periodEnd && (
+              <div className={s.metaItem}>
+                <dt className={s.label}>
+                  <CalendarClock size={13} />
+                  {t('untilLabel')}
+                </dt>
+                <dd className={s.value}>{formatDate(periodEnd)}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
 
         {subscription && (
           <>

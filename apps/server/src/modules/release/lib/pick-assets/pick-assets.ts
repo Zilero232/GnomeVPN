@@ -9,8 +9,7 @@ import { EXTENSION_TO_PLATFORM, PLATFORM_EXTENSION_PRIORITY } from '../../config
 
 const extensionOf = (name: string) => name.toLowerCase().split('.').pop() ?? '';
 
-const detectPlatform = (name: string): ReleasePlatform | null =>
-  EXTENSION_TO_PLATFORM[extensionOf(name)] ?? null;
+const detectPlatform = (name: string): ReleasePlatform | null => EXTENSION_TO_PLATFORM[extensionOf(name)] ?? null;
 
 const rank = (asset: GithubAsset) => {
   const index = PLATFORM_EXTENSION_PRIORITY.indexOf(extensionOf(asset.name));

@@ -5,13 +5,7 @@ import { makeYooKassaClient, YooKassaClient } from '../../lib';
 import { ConfigsModule } from '../configs';
 import { BillingController } from './billing.controller';
 import { WebhookIpGuard } from './guards';
-import {
-  AutoRenewService,
-  BillingSharedService,
-  CardService,
-  CheckoutService,
-  WebhookService
-} from './services';
+import { AutoRenewService, BillingSharedService, CardService, CheckoutService, WebhookService } from './services';
 
 const yooKassaProvider = {
   provide: YooKassaClient,
@@ -22,15 +16,7 @@ const yooKassaProvider = {
 @Module({
   imports: [ConfigsModule],
   controllers: [BillingController],
-  providers: [
-    BillingSharedService,
-    CheckoutService,
-    WebhookService,
-    AutoRenewService,
-    CardService,
-    WebhookIpGuard,
-    yooKassaProvider
-  ],
+  providers: [BillingSharedService, CheckoutService, WebhookService, AutoRenewService, CardService, WebhookIpGuard, yooKassaProvider],
   exports: [CheckoutService, WebhookService, YooKassaClient]
 })
 export class BillingModule {}

@@ -35,12 +35,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
 
   return (
     <div className={s.section}>
-      <SplitModeToggle
-        label={t('modeLabel')}
-        lead={t('modeLeadApps')}
-        mode={draft.appsMode}
-        onModeChange={setAppsMode}
-      />
+      <SplitModeToggle label={t('modeLabel')} lead={t('modeLeadApps')} mode={draft.appsMode} onModeChange={setAppsMode} />
 
       <div className={s.searchRow}>
         <div className={s.search}>
@@ -54,12 +49,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
           />
 
           {query && (
-            <IconButton
-              aria-label={t('clearSearch')}
-              className={s.searchClear}
-              size='sm'
-              onClick={() => setQuery('')}
-            >
+            <IconButton aria-label={t('clearSearch')} className={s.searchClear} size='sm' onClick={() => setQuery('')}>
               <X size={13} />
             </IconButton>
           )}
@@ -118,11 +108,7 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
               >
                 <span aria-hidden className={s.rail} />
 
-                <span
-                  aria-hidden
-                  className={s.monogram}
-                  data-mode={isSelected ? draft.appsMode : undefined}
-                >
+                <span aria-hidden className={s.monogram} data-mode={isSelected ? draft.appsMode : undefined}>
                   {app.name.charAt(0).toUpperCase()}
                 </span>
 
@@ -131,16 +117,8 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
                   <span className={s.path}>{app.path}</span>
                 </span>
 
-                <span
-                  aria-hidden
-                  className={s.mark}
-                  data-mode={isSelected ? draft.appsMode : undefined}
-                >
-                  {isSelected ? (
-                    <Check size={13} strokeWidth={2.75} />
-                  ) : (
-                    <Plus className={s.markAdd} size={14} strokeWidth={2.5} />
-                  )}
+                <span aria-hidden className={s.mark} data-mode={isSelected ? draft.appsMode : undefined}>
+                  {isSelected ? <Check size={13} strokeWidth={2.75} /> : <Plus className={s.markAdd} size={14} strokeWidth={2.5} />}
                 </span>
               </button>
             );

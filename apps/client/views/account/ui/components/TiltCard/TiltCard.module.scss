@@ -1,0 +1,25 @@
+.root {
+  position: relative;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.glare {
+  position: absolute;
+  z-index: 1;
+  border-radius: inherit;
+  background: radial-gradient(
+    340px circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    color-mix(in srgb, var(--color-accent) 9%, transparent),
+    transparent 58%
+  );
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.root:hover .glare {
+  opacity: 1;
+}

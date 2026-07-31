@@ -141,8 +141,8 @@
       "limitsHint": "No gigabyte limits and no slowdown in the evening"
     },
     "guarantee": {
-      "title": "Not for you? Money back",
-      "body": "We refund the full amount within 14 days of payment, no questions asked. Just write to support.",
+      "title": "Cancel in one click",
+      "body": "Turn off renewal whenever you like — your access stays until the end of the period you paid for. No calls, no emails to support.",
       "cta": "Try it"
     }
   },
@@ -183,6 +183,7 @@
     "backToVpn": "Back to VPN",
     "signOut": "Sign out",
     "active": "Subscription active",
+    "daysLeft": "{count, plural, =0 {final day} one {day left} other {days left}}",
     "planLabel": "Plan",
     "untilLabel": "Valid until",
     "autoRenewOff": "Auto-renewal is off",

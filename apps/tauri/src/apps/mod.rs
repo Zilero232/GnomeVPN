@@ -14,9 +14,7 @@ pub struct InstalledApp {
 pub async fn list_installed_apps() -> Vec<InstalledApp> {
     #[cfg(target_os = "windows")]
     {
-        tauri::async_runtime::spawn_blocking(scan::installed_apps)
-            .await
-            .unwrap_or_default()
+        tauri::async_runtime::spawn_blocking(scan::installed_apps).await.unwrap_or_default()
     }
 
     #[cfg(not(target_os = "windows"))]
@@ -27,9 +25,7 @@ pub async fn list_installed_apps() -> Vec<InstalledApp> {
 pub async fn list_running_processes() -> Vec<InstalledApp> {
     #[cfg(target_os = "windows")]
     {
-        tauri::async_runtime::spawn_blocking(scan::running_processes)
-            .await
-            .unwrap_or_default()
+        tauri::async_runtime::spawn_blocking(scan::running_processes).await.unwrap_or_default()
     }
 
     #[cfg(not(target_os = "windows"))]

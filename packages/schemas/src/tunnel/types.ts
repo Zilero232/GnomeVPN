@@ -1,11 +1,6 @@
 import type { z } from 'zod';
 
-import type {
-  connectInputSchema,
-  disconnectInputSchema,
-  issueConfigSchema,
-  revokeConfigSchema
-} from './inputs';
+import type { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
 import type {
   deviceUsageSchema,
   downloadedConfigSchema,

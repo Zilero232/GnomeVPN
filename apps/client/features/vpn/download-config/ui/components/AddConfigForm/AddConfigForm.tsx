@@ -41,12 +41,7 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
   });
 
   const onSubmit = handleSubmit((input) => {
-    const isTaken = configs.some(
-      (config) =>
-        config.name === input.name &&
-        config.nodeId === input.nodeId &&
-        config.protocol === input.protocol
-    );
+    const isTaken = configs.some((config) => config.name === input.name && config.nodeId === input.nodeId && config.protocol === input.protocol);
 
     if (isTaken) {
       toast.error(tv('nameTaken'));
@@ -70,36 +65,14 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
   return (
     <form className={s.form} onSubmit={onSubmit}>
       <div className={s.row}>
-        <FormField
-          hasFloatingError
-          className={s.field}
-          error={fieldError(errors.name)}
-          htmlFor='config-name'
-          label={t('nameLabel')}
-        >
-          <Input
-            disabled={isDisabled}
-            id='config-name'
-            placeholder={t('namePlaceholder')}
-            {...register('name')}
-          />
+        <FormField hasFloatingError className={s.field} error={fieldError(errors.name)} htmlFor='config-name' label={t('nameLabel')}>
+          <Input disabled={isDisabled} id='config-name' placeholder={t('namePlaceholder')} {...register('name')} />
         </FormField>
 
-        <FormField
-          hasFloatingError
-          className={s.field}
-          htmlFor='config-node'
-          label={t('countryLabel')}
-        >
+        <FormField hasFloatingError className={s.field} htmlFor='config-node' label={t('countryLabel')}>
           <Controller
             render={({ field }) => (
-              <Select
-                id='config-node'
-                isDisabled={isDisabled}
-                options={nodeOptions}
-                value={field.value}
-                onChange={field.onChange}
-              />
+              <Select id='config-node' isDisabled={isDisabled} options={nodeOptions} value={field.value} onChange={field.onChange} />
             )}
             control={control}
             name='nodeId'
@@ -109,24 +82,13 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
 
       <FormField hasFloatingError htmlFor='config-protocol' label={t('protocolLabel')}>
         <Controller
-          render={({ field }) => (
-            <ProtocolPicker
-              isDisabled={isDisabled}
-              value={field.value ?? DEFAULT_PROTOCOL}
-              onChange={field.onChange}
-            />
-          )}
           control={control}
           name='protocol'
+          render={({ field }) => <ProtocolPicker isDisabled={isDisabled} value={field.value ?? DEFAULT_PROTOCOL} onChange={field.onChange} />}
         />
       </FormField>
 
-      <SubmitButton
-        className={s.submit}
-        disabled={isDisabled || isFull}
-        isPending={issue.isPending}
-        size='md'
-      >
+      <SubmitButton className={s.submit} disabled={isDisabled || isFull} isPending={issue.isPending} size='md'>
         {t('create')}
       </SubmitButton>
     </form>

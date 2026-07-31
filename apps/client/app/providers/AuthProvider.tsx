@@ -3,18 +3,12 @@
 import type { ReactNode } from 'react';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { match } from 'ts-pattern';
 
 import { usePlatform } from '@/entities/app/platform';
 import { useCurrentUser } from '@/entities/auth/user';
-import {
-  isGuestOnlyRoute,
-  isKnownRoute,
-  isPublicRoute,
-  isWebOnlyRoute,
-  ROUTES
-} from '@/shared/constants';
+import { isGuestOnlyRoute, isKnownRoute, isPublicRoute, isWebOnlyRoute, ROUTES } from '@/shared/constants';
 import { AppSplash } from '@/shared/ui';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -24,13 +18,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { isNativeApp, isReady } = usePlatform();
   const { isLoading, isAuthenticated } = useCurrentUser();
 
-  const hasResolvedRef = useRef(false);
-
-  if (!isLoading && isReady) {
-    hasResolvedRef.current = true;
-  }
-
-  const isPending = (isLoading || !isReady) && !hasResolvedRef.current;
+  const isPending = isLoading || !isReady;
 
   const isOpen = isPublicRoute(pathname) || !isKnownRoute(pathname);
   const isGuestOnly = isGuestOnlyRoute(pathname);
@@ -50,12 +38,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     .with({ isGuestOnly: true, isAuthenticated: true }, () => home)
     .otherwise(() => null);
 
-  // redirect must fire only on target change; router is a stable ref
   useEffect(() => {
     if (target) {
       router.replace(target);
     }
-  }, [target]);
+  }, [target, router]);
 
   if (isWebOnly || (!isOpen && (isPending || target))) {
     return <AppSplash />;

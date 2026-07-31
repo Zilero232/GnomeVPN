@@ -4,12 +4,7 @@ import { GITHUB_TIMEOUT_MS } from '../../config';
 
 export class GithubFetchError extends Error {}
 
-export const githubFetch = async ({
-  url,
-  headers,
-  redirect,
-  describe
-}: GithubFetchInput): Promise<Response> => {
+export const githubFetch = async ({ url, headers, redirect, describe }: GithubFetchInput): Promise<Response> => {
   let response: Response;
 
   try {

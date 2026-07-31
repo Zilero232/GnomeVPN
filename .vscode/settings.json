@@ -1,12 +1,7 @@
 {
   "rust-analyzer.linkedProjects": ["Cargo.toml"],
   "rust-analyzer.cargo.targetDir": true,
-  "rust-analyzer.check.overrideCommand": [
-    "cargo",
-    "check",
-    "--workspace",
-    "--message-format=json-diagnostic-rendered-ansi"
-  ],
+  "rust-analyzer.check.overrideCommand": ["cargo", "check", "--workspace", "--message-format=json-diagnostic-rendered-ansi"],
   "biome.enabled": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
@@ -15,15 +10,7 @@
     "source.fixAll.stylelint": "explicit"
   },
   "eslint.useFlatConfig": true,
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "json",
-    "jsonc",
-    "yaml"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "json", "jsonc", "yaml"],
   "stylelint.validate": ["css", "scss"],
   "css.validate": false,
   "scss.validate": false,

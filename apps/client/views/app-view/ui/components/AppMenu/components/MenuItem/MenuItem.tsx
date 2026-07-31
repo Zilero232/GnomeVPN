@@ -9,14 +9,7 @@ import { MENU_ITEM_MOTION } from '../../AppMenu.motion';
 
 import s from './MenuItem.module.scss';
 
-export const MenuItem = ({
-  label,
-  icon: Icon,
-  trailing,
-  tone = 'default',
-  isPressed,
-  onClick
-}: MenuItemProps) => (
+export const MenuItem = ({ label, icon: Icon, trailing, tone = 'default', isPressed, onClick }: MenuItemProps) => (
   <motion.button
     aria-pressed={isPressed}
     className={clsx(s.root, tone === 'danger' && s.danger)}

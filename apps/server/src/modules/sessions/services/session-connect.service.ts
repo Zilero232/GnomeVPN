@@ -2,11 +2,7 @@ import type { DeviceUsage, TunnelConfig } from '@gnomevpn/schemas';
 
 import { Injectable, Logger } from '@nestjs/common';
 
-import type {
-  ConnectSessionInput,
-  DisconnectSessionInput,
-  PersistSessionInput
-} from '../sessions.service.types';
+import type { ConnectSessionInput, DisconnectSessionInput, PersistSessionInput } from '../sessions.service.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService, withSerializableRetry } from '../../../core';
@@ -48,13 +44,11 @@ export class SessionConnectService {
     const toFree = sessions.length - deviceLimit + 1;
 
     if (idle.length < toFree) {
-      throw new AppBadRequestException(
-        'DEVICE_LIMIT_REACHED',
-        'All device slots are in active use'
-      );
+      throw new AppBadRequestException('DEVICE_LIMIT_REACHED', 'All device slots are in active use');
     }
 
     const evicted = idle.slice(0, toFree);
+
     this.logger.log(`evicting ${evicted.length} idle slot(s) for ${userId}/${deviceId}`);
 
     await this.access.releaseAll(evicted);
@@ -87,12 +81,7 @@ export class SessionConnectService {
     };
   }
 
-  async connect({
-    userId,
-    nodeId,
-    deviceId,
-    protocol
-  }: ConnectSessionInput): Promise<TunnelConfig> {
+  async connect({ userId, nodeId, deviceId, protocol }: ConnectSessionInput): Promise<TunnelConfig> {
     this.logger.log(`connect requested by ${userId}/${deviceId} for node ${nodeId}`);
 
     const node = await this.nodes.getNodeForConnect(nodeId);
@@ -106,8 +95,7 @@ export class SessionConnectService {
       kind: 'session',
       protocol,
       name: deviceId,
-      persist: (peer) =>
-        this.persistSession({ userId, nodeId, deviceId, protocol, peer, deviceLimit })
+      persist: (peer) => this.persistSession({ userId, nodeId, deviceId, protocol, peer, deviceLimit })
     });
 
     this.logger.log(`connect granted to ${userId}/${deviceId} on ${node.country} (${node.host})`);
@@ -123,14 +111,7 @@ export class SessionConnectService {
     });
   }
 
-  private persistSession({
-    userId,
-    nodeId,
-    deviceId,
-    protocol,
-    peer,
-    deviceLimit
-  }: PersistSessionInput): Promise<void> {
+  private persistSession({ userId, nodeId, deviceId, protocol, peer, deviceLimit }: PersistSessionInput): Promise<void> {
     const data = {
       nodeId,
       protocol,
@@ -160,10 +141,7 @@ export class SessionConnectService {
           });
 
           if (active >= deviceLimit) {
-            throw new AppBadRequestException(
-              'DEVICE_LIMIT_REACHED',
-              'All device slots are in active use'
-            );
+            throw new AppBadRequestException('DEVICE_LIMIT_REACHED', 'All device slots are in active use');
           }
 
           await tx.peer.create({ data: { userId, kind: 'session', name: deviceId, ...data } });

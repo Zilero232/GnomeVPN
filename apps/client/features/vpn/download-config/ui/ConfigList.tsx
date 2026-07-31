@@ -41,15 +41,7 @@ export const ConfigList = ({ className }: ConfigListProps) => {
             {hasAccess ? t('hint', { limit: limits.configLimit }) : t('lockedHint')}
           </Text>
 
-          {hasAccess && (
-            <AddConfigForm
-              key={configs.length}
-              configs={configs}
-              isDisabled={revoke.isPending}
-              isFull={isFull}
-              nodes={nodes}
-            />
-          )}
+          {hasAccess && <AddConfigForm key={configs.length} configs={configs} isDisabled={revoke.isPending} isFull={isFull} nodes={nodes} />}
 
           {isFull && (
             <Text size='xs' tone='muted'>

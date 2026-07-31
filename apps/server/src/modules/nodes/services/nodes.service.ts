@@ -81,9 +81,7 @@ export class NodesService {
     });
 
     if (status !== 'online') {
-      this.logger.warn(
-        `node ${node.country} (${node.host}) is ${status}, last healthy at ${node.lastHealthyAt?.toISOString() ?? 'never'}`
-      );
+      this.logger.warn(`node ${node.country} (${node.host}) is ${status}, last healthy at ${node.lastHealthyAt?.toISOString() ?? 'never'}`);
 
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'Node is not healthy');
     }

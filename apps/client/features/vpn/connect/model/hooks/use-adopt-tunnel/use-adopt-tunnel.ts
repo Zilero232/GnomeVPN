@@ -8,6 +8,7 @@ import type { UseAdoptTunnelInput } from './use-adopt-tunnel.types';
 
 export const useAdoptTunnel = ({ onAdopted }: UseAdoptTunnelInput) => {
   const onAdoptedRef = useRef(onAdopted);
+
   onAdoptedRef.current = onAdopted;
 
   useEffect(() => {

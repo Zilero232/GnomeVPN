@@ -1,5 +1,6 @@
-import { requireEnv } from '../lib/env.mjs';
-import { $, reporter, requireGh } from '../lib/shell.mjs';
+import { requireEnv } from '@gnomevpn/scripts/env';
+import { $, reporter, requireGh } from '@gnomevpn/scripts/local';
+
 import { releaseTag, releaseVersion } from './version.mjs';
 
 const log = reporter('release');
@@ -27,9 +28,7 @@ const ensureDraft = async () => {
   const state = await releaseState();
 
   if (state === 'published') {
-    log.fail(
-      `${tag} is already published — bump the version in package.json before releasing again`
-    );
+    log.fail(`${tag} is already published — bump the version in package.json before releasing again`);
   }
 
   if (state === 'draft') {

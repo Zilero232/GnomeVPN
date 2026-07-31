@@ -20,10 +20,7 @@ export const Text = <As extends TextElement = 'p'>({
   const Tag = (as ?? 'p') as ElementType;
 
   return (
-    <Tag
-      className={text({ size, weight, tone, align, mono, uppercase, truncate, class: className })}
-      {...props}
-    >
+    <Tag className={text({ size, weight, tone, align, mono, uppercase, truncate, class: className })} {...props}>
       {children}
     </Tag>
   );

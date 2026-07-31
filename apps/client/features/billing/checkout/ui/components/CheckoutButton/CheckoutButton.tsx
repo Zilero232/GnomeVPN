@@ -9,11 +9,7 @@ import type { CheckoutButtonProps } from './CheckoutButton.types';
 
 import { useCheckout } from '../../../model/hooks';
 
-export const CheckoutButton = ({
-  planId = DEFAULT_PLAN_ID,
-  className,
-  children
-}: CheckoutButtonProps) => {
+export const CheckoutButton = ({ planId = DEFAULT_PLAN_ID, className, children }: CheckoutButtonProps) => {
   const t = useTranslations('account.plans');
   const { isPending, mutate } = useCheckout();
 

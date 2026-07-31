@@ -14,13 +14,7 @@ export const Platforms = () => {
   const t = useTranslations('landing.platforms');
 
   return (
-    <motion.div
-      className={s.grid}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {PLATFORMS.map((platform) => (
         <motion.article
           key={platform.key}

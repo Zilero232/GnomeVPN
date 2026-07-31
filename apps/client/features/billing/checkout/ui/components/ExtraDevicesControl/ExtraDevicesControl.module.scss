@@ -1,11 +1,47 @@
 .root {
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: var(--gap-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-surface-raised);
   gap: 14px;
+}
+
+@media (width >= 900px) {
+  .root {
+    display: grid;
+    align-items: center;
+    column-gap: var(--gap-lg);
+    grid-template-areas:
+      'head actions'
+      'slots actions'
+      'note result';
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .head {
+    grid-area: head;
+  }
+
+  .slots {
+    align-self: start;
+    grid-area: slots;
+  }
+
+  .note {
+    grid-area: note;
+  }
+
+  .actions {
+    justify-content: flex-end;
+    grid-area: actions;
+  }
+
+  .result {
+    grid-area: result;
+    text-align: right;
+  }
 }
 
 .head {

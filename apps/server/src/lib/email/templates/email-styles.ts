@@ -3,8 +3,7 @@ export const emailStyles = {
     margin: 0,
     padding: '32px 0',
     backgroundColor: '#0a0a0a',
-    fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   },
   outer: {
     maxWidth: '520px',

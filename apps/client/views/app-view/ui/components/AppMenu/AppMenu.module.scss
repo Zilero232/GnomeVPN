@@ -73,11 +73,5 @@
 .divider {
   height: 1px;
   margin: 5px 10px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(230 240 236 / 12%) 30%,
-    rgb(230 240 236 / 12%) 70%,
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgb(230 240 236 / 12%) 30%, rgb(230 240 236 / 12%) 70%, transparent);
 }

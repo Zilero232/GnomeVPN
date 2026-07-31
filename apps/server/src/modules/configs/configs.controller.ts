@@ -25,11 +25,7 @@ export class ConfigsController {
 
   @Post()
   @UseGuards(SubscriptionGuard)
-  async issue(
-    @Body() body: IssueConfigDto,
-    @CurrentUserId() userId: string,
-    @Res() res: Response
-  ): Promise<void> {
+  async issue(@Body() body: IssueConfigDto, @CurrentUserId() userId: string, @Res() res: Response): Promise<void> {
     const file = await this.configIssue.issue({
       userId,
       nodeId: body.nodeId,
@@ -37,10 +33,7 @@ export class ConfigsController {
       protocol: body.protocol
     });
 
-    res
-      .type(CONFIG_FILE_CONTENT_TYPE)
-      .header('Content-Disposition', contentDisposition(file.fileName))
-      .send(file.content);
+    res.type(CONFIG_FILE_CONTENT_TYPE).header('Content-Disposition', contentDisposition(file.fileName)).send(file.content);
   }
 
   @Delete()

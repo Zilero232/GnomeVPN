@@ -34,10 +34,7 @@ pub async fn vpn_connect<R: Runtime>(
     Ok(())
 }
 
-async fn start_service<R: Runtime>(
-    app: &AppHandle<R>,
-    config: &TunnelConfig,
-) -> Result<(), MobileVpnError> {
+async fn start_service<R: Runtime>(app: &AppHandle<R>, config: &TunnelConfig) -> Result<(), MobileVpnError> {
     let handle = app.clone();
     let config = config.clone();
 
@@ -47,10 +44,7 @@ async fn start_service<R: Runtime>(
 }
 
 #[tauri::command]
-pub async fn vpn_disconnect<R: Runtime>(
-    app: AppHandle<R>,
-    state: State<'_, MobileVpnState>,
-) -> Result<(), MobileVpnError> {
+pub async fn vpn_disconnect<R: Runtime>(app: AppHandle<R>, state: State<'_, MobileVpnState>) -> Result<(), MobileVpnError> {
     log::info!("vpn_disconnect: closing the android tunnel");
 
     state.cancel();
@@ -77,11 +71,7 @@ pub async fn vpn_hide_window<R: Runtime>(app: AppHandle<R>) -> Result<(), Mobile
 }
 
 #[tauri::command]
-pub async fn vpn_share_config<R: Runtime>(
-    app: AppHandle<R>,
-    file_name: String,
-    content: String,
-) -> Result<bool, MobileVpnError> {
+pub async fn vpn_share_config<R: Runtime>(app: AppHandle<R>, file_name: String, content: String) -> Result<bool, MobileVpnError> {
     app.state::<VpnPlugin<R>>().share_config(file_name, content)
 }
 
@@ -94,11 +84,9 @@ pub async fn vpn_has_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, M
 pub async fn vpn_request_permission<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
     let handle = app.clone();
 
-    tauri::async_runtime::spawn_blocking(move || {
-        handle.state::<VpnPlugin<R>>().request_permission()
-    })
-    .await
-    .map_err(|error| MobileVpnError::Service(error.to_string()))?
+    tauri::async_runtime::spawn_blocking(move || handle.state::<VpnPlugin<R>>().request_permission())
+        .await
+        .map_err(|error| MobileVpnError::Service(error.to_string()))?
 }
 
 #[tauri::command]
@@ -107,14 +95,8 @@ pub async fn vpn_traffic<R: Runtime>(app: AppHandle<R>) -> Result<TrafficResult,
 }
 
 #[tauri::command]
-pub async fn vpn_status<R: Runtime>(
-    app: AppHandle<R>,
-    state: State<'_, MobileVpnState>,
-) -> Result<&'static str, MobileVpnError> {
-    let running = state.is_active()
-        || app
-            .try_state::<VpnPlugin<R>>()
-            .is_some_and(|plugin| plugin.is_running().unwrap_or(false));
+pub async fn vpn_status<R: Runtime>(app: AppHandle<R>, state: State<'_, MobileVpnState>) -> Result<&'static str, MobileVpnError> {
+    let running = state.is_active() || app.try_state::<VpnPlugin<R>>().is_some_and(|plugin| plugin.is_running().unwrap_or(false));
 
     Ok(if running { "connected" } else { "disconnected" })
 }

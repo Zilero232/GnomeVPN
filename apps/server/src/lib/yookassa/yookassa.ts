@@ -141,10 +141,7 @@ export class YooKassaClient {
   }
 
   async getPaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
-    const payload = await this.request<PaymentMethodResponse>(
-      `/payment_methods/${paymentMethodId}`,
-      { method: 'GET' }
-    );
+    const payload = await this.request<PaymentMethodResponse>(`/payment_methods/${paymentMethodId}`, { method: 'GET' });
 
     return this.toPaymentMethodInfo(payload);
   }

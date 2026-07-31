@@ -3,14 +3,7 @@
 import { useTranslations } from 'next-intl';
 
 import { DOWNLOAD_PLATFORMS, useRelease } from '@/entities/app/release';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  Spinner
-} from '@/shared/ui';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Spinner } from '@/shared/ui';
 
 import type { DownloadAppDialogProps } from './DownloadAppDialog.types';
 
@@ -51,12 +44,7 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
           <>
             <div className={s.grid}>
               {DOWNLOAD_PLATFORMS.map(({ id, labelKey, Icon }) => (
-                <PlatformCard
-                  key={id}
-                  asset={release.assets.find((asset) => asset.platform === id)}
-                  Icon={Icon}
-                  label={t(`platforms.${labelKey}`)}
-                />
+                <PlatformCard key={id} asset={release.assets.find((asset) => asset.platform === id)} Icon={Icon} label={t(`platforms.${labelKey}`)} />
               ))}
             </div>
 

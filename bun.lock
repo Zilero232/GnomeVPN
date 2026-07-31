@@ -4,14 +4,19 @@
     "": {
       "name": "gnomevpn",
       "dependencies": {
-        "node-ssh": "^13.2.1",
-        "p-retry": "^8.0.0",
+        "@gnomevpn/scripts": "workspace:*",
+        "p-wait-for": "^6.0.0",
+        "pg": "^8.13.0",
+        "remeda": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@siberiacancode/eslint": "^2.18.0",
         "@siberiacancode/prettier": "^1.8.0",
         "@siberiacancode/stylelint": "^1.2.0",
         "@siberiacancode/tsconfig": "^1.2.0",
+        "@types/bun": "latest",
+        "@types/pg": "^8.20.0",
         "babel-plugin-react-compiler": "^1.0.0",
         "eslint": "^10.8.0",
         "fkill-cli": "^9.0.0",
@@ -25,7 +30,6 @@
         "stylelint-config-standard-scss": "^17.0.0",
         "stylelint-order": "^8.1.1",
         "typescript": "~6.0.3",
-        "zod": "^4.4.3",
       },
     },
     "apps/client": {
@@ -105,14 +109,12 @@
         "helmet": "^8.0.0",
         "nestjs-zod": "5.4.0",
         "nodemailer": "^9.0.3",
-        "p-wait-for": "^6.0.0",
         "pg": "^8.13.0",
         "react": "catalog:",
         "react-email": "^6.9.1",
         "reflect-metadata": "^0.2.2",
         "remeda": "catalog:",
         "rxjs": "^7.8.1",
-        "shell-quote": "^1.10.0",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -121,7 +123,6 @@
         "@types/nodemailer": "^8.0.1",
         "@types/pg": "^8.20.0",
         "@types/react": "catalog:",
-        "@types/shell-quote": "^1.7.5",
         "dotenv": "^17.2.0",
         "prisma": "^7.9.0",
         "typescript": "catalog:",
@@ -141,6 +142,20 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "typescript": "catalog:",
+      },
+    },
+    "packages/scripts": {
+      "name": "@gnomevpn/scripts",
+      "version": "0.0.0",
+      "dependencies": {
+        "node-ssh": "^13.2.1",
+        "p-retry": "^8.0.0",
+        "shell-quote": "^1.10.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/shell-quote": "^1.7.5",
         "typescript": "catalog:",
       },
     },
@@ -374,6 +389,8 @@
     "@gnomevpn/client": ["@gnomevpn/client@workspace:apps/client"],
 
     "@gnomevpn/schemas": ["@gnomevpn/schemas@workspace:packages/schemas"],
+
+    "@gnomevpn/scripts": ["@gnomevpn/scripts@workspace:packages/scripts"],
 
     "@gnomevpn/server": ["@gnomevpn/server@workspace:apps/server"],
 

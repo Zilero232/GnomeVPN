@@ -49,17 +49,5 @@ export {
   vpnStatus,
   vpnTraffic
 } from './vpn-bridge';
-export type {
-  InstalledApp,
-  LatencyByNode,
-  ProbeLatencyInput,
-  VpnConnectInput,
-  VpnTraffic
-} from './vpn-bridge';
-export {
-  closeMainWindow,
-  hideMainWindow,
-  minimizeMainWindow,
-  showMainWindow,
-  toggleMainWindow
-} from './window';
+export type { InstalledApp, LatencyByNode, ProbeLatencyInput, VpnConnectInput, VpnTraffic } from './vpn-bridge';
+export { closeMainWindow, hideMainWindow, minimizeMainWindow, showMainWindow, toggleMainWindow } from './window';

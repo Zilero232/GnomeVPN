@@ -39,9 +39,7 @@ export const tunnelConfigSchema = z
   })
   .refine(
     (config) =>
-      config.protocol === TUNNEL_PROTOCOL.wireguard
-        ? config.wireguard !== undefined
-        : config.auth.length > 0 && config.serverName.length > 0,
+      config.protocol === TUNNEL_PROTOCOL.wireguard ? config.wireguard !== undefined : config.auth.length > 0 && config.serverName.length > 0,
     { message: 'validation.tunnelProtocolFields' }
   );
 

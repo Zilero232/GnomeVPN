@@ -1,11 +1,5 @@
 services:
   xray:
-    # Pinned, never `latest`: the panel image carries the Hysteria2 server
-    # implementation, and the desktop and Android clients ship a matching
-    # hysteria binary. A silent bump on the node can move the server side of the
-    # protocol out from under clients on the pinned version, and the tunnel then
-    # connects and carries nothing. Bump this together with the client hysteria
-    # binary in apps/tauri/bin and the android libs.
     image: ghcr.io/mhsanaei/3x-ui:v3.5.0
     container_name: gnomevpn-xray
     restart: unless-stopped
@@ -15,6 +9,7 @@ services:
     volumes:
       - xray-db:/etc/x-ui
       - xray-certs:/root/cert
+      - xray-secrets:/etc/gnomevpn
     network_mode: host
     cap_add:
       - NET_ADMIN
@@ -22,3 +17,4 @@ services:
 volumes:
   xray-db:
   xray-certs:
+  xray-secrets:

@@ -9,8 +9,7 @@ import { emptySplitConfig, getSplitConfig, logger, setSplitConfig } from '@/shar
 
 import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 
-const toggleIn = (list: string[], value: string) =>
-  list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
+const toggleIn = (list: string[], value: string) => (list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value]);
 
 export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}) => {
   const [applied, setApplied] = useState<SplitConfig>(emptySplitConfig);
@@ -72,16 +71,11 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
 
   const setIpsMode = (ipsMode: SplitMode) => setDraft((current) => ({ ...current, ipsMode }));
 
-  const toggleApp = (path: string) =>
-    setDraft((current) => ({ ...current, apps: toggleIn(current.apps, path) }));
+  const toggleApp = (path: string) => setDraft((current) => ({ ...current, apps: toggleIn(current.apps, path) }));
 
-  const addIp = (cidr: string) =>
-    setDraft((current) =>
-      current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] }
-    );
+  const addIp = (cidr: string) => setDraft((current) => (current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] }));
 
-  const removeIp = (cidr: string) =>
-    setDraft((current) => ({ ...current, ips: current.ips.filter((entry) => entry !== cidr) }));
+  const removeIp = (cidr: string) => setDraft((current) => ({ ...current, ips: current.ips.filter((entry) => entry !== cidr) }));
 
   const clear = () => setDraft(emptySplitConfig());
 

@@ -8,14 +8,7 @@ import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { CACHE_TTL_MS, GITHUB_RELEASE_URL, githubAssetUrl, UPDATER_MANIFEST_NAME } from '../config';
-import {
-  findManifestAsset,
-  githubFetch,
-  githubReleaseSchema,
-  pickInstallers,
-  rewriteManifestUrls,
-  updaterManifestSchema
-} from '../lib';
+import { findManifestAsset, githubFetch, githubReleaseSchema, pickInstallers, rewriteManifestUrls, updaterManifestSchema } from '../lib';
 
 @Injectable()
 export class ReleaseService {
@@ -108,9 +101,7 @@ export class ReleaseService {
     const location = response.headers.get('location');
 
     if (!location) {
-      throw this.unavailable(
-        `GitHub asset ${assetId} answered ${response.status} without a redirect`
-      );
+      throw this.unavailable(`GitHub asset ${assetId} answered ${response.status} without a redirect`);
     }
 
     return location;

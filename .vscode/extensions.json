@@ -1,9 +1,4 @@
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "stylelint.vscode-stylelint",
-    "rust-lang.rust-analyzer"
-  ],
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "stylelint.vscode-stylelint", "rust-lang.rust-analyzer"],
   "unwantedRecommendations": ["biomejs.biome"]
 }

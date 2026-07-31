@@ -227,9 +227,9 @@ registers the node:
 bun run provision:nodes
 ```
 
-The node list lives in `apps/server/nodes.json` — gitignored, since it holds root
-SSH passwords. Provisioning runs by hand from a machine that can reach the nodes;
-it is not part of CI.
+The node list lives in `nodes.json` at the repo root — gitignored, since it holds
+root SSH passwords. Copy `nodes.example.json` to start. Provisioning runs by hand
+from a machine that can reach the nodes; it is not part of CI.
 
 Verify a new node by running a real client against it, never by "the panel
 returned 200" — a Hysteria2 client written without its full field set is stored
