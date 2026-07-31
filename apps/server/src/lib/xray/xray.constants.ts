@@ -10,7 +10,7 @@ export const UNLIMITED = 0;
 
 export const XRAY_STATE_RUNNING = 'running';
 
-export const WG_PEER_KEEPALIVE = 25;
+export const WG_PEER_KEEPALIVE = 0;
 
 export const WG_PEER_ID_BYTES = 16;
 
