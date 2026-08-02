@@ -75,3 +75,46 @@
   margin: 5px 10px;
   background: linear-gradient(90deg, transparent, rgb(230 240 236 / 12%) 30%, rgb(230 240 236 / 12%) 70%, transparent);
 }
+
+.account {
+  display: flex;
+  align-items: center;
+  padding: 10px 11px;
+  border-radius: 10px;
+  gap: 11px;
+  transition: background-color 0.16s ease;
+
+  &:hover {
+    background-color: var(--color-surface-raised);
+  }
+}
+
+.accountText {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.accountTitle {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountMail {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountArrow {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}

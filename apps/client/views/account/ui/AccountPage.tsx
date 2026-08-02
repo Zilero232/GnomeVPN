@@ -4,11 +4,11 @@ import { CreditCard, FileKey, LogOut, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { useCurrentUser } from '@/entities/auth/user';
+import { useAvatarSeed, useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
 import { ConfigList } from '@/features/vpn/download-config';
-import { Text } from '@/shared/ui';
+import { Avatar, Text } from '@/shared/ui';
 
 import type { AccountTab } from './components';
 
@@ -23,6 +23,7 @@ export const AccountPage = () => {
   const { email, name } = useCurrentUser();
   const { subscription, isLoading } = useSubscriptionStatus();
 
+  const avatarSeed = useAvatarSeed({ fallback: email });
   const signOut = useSignOut();
 
   const tabs: AccountTab[] = [
@@ -58,9 +59,7 @@ export const AccountPage = () => {
 
         <motion.header className={s.header} variants={HEADER_MOTION}>
           <div className={s.identity}>
-            <span aria-hidden className={s.avatar}>
-              {(name || email).slice(0, 1).toUpperCase()}
-            </span>
+            <Avatar alt={name || email} seed={avatarSeed} />
 
             <div className={s.who}>
               <Text as='h1' className={s.title}>

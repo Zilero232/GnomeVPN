@@ -1,3 +1,4 @@
+export { useAvatarSeed } from './use-avatar-seed';
 export { useChangeEmail } from './use-change-email';
 export { useChangePassword } from './use-change-password';
 export { useCurrentUser } from './use-current-user';

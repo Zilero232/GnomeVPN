@@ -1,8 +1,6 @@
 'use client';
 
-import { UserRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isNonNullish } from 'remeda';
 
@@ -76,10 +74,6 @@ export const AppView = () => {
           <Text as='span' className={s.version}>
             v{env.NEXT_PUBLIC_APP_VERSION}
           </Text>
-
-          <Link aria-label={t('openAccount')} className={s.accountLink} href={ROUTES.account}>
-            <UserRound size={15} />
-          </Link>
 
           {isDesktopApp && <SplitTunnelingButton />}
 

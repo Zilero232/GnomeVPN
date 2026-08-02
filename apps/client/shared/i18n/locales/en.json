@@ -370,6 +370,8 @@
     "disconnect": "Disconnect",
     "statusOnline": "Connected",
     "statusOffline": "Disconnected",
+    "nodeOnline": "Healthy",
+    "nodeDegraded": "Unstable",
     "nodeOffline": "Unavailable",
     "nodeOfflineHint": "This node is not responding — pick another country",
     "nodeLatency": "{value} ms",

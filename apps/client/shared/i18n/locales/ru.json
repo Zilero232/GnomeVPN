@@ -370,6 +370,8 @@
     "disconnect": "Отключить",
     "statusOnline": "Подключено",
     "statusOffline": "Отключено",
+    "nodeOnline": "Работает",
+    "nodeDegraded": "С перебоями",
     "nodeOffline": "Недоступен",
     "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
     "nodeLatency": "{value} мс",

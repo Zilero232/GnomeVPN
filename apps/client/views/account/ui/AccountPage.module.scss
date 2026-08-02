@@ -36,21 +36,6 @@
   gap: 14px;
 }
 
-.avatar {
-  display: inline-flex;
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-  border-radius: var(--radius-md);
-  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  color: var(--color-accent);
-  font-size: var(--step-lg);
-  font-weight: 700;
-}
-
 .who {
   display: flex;
   min-width: 0;

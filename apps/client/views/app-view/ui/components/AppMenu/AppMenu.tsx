@@ -1,18 +1,22 @@
 'use client';
 
 import { useClickOutside } from '@siberiacancode/reactuse';
-import { LogOut, Settings } from 'lucide-react';
+import { ChevronRight, LogOut, Settings } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { usePlatform } from '@/entities/app/platform';
+import { useAvatarSeed, useCurrentUser } from '@/entities/auth/user';
 import { CheckUpdateButton } from '@/features/app/check-update';
 import { useStartupSettings } from '@/features/app/startup-settings';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { useCloseToTray } from '@/features/app/system-tray';
 import { useSignOut } from '@/features/auth/sign-out';
-import { Switch } from '@/shared/ui';
+import { AVATAR_SIZE_SM } from '@/shared/config';
+import { ROUTES } from '@/shared/constants';
+import { Avatar, Switch, Text } from '@/shared/ui';
 
 import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
 import { MenuItem } from './components';
@@ -24,6 +28,8 @@ export const AppMenu = () => {
   const tray = useTranslations('tray');
 
   const { isDesktopApp } = usePlatform();
+  const { email, name } = useCurrentUser();
+  const avatarSeed = useAvatarSeed({ fallback: email });
   const { closeToTray, setCloseToTray } = useCloseToTray();
   const { autoStart, autoConnect, autoReconnect, toggleAutoStart, toggleAutoConnect, toggleAutoReconnect } = useStartupSettings();
 
@@ -51,6 +57,26 @@ export const AppMenu = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div className={s.menu} {...MENU_MOTION}>
+            <motion.div variants={MENU_ITEM_MOTION}>
+              <Link className={s.account} href={ROUTES.account} onClick={() => setIsOpen(false)}>
+                <Avatar seed={avatarSeed} size={AVATAR_SIZE_SM} />
+
+                <span className={s.accountText}>
+                  <Text as='span' className={s.accountTitle}>
+                    {name || t('openAccount')}
+                  </Text>
+
+                  <Text as='span' className={s.accountMail}>
+                    {email}
+                  </Text>
+                </span>
+
+                <ChevronRight aria-hidden className={s.accountArrow} size={15} />
+              </Link>
+            </motion.div>
+
+            <div className={s.divider} />
+
             {isDesktopApp && (
               <>
                 <motion.div variants={MENU_ITEM_MOTION}>
