@@ -13,21 +13,21 @@ const LOOPBACK_CIDRS = ['127.0.0.1/32', '::1/128'] as const;
 export const WEBHOOK_ALLOWED_CIDRS: readonly string[] =
   process.env.NODE_ENV === 'production' ? YOOKASSA_CIDRS : [...YOOKASSA_CIDRS, ...LOOPBACK_CIDRS];
 
-export const MONTH_FORMS = {
+export const MONTH_FORMS: Partial<Record<Intl.LDMLPluralRule, string>> & { many: string } = {
   one: 'месяц',
   few: 'месяца',
   many: 'месяцев'
-} as const;
+};
 
 export const SUBSCRIPTION_PREFIX = {
   purchase: 'Подписка GnomeVPN на',
   renewal: 'Продление подписки GnomeVPN на'
 } as const;
 
-export const DEVICE_FORMS = {
+export const DEVICE_FORMS: Partial<Record<Intl.LDMLPluralRule, string>> & { many: string } = {
   one: 'устройство',
   few: 'устройства',
   many: 'устройств'
-} as const;
+};
 
 export const EXTRA_DEVICES_PREFIX = 'Дополнительные устройства GnomeVPN:';

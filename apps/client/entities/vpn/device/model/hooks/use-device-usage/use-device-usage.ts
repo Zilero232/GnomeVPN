@@ -19,7 +19,7 @@ export const useDeviceUsage = ({ status }: UseDeviceUsageInput = {}) => {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: QUERY_KEYS.deviceUsage(deviceId ?? undefined),
-    queryFn: () => getDeviceUsage(deviceId as string),
+    queryFn: () => (deviceId ? getDeviceUsage(deviceId) : null),
     enabled: isAuthenticated && isNonNullish(deviceId),
     refetchInterval: REFRESH_MS,
     refetchOnWindowFocus: true

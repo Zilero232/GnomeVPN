@@ -35,7 +35,6 @@ export type WireguardClient = {
   publicKey: string;
   allowedIPs: string[];
   preSharedKey: string;
-  keepAlive: number;
   enable: boolean;
 };
 

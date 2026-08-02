@@ -10,6 +10,7 @@ import type {
   FindPeersInput,
   IssueAndPersistInput,
   IssuePeerInput,
+  OnlinePeerRef,
   PeerRef,
   SetPeerEnabledInput
 } from '../peers.service.types';
@@ -105,7 +106,7 @@ export class PeersService {
     }
   }
 
-  async onlinePeerIds(peers: PeerRef[]): Promise<Set<string>> {
+  async onlinePeerIds(peers: OnlinePeerRef[], { assumeOnlineWhenNodeSilent = true } = {}): Promise<Set<string>> {
     const byNode = groupBy(peers, (peer) => peer.nodeId);
     const online = new Set<string>();
 
@@ -123,6 +124,10 @@ export class PeersService {
         const emails = await xrayClientForNode(node)
           .onlineEmails()
           .catch(() => null);
+
+        if (emails === null && !assumeOnlineWhenNodeSilent) {
+          return;
+        }
 
         for (const peer of nodePeers) {
           if (emails === null || emails.has(peerClientName(peer))) {

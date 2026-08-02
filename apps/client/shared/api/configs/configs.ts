@@ -12,10 +12,10 @@ export const listConfigs = async (): Promise<DownloadedConfig[]> => {
 };
 
 export const issueConfig = async (input: IssueConfigRequest): Promise<ConfigDownload> => {
-  const response = await api.post('/configs', input, { responseType: 'blob' });
+  const response = await api.post<Blob>('/configs', input, { responseType: 'blob' });
 
   return {
-    blob: response.data as Blob,
+    blob: response.data,
     fileName: parseFileName(response.headers['content-disposition'])
   };
 };

@@ -3,6 +3,8 @@ import { isServer } from '../env';
 
 const STORAGE_KEY = 'gnomevpn.device-id';
 
+let pending: Promise<string> | null = null;
+
 const fromBrowserStorage = (): string => {
   const stored = window.localStorage.getItem(STORAGE_KEY);
 
@@ -17,7 +19,7 @@ const fromBrowserStorage = (): string => {
   return created;
 };
 
-export const getDeviceId = async (): Promise<string> => {
+const resolveDeviceId = async (): Promise<string> => {
   const stored = await read();
 
   if (stored) {
@@ -29,6 +31,14 @@ export const getDeviceId = async (): Promise<string> => {
   await write(created);
 
   return created;
+};
+
+export const getDeviceId = async (): Promise<string> => {
+  pending ??= resolveDeviceId().finally(() => {
+    pending = null;
+  });
+
+  return pending;
 };
 
 export const readDeviceIdSync = (): string | null => {

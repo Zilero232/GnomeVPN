@@ -24,3 +24,5 @@ export const TAB_PANEL_MOTION: Variants = {
 };
 
 export const SPOTLIGHT_SPRING = { stiffness: 120, damping: 22, mass: 0.4 } as const;
+
+export const PILL_MOTION = { type: 'spring', stiffness: 380, damping: 32 } as const;

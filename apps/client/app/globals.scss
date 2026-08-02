@@ -19,7 +19,7 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
-  --shell-width: clamp(680px, 62vw, 1180px);
+  --shell-width: min(100%, 1180px);
   --step-xs: clamp(0.75rem, 0.71rem + 0.2vw, 0.875rem);
   --step-sm: clamp(0.8125rem, 0.77rem + 0.22vw, 0.9375rem);
   --step-md: clamp(0.9375rem, 0.88rem + 0.28vw, 1.0625rem);

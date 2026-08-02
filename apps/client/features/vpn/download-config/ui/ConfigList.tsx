@@ -2,7 +2,8 @@
 
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
-import { isEmpty } from 'remeda';
+import { useState } from 'react';
+import { isEmpty, unique } from 'remeda';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
@@ -10,8 +11,9 @@ import { Stack, Text } from '@/shared/ui';
 
 import type { ConfigListProps } from './ConfigList.types';
 
+import { CONFIG_FILTER_ALL, CONFIG_FILTER_ONLINE, FILTER_MIN_CONFIGS } from '../config';
 import { useConfigs, useRevokeConfig } from '../model/hooks';
-import { AddConfigForm, ConfigRow } from './components';
+import { AddConfigForm, ConfigFilter, ConfigRow } from './components';
 
 import s from './ConfigList.module.scss';
 
@@ -22,8 +24,27 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const { hasAccess, limits } = useSubscriptionStatus();
 
   const revoke = useRevokeConfig();
+  const [filter, setFilter] = useState(CONFIG_FILTER_ALL);
 
   const isFull = configs.length >= limits.configLimit;
+  const onlineCount = configs.filter((config) => config.isOnline).length;
+  const hasFilter = configs.length >= FILTER_MIN_CONFIGS;
+
+  const countries = unique(configs.map((config) => config.country))
+    .sort()
+    .map((name) => {
+      const matching = configs.filter((config) => config.country === name);
+
+      return { name, code: matching[0]?.countryCode ?? '', count: matching.length };
+    });
+
+  const visible = configs.filter((config) => {
+    if (!hasFilter || filter === CONFIG_FILTER_ALL) {
+      return true;
+    }
+
+    return filter === CONFIG_FILTER_ONLINE ? config.isOnline : config.country === filter;
+  });
 
   if (isLoadingNodes || isLoadingConfigs || isEmpty(nodes)) {
     return (
@@ -69,8 +90,26 @@ export const ConfigList = ({ className }: ConfigListProps) => {
             </Text>
           )}
 
+          {hasFilter && (
+            <ConfigFilter
+              className={s.panelFilter}
+              countries={countries}
+              isDisabled={revoke.isPending}
+              onlineCount={onlineCount}
+              total={configs.length}
+              value={filter}
+              onChange={setFilter}
+            />
+          )}
+
+          {isEmpty(visible) && (
+            <Text size='xs' tone='muted'>
+              {t('filterEmpty')}
+            </Text>
+          )}
+
           <div className={s.rows}>
-            {configs.map((config) => (
+            {visible.map((config) => (
               <ConfigRow
                 key={config.id}
                 config={config}

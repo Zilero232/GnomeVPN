@@ -29,15 +29,7 @@ import {
   serializeByKey,
   stripCidrMask
 } from './lib';
-import {
-  INBOUND_REMARK,
-  REQUEST_TIMEOUT_MS,
-  UNLIMITED,
-  WG_INBOUND_REMARK,
-  WG_PEER_ID_BYTES,
-  WG_PEER_KEEPALIVE,
-  XRAY_STATE_RUNNING
-} from './xray.constants';
+import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -244,7 +236,6 @@ export class XrayClient {
       publicKey,
       allowedIPs: [`${assignedIp}/32`],
       preSharedKey: '',
-      keepAlive: WG_PEER_KEEPALIVE,
       enable: true
     };
   }

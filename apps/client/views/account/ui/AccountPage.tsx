@@ -1,45 +1,48 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
+import { CreditCard, FileKey, LogOut, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
-
-import type { TabItem } from '@/shared/ui';
 
 import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
 import { ConfigList } from '@/features/vpn/download-config';
-import { Tabs, Text } from '@/shared/ui';
+import { Text } from '@/shared/ui';
+
+import type { AccountTab } from './components';
 
 import { BLOCK_MOTION, HEADER_MOTION, PAGE_MOTION } from './AccountPage.motion';
-import { AccountAura, AccountNav, ProfileCard, SubscriptionCard } from './components';
+import { AccountAura, AccountNav, AccountTabs, ProfileCard, SubscriptionCard } from './components';
 
 import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
   const tConfigs = useTranslations('configs');
-  const { email } = useCurrentUser();
+  const { email, name } = useCurrentUser();
   const { subscription, isLoading } = useSubscriptionStatus();
 
   const signOut = useSignOut();
 
-  const tabs: TabItem[] = [
+  const tabs: AccountTab[] = [
     {
       value: 'subscription',
       label: t('tabs.subscription'),
+      icon: CreditCard,
       content: <SubscriptionCard isLoading={isLoading} subscription={subscription} />
     },
     {
       value: 'configs',
       label: tConfigs('title'),
+      icon: FileKey,
       content: <ConfigList />,
       isBare: true
     },
     {
       value: 'profile',
       label: t('profile.title'),
+      icon: UserRound,
       content: <ProfileCard />
     }
   ];
@@ -54,24 +57,31 @@ export const AccountPage = () => {
         </motion.div>
 
         <motion.header className={s.header} variants={HEADER_MOTION}>
-          <Text as='h1' className={s.title}>
-            {t('title')}
-          </Text>
-          <Text size='xs' tone='muted'>
-            {email}
-          </Text>
-        </motion.header>
+          <div className={s.identity}>
+            <span aria-hidden className={s.avatar}>
+              {(name || email).slice(0, 1).toUpperCase()}
+            </span>
 
-        <motion.div variants={BLOCK_MOTION}>
-          <Tabs items={tabs} panelClassName={s.card} />
-        </motion.div>
+            <div className={s.who}>
+              <Text as='h1' className={s.title}>
+                {t('title')}
+              </Text>
 
-        <motion.footer className={s.footer} variants={BLOCK_MOTION}>
+              <Text size='xs' tone='muted'>
+                {email}
+              </Text>
+            </div>
+          </div>
+
           <button className={s.signOut} disabled={signOut.isPending} type='button' onClick={() => signOut.mutate()}>
-            <LogOut size={15} />
+            <LogOut aria-hidden size={15} />
             {t('signOut')}
           </button>
-        </motion.footer>
+        </motion.header>
+
+        <motion.div className={s.body} variants={BLOCK_MOTION}>
+          <AccountTabs items={tabs} panelClassName={s.card} />
+        </motion.div>
       </motion.main>
     </>
   );

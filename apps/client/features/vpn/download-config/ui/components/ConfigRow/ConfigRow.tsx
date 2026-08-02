@@ -46,6 +46,8 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
             </Text>
 
             {isBlocked ? <Badge tone='muted'>{t('paused')}</Badge> : <Badge>{t(`protocol.${config.protocol}`)}</Badge>}
+
+            {config.isOnline && <Badge tone='accent'>{t('connected')}</Badge>}
           </span>
 
           <Text size='xs' tone='muted'>

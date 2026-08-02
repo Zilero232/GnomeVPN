@@ -92,6 +92,7 @@ export const useVpnConnection = () => {
   });
 
   useAdoptTunnel({
+    status: tunnel.status,
     onAdopted: (nodeId) => {
       tunnel.markAdopted(nodeId);
       events.markConnected();

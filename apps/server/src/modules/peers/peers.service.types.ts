@@ -16,6 +16,14 @@ export type PeerRef = {
   nodeCredential: string;
 };
 
+export type OnlinePeerRef = {
+  id: string;
+  nodeId: string;
+  userId: string;
+  kind: PeerKind;
+  name: string | null;
+};
+
 export type IssuePeerInput = {
   node: PeerNode;
   nodeId?: string;

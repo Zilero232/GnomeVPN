@@ -6,7 +6,7 @@ import { MONTH_FORMS, SUBSCRIPTION_PREFIX } from '../../config';
 
 const rules = new Intl.PluralRules('ru-RU');
 
-const months = (count: number): string => MONTH_FORMS[rules.select(count) as keyof typeof MONTH_FORMS] ?? MONTH_FORMS.many;
+const months = (count: number): string => MONTH_FORMS[rules.select(count)] ?? MONTH_FORMS.many;
 
 export const describeSubscription = ({ plan, kind }: DescribeSubscriptionInput): string =>
   `${SUBSCRIPTION_PREFIX[kind]} ${plan.months} ${months(plan.months)}`;

@@ -15,6 +15,11 @@
       color-mix(in srgb, var(--color-accent-dim) 8%, transparent),
       transparent 70%
     );
-  inset: -20%;
-  will-change: background;
+  inset: 0;
+}
+
+@media (pointer: coarse) {
+  .spotlight {
+    display: none;
+  }
 }
