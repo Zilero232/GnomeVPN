@@ -6,6 +6,19 @@
   gap: 12px;
 }
 
+.prompt {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px dashed var(--color-border-bright);
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-surface-raised) 45%, transparent);
+  gap: 12px;
+}
+
 .card {
   display: flex;
   width: 100%;

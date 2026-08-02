@@ -197,7 +197,9 @@ enabling it for every target only grows the APK.
 - `kill` — `fkill gnomevpn.exe`
 
 `scripts/lib/` holds what the three share: `shell.mjs` (paths and the `[scope]`
-logger), plus `android-manifest.mjs` and `android-overlay.mjs`. **A new Android
+logger — kept local rather than pulled from `@gnomevpn/scripts`, because these
+scripts run under `node`, which cannot import the package's TypeScript), plus
+`android-manifest.mjs` and `android-overlay.mjs`. **A new Android
 permission is one string in `PERMISSIONS`** — the patch turns each entry into its
 own idempotent step, so nothing else has to change.
 

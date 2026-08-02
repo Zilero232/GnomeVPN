@@ -1,9 +1,4 @@
-import {
-  connectInputSchema,
-  deviceUsageSchema,
-  disconnectInputSchema,
-  tunnelConfigSchema
-} from '@gnomevpn/schemas';
+import { connectInputSchema, deviceUsageSchema, disconnectInputSchema, tunnelConfigSchema } from '@gnomevpn/schemas';
 import { createZodDto } from 'nestjs-zod';
 
 export class ConnectDto extends createZodDto(connectInputSchema) {}

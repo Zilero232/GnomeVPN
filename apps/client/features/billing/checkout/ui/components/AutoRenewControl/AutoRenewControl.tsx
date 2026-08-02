@@ -8,12 +8,7 @@ import { Button, Text } from '@/shared/ui';
 
 import type { AutoRenewControlProps } from './AutoRenewControl.types';
 
-import {
-  useBindCard,
-  useCancelAutoRenew,
-  useResumeAutoRenew,
-  useUnbindCard
-} from '../../../model/hooks';
+import { useBindCard, useCancelAutoRenew, useResumeAutoRenew, useUnbindCard } from '../../../model/hooks';
 
 import s from './AutoRenewControl.module.scss';
 
@@ -24,8 +19,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   const cancel = useCancelAutoRenew();
   const resume = useResumeAutoRenew();
 
-  const { isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd, savedCardTitle } =
-    subscription;
+  const { isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd, savedCardTitle } = subscription;
 
   const card = (
     <div className={s.card}>
@@ -43,12 +37,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
         </Text>
       </div>
 
-      <Button
-        className={s.unbind}
-        disabled={unbind.isPending}
-        variant='ghost'
-        onClick={() => unbind.mutate()}
-      >
+      <Button className={s.unbind} disabled={unbind.isPending} variant='ghost' onClick={() => unbind.mutate()}>
         {t('unbindCard')}
       </Button>
     </div>
@@ -57,7 +46,7 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   return match({ isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd })
     .with({ isRecurringAvailable: false }, () => null)
     .with({ hasPaymentMethod: false }, () => (
-      <div className={s.root}>
+      <div className={s.prompt}>
         <Text size='xs' tone='muted'>
           {t('noPaymentMethod')}
         </Text>

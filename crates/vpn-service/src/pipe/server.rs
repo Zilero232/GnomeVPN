@@ -45,11 +45,8 @@ pub fn serve(supervisor: Arc<Supervisor>, runtime: Handle) -> io::Result<()> {
     Ok(())
 }
 
-fn listen() -> io::Result<
-    interprocess::os::windows::named_pipe::PipeListener<pipe_mode::Bytes, pipe_mode::Bytes>,
-> {
-    let sddl = U16CString::from_str(PIPE_SDDL)
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?;
+fn listen() -> io::Result<interprocess::os::windows::named_pipe::PipeListener<pipe_mode::Bytes, pipe_mode::Bytes>> {
+    let sddl = U16CString::from_str(PIPE_SDDL).map_err(|error| io::Error::new(io::ErrorKind::InvalidInput, error.to_string()))?;
 
     PipeListenerOptions::new()
         .path(Path::new(PIPE_NAME))
@@ -88,10 +85,7 @@ fn watch_for_orphan(supervisor: Arc<Supervisor>, runtime: Handle) {
     });
 }
 
-fn pump_events(
-    mut events: tokio::sync::broadcast::Receiver<gnomevpn_ipc::TunnelEvent>,
-    writer: SharedWriter,
-) {
+fn pump_events(mut events: tokio::sync::broadcast::Receiver<gnomevpn_ipc::TunnelEvent>, writer: SharedWriter) {
     std::thread::spawn(move || {
         while let Ok(event) = events.blocking_recv() {
             if write_frame(&mut *writer.lock(), &Response::Event { event }).is_err() {

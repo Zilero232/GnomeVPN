@@ -84,7 +84,7 @@ services:
       # over ssh, so the container reads what the last provisioning wrote rather
       # than keeping its own copy. Create it before the first `up` — Docker makes
       # a directory out of a bind mount whose source is missing: touch .env.nodes
-      - ./.env.nodes:/app/apps/server/.env.nodes
+      - ./.env.nodes:/app/.env.nodes
     networks:
       - gnomevpn
     healthcheck:

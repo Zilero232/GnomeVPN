@@ -14,15 +14,7 @@ import { gradeLatency } from '../../../lib';
 
 import s from './NodePicker.module.scss';
 
-export const NodePicker = ({
-  nodes,
-  activeNodeId,
-  isLoading,
-  isError,
-  isLocked,
-  latency = {},
-  onSelect
-}: NodePickerProps) => {
+export const NodePicker = ({ nodes, activeNodeId, isLoading, isError, isLocked, latency = {}, onSelect }: NodePickerProps) => {
   const t = useTranslations('app');
 
   const statusPlaceholder = match({ isLoading, isError, isEmpty: nodes.length === 0 })

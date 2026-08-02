@@ -2,9 +2,7 @@ use std::ffi::OsString;
 use std::sync::Arc;
 use std::time::Duration;
 
-use windows_service::service::{
-    ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus, ServiceType,
-};
+use windows_service::service::{ServiceControl, ServiceControlAccept, ServiceExitCode, ServiceState, ServiceStatus, ServiceType};
 use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
 use windows_service::{define_windows_service, service_dispatcher};
 
@@ -93,34 +91,20 @@ fn run_pipe_server() {
 }
 
 fn init_logging() {
-    use simplelog::{
-        ColorChoice, CombinedLogger, LevelFilter, TermLogger, TerminalMode, WriteLogger,
-    };
+    use simplelog::{ColorChoice, CombinedLogger, LevelFilter, TermLogger, TerminalMode, WriteLogger};
 
-    let log_dir = std::path::PathBuf::from(
-        std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string()),
-    )
-    .join("GnomeVPN");
+    let log_dir = std::path::PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string())).join("GnomeVPN");
 
     let _ = std::fs::create_dir_all(&log_dir);
 
     let config = simplelog::Config::default();
     let mut loggers: Vec<Box<dyn simplelog::SharedLogger>> = Vec::new();
 
-    if let Ok(file) = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(log_dir.join("service.log"))
-    {
+    if let Ok(file) = std::fs::OpenOptions::new().create(true).append(true).open(log_dir.join("service.log")) {
         loggers.push(WriteLogger::new(LevelFilter::Info, config.clone(), file));
     }
 
-    loggers.push(TermLogger::new(
-        LevelFilter::Info,
-        config,
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    ));
+    loggers.push(TermLogger::new(LevelFilter::Info, config, TerminalMode::Mixed, ColorChoice::Auto));
 
     let _ = CombinedLogger::init(loggers);
 }

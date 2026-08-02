@@ -1,13 +1,6 @@
 import { isEmpty } from 'remeda';
 
-import type {
-  PanelClientInput,
-  PanelInbound,
-  PanelOnlines,
-  PanelResponse,
-  PanelServerStatus,
-  SetClientsEnabledInput
-} from './panel-client.types';
+import type { PanelClientInput, PanelInbound, PanelOnlines, PanelResponse, PanelServerStatus, SetClientsEnabledInput } from './panel-client.types';
 
 import { AppServiceUnavailableException } from '../../../../common/exceptions';
 import { collectOnlineEmails } from '../collect-online-emails';
@@ -41,19 +34,13 @@ export class PanelClient {
       });
 
       if (!response.ok) {
-        throw new AppServiceUnavailableException(
-          'NODE_UNAVAILABLE',
-          `panel ${path} returned ${response.status}`
-        );
+        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path} returned ${response.status}`);
       }
 
       const payload = (await response.json()) as PanelResponse<T>;
 
       if (!payload.success) {
-        throw new AppServiceUnavailableException(
-          'NODE_UNAVAILABLE',
-          `panel ${path}: ${payload.msg}`
-        );
+        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path}: ${payload.msg}`);
       }
 
       return payload.obj;

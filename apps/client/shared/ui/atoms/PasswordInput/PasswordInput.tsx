@@ -10,23 +10,12 @@ import { Input } from '../Input';
 
 import s from './PasswordInput.module.scss';
 
-export const PasswordInput = ({
-  className,
-  disabled,
-  showLabel,
-  hideLabel,
-  ...props
-}: PasswordInputProps) => {
+export const PasswordInput = ({ className, disabled, showLabel, hideLabel, ...props }: PasswordInputProps) => {
   const [isVisible, toggleVisible] = useBoolean(false);
 
   return (
     <div className={s.root}>
-      <Input
-        className={clsx(s.input, className)}
-        disabled={disabled}
-        type={isVisible ? 'text' : 'password'}
-        {...props}
-      />
+      <Input className={clsx(s.input, className)} disabled={disabled} type={isVisible ? 'text' : 'password'} {...props} />
 
       <button
         aria-label={isVisible ? hideLabel : showLabel}

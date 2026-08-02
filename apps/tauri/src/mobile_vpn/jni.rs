@@ -32,10 +32,7 @@ struct Session {
 static SESSION: Mutex<Option<Session>> = Mutex::new(None);
 
 #[no_mangle]
-pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeNetworkChanged(
-    _env: JNIEnv,
-    _class: JClass,
-) {
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeNetworkChanged(_env: JNIEnv, _class: JClass) {
     install_logger();
     engine::restart_attempt();
 }
@@ -95,18 +92,13 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
             auto_reconnect: auto_reconnect != 0,
         };
 
-        if let Err(error) =
-            engine::run_tunnel(&native_lib_dir, &data_dir, &config, options, worker, |_| {}).await
-        {
+        if let Err(error) = engine::run_tunnel(&native_lib_dir, &data_dir, &config, options, worker, |_| {}).await {
             log::error!("tunnel stopped: {error}");
         }
     });
 
     if let Ok(mut guard) = SESSION.lock() {
-        if let Some(previous) = guard.replace(Session {
-            runtime,
-            cancellation,
-        }) {
+        if let Some(previous) = guard.replace(Session { runtime, cancellation }) {
             previous.cancellation.cancel();
             previous.runtime.shutdown_background();
         }
@@ -126,17 +118,11 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStop(_env: JNIEnv
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficRx(
-    _env: JNIEnv,
-    _class: JClass,
-) -> jlong {
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficRx(_env: JNIEnv, _class: JClass) -> jlong {
     engine::traffic().rx as jlong
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficTx(
-    _env: JNIEnv,
-    _class: JClass,
-) -> jlong {
+pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeTrafficTx(_env: JNIEnv, _class: JClass) -> jlong {
     engine::traffic().tx as jlong
 }

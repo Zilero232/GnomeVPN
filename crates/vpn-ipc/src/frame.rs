@@ -18,15 +18,13 @@ pub enum FrameError {
 pub fn write_frame<W: Write, T: Serialize>(writer: &mut W, value: &T) -> Result<(), FrameError> {
     let payload = serde_json::to_vec(value).map_err(|e| FrameError::Payload(e.to_string()))?;
 
-    let len = u32::try_from(payload.len())
-        .map_err(|_| FrameError::TooLarge(u32::MAX))
-        .and_then(|len| {
-            if len > MAX_FRAME_LEN {
-                Err(FrameError::TooLarge(len))
-            } else {
-                Ok(len)
-            }
-        })?;
+    let len = u32::try_from(payload.len()).map_err(|_| FrameError::TooLarge(u32::MAX)).and_then(|len| {
+        if len > MAX_FRAME_LEN {
+            Err(FrameError::TooLarge(len))
+        } else {
+            Ok(len)
+        }
+    })?;
 
     writer.write_all(&len.to_be_bytes())?;
     writer.write_all(&payload)?;

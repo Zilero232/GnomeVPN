@@ -9,16 +9,7 @@ import type { SelectProps } from './Select.types';
 
 import s from './Select.module.scss';
 
-export const Select = ({
-  value,
-  options,
-  id,
-  placeholder,
-  isDisabled,
-  className,
-  'aria-label': ariaLabel,
-  onChange
-}: SelectProps) => {
+export const Select = ({ value, options, id, placeholder, isDisabled, className, 'aria-label': ariaLabel, onChange }: SelectProps) => {
   const handleChange = (next: unknown) => {
     if (isNullish(next) || next === '') {
       return;
@@ -31,9 +22,7 @@ export const Select = ({
     <BaseSelect.Root disabled={isDisabled} value={value} onValueChange={handleChange}>
       <BaseSelect.Trigger aria-label={ariaLabel} className={clsx(s.trigger, className)} id={id}>
         <BaseSelect.Value className={s.value}>
-          {(selected: string | null) =>
-            options.find((option) => option.value === selected)?.label ?? placeholder
-          }
+          {(selected: string | null) => options.find((option) => option.value === selected)?.label ?? placeholder}
         </BaseSelect.Value>
 
         <ChevronDown aria-hidden className={s.chevron} size={16} />
@@ -44,13 +33,7 @@ export const Select = ({
           <BaseSelect.Popup className={s.popup}>
             <BaseSelect.List className={s.list}>
               {options.map((option) => (
-                <BaseSelect.Item
-                  key={option.value}
-                  className={s.item}
-                  disabled={option.isDisabled}
-                  title={option.title}
-                  value={option.value}
-                >
+                <BaseSelect.Item key={option.value} className={s.item} disabled={option.isDisabled} title={option.title} value={option.value}>
                   <BaseSelect.ItemText className={s.itemLabel}>{option.label}</BaseSelect.ItemText>
 
                   <BaseSelect.ItemIndicator className={s.check}>

@@ -14,13 +14,7 @@ export const Faq = () => {
   const t = useTranslations('landing.faq');
 
   return (
-    <motion.div
-      className={s.list}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.list} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {FAQ_ITEMS.map((item) => (
         <motion.article key={item} className={s.item} variants={ROW_MOTION}>
           <Text as='h3' className={s.question}>

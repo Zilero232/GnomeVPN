@@ -31,12 +31,7 @@ export const AddressSection = ({ draft, setIpsMode, addIp, removeIp }: AddressSe
 
   return (
     <div className={s.section}>
-      <SplitModeToggle
-        label={t('addressModeLabel')}
-        lead={t('modeLeadAddresses')}
-        mode={draft.ipsMode}
-        onModeChange={setIpsMode}
-      />
+      <SplitModeToggle label={t('addressModeLabel')} lead={t('modeLeadAddresses')} mode={draft.ipsMode} onModeChange={setIpsMode} />
 
       <div className={s.ipRow}>
         <Input

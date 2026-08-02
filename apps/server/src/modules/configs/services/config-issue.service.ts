@@ -38,9 +38,13 @@ export class ConfigIssueService {
         nodeId: true,
         protocol: true,
         createdAt: true,
+        userId: true,
+        kind: true,
         node: { select: { country: true, countryCode: true } }
       }
     });
+
+    const online = await this.peers.onlinePeerIds(rows, { assumeOnlineWhenNodeSilent: false });
 
     return rows.map((row) => ({
       id: row.id,
@@ -49,7 +53,8 @@ export class ConfigIssueService {
       country: row.node.country,
       countryCode: row.node.countryCode,
       protocol: row.protocol,
-      createdAt: row.createdAt.toISOString()
+      createdAt: row.createdAt.toISOString(),
+      isOnline: online.has(row.id)
     }));
   }
 
@@ -81,8 +86,7 @@ export class ConfigIssueService {
       kind: 'config',
       protocol,
       name,
-      persist: (peer) =>
-        this.persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer })
+      persist: (peer) => this.persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer })
     });
 
     return this.buildFile({
@@ -118,14 +122,7 @@ export class ConfigIssueService {
     });
   }
 
-  private persistConfigPeer({
-    userId,
-    nodeId,
-    name,
-    protocol,
-    configLimit,
-    peer
-  }: PersistConfigPeerInput): Promise<void> {
+  private persistConfigPeer({ userId, nodeId, name, protocol, configLimit, peer }: PersistConfigPeerInput): Promise<void> {
     const data = { nodeId, nodeCredential: peer.nodeCredential, ...peerWgData(peer) };
 
     return withSerializableRetry(() =>
@@ -144,10 +141,7 @@ export class ConfigIssueService {
           }
 
           if ((await tx.peer.count({ where: { userId, kind: 'config' } })) >= configLimit) {
-            throw new AppBadRequestException(
-              'CONFIG_LIMIT_REACHED',
-              `At most ${configLimit} configs`
-            );
+            throw new AppBadRequestException('CONFIG_LIMIT_REACHED', `At most ${configLimit} configs`);
           }
 
           await tx.peer.create({ data: { userId, kind: 'config', protocol, name, ...data } });
@@ -157,14 +151,7 @@ export class ConfigIssueService {
     );
   }
 
-  private buildFile({
-    node,
-    name,
-    protocol,
-    auth,
-    wgPrivateKey,
-    wgAssignedIp
-  }: BuildConfigFileInput): ConfigFile {
+  private buildFile({ node, name, protocol, auth, wgPrivateKey, wgAssignedIp }: BuildConfigFileInput): ConfigFile {
     const config = buildTunnelConfig({ node, protocol, auth, wgPrivateKey, wgAssignedIp });
 
     return renderConfig({ config, protocol, country: node.country, deviceName: name });

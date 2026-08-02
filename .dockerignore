@@ -17,7 +17,7 @@
 .env.*
 **/.env
 **/.env.*
-apps/server/nodes.json
+nodes.json
 
 # Local tooling / VCS noise.
 .git

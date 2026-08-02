@@ -5,13 +5,7 @@ import { Channel } from '@tauri-apps/api/core';
 import { mapToObj } from 'remeda';
 
 import type { TunnelEvent } from '../ipc';
-import type {
-  InstalledApp,
-  LatencyByNode,
-  ProbeLatencyInput,
-  VpnConnectInput,
-  VpnTraffic
-} from './vpn-bridge.types';
+import type { InstalledApp, LatencyByNode, ProbeLatencyInput, VpnConnectInput, VpnTraffic } from './vpn-bridge.types';
 
 import { callRust } from '../ipc';
 import { isTauriDesktop } from '../tauri-platform';
@@ -23,11 +17,9 @@ export const emptySplitConfig = (): SplitConfig => ({
   ips: []
 });
 
-const asMode = (value: unknown): SplitMode =>
-  value === SPLIT_MODE.disallowed ? SPLIT_MODE.disallowed : SPLIT_MODE.allowed;
+const asMode = (value: unknown): SplitMode => (value === SPLIT_MODE.disallowed ? SPLIT_MODE.disallowed : SPLIT_MODE.allowed);
 
-const asList = (value: unknown) =>
-  Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
+const asList = (value: unknown) => (Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []);
 
 export const normalizeSplitConfig = (value: unknown): SplitConfig => {
   const source = (value ?? {}) as Record<string, unknown>;
@@ -40,18 +32,12 @@ export const normalizeSplitConfig = (value: unknown): SplitConfig => {
   };
 };
 
-export const vpnConnect = async ({
-  config,
-  onEvent,
-  autoReconnect,
-  split = emptySplitConfig()
-}: VpnConnectInput): Promise<void> => {
+export const vpnConnect = async ({ config, onEvent, autoReconnect, split = emptySplitConfig() }: VpnConnectInput): Promise<void> => {
   const channel = new Channel<TunnelEvent>();
+
   channel.onmessage = onEvent;
 
-  const args = isTauriDesktop()
-    ? { config, onEvent: channel, autoReconnect, split }
-    : { config, onEvent: channel, autoReconnect };
+  const args = isTauriDesktop() ? { config, onEvent: channel, autoReconnect, split } : { config, onEvent: channel, autoReconnect };
 
   await callRust({
     command: 'vpn_connect',
@@ -60,11 +46,9 @@ export const vpnConnect = async ({
   });
 };
 
-export const listInstalledApps = async (): Promise<InstalledApp[]> =>
-  callRust({ command: 'list_installed_apps', fallback: [] });
+export const listInstalledApps = async (): Promise<InstalledApp[]> => callRust({ command: 'list_installed_apps', fallback: [] });
 
-export const listRunningProcesses = async (): Promise<InstalledApp[]> =>
-  callRust({ command: 'list_running_processes', fallback: [] });
+export const listRunningProcesses = async (): Promise<InstalledApp[]> => callRust({ command: 'list_running_processes', fallback: [] });
 
 export const pickExecutable = async (): Promise<string | null> => {
   if (!isTauriDesktop()) {
@@ -86,32 +70,24 @@ export const vpnDisconnect = async (): Promise<void> => {
   await callRust({ command: 'vpn_disconnect', fallback: null });
 };
 
-export const vpnStatus = async (): Promise<string> =>
-  callRust({ command: 'vpn_status', fallback: 'disconnected' });
+export const vpnStatus = async (): Promise<string> => callRust({ command: 'vpn_status', fallback: 'disconnected' });
 
-export const vpnTraffic = async (): Promise<VpnTraffic> =>
-  callRust({ command: 'vpn_traffic', fallback: { rx: 0, tx: 0 } });
+export const vpnTraffic = async (): Promise<VpnTraffic> => callRust({ command: 'vpn_traffic', fallback: { rx: 0, tx: 0 } });
 
-export const isVpnServiceAvailable = async (): Promise<boolean> =>
-  callRust({ command: 'vpn_service_available', fallback: false });
+export const isVpnServiceAvailable = async (): Promise<boolean> => callRust({ command: 'vpn_service_available', fallback: false });
 
-export const takeTileConnectRequest = async (): Promise<boolean> =>
-  callRust({ command: 'vpn_take_tile_request', fallback: false });
+export const takeTileConnectRequest = async (): Promise<boolean> => callRust({ command: 'vpn_take_tile_request', fallback: false });
 
 export const hideAppWindow = async (): Promise<void> => {
   await callRust({ command: 'vpn_hide_window', fallback: null });
 };
 
-export const shareConfigFile = async (args: {
-  fileName: string;
-  content: string;
-}): Promise<boolean> => callRust({ command: 'vpn_share_config', args, fallback: false });
+export const shareConfigFile = async (args: { fileName: string; content: string }): Promise<boolean> =>
+  callRust({ command: 'vpn_share_config', args, fallback: false });
 
-export const hasVpnPermission = async (): Promise<boolean> =>
-  callRust({ command: 'vpn_has_permission', fallback: true });
+export const hasVpnPermission = async (): Promise<boolean> => callRust({ command: 'vpn_has_permission', fallback: true });
 
-export const requestVpnPermission = async (): Promise<boolean> =>
-  callRust({ command: 'vpn_request_permission', fallback: true });
+export const requestVpnPermission = async (): Promise<boolean> => callRust({ command: 'vpn_request_permission', fallback: true });
 
 export const probeNodeLatency = async ({ targets }: ProbeLatencyInput): Promise<LatencyByNode> => {
   const outcomes = await callRust({

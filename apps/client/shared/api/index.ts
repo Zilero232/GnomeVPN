@@ -1,19 +1,7 @@
-export {
-  authClient,
-  clearToken,
-  getAuthToken,
-  restoreTokenFromVault,
-  saveAuthToken
-} from './auth/auth-client';
+export { authClient, clearToken, getAuthToken, restoreTokenFromVault, saveAuthToken } from './auth/auth-client';
+export { resetSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
-export {
-  bindCard,
-  buyExtraDevices,
-  cancelAutoRenew,
-  createCheckout,
-  resumeAutoRenew,
-  unbindCard
-} from './billing';
+export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
 export { issueConfig, listConfigs, readConfigText, revokeConfig } from './configs';
 export type { ConfigDownload } from './configs';
 export { api, ApiError, apiErrorCode, toApiError } from './http';

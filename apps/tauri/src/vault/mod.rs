@@ -24,9 +24,7 @@ fn entry() -> Result<keyring::Entry, VaultError> {
 pub async fn vault_save_token(token: String) -> Result<(), VaultError> {
     #[cfg(target_os = "windows")]
     {
-        entry()?
-            .set_password(&token)
-            .map_err(|e| VaultError::Backend(e.to_string()))
+        entry()?.set_password(&token).map_err(|e| VaultError::Backend(e.to_string()))
     }
     #[cfg(not(target_os = "windows"))]
     {

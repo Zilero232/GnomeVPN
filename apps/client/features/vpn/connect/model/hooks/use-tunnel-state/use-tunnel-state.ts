@@ -2,10 +2,7 @@
 
 import { useState } from 'react';
 
-import type {
-  VpnConnectionStatus,
-  VpnTraffic
-} from '../use-vpn-connection/use-vpn-connection.types';
+import type { VpnConnectionStatus, VpnTraffic } from '../use-vpn-connection/use-vpn-connection.types';
 
 const EMPTY_TRAFFIC: VpnTraffic = { rx: 0, tx: 0 };
 

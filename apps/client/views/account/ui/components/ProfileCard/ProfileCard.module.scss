@@ -1,8 +1,21 @@
 .root {
-  display: flex;
+  display: grid;
   width: 100%;
+  gap: var(--gap-lg);
+  grid-template-columns: 1fr;
+}
+
+.pair {
+  display: grid;
+  gap: var(--gap-lg);
+  grid-template-columns: 1fr;
+}
+
+.section {
+  display: flex;
+  min-width: 0;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap-sm);
 }
 
 .divider {
@@ -15,6 +28,18 @@
 .subtitle {
   margin: 0;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--step-sm);
   font-weight: 600;
+}
+
+@media (width >= 900px) {
+  .pair {
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pair .section + .section {
+    padding-left: var(--gap-lg);
+    border-left: 1px solid var(--color-border);
+  }
 }

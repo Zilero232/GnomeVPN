@@ -21,11 +21,7 @@ export class CheckoutService {
     private readonly shared: BillingSharedService
   ) {}
 
-  async createCheckout(
-    userId: string,
-    planId: PlanId,
-    client: CheckoutClient
-  ): Promise<CheckoutResult> {
+  async createCheckout(userId: string, planId: PlanId, client: CheckoutClient): Promise<CheckoutResult> {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
@@ -33,10 +29,7 @@ export class CheckoutService {
     });
 
     if (isPeriodActive(subscription?.currentPeriodEnd) && subscription?.plan !== plan.id) {
-      throw new AppBadRequestException(
-        'PLAN_CHANGE_LOCKED',
-        'Plan cannot change while the current period runs'
-      );
+      throw new AppBadRequestException('PLAN_CHANGE_LOCKED', 'Plan cannot change while the current period runs');
     }
 
     const payment = await this.yookassa.createPayment({
@@ -61,11 +54,7 @@ export class CheckoutService {
     return { confirmationUrl: payment.confirmationUrl };
   }
 
-  async buyExtraDevices({
-    userId,
-    quantity,
-    client
-  }: BuyExtraDevicesServiceInput): Promise<CheckoutResult> {
+  async buyExtraDevices({ userId, quantity, client }: BuyExtraDevicesServiceInput): Promise<CheckoutResult> {
     const [subscription, pending] = await Promise.all([
       this.prisma.subscription.findUnique({
         where: { userId },
@@ -78,19 +67,13 @@ export class CheckoutService {
     ]);
 
     if (!isPeriodActive(subscription?.currentPeriodEnd)) {
-      throw new AppBadRequestException(
-        'SUBSCRIPTION_REQUIRED',
-        'Extra devices need an active subscription'
-      );
+      throw new AppBadRequestException('SUBSCRIPTION_REQUIRED', 'Extra devices need an active subscription');
     }
 
     const claimed = (subscription?.extraDevices ?? 0) + (pending._sum.extraDevices ?? 0);
 
     if (claimed + quantity > MAX_EXTRA_DEVICES) {
-      throw new AppBadRequestException(
-        'EXTRA_DEVICES_LIMIT',
-        `At most ${MAX_EXTRA_DEVICES} extra devices`
-      );
+      throw new AppBadRequestException('EXTRA_DEVICES_LIMIT', `At most ${MAX_EXTRA_DEVICES} extra devices`);
     }
 
     const payment = await this.yookassa.createPayment({
@@ -119,10 +102,7 @@ export class CheckoutService {
           const claimedNow = (current?.extraDevices ?? 0) + (pendingNow._sum.extraDevices ?? 0);
 
           if (claimedNow + quantity > MAX_EXTRA_DEVICES) {
-            throw new AppBadRequestException(
-              'EXTRA_DEVICES_LIMIT',
-              `At most ${MAX_EXTRA_DEVICES} extra devices`
-            );
+            throw new AppBadRequestException('EXTRA_DEVICES_LIMIT', `At most ${MAX_EXTRA_DEVICES} extra devices`);
           }
 
           await tx.payment.create({
@@ -144,12 +124,7 @@ export class CheckoutService {
     return { confirmationUrl: payment.confirmationUrl };
   }
 
-  async recordPendingPayment({
-    userId,
-    paymentId,
-    plan,
-    isAutoCharge
-  }: RecordPaymentInput): Promise<void> {
+  async recordPendingPayment({ userId, paymentId, plan, isAutoCharge }: RecordPaymentInput): Promise<void> {
     await this.prisma.payment.upsert({
       where: { yookassaPaymentId: paymentId },
       update: {},

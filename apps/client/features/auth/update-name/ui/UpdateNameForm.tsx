@@ -45,12 +45,7 @@ export const UpdateNameForm = () => {
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField
-        className={s.field}
-        error={fieldError(errors.name)}
-        htmlFor='profile-name'
-        label={t('nameLabel')}
-      >
+      <FormField className={s.field} error={fieldError(errors.name)} htmlFor='profile-name' label={t('nameLabel')}>
         <Input autoComplete='name' id='profile-name' {...register('name')} />
       </FormField>
 

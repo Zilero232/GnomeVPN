@@ -1,19 +1,61 @@
 @use '@/shared/styles/mixins' as *;
 
 .root {
+  position: relative;
+  z-index: 1;
   display: flex;
-  max-width: 760px;
+  max-width: var(--shell-width);
   flex-direction: column;
   margin: 0 auto;
-  gap: 20px;
+  gap: var(--gap-lg);
 
-  @include safe-screen(40px, 24px, 32px);
+  @include safe-screen(clamp(24px, 3vw, 48px), clamp(16px, 3vw, 40px), clamp(24px, 3vw, 40px));
 }
 
-.footer {
+.body {
   display: flex;
-  padding-top: 28px;
-  margin-top: auto;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-md);
+  overflow-wrap: anywhere;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatar {
+  display: inline-flex;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: var(--radius-md);
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  font-size: var(--step-lg);
+  font-weight: 700;
+}
+
+.who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .signOut {
@@ -26,7 +68,7 @@
   color: var(--color-text-muted);
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: var(--step-xs);
   gap: 9px;
   transition:
     border-color 0.16s ease,
@@ -45,24 +87,16 @@
   }
 }
 
-.header {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 6px;
-  overflow-wrap: anywhere;
-}
-
 .title {
   margin: 0;
-  font-size: 28px;
+  font-size: var(--step-xl);
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--step-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -73,11 +107,23 @@
   overflow: hidden;
   flex-direction: column;
   align-items: stretch;
-  padding: 30px;
+  padding: var(--pad-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  gap: 14px;
+  backdrop-filter: blur(12px);
+  background-color: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  box-shadow: 0 18px 48px -28px rgb(0 0 0 / 70%);
+  gap: var(--gap-md);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  box-shadow:
+    0 22px 56px -28px rgb(0 0 0 / 78%),
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
 .card:before {
@@ -91,13 +137,8 @@
 }
 
 @media (width <= 560px) {
-  .root {
-    gap: 16px;
-
-    @include safe-screen(24px, 16px);
-  }
-
   .card {
-    padding: 22px 18px;
+    padding-right: clamp(1rem, 4vw, 1.5rem);
+    padding-left: clamp(1rem, 4vw, 1.5rem);
   }
 }

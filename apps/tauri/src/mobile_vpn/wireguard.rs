@@ -56,12 +56,7 @@ fn keys_from_config(wireguard: &WireguardConfig) -> Result<WireguardKeys, Mobile
 }
 
 pub fn assigned_ip(wireguard: &WireguardConfig) -> String {
-    wireguard
-        .address
-        .split('/')
-        .next()
-        .unwrap_or(&wireguard.address)
-        .to_string()
+    wireguard.address.split('/').next().unwrap_or(&wireguard.address).to_string()
 }
 
 async fn resolve_endpoint(config: &TunnelConfig) -> Result<SocketAddr, MobileVpnError> {
@@ -91,11 +86,7 @@ fn strip_reserved(packet: &mut [u8], reserved: &[u8]) {
     packet[RESERVED_OFFSET..RESERVED_END].fill(0);
 }
 
-async fn send_to_network(
-    socket: &UdpSocket,
-    packet: &mut [u8],
-    reserved: &[u8],
-) -> Result<(), MobileVpnError> {
+async fn send_to_network(socket: &UdpSocket, packet: &mut [u8], reserved: &[u8]) -> Result<(), MobileVpnError> {
     apply_reserved(packet, reserved);
 
     socket
@@ -105,11 +96,7 @@ async fn send_to_network(
         .map_err(|error| MobileVpnError::Wireguard(format!("udp send failed: {error}")))
 }
 
-async fn drain_network(
-    tunnel: &Mutex<Tunn>,
-    socket: &UdpSocket,
-    reserved: &[u8],
-) -> Result<(), MobileVpnError> {
+async fn drain_network(tunnel: &Mutex<Tunn>, socket: &UdpSocket, reserved: &[u8]) -> Result<(), MobileVpnError> {
     loop {
         let mut scratch = [0u8; UDP_BUFFER];
 
@@ -129,12 +116,7 @@ async fn drain_network(
     }
 }
 
-async fn handle_tun_packet(
-    tunnel: &Mutex<Tunn>,
-    socket: &UdpSocket,
-    reserved: &[u8],
-    packet: &[u8],
-) -> Result<(), MobileVpnError> {
+async fn handle_tun_packet(tunnel: &Mutex<Tunn>, socket: &UdpSocket, reserved: &[u8], packet: &[u8]) -> Result<(), MobileVpnError> {
     let mut scratch = [0u8; UDP_BUFFER];
 
     let outcome = {
@@ -190,11 +172,7 @@ async fn handle_udp_packet(
     Ok(())
 }
 
-async fn tick_timers(
-    tunnel: &Mutex<Tunn>,
-    socket: &UdpSocket,
-    reserved: &[u8],
-) -> Result<(), MobileVpnError> {
+async fn tick_timers(tunnel: &Mutex<Tunn>, socket: &UdpSocket, reserved: &[u8]) -> Result<(), MobileVpnError> {
     let mut scratch = [0u8; UDP_BUFFER];
 
     let outcome = {
@@ -202,9 +180,7 @@ async fn tick_timers(
 
         match guard.update_timers(&mut scratch) {
             TunnResult::WriteToNetwork(packet) => Some(packet.len()),
-            TunnResult::Err(WireGuardError::ConnectionExpired) => {
-                return Err(MobileVpnError::Wireguard("handshake expired".into()))
-            }
+            TunnResult::Err(WireGuardError::ConnectionExpired) => return Err(MobileVpnError::Wireguard("handshake expired".into())),
             _ => None,
         }
     };
@@ -216,11 +192,7 @@ async fn tick_timers(
     Ok(())
 }
 
-async fn initiate_handshake(
-    tunnel: &Mutex<Tunn>,
-    socket: &UdpSocket,
-    reserved: &[u8],
-) -> Result<(), MobileVpnError> {
+async fn initiate_handshake(tunnel: &Mutex<Tunn>, socket: &UdpSocket, reserved: &[u8]) -> Result<(), MobileVpnError> {
     let mut scratch = [0u8; UDP_BUFFER];
 
     let outcome = {
@@ -280,18 +252,12 @@ fn open_device(fd: i32) -> Result<AsyncTun, MobileVpnError> {
 
     config.raw_fd(fd).close_fd_on_drop(false);
 
-    let device = tun::create_as_async(&config)
-        .map_err(|error| MobileVpnError::Wireguard(format!("cannot wrap the tun fd: {error}")))?;
+    let device = tun::create_as_async(&config).map_err(|error| MobileVpnError::Wireguard(format!("cannot wrap the tun fd: {error}")))?;
 
     Ok(AsyncTun { device })
 }
 
-pub async fn run_wireguard<F>(
-    config: &TunnelConfig,
-    fd: i32,
-    cancellation: CancellationToken,
-    on_phase: &mut F,
-) -> Result<(), MobileVpnError>
+pub async fn run_wireguard<F>(config: &TunnelConfig, fd: i32, cancellation: CancellationToken, on_phase: &mut F) -> Result<(), MobileVpnError>
 where
     F: FnMut(Phase) + Send,
 {
@@ -304,14 +270,7 @@ where
     let reserved = wireguard.reserved.clone();
     let endpoint = resolve_endpoint(config).await?;
 
-    let tunnel = Tunn::new(
-        keys.private,
-        keys.peer_public,
-        keys.preshared,
-        Some(KEEPALIVE_SECS),
-        0,
-        None,
-    );
+    let tunnel = Tunn::new(keys.private, keys.peer_public, keys.preshared, Some(KEEPALIVE_SECS), 0, None);
     let tunnel = Mutex::new(tunnel);
 
     let bind: SocketAddr = match endpoint {

@@ -23,8 +23,7 @@ export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promis
     throw new Error('Email is not configured: set SMTP_HOST, SMTP_USER and EMAIL_FROM');
   }
 
-  const recipient =
-    env.NODE_ENV !== 'production' && env.DEV_EMAIL_OVERRIDE ? env.DEV_EMAIL_OVERRIDE : to;
+  const recipient = env.NODE_ENV !== 'production' && env.DEV_EMAIL_OVERRIDE ? env.DEV_EMAIL_OVERRIDE : to;
 
   const [html, text] = await Promise.all([render(react), render(react, { plainText: true })]);
 

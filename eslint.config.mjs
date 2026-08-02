@@ -42,10 +42,46 @@ export default eslint(
     rules: {
       // `type` everywhere, never `interface` — see the root CLAUDE.md.
       'ts/consistent-type-definitions': ['error', 'type'],
+      // No `as` casts. `as const` stays — it narrows literals instead of
+      // overriding the checker, which is the opposite of what a cast does.
+      // A warning, not an error: the casts that predate this rule are still
+      // being worked through, and none of them should block a build.
+      'ts/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
       // Bun and Node both provide these as globals; the rule wants a CJS
       // require() that has no place in an ESM workspace.
       'node/prefer-global/buffer': 'off',
-      'node/prefer-global/process': 'off'
+      'node/prefer-global/process': 'off',
+      // "Let the code breathe" from the root CLAUDE.md, enforced instead of
+      // eyeballed: a blank line before every exit, and between the const/let
+      // setup block and the logic that acts on it. Prettier only preserves
+      // blank lines, it never inserts them — this rule does, and --fix applies it.
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: ['return', 'throw', 'continue', 'break'] },
+        { blankLine: 'always', prev: ['const', 'let'], next: '*' },
+        { blankLine: 'any', prev: ['const', 'let'], next: ['const', 'let'] },
+        // Distinct steps: a block never butts up against whatever precedes or
+        // follows it, in either direction.
+        {
+          blankLine: 'always',
+          prev: '*',
+          next: ['if', 'for', 'while', 'do', 'switch', 'try', 'function', 'class', 'export']
+        },
+        {
+          blankLine: 'always',
+          prev: ['if', 'for', 'while', 'do', 'switch', 'try', 'function', 'class', 'block-like'],
+          next: '*'
+        },
+        // A call that spans several lines is a step of its own. Single-line
+        // calls stay grouped, so `log.step(...)` keeps sitting on top of the
+        // `await` it announces instead of being pushed away from it.
+        { blankLine: 'always', prev: 'multiline-expression', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'multiline-expression' },
+        { blankLine: 'always', prev: 'multiline-const', next: '*' },
+        { blankLine: 'always', prev: 'multiline-let', next: '*' },
+        { blankLine: 'any', prev: 'export', next: 'export' },
+        { blankLine: 'any', prev: 'directive', next: 'directive' }
+      ]
     }
   },
 

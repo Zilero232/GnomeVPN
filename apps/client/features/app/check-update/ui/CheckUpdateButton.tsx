@@ -41,9 +41,7 @@ export const CheckUpdateButton = () => {
         {isFetching ? t('checking') : t('check')}
       </button>
 
-      {update && (
-        <UpdateDialog isOpen={isDialogOpen} update={update} onOpenChange={setIsDialogOpen} />
-      )}
+      {update && <UpdateDialog isOpen={isDialogOpen} update={update} onOpenChange={setIsDialogOpen} />}
     </>
   );
 };

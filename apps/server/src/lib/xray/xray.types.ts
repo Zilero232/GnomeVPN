@@ -35,7 +35,6 @@ export type WireguardClient = {
   publicKey: string;
   allowedIPs: string[];
   preSharedKey: string;
-  keepAlive: number;
   enable: boolean;
 };
 
@@ -78,4 +77,16 @@ export type WriteInboundClientsInput = {
   protocol: string;
   settings: Record<string, unknown>;
   remark: string;
+};
+
+export type WireguardInboundInput = {
+  tag: string;
+  listen: string | null;
+  port: number;
+  protocol: string;
+  settings: {
+    secretKey: string;
+    clients: WireguardClient[];
+    mtu: number;
+  };
 };

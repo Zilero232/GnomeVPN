@@ -41,10 +41,7 @@ impl fmt::Debug for WireguardConfig {
             .field("private_key", &"[redacted]")
             .field("address", &self.address)
             .field("peer_public_key", &self.peer_public_key)
-            .field(
-                "pre_shared_key",
-                &self.pre_shared_key.as_ref().map(|_| "[redacted]"),
-            )
+            .field("pre_shared_key", &self.pre_shared_key.as_ref().map(|_| "[redacted]"))
             .field("allowed_ips", &self.allowed_ips)
             .field("reserved", &self.reserved)
             .field("mtu", &self.mtu)

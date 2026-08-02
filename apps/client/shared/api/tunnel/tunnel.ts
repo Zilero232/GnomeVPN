@@ -1,9 +1,4 @@
-import type {
-  ConnectRequest,
-  DeviceUsage,
-  DisconnectRequest,
-  TunnelConfig
-} from '@gnomevpn/schemas';
+import type { ConnectRequest, DeviceUsage, DisconnectRequest, TunnelConfig } from '@gnomevpn/schemas';
 
 import { tunnelConfigSchema } from '@gnomevpn/schemas';
 
@@ -15,11 +10,7 @@ export const getDeviceUsage = async (deviceId: string): Promise<DeviceUsage> => 
   return data;
 };
 
-export const connectTunnel = async ({
-  nodeId,
-  deviceId,
-  protocol
-}: ConnectRequest): Promise<TunnelConfig> => {
+export const connectTunnel = async ({ nodeId, deviceId, protocol }: ConnectRequest): Promise<TunnelConfig> => {
   const { data } = await api.post('/tunnel/connect', { nodeId, deviceId, protocol });
 
   return tunnelConfigSchema.parse(data);

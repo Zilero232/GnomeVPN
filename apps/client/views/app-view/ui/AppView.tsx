@@ -15,11 +15,7 @@ import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
-import {
-  ConnectButton,
-  useProtocolSelection,
-  useVpnConnectionContext
-} from '@/features/vpn/connect';
+import { ConnectButton, useProtocolSelection, useVpnConnectionContext } from '@/features/vpn/connect';
 import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
@@ -39,8 +35,7 @@ export const AppView = () => {
   const { hasAccess } = useSubscriptionStatus();
 
   useServerEvents({ isEnabled: isAuthenticated });
-  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } =
-    useVpnConnectionContext();
+  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
   const { protocol, select: selectProtocol } = useProtocolSelection();
@@ -50,10 +45,7 @@ export const AppView = () => {
   const { latency } = useNodeLatency({ isEnabled: hasAccess && status === 'disconnected' });
   const { usage } = useDeviceUsage({ status });
 
-  const isDeviceLimitReached =
-    isNonNullish(usage) &&
-    usage.used >= usage.limit &&
-    !usage.devices.some((device) => device.isCurrent);
+  const isDeviceLimitReached = isNonNullish(usage) && usage.used >= usage.limit && !usage.devices.some((device) => device.isCurrent);
 
   const onToggle = async () => {
     if (status === 'connected') {
@@ -78,15 +70,7 @@ export const AppView = () => {
   return (
     <main className={s.root}>
       <header className={s.head}>
-        {hasAccess ? (
-          <ProtocolSwitch
-            isDisabled={status !== 'disconnected'}
-            value={protocol}
-            onChange={selectProtocol}
-          />
-        ) : (
-          <span />
-        )}
+        {hasAccess ? <ProtocolSwitch isDisabled={status !== 'disconnected'} value={protocol} onChange={selectProtocol} /> : <span />}
 
         <div className={s.headRight}>
           <Text as='span' className={s.version}>
@@ -105,10 +89,7 @@ export const AppView = () => {
 
       <div className={s.body}>
         <ConnectButton
-          disabled={
-            hasAccess &&
-            (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))
-          }
+          disabled={hasAccess && (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))}
           status={status}
           onToggle={onToggle}
         />
@@ -127,9 +108,7 @@ export const AppView = () => {
 
         {hasAccess && usage && (
           <Text size='xs' tone={isDeviceLimitReached ? 'danger' : 'muted'}>
-            {isDeviceLimitReached
-              ? t('devicesFull', { limit: usage.limit })
-              : t('devicesUsed', { used: usage.used, limit: usage.limit })}
+            {isDeviceLimitReached ? t('devicesFull', { limit: usage.limit }) : t('devicesUsed', { used: usage.used, limit: usage.limit })}
           </Text>
         )}
 

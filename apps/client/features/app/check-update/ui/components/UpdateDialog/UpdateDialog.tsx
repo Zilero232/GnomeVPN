@@ -7,14 +7,7 @@ import { isNonNullish, isNullish } from 'remeda';
 import { toast } from 'sonner';
 
 import { env } from '@/shared/config';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/shared/ui';
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui';
 
 import type { UpdateDialogProps } from './UpdateDialog.types';
 
@@ -27,9 +20,7 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
   const { isPending, mutate, progress } = useInstallUpdate();
 
   const percent =
-    progress.totalBytes && progress.totalBytes > 0
-      ? Math.min(100, Math.round((progress.downloadedBytes / progress.totalBytes) * 100))
-      : null;
+    progress.totalBytes && progress.totalBytes > 0 ? Math.min(100, Math.round((progress.downloadedBytes / progress.totalBytes) * 100)) : null;
 
   const onInstall = () => {
     mutate(undefined, {
@@ -46,9 +37,7 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
           </div>
 
           <DialogTitle>{t('availableTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('availableDescription', { version: update.version })}
-          </DialogDescription>
+          <DialogDescription>{t('availableDescription', { version: update.version })}</DialogDescription>
         </DialogHeader>
 
         <div className={s.versions}>
@@ -62,9 +51,7 @@ export const UpdateDialog = ({ isOpen, onOpenChange, update }: UpdateDialogProps
 
               {isNonNullish(percent) && (
                 <span className={s.progressValue}>
-                  {(progress.totalBytes ?? 0) > 0 && (
-                    <span>{prettyBytes(progress.downloadedBytes)}</span>
-                  )}
+                  {(progress.totalBytes ?? 0) > 0 && <span>{prettyBytes(progress.downloadedBytes)}</span>}
                   <span>{percent}%</span>
                 </span>
               )}

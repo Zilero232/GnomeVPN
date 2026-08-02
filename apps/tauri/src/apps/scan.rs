@@ -39,10 +39,7 @@ fn collect(dir: &Path, found: &mut BTreeMap<String, InstalledApp>) {
             continue;
         }
 
-        if path
-            .extension()
-            .is_none_or(|ext| !ext.eq_ignore_ascii_case("lnk"))
-        {
+        if path.extension().is_none_or(|ext| !ext.eq_ignore_ascii_case("lnk")) {
             continue;
         }
 
@@ -50,19 +47,14 @@ fn collect(dir: &Path, found: &mut BTreeMap<String, InstalledApp>) {
             continue;
         };
 
-        let Some(name) = path
-            .file_stem()
-            .map(|stem| stem.to_string_lossy().into_owned())
-        else {
+        let Some(name) = path.file_stem().map(|stem| stem.to_string_lossy().into_owned()) else {
             continue;
         };
 
-        found
-            .entry(target.to_string_lossy().to_lowercase())
-            .or_insert(InstalledApp {
-                name,
-                path: target.to_string_lossy().into_owned(),
-            });
+        found.entry(target.to_string_lossy().to_lowercase()).or_insert(InstalledApp {
+            name,
+            path: target.to_string_lossy().into_owned(),
+        });
     }
 }
 
@@ -90,10 +82,7 @@ pub fn running_processes() -> Vec<InstalledApp> {
             continue;
         };
 
-        if path
-            .extension()
-            .is_none_or(|ext| !ext.eq_ignore_ascii_case("exe"))
-        {
+        if path.extension().is_none_or(|ext| !ext.eq_ignore_ascii_case("exe")) {
             continue;
         }
 
@@ -102,12 +91,10 @@ pub fn running_processes() -> Vec<InstalledApp> {
             .map(|stem| stem.to_string_lossy().into_owned())
             .unwrap_or_else(|| process.name().to_string_lossy().into_owned());
 
-        found
-            .entry(path.to_string_lossy().to_lowercase())
-            .or_insert(InstalledApp {
-                name,
-                path: path.to_string_lossy().into_owned(),
-            });
+        found.entry(path.to_string_lossy().to_lowercase()).or_insert(InstalledApp {
+            name,
+            path: path.to_string_lossy().into_owned(),
+        });
     }
 
     let mut apps: Vec<InstalledApp> = found.into_values().collect();

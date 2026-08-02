@@ -10,6 +10,7 @@ import type {
   FindPeersInput,
   IssueAndPersistInput,
   IssuePeerInput,
+  OnlinePeerRef,
   PeerRef,
   SetPeerEnabledInput
 } from '../peers.service.types';
@@ -44,14 +45,7 @@ export class PeersService {
     return created;
   }
 
-  async issue({
-    node,
-    nodeId,
-    userId,
-    kind,
-    protocol,
-    name
-  }: IssuePeerInput): Promise<CreatedPeer> {
+  async issue({ node, nodeId, userId, kind, protocol, name }: IssuePeerInput): Promise<CreatedPeer> {
     const email = peerClientName({ userId, kind, name, nodeId });
 
     if (protocol === TUNNEL_PROTOCOL.wireguard) {
@@ -82,16 +76,9 @@ export class PeersService {
     return rows.map((row) => row.wgAssignedIp).filter((ip): ip is string => Boolean(ip));
   }
 
-  private async createWireguardClient({
-    node,
-    nodeId,
-    email
-  }: CreateWireguardClientInput): Promise<CreatedPeer> {
+  private async createWireguardClient({ node, nodeId, email }: CreateWireguardClientInput): Promise<CreatedPeer> {
     if (!node.wgPublicKey) {
-      throw new AppServiceUnavailableException(
-        'NODE_UNAVAILABLE',
-        'node has no wireguard endpoint'
-      );
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no wireguard endpoint');
     }
 
     const takenIps = await this.takenWireguardIps(nodeId);
@@ -119,7 +106,7 @@ export class PeersService {
     }
   }
 
-  async onlinePeerIds(peers: PeerRef[]): Promise<Set<string>> {
+  async onlinePeerIds(peers: OnlinePeerRef[], { assumeOnlineWhenNodeSilent = true } = {}): Promise<Set<string>> {
     const byNode = groupBy(peers, (peer) => peer.nodeId);
     const online = new Set<string>();
 
@@ -137,6 +124,10 @@ export class PeersService {
         const emails = await xrayClientForNode(node)
           .onlineEmails()
           .catch(() => null);
+
+        if (emails === null && !assumeOnlineWhenNodeSilent) {
+          return;
+        }
 
         for (const peer of nodePeers) {
           if (emails === null || emails.has(peerClientName(peer))) {
@@ -169,9 +160,7 @@ export class PeersService {
 
         const client = xrayClientForNode(node);
 
-        await Promise.all(
-          nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined))
-        );
+        await Promise.all(nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined)));
       })
     );
   }

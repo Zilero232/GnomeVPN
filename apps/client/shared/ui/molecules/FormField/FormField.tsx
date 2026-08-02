@@ -9,19 +9,8 @@ import { Label, Text } from '../../atoms';
 
 import s from './FormField.module.scss';
 
-export const FormField = ({
-  label,
-  children,
-  error,
-  hint,
-  htmlFor,
-  hasFloatingError,
-  className
-}: FormFieldProps) => (
-  <Field.Root
-    className={clsx(s.root, hasFloatingError && s.floatingError, className)}
-    invalid={Boolean(error)}
-  >
+export const FormField = ({ label, children, error, hint, htmlFor, hasFloatingError, className }: FormFieldProps) => (
+  <Field.Root className={clsx(s.root, hasFloatingError && s.floatingError, className)} invalid={Boolean(error)}>
     <Field.Label render={<Label htmlFor={htmlFor} />}>{label}</Field.Label>
 
     {children}

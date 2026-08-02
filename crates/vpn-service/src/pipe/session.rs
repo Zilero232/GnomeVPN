@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use gnomevpn_ipc::{
-    validate_split, Request, Response, SplitConfig, TunnelConfig, PROTOCOL_VERSION,
-};
+use gnomevpn_ipc::{validate_split, Request, Response, SplitConfig, TunnelConfig, PROTOCOL_VERSION};
 
 use crate::tunnel::supervisor::{Supervisor, SupervisorError};
 
@@ -18,9 +16,7 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
         Request::Hello { protocol_version } => {
             if protocol_version != PROTOCOL_VERSION {
                 return Action::Reject(Response::Error {
-                    message: format!(
-                        "protocol mismatch: client {protocol_version}, service {PROTOCOL_VERSION}"
-                    ),
+                    message: format!("protocol mismatch: client {protocol_version}, service {PROTOCOL_VERSION}"),
                 });
             }
 
@@ -29,9 +25,7 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
             })
         }
 
-        Request::Status => Action::Reply(Response::Status {
-            status: supervisor.status(),
-        }),
+        Request::Status => Action::Reply(Response::Status { status: supervisor.status() }),
 
         Request::Disconnect => {
             log::info!("disconnect requested over the pipe");
@@ -58,9 +52,7 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
             if let Err(error) = validate_split(&split) {
                 log::warn!("connect rejected by validation: {error}");
 
-                return Action::Reply(Response::Error {
-                    message: error.to_string(),
-                });
+                return Action::Reply(Response::Error { message: error.to_string() });
             }
 
             match supervisor.begin(&config) {
@@ -71,15 +63,11 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
                 }
                 Err(error @ SupervisorError::AlreadyRunning) => {
                     log::warn!("connect rejected: {error}");
-                    Action::Reply(Response::Error {
-                        message: error.to_string(),
-                    })
+                    Action::Reply(Response::Error { message: error.to_string() })
                 }
                 Err(SupervisorError::Rejected(error)) => {
                     log::warn!("connect rejected by validation: {error}");
-                    Action::Reply(Response::Error {
-                        message: error.to_string(),
-                    })
+                    Action::Reply(Response::Error { message: error.to_string() })
                 }
             }
         }

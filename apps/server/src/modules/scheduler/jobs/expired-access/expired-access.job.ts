@@ -57,24 +57,17 @@ export class ExpiredAccessJob {
       unique()
     );
 
-    await Promise.allSettled(
-      expired.map((userId) => this.configs.setEnabledAll({ userId, enabled: false }))
-    );
+    await Promise.allSettled(expired.map((userId) => this.configs.setEnabledAll({ userId, enabled: false })));
 
     return expired;
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async run(): Promise<void> {
-    const [sessions, configs] = await Promise.all([
-      this.revokeExpiredSessions(),
-      this.revokeExpiredConfigs()
-    ]);
+    const [sessions, configs] = await Promise.all([this.revokeExpiredSessions(), this.revokeExpiredConfigs()]);
 
     if (sessions.length > 0 || configs.length > 0) {
-      this.logger.log(
-        `Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`
-      );
+      this.logger.log(`Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`);
     }
   }
 }

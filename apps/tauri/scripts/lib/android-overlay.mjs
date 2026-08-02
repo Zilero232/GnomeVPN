@@ -61,8 +61,7 @@ export const copySources = ({ from, to }) => {
 
   removeStale({
     directory: to,
-    keep: (entry) =>
-      !entry.endsWith('.kt') || ours.includes(entry) || GENERATED_SOURCES.includes(entry)
+    keep: (entry) => !entry.endsWith('.kt') || ours.includes(entry) || GENERATED_SOURCES.includes(entry)
   });
 
   cpSync(from, to, { recursive: true });

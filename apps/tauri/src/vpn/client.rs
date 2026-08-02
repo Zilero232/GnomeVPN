@@ -1,10 +1,7 @@
 use std::io::BufReader;
 use std::sync::Arc;
 
-use gnomevpn_ipc::{
-    read_frame, write_frame, Request, Response, SplitConfig, TunnelConfig, TunnelEvent,
-    TunnelStatus, PIPE_NAME, PROTOCOL_VERSION,
-};
+use gnomevpn_ipc::{read_frame, write_frame, Request, Response, SplitConfig, TunnelConfig, TunnelEvent, TunnelStatus, PIPE_NAME, PROTOCOL_VERSION};
 use interprocess::os::windows::named_pipe::{pipe_mode, DuplexPipeStream};
 
 #[derive(Debug, thiserror::Error)]
@@ -29,8 +26,7 @@ pub struct ServiceClient {
 
 impl ServiceClient {
     pub fn connect() -> Result<Self, ClientError> {
-        let stream = DuplexPipeStream::<pipe_mode::Bytes>::connect_by_path(PIPE_NAME)
-            .map_err(|e| ClientError::Unavailable(e.to_string()))?;
+        let stream = DuplexPipeStream::<pipe_mode::Bytes>::connect_by_path(PIPE_NAME).map_err(|e| ClientError::Unavailable(e.to_string()))?;
 
         let mut client = Self { stream };
 
@@ -45,14 +41,12 @@ impl ServiceClient {
     }
 
     fn request(&mut self, request: Request) -> Result<Response, ClientError> {
-        write_frame(&mut self.stream, &request)
-            .map_err(|e| ClientError::Protocol(e.to_string()))?;
+        write_frame(&mut self.stream, &request).map_err(|e| ClientError::Protocol(e.to_string()))?;
 
         let mut reader = BufReader::new(&mut self.stream);
 
         loop {
-            let response =
-                read_frame(&mut reader).map_err(|e| ClientError::Protocol(e.to_string()))?;
+            let response = read_frame(&mut reader).map_err(|e| ClientError::Protocol(e.to_string()))?;
 
             if !matches!(response, Response::Event { .. }) {
                 return Ok(response);
@@ -60,11 +54,7 @@ impl ServiceClient {
         }
     }
 
-    fn expect<T>(
-        &mut self,
-        request: Request,
-        accept: impl Fn(Response) -> Option<T>,
-    ) -> Result<T, ClientError> {
+    fn expect<T>(&mut self, request: Request, accept: impl Fn(Response) -> Option<T>) -> Result<T, ClientError> {
         let response = self.request(request)?;
 
         if let Response::Error { message } = response {
@@ -76,12 +66,7 @@ impl ServiceClient {
         accept(response).ok_or(ClientError::Protocol(unexpected))
     }
 
-    pub fn connect_tunnel(
-        &mut self,
-        config: TunnelConfig,
-        auto_reconnect: bool,
-        split: SplitConfig,
-    ) -> Result<(), ClientError> {
+    pub fn connect_tunnel(&mut self, config: TunnelConfig, auto_reconnect: bool, split: SplitConfig) -> Result<(), ClientError> {
         self.expect(
             Request::Connect {
                 config: Box::new(config),
@@ -93,9 +78,7 @@ impl ServiceClient {
     }
 
     pub fn disconnect_tunnel(&mut self) -> Result<(), ClientError> {
-        self.expect(Request::Disconnect, |response| {
-            matches!(response, Response::Ok).then_some(())
-        })
+        self.expect(Request::Disconnect, |response| matches!(response, Response::Ok).then_some(()))
     }
 
     pub fn status(&mut self) -> Result<TunnelStatus, ClientError> {

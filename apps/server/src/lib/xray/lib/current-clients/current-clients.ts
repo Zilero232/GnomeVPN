@@ -13,17 +13,12 @@ const parseJson = <T>(value: string | Record<string, unknown> | undefined): T =>
   }
 };
 
-export const parseSettings = (inbound: XrayInbound): XrayInboundSettings =>
-  parseJson<XrayInboundSettings>(inbound.settings);
+export const parseSettings = (inbound: XrayInbound): XrayInboundSettings => parseJson<XrayInboundSettings>(inbound.settings);
 
-export const parseStreamSettings = (inbound: XrayInbound): Record<string, unknown> =>
-  parseJson<Record<string, unknown>>(inbound.streamSettings);
+export const parseStreamSettings = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.streamSettings);
 
-export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> =>
-  parseJson<Record<string, unknown>>(inbound.sniffing);
+export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.sniffing);
 
-export const currentClients = (inbound: XrayInbound): unknown[] =>
-  parseSettings(inbound).clients ?? [];
+export const currentClients = (inbound: XrayInbound): unknown[] => parseSettings(inbound).clients ?? [];
 
-export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSettings =>
-  parseJson<XrayWireguardSettings>(inbound.settings);
+export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSettings => parseJson<XrayWireguardSettings>(inbound.settings);

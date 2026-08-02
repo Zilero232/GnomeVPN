@@ -8,8 +8,7 @@ import { useEffect } from 'react';
 import { useLocale } from '@/entities/app/locale';
 import { DEFAULT_LOCALE, messages } from '@/shared/i18n';
 
-const timeZone =
-  typeof Intl !== 'undefined' ? new Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
+const timeZone = typeof Intl !== 'undefined' ? new Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
 
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const { locale, isReady } = useLocale();
@@ -23,11 +22,7 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
   }, [locale, isReady]);
 
   return (
-    <NextIntlClientProvider
-      locale={activeLocale}
-      messages={messages[activeLocale]}
-      timeZone={timeZone}
-    >
+    <NextIntlClientProvider locale={activeLocale} messages={messages[activeLocale]} timeZone={timeZone}>
       {children}
     </NextIntlClientProvider>
   );

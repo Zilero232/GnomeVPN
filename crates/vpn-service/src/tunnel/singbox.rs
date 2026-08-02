@@ -6,11 +6,7 @@ use tokio::process::{Child, Command};
 
 use super::TunnelError;
 
-const BINARY: &str = if cfg!(target_os = "windows") {
-    "sing-box.exe"
-} else {
-    "sing-box"
-};
+const BINARY: &str = if cfg!(target_os = "windows") { "sing-box.exe" } else { "sing-box" };
 
 const CONFIG_NAME: &str = "singbox-config.json";
 const CACHE_NAME: &str = "singbox-cache.db";
@@ -51,12 +47,7 @@ pub async fn reap_orphans() {
         command
     };
 
-    let _ = command
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .await;
+    let _ = command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).status().await;
 }
 
 fn log_file(dir: &std::path::Path) -> (Stdio, Stdio) {
@@ -92,17 +83,12 @@ fn binary_path() -> Result<PathBuf, TunnelError> {
 
 fn config_dir() -> Result<PathBuf, TunnelError> {
     #[cfg(target_os = "windows")]
-    let base = PathBuf::from(
-        std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string()),
-    )
-    .join("GnomeVPN");
+    let base = PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string())).join("GnomeVPN");
 
     #[cfg(not(target_os = "windows"))]
     let base = PathBuf::from("/var/lib/gnomevpn");
 
-    std::fs::create_dir_all(&base).map_err(|error| {
-        TunnelError::Singbox(format!("cannot create {}: {error}", base.display()))
-    })?;
+    std::fs::create_dir_all(&base).map_err(|error| TunnelError::Singbox(format!("cannot create {}: {error}", base.display())))?;
 
     Ok(base)
 }

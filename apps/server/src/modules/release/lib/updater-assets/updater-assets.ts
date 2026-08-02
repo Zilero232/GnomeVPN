@@ -5,8 +5,7 @@ import type { ProxiedUrlInput, RewriteManifestUrlsInput } from './updater-assets
 
 import { UPDATER_MANIFEST_NAME } from '../../config';
 
-export const findManifestAsset = (assets: GithubAsset[]): GithubAsset | null =>
-  assets.find((asset) => asset.name === UPDATER_MANIFEST_NAME) ?? null;
+export const findManifestAsset = (assets: GithubAsset[]): GithubAsset | null => assets.find((asset) => asset.name === UPDATER_MANIFEST_NAME) ?? null;
 
 const proxiedUrl = ({ assets, apiUrl, githubUrl }: ProxiedUrlInput): string | null => {
   const fileName = last(githubUrl.split('/'));
@@ -15,11 +14,7 @@ const proxiedUrl = ({ assets, apiUrl, githubUrl }: ProxiedUrlInput): string | nu
   return asset ? `${apiUrl}/release/download/${asset.id}` : null;
 };
 
-export const rewriteManifestUrls = ({
-  manifest,
-  assets,
-  apiUrl
-}: RewriteManifestUrlsInput): UpdaterManifest => ({
+export const rewriteManifestUrls = ({ manifest, assets, apiUrl }: RewriteManifestUrlsInput): UpdaterManifest => ({
   ...manifest,
   platforms: pipe(
     manifest.platforms,

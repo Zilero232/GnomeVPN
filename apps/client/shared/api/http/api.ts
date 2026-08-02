@@ -2,7 +2,8 @@ import axios from 'axios';
 
 import { env } from '@/shared/config';
 
-import { clearToken, getAuthToken, saveAuthToken } from '../auth/auth-client';
+import { getAuthToken, saveAuthToken } from '../auth/auth-client';
+import { resetSession } from '../auth/session-reset';
 import { toApiError } from './api-error';
 
 export const api = axios.create({ baseURL: env.NEXT_PUBLIC_API_URL });
@@ -38,7 +39,7 @@ api.interceptors.response.use((response) => {
 api.interceptors.response.use(undefined, async (error) => {
   if (axios.isAxiosError(error)) {
     if (error.response?.status === 401 && getAuthToken()) {
-      clearToken();
+      resetSession();
     }
 
     const apiError = toApiError(await readErrorBody(error.response?.data));

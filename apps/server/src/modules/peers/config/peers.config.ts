@@ -14,5 +14,6 @@ export const WG = {
   mtu: 1420,
   allowedIps: ['0.0.0.0/0'],
   subnet: '10.9.0.0/24',
+  addressPrefix: 24,
   serverHostOffset: 1
 } as const;

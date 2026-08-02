@@ -15,8 +15,7 @@ if (!url) {
 
 if (LOCAL_HOST.test(url)) {
   log.fail(
-    `NEXT_PUBLIC_API_URL points at ${url}, which is the phone's own loopback. ` +
-      'Set it to the public API before building an APK for a device.'
+    `NEXT_PUBLIC_API_URL points at ${url}, which is the phone's own loopback. ` + 'Set it to the public API before building an APK for a device.'
   );
 }
 

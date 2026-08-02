@@ -39,9 +39,7 @@ export const tunnelConfigSchema = z
   })
   .refine(
     (config) =>
-      config.protocol === TUNNEL_PROTOCOL.wireguard
-        ? config.wireguard !== undefined
-        : config.auth.length > 0 && config.serverName.length > 0,
+      config.protocol === TUNNEL_PROTOCOL.wireguard ? config.wireguard !== undefined : config.auth.length > 0 && config.serverName.length > 0,
     { message: 'validation.tunnelProtocolFields' }
   );
 
@@ -79,5 +77,6 @@ export const downloadedConfigSchema = z.object({
   country: z.string().min(1),
   countryCode: z.string().min(1),
   protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
-  createdAt: z.string()
+  createdAt: z.string(),
+  isOnline: z.boolean().default(false)
 });

@@ -25,15 +25,11 @@ const PROBE_TARGETS: [SocketAddr; 2] = [
 ];
 
 async fn tunnel_is_up() -> bool {
-    tokio::task::spawn_blocking(|| adapter::is_up(TUNNEL_NAME))
-        .await
-        .unwrap_or(false)
+    tokio::task::spawn_blocking(|| adapter::is_up(TUNNEL_NAME)).await.unwrap_or(false)
 }
 
 async fn traffic() -> Traffic {
-    tokio::task::spawn_blocking(|| adapter::traffic(TUNNEL_NAME))
-        .await
-        .unwrap_or_default()
+    tokio::task::spawn_blocking(|| adapter::traffic(TUNNEL_NAME)).await.unwrap_or_default()
 }
 
 async fn probe_through_tunnel(target: SocketAddr) -> bool {
@@ -41,17 +37,11 @@ async fn probe_through_tunnel(target: SocketAddr) -> bool {
         return false;
     };
 
-    if socket
-        .bind(SocketAddr::V4(SocketAddrV4::new(TUNNEL_ADDRESS, 0)))
-        .is_err()
-    {
+    if socket.bind(SocketAddr::V4(SocketAddrV4::new(TUNNEL_ADDRESS, 0))).is_err() {
         return false;
     }
 
-    matches!(
-        timeout(PROBE_TIMEOUT, socket.connect(target)).await,
-        Ok(Ok(_))
-    )
+    matches!(timeout(PROBE_TIMEOUT, socket.connect(target)).await, Ok(Ok(_)))
 }
 
 async fn tunnel_carries_traffic() -> bool {

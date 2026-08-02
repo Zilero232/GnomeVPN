@@ -5,15 +5,13 @@ import { createParamDecorator } from '@nestjs/common';
 
 import { AppUnauthorizedException } from '../exceptions';
 
-export const CurrentUserId = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): string => {
-    const request = ctx.switchToHttp().getRequest<{ session?: UserSession }>();
-    const userId = request.session?.user.id;
+export const CurrentUserId = createParamDecorator((_data: unknown, ctx: ExecutionContext): string => {
+  const request = ctx.switchToHttp().getRequest<{ session?: UserSession }>();
+  const userId = request.session?.user.id;
 
-    if (!userId) {
-      throw new AppUnauthorizedException('UNAUTHORIZED', 'Authentication required');
-    }
-
-    return userId;
+  if (!userId) {
+    throw new AppUnauthorizedException('UNAUTHORIZED', 'Authentication required');
   }
-);
+
+  return userId;
+});

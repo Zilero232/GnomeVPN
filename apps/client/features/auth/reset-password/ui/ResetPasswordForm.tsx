@@ -47,30 +47,12 @@ export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => 
 
   return (
     <form className={s.form} onSubmit={onSubmit}>
-      <FormField
-        error={fieldError(errors.newPassword)}
-        htmlFor='reset-password'
-        label={t('fields.password')}
-      >
-        <PasswordInput
-          autoComplete='new-password'
-          id='reset-password'
-          {...passwordLabels}
-          {...register('newPassword')}
-        />
+      <FormField error={fieldError(errors.newPassword)} htmlFor='reset-password' label={t('fields.password')}>
+        <PasswordInput autoComplete='new-password' id='reset-password' {...passwordLabels} {...register('newPassword')} />
       </FormField>
 
-      <FormField
-        error={fieldError(errors.confirmPassword)}
-        htmlFor='reset-confirm-password'
-        label={t('fields.confirmPassword')}
-      >
-        <PasswordInput
-          autoComplete='new-password'
-          id='reset-confirm-password'
-          {...passwordLabels}
-          {...register('confirmPassword')}
-        />
+      <FormField error={fieldError(errors.confirmPassword)} htmlFor='reset-confirm-password' label={t('fields.confirmPassword')}>
+        <PasswordInput autoComplete='new-password' id='reset-confirm-password' {...passwordLabels} {...register('confirmPassword')} />
       </FormField>
 
       <SubmitButton isPending={isPending}>{t('resetPasswordAction')}</SubmitButton>

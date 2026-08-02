@@ -20,22 +20,12 @@ export const PricingCard = () => {
 
   return (
     <Stack className={s.root} gap='lg'>
-      <motion.div
-        className={s.plans}
-        initial='hidden'
-        variants={SECTION_MOTION}
-        viewport={REVEAL_VIEWPORT}
-        whileInView='visible'
-      >
+      <motion.div className={s.plans} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         {PLANS.map((plan) => {
           const discount = planDiscountPercent(plan.id);
 
           return (
-            <Stack
-              key={plan.id}
-              className={clsx(s.plan, plan.id === FEATURED_PLAN_ID && s.featured)}
-              gap='md'
-            >
+            <Stack key={plan.id} className={clsx(s.plan, plan.id === FEATURED_PLAN_ID && s.featured)} gap='md'>
               <div className={s.head}>
                 <Text as='span' className={s.term}>
                   {t(`plans.${plan.id}`)}

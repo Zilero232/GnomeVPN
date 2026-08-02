@@ -16,13 +16,7 @@ export const Guarantee = () => {
   const t = useTranslations('landing.guarantee');
 
   return (
-    <motion.div
-      className={s.root}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.root} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       <motion.span className={s.icon} variants={ITEM_MOTION}>
         <ShieldCheck size={22} strokeWidth={1.7} />
       </motion.span>

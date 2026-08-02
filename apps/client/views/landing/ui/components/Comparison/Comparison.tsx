@@ -15,13 +15,7 @@ export const Comparison = () => {
   const t = useTranslations('landing.comparison');
 
   return (
-    <motion.div
-      className={s.wrapper}
-      initial='hidden'
-      variants={SECTION_MOTION}
-      viewport={REVEAL_VIEWPORT}
-      whileInView='visible'
-    >
+    <motion.div className={s.wrapper} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       <div className={s.head}>
         <span className={s.headFeature} />
         <span className={s.headUs}>GnomeVPN</span>

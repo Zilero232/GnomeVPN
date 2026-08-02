@@ -37,11 +37,27 @@ apps/
 crates/
 ├── vpn-ipc/         # Wire protocol: types, framing, validation, tunnel configs
 └── vpn-service/     # Privileged service: tunnel, routes, DNS (CLAUDE.md)
-packages/schemas/    # Zod schemas, imported by client and server
+packages/
+├── schemas/         # Zod schemas, imported by client and server
+└── scripts/         # shared script layer: reporter, ssh, shell, env, local
+scripts/
+├── deploy/          # build images, ship them to the VPS
+├── provision/       # VPN node setup over SSH
+├── release/         # desktop + android releases
+└── setup/           # first-run and release-env bootstrap
 infra/
 ├── caddy/           # TLS + reverse proxy
-└── provision/       # VPN node setup over SSH
+└── xray/            # the 3x-ui compose stack shipped to every node
 ```
+
+Anything two scripts share lives in `@gnomevpn/scripts`, never copied between
+them: `reporter` (the `[scope] message` output), `ssh` (one `SshClient` for
+provisioning _and_ deploy), `shell` (build remote commands — `arg()` quotes
+untrusted values, `quiet()` keeps stdout while `silent()` drops it), `env`
+(`requireEnv`) and `local` (`$`, `workspace`, `findGh`).
+
+`nodes.json` and `.env.nodes` sit at the repo root — both gitignored, both
+holding secrets; `nodes.example.json` is the committed template.
 
 ## The split that shapes everything
 
@@ -111,11 +127,14 @@ The repo has no `unsafe` blocks. Keep it that way.
 - Import order: types → builtin/external → internal (`@/`) → relative → styles →
   side-effects. `perfectionist/sort-imports` enforces it; `bun lint:fix` sorts.
 - **Let the code breathe — group statements, don't write a wall.** A function
-  body reads as paragraphs, not one block. The formatter cannot enforce this (it
-  only preserves blank lines, never inserts them), so it is on us. Blank line between:
-  the `const`/`let` setup block and the logic that acts on it; before every
-  `return`/`throw`/`continue`/`break`; between distinct steps (validate → do →
-  publish). No blank line _inside_ a tight group of related assignments, and
+  body reads as paragraphs, not one block. Prettier only preserves blank lines
+  and never inserts them, so `padding-line-between-statements` does it instead
+  and `bun lint:fix` applies it. Blank line between: the `const`/`let` setup
+  block and the logic that acts on it; before every
+  `return`/`throw`/`continue`/`break`; around every block (`if`, `for`, `try`,
+  `switch`) and every **multiline** call. Consecutive one-line statements stay
+  grouped on purpose — `log.step(...)` belongs directly above the `await` it
+  announces. No blank line _inside_ a tight group of related assignments, and
   never two blank lines in a row.
 
   ```ts

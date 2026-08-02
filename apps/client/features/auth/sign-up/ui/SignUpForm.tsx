@@ -52,30 +52,12 @@ export const SignUpForm = () => {
         <Input autoComplete='email' id='signup-email' type='email' {...register('email')} />
       </FormField>
 
-      <FormField
-        error={fieldError(errors.password)}
-        htmlFor='signup-password'
-        label={t('fields.password')}
-      >
-        <PasswordInput
-          autoComplete='new-password'
-          id='signup-password'
-          {...passwordLabels}
-          {...register('password')}
-        />
+      <FormField error={fieldError(errors.password)} htmlFor='signup-password' label={t('fields.password')}>
+        <PasswordInput autoComplete='new-password' id='signup-password' {...passwordLabels} {...register('password')} />
       </FormField>
 
-      <FormField
-        error={fieldError(errors.confirmPassword)}
-        htmlFor='signup-confirm'
-        label={t('fields.confirmPassword')}
-      >
-        <PasswordInput
-          autoComplete='new-password'
-          id='signup-confirm'
-          {...passwordLabels}
-          {...register('confirmPassword')}
-        />
+      <FormField error={fieldError(errors.confirmPassword)} htmlFor='signup-confirm' label={t('fields.confirmPassword')}>
+        <PasswordInput autoComplete='new-password' id='signup-confirm' {...passwordLabels} {...register('confirmPassword')} />
       </FormField>
 
       <SubmitButton isPending={isPending}>{t('signUpAction')}</SubmitButton>

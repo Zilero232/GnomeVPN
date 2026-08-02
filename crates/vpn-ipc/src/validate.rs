@@ -48,9 +48,7 @@ fn check_host(field: &'static str, value: &str) -> Result<(), ValidationError> {
         return Err(reject(field, "too long"));
     }
 
-    let is_hostname = value
-        .bytes()
-        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'.' || byte == b'-');
+    let is_hostname = value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'.' || byte == b'-');
 
     if !is_hostname {
         return Err(reject(field, "not a hostname or ip address"));
@@ -58,15 +56,8 @@ fn check_host(field: &'static str, value: &str) -> Result<(), ValidationError> {
 
     if let Ok(ip) = value.parse::<IpAddr>() {
         let is_public = match ip {
-            IpAddr::V4(ip) => {
-                !(ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified())
-            }
-            IpAddr::V6(ip) => {
-                !(ip.is_loopback()
-                    || ip.is_unspecified()
-                    || ip.is_unique_local()
-                    || ip.is_unicast_link_local())
-            }
+            IpAddr::V4(ip) => !(ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified()),
+            IpAddr::V6(ip) => !(ip.is_loopback() || ip.is_unspecified() || ip.is_unique_local() || ip.is_unicast_link_local()),
         };
 
         if !is_public {
@@ -94,11 +85,7 @@ fn check_dns(values: &[String]) -> Result<(), ValidationError> {
 fn is_windows_drive_path(path: &str) -> bool {
     let mut chars = path.chars();
 
-    chars
-        .next()
-        .is_some_and(|drive| drive.is_ascii_alphabetic())
-        && chars.next() == Some(':')
-        && chars.next() == Some('\\')
+    chars.next().is_some_and(|drive| drive.is_ascii_alphabetic()) && chars.next() == Some(':') && chars.next() == Some('\\')
 }
 
 fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), ValidationError> {
@@ -212,10 +199,7 @@ pub fn validate_tunnel_config(config: &TunnelConfig) -> Result<(), ValidationErr
             check_host("serverName", &config.server_name)?;
         }
         TunnelProtocol::Wireguard => {
-            let wireguard = config
-                .wireguard
-                .as_ref()
-                .ok_or_else(|| reject("wireguard", "must be present"))?;
+            let wireguard = config.wireguard.as_ref().ok_or_else(|| reject("wireguard", "must be present"))?;
 
             validate_wireguard(wireguard)?;
         }

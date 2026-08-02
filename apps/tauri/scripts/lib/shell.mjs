@@ -23,6 +23,7 @@ export const reporter = (scope) => ({
   warn: (message) => write('warn', scope, message),
   fail: (message, code = 1) => {
     write('error', scope, message);
+
     process.exit(code);
   }
 });

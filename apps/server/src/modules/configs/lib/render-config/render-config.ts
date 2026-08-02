@@ -6,12 +6,7 @@ import { HYSTERIA2_FILE_EXTENSION, WIREGUARD_FILE_EXTENSION } from '../../config
 import { configFileName, renderHysteria2Config } from '../config-file';
 import { renderWireguardConfigFile } from '../wg-config-file';
 
-export const renderConfig = ({
-  config,
-  protocol,
-  country,
-  deviceName
-}: RenderConfigInput): RenderedConfig => {
+export const renderConfig = ({ config, protocol, country, deviceName }: RenderConfigInput): RenderedConfig => {
   const baseName = configFileName({ country, deviceName });
 
   if (protocol === TUNNEL_PROTOCOL.wireguard) {

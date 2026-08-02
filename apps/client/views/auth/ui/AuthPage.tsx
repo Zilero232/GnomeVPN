@@ -50,11 +50,7 @@ export const AuthPage = () => {
         {mode !== 'forgot' && (
           <Text align='center' size='sm' tone='muted'>
             {isSignUp ? t('hasAccount') : t('noAccount')}{' '}
-            <button
-              className={s.toggleButton}
-              type='button'
-              onClick={() => setMode(isSignUp ? 'signin' : 'signup')}
-            >
+            <button className={s.toggleButton} type='button' onClick={() => setMode(isSignUp ? 'signin' : 'signup')}>
               {isSignUp ? t('toggleSignIn') : t('toggleSignUp')}
             </button>
           </Text>

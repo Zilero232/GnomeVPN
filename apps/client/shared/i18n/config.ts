@@ -9,5 +9,8 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English'
 };
 
-export const resolveLocale = (value: string | undefined): Locale =>
-  LOCALES.includes(value as Locale) ? (value as Locale) : DEFAULT_LOCALE;
+const KNOWN_LOCALES: readonly string[] = LOCALES;
+
+const isLocale = (value: string | undefined): value is Locale => value !== undefined && KNOWN_LOCALES.includes(value);
+
+export const resolveLocale = (value: string | undefined): Locale => (isLocale(value) ? value : DEFAULT_LOCALE);

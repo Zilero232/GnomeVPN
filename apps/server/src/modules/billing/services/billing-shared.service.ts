@@ -3,13 +3,7 @@ import type { CheckoutClient } from '@gnomevpn/schemas';
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 
-import type {
-  ActivateInput,
-  AttachMethodInput,
-  AutoRenewInput,
-  GrantExtraDevicesInput,
-  PrismaExecutor
-} from '../billing.types';
+import type { ActivateInput, AttachMethodInput, AutoRenewInput, GrantExtraDevicesInput, PrismaExecutor } from '../billing.types';
 
 import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
@@ -29,9 +23,7 @@ export class BillingSharedService {
   }
 
   returnUrlFor(client: CheckoutClient): string {
-    return client === 'desktop'
-      ? this.config.get('YOOKASSA_RETURN_URL_DESKTOP')
-      : this.config.get('YOOKASSA_RETURN_URL');
+    return client === 'desktop' ? this.config.get('YOOKASSA_RETURN_URL_DESKTOP') : this.config.get('YOOKASSA_RETURN_URL');
   }
 
   async setAutoRenew(userId: string, isEnabled: boolean): Promise<void> {
@@ -61,10 +53,7 @@ export class BillingSharedService {
     return wasCancelled;
   }
 
-  async activate(
-    { userId, planId, method }: ActivateInput,
-    db: PrismaExecutor = this.prisma
-  ): Promise<void> {
+  async activate({ userId, planId, method }: ActivateInput, db: PrismaExecutor = this.prisma): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
       select: {
@@ -97,10 +86,7 @@ export class BillingSharedService {
     });
   }
 
-  async grantExtraDevices(
-    { userId, quantity }: GrantExtraDevicesInput,
-    db: PrismaExecutor = this.prisma
-  ): Promise<void> {
+  async grantExtraDevices({ userId, quantity }: GrantExtraDevicesInput, db: PrismaExecutor = this.prisma): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
       select: { extraDevices: true }

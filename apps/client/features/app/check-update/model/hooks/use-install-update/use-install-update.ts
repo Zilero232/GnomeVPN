@@ -31,9 +31,7 @@ export const useInstallUpdate = () => {
 
       await update.downloadAndInstall((event) => {
         match(event)
-          .with({ event: 'Started' }, ({ data }) =>
-            setProgress({ downloadedBytes: 0, totalBytes: data.contentLength ?? null })
-          )
+          .with({ event: 'Started' }, ({ data }) => setProgress({ downloadedBytes: 0, totalBytes: data.contentLength ?? null }))
           .with({ event: 'Progress' }, ({ data }) =>
             setProgress((current) => ({
               ...current,

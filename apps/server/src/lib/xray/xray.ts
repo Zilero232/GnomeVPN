@@ -10,6 +10,7 @@ import type {
   SetClientEnabledInput,
   SetClientsEnabledInput,
   WireguardClient,
+  WireguardInboundInput,
   WriteInboundClientsInput,
   XrayClientOptions,
   XrayInbound,
@@ -28,15 +29,7 @@ import {
   serializeByKey,
   stripCidrMask
 } from './lib';
-import {
-  INBOUND_REMARK,
-  REQUEST_TIMEOUT_MS,
-  UNLIMITED,
-  WG_INBOUND_REMARK,
-  WG_PEER_ID_BYTES,
-  WG_PEER_KEEPALIVE,
-  XRAY_STATE_RUNNING
-} from './xray.constants';
+import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -45,6 +38,7 @@ export class XrayClient {
 
   constructor(opts: XrayClientOptions) {
     this.nodeKey = opts.baseUrl.replace(/\/$/, '');
+
     this.panel = new PanelClient({
       baseUrl: this.nodeKey,
       token: opts.token,
@@ -76,10 +70,7 @@ export class XrayClient {
     return Boolean(await this.findInbound(WG_INBOUND_REMARK));
   }
 
-  private inboundPayload(
-    inbound: Record<string, unknown>,
-    remark: string = INBOUND_REMARK
-  ): XrayInboundPayload {
+  private inboundPayload(inbound: Record<string, unknown>, remark: string = INBOUND_REMARK): XrayInboundPayload {
     const stringify = (value: unknown) => (value === undefined ? '' : JSON.stringify(value));
 
     return {
@@ -98,13 +89,29 @@ export class XrayClient {
     await this.panel.addInbound(this.inboundPayload(inbound));
   }
 
-  async ensureWireguardInbound(inbound: Record<string, unknown>): Promise<void> {
+  async ensureWireguardInbound(inbound: WireguardInboundInput) {
     return serializeByKey(this.nodeKey, async () => {
-      if (await this.hasWireguardInbound()) {
+      const current = await this.findInbound(WG_INBOUND_REMARK);
+
+      if (!current) {
+        await this.panel.addInbound(this.inboundPayload(inbound, WG_INBOUND_REMARK));
+
         return;
       }
 
-      await this.panel.addInbound(this.inboundPayload(inbound, WG_INBOUND_REMARK));
+      const { peers: _legacyPeers, ...existing } = parseWireguardSettings(current);
+      const { clients: _fresh, ...incoming } = inbound.settings;
+
+      if (existing.secretKey === incoming.secretKey) {
+        return;
+      }
+
+      await this.writeInboundClients({
+        inbound: current,
+        protocol: 'wireguard',
+        settings: { ...existing, ...incoming },
+        remark: WG_INBOUND_REMARK
+      });
     });
   }
 
@@ -118,12 +125,7 @@ export class XrayClient {
     });
   }
 
-  private async writeInboundClients({
-    inbound,
-    protocol,
-    settings,
-    remark
-  }: WriteInboundClientsInput): Promise<void> {
+  private async writeInboundClients({ inbound, protocol, settings, remark }: WriteInboundClientsInput): Promise<void> {
     await this.panel.updateInbound(
       inbound.id,
       this.inboundPayload(
@@ -175,6 +177,7 @@ export class XrayClient {
       }
 
       const auth = generateAuth();
+
       await this.writeClients([...clients, this.newClient({ email, auth })]);
       await this.restartCore();
 
@@ -189,9 +192,7 @@ export class XrayClient {
   private async listClients(): Promise<HysteriaClient[]> {
     const inbound = await this.getInbound();
 
-    return (parseSettings(inbound).clients ?? []).filter((client): client is HysteriaClient =>
-      Boolean(client?.auth && client?.email)
-    );
+    return (parseSettings(inbound).clients ?? []).filter((client): client is HysteriaClient => Boolean(client?.auth && client?.email));
   }
 
   async deleteClient(email: string): Promise<void> {
@@ -199,22 +200,14 @@ export class XrayClient {
   }
 
   async clientEnabledByEmail(): Promise<Map<string, boolean>> {
-    const [hysteria, wireguard] = await Promise.all([
-      this.listClients(),
-      this.listWireguardClients()
-    ]);
+    const [hysteria, wireguard] = await Promise.all([this.listClients(), this.listWireguardClients()]);
 
-    return new Map(
-      [...hysteria, ...wireguard].map((client) => [client.email, client.enable ?? true])
-    );
+    return new Map([...hysteria, ...wireguard].map((client) => [client.email, client.enable ?? true]));
   }
 
   private async writeWireguardClients(clients: WireguardClient[]): Promise<void> {
     const inbound = await this.getInbound(WG_INBOUND_REMARK);
-    const { peers: _legacyPeers, ...current } = parseWireguardSettings(inbound) as Record<
-      string,
-      unknown
-    >;
+    const { peers: _legacyPeers, ...current } = parseWireguardSettings(inbound) as Record<string, unknown>;
 
     await this.writeInboundClients({
       inbound,
@@ -231,24 +224,18 @@ export class XrayClient {
       return [];
     }
 
-    return (parseWireguardSettings(inbound).clients ?? []).filter(
-      (client): client is WireguardClient =>
-        Boolean(client?.email && client?.publicKey && client?.allowedIPs)
+    return (parseWireguardSettings(inbound).clients ?? []).filter((client): client is WireguardClient =>
+      Boolean(client?.email && client?.publicKey && client?.allowedIPs)
     );
   }
 
-  private newWireguardClient({
-    email,
-    publicKey,
-    assignedIp
-  }: NewWireguardClientInput): WireguardClient {
+  private newWireguardClient({ email, publicKey, assignedIp }: NewWireguardClientInput): WireguardClient {
     return {
       email,
       id: randomBytes(WG_PEER_ID_BYTES).toString('hex'),
       publicKey,
       allowedIPs: [`${assignedIp}/32`],
       preSharedKey: '',
-      keepAlive: WG_PEER_KEEPALIVE,
       enable: true
     };
   }
@@ -257,12 +244,7 @@ export class XrayClient {
     return clients.flatMap((client) => client.allowedIPs.map(stripCidrMask));
   }
 
-  async addWireguardPeer({
-    email,
-    publicKey,
-    takenIps,
-    allocateIp
-  }: AddWireguardPeerInput): Promise<string> {
+  async addWireguardPeer({ email, publicKey, takenIps, allocateIp }: AddWireguardPeerInput): Promise<string> {
     return serializeByKey(this.nodeKey, async () => {
       const clients = await this.listWireguardClients();
       const reused = clients.find((client) => client.email === email);
@@ -278,23 +260,16 @@ export class XrayClient {
       const peer = this.newWireguardClient({ email, publicKey, assignedIp });
 
       const conflictsWithPeer = (client: WireguardClient) =>
-        client.email === peer.email ||
-        client.publicKey === peer.publicKey ||
-        client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
+        client.email === peer.email || client.publicKey === peer.publicKey || client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
 
-      const evicted = clients.filter(
-        (client) => client.email !== peer.email && conflictsWithPeer(client)
-      );
+      const evicted = clients.filter((client) => client.email !== peer.email && conflictsWithPeer(client));
 
       if (!isEmpty(evicted)) {
         XrayClient.logger.error(
           `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`
         );
 
-        throw new AppServiceUnavailableException(
-          'NODE_UNAVAILABLE',
-          'wireguard client collision on the node'
-        );
+        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard client collision on the node');
       }
 
       const kept = clients.filter((client) => !conflictsWithPeer(client));
@@ -307,9 +282,7 @@ export class XrayClient {
   }
 
   async setClientEnabled({ email, enabled }: SetClientEnabledInput): Promise<void> {
-    return serializeByKey(this.nodeKey, () =>
-      this.panel.setClientsEnabled({ emails: [email], enabled })
-    );
+    return serializeByKey(this.nodeKey, () => this.panel.setClientsEnabled({ emails: [email], enabled }));
   }
 
   async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {

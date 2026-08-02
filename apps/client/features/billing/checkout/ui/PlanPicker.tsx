@@ -28,12 +28,7 @@ export const PlanPicker = ({ className }: PlanPickerProps) => {
           const discount = planDiscountPercent(option.id);
 
           return (
-            <SelectableCard
-              key={option.id}
-              className={s.card}
-              isSelected={option.id === selected}
-              onClick={() => setSelected(option.id)}
-            >
+            <SelectableCard key={option.id} className={s.card} isSelected={option.id === selected} onClick={() => setSelected(option.id)}>
               <Stack className={s.body} gap='sm'>
                 <span className={s.head}>
                   <Text as='span' className={s.term}>

@@ -86,9 +86,7 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
             </Button>
           </div>
 
-          <p className={s.result}>
-            {t('extraDevicesResult', { total: limits.deviceLimit + quantity })}
-          </p>
+          <p className={s.result}>{t('extraDevicesResult', { total: limits.deviceLimit + quantity })}</p>
         </>
       )}
     </section>

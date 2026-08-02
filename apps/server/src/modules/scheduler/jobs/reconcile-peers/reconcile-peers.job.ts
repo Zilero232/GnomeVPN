@@ -1,13 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 
-import type {
-  CollectOrphansInput,
-  PeerIdentity,
-  ReconcileNode,
-  RemoveRevokedInput,
-  SyncEnabledInput
-} from './reconcile-peers.job.types';
+import type { CollectOrphansInput, PeerIdentity, ReconcileNode, RemoveRevokedInput, SyncEnabledInput } from './reconcile-peers.job.types';
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
@@ -106,19 +100,10 @@ export class ReconcilePeersJob {
       }
     }
 
-    await Promise.all([
-      xray.setClientsEnabled({ emails: toEnable, enabled: true }),
-      xray.setClientsEnabled({ emails: toDisable, enabled: false })
-    ]);
+    await Promise.all([xray.setClientsEnabled({ emails: toEnable, enabled: true }), xray.setClientsEnabled({ emails: toDisable, enabled: false })]);
   }
 
-  private async collectOrphans({
-    xray,
-    nodeId,
-    peers,
-    nodeClients,
-    online
-  }: CollectOrphansInput): Promise<void> {
+  private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<void> {
     if (online === null) {
       this.suspects.delete(nodeId);
 

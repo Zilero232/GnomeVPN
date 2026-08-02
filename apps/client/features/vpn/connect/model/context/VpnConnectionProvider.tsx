@@ -24,7 +24,5 @@ export const VpnConnectionProvider = ({ children }: { children: ReactNode }) => 
     connect: connection.connect
   });
 
-  return (
-    <VpnConnectionContext.Provider value={connection}>{children}</VpnConnectionContext.Provider>
-  );
+  return <VpnConnectionContext.Provider value={connection}>{children}</VpnConnectionContext.Provider>;
 };

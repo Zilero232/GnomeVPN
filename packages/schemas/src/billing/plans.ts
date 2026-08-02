@@ -16,9 +16,7 @@ export const PLANS = [
 
 export const DEFAULT_PLAN_ID = 'monthly' as const;
 
-export const LOWEST_MONTHLY_RUB = Math.round(
-  Math.min(...PLANS.map((plan) => plan.priceRub / plan.months))
-);
+export const LOWEST_MONTHLY_RUB = Math.round(Math.min(...PLANS.map((plan) => plan.priceRub / plan.months)));
 
 export const findPlan = (id: z.infer<typeof planIdSchema>) => {
   const plan = PLANS.find((entry) => entry.id === id);

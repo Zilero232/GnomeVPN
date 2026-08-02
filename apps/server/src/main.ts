@@ -18,11 +18,13 @@ const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyPa
 app.set('trust proxy', 1);
 
 app.use(helmet({ contentSecurityPolicy: false }));
+
 app.enableCors({
   origin: allowedOrigins,
   credentials: true,
   exposedHeaders: ['set-auth-token', 'content-disposition']
 });
+
 app.use(json());
 app.useGlobalPipes(new ZodValidationPipe());
 app.enableShutdownHooks();

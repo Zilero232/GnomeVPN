@@ -64,11 +64,7 @@ export const LandingHeader = () => {
           <div className={s.actions}>
             <LocaleSwitcher />
 
-            <Button
-              aria-label={t('nav.download')}
-              variant='ghost'
-              onClick={() => setIsDownloadOpen(true)}
-            >
+            <Button aria-label={t('nav.download')} variant='ghost' onClick={() => setIsDownloadOpen(true)}>
               <Download size={14} />
               <span className={s.downloadLabel}>{t('nav.download')}</span>
             </Button>

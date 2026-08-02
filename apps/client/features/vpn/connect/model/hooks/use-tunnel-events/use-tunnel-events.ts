@@ -10,15 +10,7 @@ import type { HandleTunnelEventInput, UseTunnelEventsInput } from './use-tunnel-
 
 import { useTunnelNotifications } from '../use-tunnel-notifications';
 
-export const useTunnelEvents = ({
-  isCurrent,
-  onConnected,
-  onReconnecting,
-  onTraffic,
-  onClosed,
-  countryRef,
-  nodeIdRef
-}: UseTunnelEventsInput) => {
+export const useTunnelEvents = ({ isCurrent, onConnected, onReconnecting, onTraffic, onClosed, countryRef, nodeIdRef }: UseTunnelEventsInput) => {
   const { notifyConnected, notifyDisconnected, notifyError } = useTunnelNotifications();
 
   const wasConnectedRef = useRef(false);

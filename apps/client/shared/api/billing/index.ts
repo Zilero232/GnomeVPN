@@ -1,8 +1,1 @@
-export {
-  bindCard,
-  buyExtraDevices,
-  cancelAutoRenew,
-  createCheckout,
-  resumeAutoRenew,
-  unbindCard
-} from './billing';
+export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';

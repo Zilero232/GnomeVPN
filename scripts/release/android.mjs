@@ -1,21 +1,16 @@
+import { requireEnv } from '@gnomevpn/scripts/env';
+import { $, isWindows, requireGh, workspace } from '@gnomevpn/scripts/local';
+import { reporter } from '@gnomevpn/scripts/reporter';
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { requireEnv } from '../lib/env.mjs';
-import { $, isWindows, reporter, requireGh, workspace } from '../lib/shell.mjs';
 import { releaseTag, releaseVersion } from './version.mjs';
 
 const log = reporter('release:android');
 
 const tag = releaseTag();
 const version = releaseVersion();
-const creds = requireEnv([
-  'ANDROID_KEY_ALIAS',
-  'ANDROID_KEY_PASSWORD',
-  'ANDROID_KEY_BASE64',
-  'ANDROID_HOME',
-  'NEXT_PUBLIC_API_URL'
-]);
+const creds = requireEnv(['ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD', 'ANDROID_KEY_BASE64', 'ANDROID_HOME', 'NEXT_PUBLIC_API_URL']);
 
 const gh = await requireGh(log);
 
@@ -28,14 +23,10 @@ const signingSnippet = join(tauri, 'scripts', 'android-signing.kts');
 const writeKeystore = () => {
   log.step('materialize keystore from ANDROID_KEY_BASE64');
   writeFileSync(keystore, Buffer.from(creds.ANDROID_KEY_BASE64, 'base64'));
+
   writeFileSync(
     join(gen, 'keystore.properties'),
-    [
-      `keyAlias=${creds.ANDROID_KEY_ALIAS}`,
-      `password=${creds.ANDROID_KEY_PASSWORD}`,
-      'storeFile=../gnomevpn.keystore',
-      ''
-    ].join('\n')
+    [`keyAlias=${creds.ANDROID_KEY_ALIAS}`, `password=${creds.ANDROID_KEY_PASSWORD}`, 'storeFile=../gnomevpn.keystore', ''].join('\n')
   );
 };
 
@@ -43,27 +34,19 @@ const patchGradle = () => {
   let gradle = readFileSync(gradleFile, 'utf8');
 
   if (!gradle.includes('import java.io.FileInputStream')) {
-    gradle = gradle.replace(
-      'import java.util.Properties',
-      'import java.io.FileInputStream\nimport java.util.Properties'
-    );
+    gradle = gradle.replace('import java.util.Properties', 'import java.io.FileInputStream\nimport java.util.Properties');
   }
 
   if (gradle.includes('signingConfigs')) {
-    gradle = gradle.replace(
-      / {4}signingConfigs \{[\s\S]*?\r?\n {4}\}\r?\n/,
-      readFileSync(signingSnippet, 'utf8')
-    );
+    gradle = gradle.replace(/ {4}signingConfigs \{[\s\S]*?\r?\n {4}\}\r?\n/, readFileSync(signingSnippet, 'utf8'));
   } else {
     const snippet = readFileSync(signingSnippet, 'utf8');
+
     gradle = gradle.replace('    buildTypes {', `${snippet}    buildTypes {`);
   }
 
   if (!gradle.includes('signingConfig = signingConfigs.getByName("release")')) {
-    gradle = gradle.replace(
-      'getByName("release") {',
-      'getByName("release") {\n            signingConfig = signingConfigs.getByName("release")'
-    );
+    gradle = gradle.replace('getByName("release") {', 'getByName("release") {\n            signingConfig = signingConfigs.getByName("release")');
   }
 
   writeFileSync(gradleFile, gradle);
@@ -99,9 +82,7 @@ const buildEnv = {
 const androidBuild = (flag) => {
   log.step(`tauri android build ${flag}`);
 
-  return $`bunx tauri android build ${flag} --target aarch64 --target x86_64`
-    .cwd(tauri)
-    .env(buildEnv);
+  return $`bunx tauri android build ${flag} --target aarch64 --target x86_64`.cwd(tauri).env(buildEnv);
 };
 
 log.step('build the client bundle');
@@ -125,6 +106,7 @@ const apk = findArtifact('.apk');
 log.step('verify apk signature');
 const buildTools = readdirSync(join(creds.ANDROID_HOME, 'build-tools')).sort().at(-1);
 const apksigner = join(creds.ANDROID_HOME, 'build-tools', buildTools, 'apksigner.bat');
+
 await $`${apksigner} verify --verbose ${apk}`;
 
 await androidBuild('--aab');

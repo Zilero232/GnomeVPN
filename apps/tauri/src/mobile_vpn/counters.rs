@@ -25,11 +25,7 @@ unsafe extern "C" fn on_traffic(status: *const TrafficStatus, _context: *mut c_v
 
 pub fn install() {
     unsafe {
-        tun2proxy_set_traffic_status_callback(
-            REPORT_INTERVAL_SECS,
-            Some(on_traffic),
-            std::ptr::null_mut(),
-        );
+        tun2proxy_set_traffic_status_callback(REPORT_INTERVAL_SECS, Some(on_traffic), std::ptr::null_mut());
     }
 }
 

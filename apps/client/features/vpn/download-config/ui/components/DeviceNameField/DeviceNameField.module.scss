@@ -1,0 +1,16 @@
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  > :first-child {
+    min-width: 0;
+    flex: 1;
+  }
+}

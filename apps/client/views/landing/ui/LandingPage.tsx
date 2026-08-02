@@ -23,12 +23,7 @@ import { REVEAL_VIEWPORT, TITLE_MOTION } from './LandingPage.motion';
 import s from './LandingPage.module.scss';
 
 const SectionTitle = ({ children }: { children: string }) => (
-  <motion.div
-    initial='hidden'
-    variants={TITLE_MOTION}
-    viewport={REVEAL_VIEWPORT}
-    whileInView='visible'
-  >
+  <motion.div initial='hidden' variants={TITLE_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
     <Text as='h2' className={s.sectionTitle}>
       {children}
     </Text>

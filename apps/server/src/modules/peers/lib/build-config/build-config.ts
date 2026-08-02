@@ -18,11 +18,7 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
   dns: [...TUNNEL.dns]
 });
 
-const buildWireguardConfig = ({
-  node,
-  wgPrivateKey,
-  wgAssignedIp
-}: BuildConfigInput): TunnelConfig => {
+const buildWireguardConfig = ({ node, wgPrivateKey, wgAssignedIp }: BuildConfigInput): TunnelConfig => {
   if (!node.wgPublicKey || !wgPrivateKey || !wgAssignedIp) {
     throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no wireguard endpoint');
   }
@@ -37,7 +33,7 @@ const buildWireguardConfig = ({
     dns: [...TUNNEL.dns],
     wireguard: {
       privateKey: wgPrivateKey,
-      address: `${wgAssignedIp}/32`,
+      address: `${wgAssignedIp}/${WG.addressPrefix}`,
       peerPublicKey: node.wgPublicKey,
       allowedIps: [...WG.allowedIps],
       reserved: [],
@@ -47,6 +43,4 @@ const buildWireguardConfig = ({
 };
 
 export const buildTunnelConfig = (input: BuildConfigInput): TunnelConfig =>
-  input.protocol === TUNNEL_PROTOCOL.wireguard
-    ? buildWireguardConfig(input)
-    : buildHysteria2Config(input);
+  input.protocol === TUNNEL_PROTOCOL.wireguard ? buildWireguardConfig(input) : buildHysteria2Config(input);

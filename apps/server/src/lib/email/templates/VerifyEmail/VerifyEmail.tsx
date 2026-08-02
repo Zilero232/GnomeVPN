@@ -11,8 +11,6 @@ export const VerifyEmail = ({ url }: VerifyEmailProps) => (
     heading='Подтвердите почту'
     preview='Подтвердите почту, чтобы завершить регистрацию в GnomeVPN'
   >
-    <Text style={emailStyles.text}>
-      Подтвердите адрес, чтобы мы могли восстановить доступ к аккаунту, если вы забудете пароль.
-    </Text>
+    <Text style={emailStyles.text}>Подтвердите адрес, чтобы мы могли восстановить доступ к аккаунту, если вы забудете пароль.</Text>
   </BaseEmail>
 );

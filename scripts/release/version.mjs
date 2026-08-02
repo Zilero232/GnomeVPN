@@ -1,7 +1,6 @@
+import { workspace } from '@gnomevpn/scripts/local';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { workspace } from '../lib/shell.mjs';
 
 const pkg = JSON.parse(readFileSync(join(workspace, 'package.json'), 'utf8'));
 
