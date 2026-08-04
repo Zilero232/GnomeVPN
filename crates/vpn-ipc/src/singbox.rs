@@ -103,6 +103,8 @@ struct Rule {
     protocol: Option<String>,
     #[serde(rename = "ip_is_private", skip_serializing_if = "Option::is_none")]
     ip_is_private: Option<bool>,
+    #[serde(rename = "ip_version", skip_serializing_if = "Option::is_none")]
+    ip_version: Option<u8>,
     #[serde(rename = "process_name", skip_serializing_if = "Vec::is_empty")]
     process_name: Vec<String>,
     #[serde(rename = "process_path", skip_serializing_if = "Vec::is_empty")]
@@ -152,6 +154,16 @@ impl Rule {
             action: Some("route".to_string()),
             process_name: names,
             outbound: Some(outbound.to_string()),
+            ..Default::default()
+        }
+    }
+
+    fn reject_ipv6(paths: Vec<String>, names: Vec<String>) -> Self {
+        Rule {
+            action: Some("reject".to_string()),
+            ip_version: Some(6),
+            process_path: paths,
+            process_name: names,
             ..Default::default()
         }
     }
@@ -310,20 +322,31 @@ fn dns(config: &TunnelConfig, split: &SplitConfig) -> Dns {
         rules.push(DnsRule::domain(vec![config.server.clone()], LOCAL_DNS_TAG));
     }
 
-    if !split.apps.is_empty() && split.apps_mode == SplitMode::Disallowed {
-        rules.push(DnsRule::process_paths(split.apps.clone(), LOCAL_DNS_TAG));
+    let listed_dns = match split.apps_mode {
+        SplitMode::Allowed => tunnel_dns.as_str(),
+        SplitMode::Disallowed => LOCAL_DNS_TAG,
+    };
+
+    if !split.apps.is_empty() {
+        rules.push(DnsRule::process_paths(split.apps.clone(), listed_dns));
 
         let names: Vec<String> = split.apps.iter().filter_map(|p| process_name_of(p)).collect();
 
         if !names.is_empty() {
-            rules.push(DnsRule::process_names(names, LOCAL_DNS_TAG));
+            rules.push(DnsRule::process_names(names, listed_dns));
         }
     }
+
+    let final_server = if split.apps.is_empty() || split.apps_mode == SplitMode::Disallowed {
+        tunnel_dns.clone()
+    } else {
+        LOCAL_DNS_TAG.to_string()
+    };
 
     Dns {
         servers,
         rules,
-        final_server: tunnel_dns,
+        final_server,
         strategy: "ipv4_only".to_string(),
     }
 }
@@ -344,10 +367,13 @@ fn route(split: &SplitConfig) -> Route {
 
     if !split.apps.is_empty() {
         let outbound = tag_for(split.apps_mode);
+        let names: Vec<String> = split.apps.iter().filter_map(|p| process_name_of(p)).collect();
+
+        if split.apps_mode == SplitMode::Allowed {
+            rules.push(Rule::reject_ipv6(split.apps.clone(), names.clone()));
+        }
 
         rules.push(Rule::app_paths(split.apps.clone(), outbound));
-
-        let names: Vec<String> = split.apps.iter().filter_map(|p| process_name_of(p)).collect();
 
         if !names.is_empty() {
             rules.push(Rule::app_names(names, outbound));

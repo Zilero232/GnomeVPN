@@ -77,9 +77,27 @@ running process whose real path differs from the scanned shortcut (wrong casing,
 a versioned Chrome path, a launcher stub) is still caught by the bare
 `chrome.exe`. Matching by path alone silently failed for exactly that reason.
 
-A bypassed app also needs its **DNS** resolved off the tunnel, or every lookup
-still traverses the proxy and leaks. `dns()` mirrors the same path+name pair into
-`dns.rules` pointing at `dns-local`, so a disallowed app is direct end to end.
+**DNS must follow the traffic, in both directions.** An app resolves where it
+connects, or it dials an address its route cannot reach. `dns()` mirrors the same
+path+name pair into `dns.rules` and flips both the rule server and `dns.final`
+with `apps_mode`: under `Disallowed` the listed apps get `dns-local` while
+`final` stays on the tunnel; under `Allowed` they get `dns-tunnel-0` while
+`final` drops to `dns-local`.
+
+Getting only the `Disallowed` half right is a bug that hides for months. With
+`Allowed`, the whole machine used to resolve through the tunnel while its traffic
+went direct — a game then resolved its server via the exit node, got a
+region-specific address, and connected to it from the user's real IP. The server
+saw a session opened from one region and packets arriving from another and cut
+it. It reads as a random mid-game disconnect, not as a DNS bug, because it only
+fires when the balancer hands back a region-locked address.
+
+Apps routed into the tunnel are also **rejected on IPv6** (`action: reject`,
+`ip_version: 6`, matched on the same path+name pair). The TUN carries an IPv4
+address only, so without that rule a dual-stack host silently opens an IPv6
+connection outside the tunnel — the same split-identity break, by another route.
+The reject is scoped to the listed apps, never global: bypassed apps keep their
+IPv6.
 
 With no split apps, `final` is `proxy` and everything goes through the tunnel.
 The same rule engine also accepts domain and CIDR rules, so any future routing
