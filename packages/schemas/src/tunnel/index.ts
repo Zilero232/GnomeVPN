@@ -1,7 +1,6 @@
 export { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
 export {
   DEFAULT_TUNNEL_PROTOCOL,
-  deviceUsageSchema,
   downloadedConfigSchema,
   portRangeSchema,
   SPLIT_MODE,
@@ -15,7 +14,6 @@ export {
 
 export type {
   ConnectRequest,
-  DeviceUsage,
   DisconnectRequest,
   DownloadedConfig,
   IssueConfigRequest,

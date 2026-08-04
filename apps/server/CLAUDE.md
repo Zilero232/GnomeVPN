@@ -114,14 +114,32 @@ roll back on failure" dance is written once instead of twice.
 
 ## Session slots
 
-A subscription covers `SESSION_LIMIT` (2) live tunnels at once, so a phone and a
-desktop can both stay connected. The client sends a `deviceId` it generates once
-and keeps in `plugin-store`; that id becomes the peer's `name`, which makes the
-xray client email unique per device (`app-<userId>-<deviceId>`).
+A subscription covers `DEFAULT_DEVICE_LIMIT` (2) live tunnels at once, so a phone
+and a desktop can both stay connected. The client sends a `deviceId` it generates
+once and keeps in `plugin-store`; that id becomes the peer's `name`, which makes
+the xray client email unique per device (`app-<userId>-<deviceId>`).
 
-Reconnecting from a known device reuses its slot. A third device evicts the least
-recently used one rather than being refused — `freeSlot` orders by
-`lastActiveAt` and frees space _before_ the new client is created.
+**Live tunnels and downloadable configs are counted separately.** `deviceLimit`
+bounds `kind: 'session'` peers (the app's own connect), `configLimit` bounds
+`kind: 'config'` ones, and `resolveLimits` derives both from the same purchased
+`extraDevices`. A user who filled every config slot can still connect from the
+app — the two never compete for the same budget.
+
+Reconnecting from a known device reuses its slot. A third device evicts an idle
+one rather than being refused — `freeSlot` orders by `createdAt` and frees space
+_before_ the new client is created. Only peers the node reports as **not** online
+are eligible; if every slot is genuinely in use it throws
+`DEVICE_LIMIT_REACHED` instead of cutting someone off.
+
+**Liveness comes from the Xray core, which cannot see WireGuard.**
+`onlineEmails()` reads `/panel/api/clients/onlines` — sessions the core itself
+proxies. A WireGuard peer is handled by the kernel module, never appears there,
+and so is _unknown_, not _idle_. `onlinePeerIds` folds that into the same
+`assumeOnlineWhenNodeSilent` flag it already uses for an unreachable node: the
+session path leaves it `true`, so an unknown peer holds its slot and a live
+tunnel is never silently evicted; `configs.list` passes `false`, so a config is
+only badged "connected" on evidence. Treating unknown as idle is what let a third
+device tear down somebody's active WireGuard tunnel.
 
 Order matters: `createClient` deletes any client with the same email first,
 because the panel rejects duplicates. Releasing the old peer _after_ creating the

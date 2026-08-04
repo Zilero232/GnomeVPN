@@ -125,12 +125,11 @@ export class PeersService {
           .onlineEmails()
           .catch(() => null);
 
-        if (emails === null && !assumeOnlineWhenNodeSilent) {
-          return;
-        }
-
         for (const peer of nodePeers) {
-          if (emails === null || emails.has(peerClientName(peer))) {
+          const isUnknown = emails === null || peer.protocol === TUNNEL_PROTOCOL.wireguard;
+          const isOnline = isUnknown ? assumeOnlineWhenNodeSilent : emails.has(peerClientName(peer));
+
+          if (isOnline) {
             online.add(peer.id);
           }
         }

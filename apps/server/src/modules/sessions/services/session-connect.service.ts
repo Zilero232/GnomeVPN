@@ -1,4 +1,4 @@
-import type { DeviceUsage, TunnelConfig } from '@gnomevpn/schemas';
+import type { TunnelConfig } from '@gnomevpn/schemas';
 
 import { Injectable, Logger } from '@nestjs/common';
 
@@ -6,7 +6,6 @@ import type { ConnectSessionInput, DisconnectSessionInput, PersistSessionInput }
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService, withSerializableRetry } from '../../../core';
-import { EventsService } from '../../events';
 import { NodesService } from '../../nodes';
 import { buildTunnelConfig, PEER_REF_SELECT, PeersService, peerWgData } from '../../peers';
 import { SubscriptionService } from '../../subscription';
@@ -21,8 +20,7 @@ export class SessionConnectService {
     private readonly nodes: NodesService,
     private readonly peers: PeersService,
     private readonly access: SessionAccessService,
-    private readonly subscription: SubscriptionService,
-    private readonly events: EventsService
+    private readonly subscription: SubscriptionService
   ) {}
 
   private async freeSlot({ userId, deviceId }: DisconnectSessionInput): Promise<number> {
@@ -56,31 +54,6 @@ export class SessionConnectService {
     return deviceLimit;
   }
 
-  async listDevices({ userId, deviceId }: DisconnectSessionInput): Promise<DeviceUsage> {
-    const [rows, { deviceLimit }] = await Promise.all([
-      this.prisma.peer.findMany({
-        where: { userId, kind: 'session', state: { not: 'revoked' } },
-        orderBy: { createdAt: 'desc' },
-        select: { ...PEER_REF_SELECT, node: { select: { country: true } } }
-      }),
-      this.subscription.getLimits(userId)
-    ]);
-
-    const online = await this.peers.onlinePeerIds(rows);
-    const devices = rows.map((row) => ({
-      name: row.name ?? '',
-      country: row.node.country,
-      isOnline: online.has(row.id),
-      isCurrent: row.name === deviceId
-    }));
-
-    return {
-      used: devices.filter((device) => device.isOnline).length,
-      limit: deviceLimit,
-      devices
-    };
-  }
-
   async connect({ userId, nodeId, deviceId, protocol }: ConnectSessionInput): Promise<TunnelConfig> {
     this.logger.log(`connect requested by ${userId}/${deviceId} for node ${nodeId}`);
 
@@ -99,8 +72,6 @@ export class SessionConnectService {
     });
 
     this.logger.log(`connect granted to ${userId}/${deviceId} on ${node.country} (${node.host})`);
-
-    this.events.publish(userId, { type: 'devices-changed' });
 
     return buildTunnelConfig({
       node,
@@ -157,7 +128,5 @@ export class SessionConnectService {
     if (session) {
       await this.access.releaseAll([session]);
     }
-
-    this.events.publish(userId, { type: 'devices-changed' });
   }
 }

@@ -5,7 +5,6 @@ import type { CollectOrphansInput, PeerIdentity, ReconcileNode, RemoveRevokedInp
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { EventsService } from '../../../events';
 import { peerClientName } from '../../../peers';
 import { BOOT_GRACE_MS, RECONCILE_CRON } from '../../config';
 
@@ -15,10 +14,7 @@ export class ReconcilePeersJob {
   private readonly bootedAt = Date.now();
   private readonly suspects = new Map<string, Set<string>>();
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly events: EventsService
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private emailOf(peer: PeerIdentity) {
     return peerClientName({
@@ -70,10 +66,6 @@ export class ReconcilePeersJob {
 
       if (nodeClients.has(email)) {
         await xray.deleteClient(email);
-      }
-
-      if (peer.kind === 'session') {
-        this.events.publish(peer.userId, { type: 'devices-changed' });
       }
     }
   }

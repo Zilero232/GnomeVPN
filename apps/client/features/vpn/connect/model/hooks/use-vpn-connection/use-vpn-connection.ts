@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRef } from 'react';
 import { toast } from 'sonner';
 
+import { useErrorMessage } from '@/entities/app/locale';
 import { DEFAULT_PROTOCOL } from '@/entities/vpn/protocol';
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
@@ -48,6 +49,7 @@ const waitForDisconnected = async () => {
 
 export const useVpnConnection = () => {
   const t = useTranslations('notifications');
+  const toErrorMessage = useErrorMessage();
 
   const tunnel = useTunnelState();
   const watchdog = useConnectWatchdog();
@@ -152,7 +154,7 @@ export const useVpnConnection = () => {
       await teardown();
 
       const code = apiErrorCode(error);
-      const message = code === 'PAYMENT_REQUIRED' ? t('subscriptionRequired') : t('connectFailed');
+      const message = toErrorMessage(error);
 
       logger.error(`vpn connect failed [${code}]: ${String(error)}`);
 

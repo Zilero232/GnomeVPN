@@ -21,6 +21,7 @@ export type OnlinePeerRef = {
   nodeId: string;
   userId: string;
   kind: PeerKind;
+  protocol: TunnelProtocol;
   name: string | null;
 };
 

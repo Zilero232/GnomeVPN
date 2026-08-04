@@ -10,4 +10,4 @@ export { queryClient } from './query-client';
 export { getLatestRelease } from './release';
 export { getSubscriptionStatus } from './subscription';
 
-export { connectTunnel, disconnectTunnel, getDeviceUsage } from './tunnel';
+export { connectTunnel, disconnectTunnel } from './tunnel';

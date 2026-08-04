@@ -57,19 +57,6 @@ export const splitConfigSchema = z.object({
   ips: z.array(z.string().min(1))
 });
 
-export const deviceSlotSchema = z.object({
-  name: z.string().min(1),
-  country: z.string().min(1),
-  isOnline: z.boolean(),
-  isCurrent: z.boolean()
-});
-
-export const deviceUsageSchema = z.object({
-  used: z.number().int().nonnegative(),
-  limit: z.number().int().positive(),
-  devices: z.array(deviceSlotSchema)
-});
-
 export const downloadedConfigSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),

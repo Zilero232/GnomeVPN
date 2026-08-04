@@ -2,13 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { isNonNullish } from 'remeda';
 
 import { usePlatform } from '@/entities/app/platform';
-import { useServerEvents } from '@/entities/app/server-events';
-import { useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
-import { useDeviceUsage } from '@/entities/vpn/device';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
@@ -28,11 +24,9 @@ export const AppView = () => {
   const t = useTranslations('app');
   const router = useRouter();
   const { nodes, isLoading, isError } = useNodes();
-  const { isAuthenticated } = useCurrentUser();
   const { isDesktopApp } = usePlatform();
   const { hasAccess } = useSubscriptionStatus();
 
-  useServerEvents({ isEnabled: isAuthenticated });
   const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
@@ -41,9 +35,6 @@ export const AppView = () => {
   const isOnline = status === 'connected';
 
   const { latency } = useNodeLatency({ isEnabled: hasAccess && status === 'disconnected' });
-  const { usage } = useDeviceUsage({ status });
-
-  const isDeviceLimitReached = isNonNullish(usage) && usage.used >= usage.limit && !usage.devices.some((device) => device.isCurrent);
 
   const onToggle = async () => {
     if (status === 'connected') {
@@ -99,12 +90,6 @@ export const AppView = () => {
           nodes={nodes}
           onSelect={selection.select}
         />
-
-        {hasAccess && usage && (
-          <Text size='xs' tone={isDeviceLimitReached ? 'danger' : 'muted'}>
-            {isDeviceLimitReached ? t('devicesFull', { limit: usage.limit }) : t('devicesUsed', { used: usage.used, limit: usage.limit })}
-          </Text>
-        )}
 
         <TunnelStats connectedAt={connectedAt} isVisible={isOnline} traffic={traffic} />
       </div>

@@ -14,6 +14,8 @@
     "VALIDATION_FAILED": "Check the fields and try again.",
     "UNAUTHORIZED": "Sign in to continue.",
     "FORBIDDEN": "You do not have access to this action.",
+    "NOT_FOUND": "Not found.",
+    "CONFLICT": "This action conflicts with the current state — refresh the page.",
     "PAYMENT_REQUIRED": "An active subscription is required.",
     "PAYMENT_FAILED": "The payment could not be created. Please try again.",
     "PLAN_CHANGE_LOCKED": "You can switch plans once the current period ends.",
@@ -253,7 +255,9 @@
       "traitBlocking": "Bypasses blocking",
       "traitSpeed": "Speed",
       "hysteria2Desc": "Fast and hard to block. Best on restricted networks. Desktop — Hiddify or NekoBox, phone — Hiddify or Streisand.",
-      "wireguardDesc": "Works everywhere UDP is allowed. A good fallback. Desktop — WireSock, phone — AmneziaVPN."
+      "wireguardDesc": "Works everywhere UDP is allowed. A good fallback. Desktop — WireSock, phone — AmneziaVPN.",
+      "wireguardSingleDevice": "One config — one device",
+      "wireguardSingleDeviceHint": "A second device on the same config keeps losing connection. Create a separate config for each device."
     },
     "namePlaceholder": "Phone",
     "devicePlaceholder": "Pick a device",
@@ -320,8 +324,7 @@
     "disconnectedTitle": "Disconnected",
     "disconnectedBody": "Tunnel closed, traffic goes directly",
     "errorTitle": "Connection dropped",
-    "connectFailed": "Could not connect",
-    "subscriptionRequired": "An active subscription is required"
+    "connectFailed": "Could not connect"
   },
   "window": {
     "minimize": "Minimize",
@@ -379,8 +382,6 @@
     "nodeGradeFast": "Fast connection",
     "nodeGradeFair": "Moderate connection",
     "nodeGradeSlow": "Slow connection",
-    "devicesUsed": "Devices: {used} of {limit}",
-    "devicesFull": "All {limit} device slots are in use — disconnect another device to connect here",
     "nodeLabel": "Country",
     "nodePlaceholder": "Pick a country",
     "openAccount": "Account",
