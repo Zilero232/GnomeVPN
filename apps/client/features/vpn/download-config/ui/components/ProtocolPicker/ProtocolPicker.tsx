@@ -1,6 +1,6 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { Check, Info } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
@@ -18,7 +18,7 @@ export const ProtocolPicker = ({ value, isDisabled, onChange }: ProtocolControlP
 
   return (
     <div className={s.list} role='radiogroup'>
-      {PROTOCOL_OPTIONS.map(({ protocol, icon, isRecommended, tagKey, descKey, traits }) => {
+      {PROTOCOL_OPTIONS.map(({ protocol, icon, isRecommended, tagKey, descKey, noteKey, noteHintKey, traits }) => {
         const isSelected = value === protocol;
         const Icon = PROTOCOL_ICON[icon];
 
@@ -53,6 +53,16 @@ export const ProtocolPicker = ({ value, isDisabled, onChange }: ProtocolControlP
               <Text className={s.desc} size='xs' tone='muted'>
                 {t(descKey)}
               </Text>
+
+              {noteKey && (
+                <span className={s.note} title={noteHintKey ? t(noteHintKey) : undefined}>
+                  <Info aria-hidden className={s.noteIcon} size={12} />
+
+                  <Text as='span' size='xs'>
+                    {t(noteKey)}
+                  </Text>
+                </span>
+              )}
 
               <span className={s.traits}>
                 {traits.map((trait) => (

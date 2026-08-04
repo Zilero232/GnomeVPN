@@ -15,6 +15,8 @@ export type ProtocolOption = {
   isRecommended?: boolean;
   tagKey?: string;
   descKey: string;
+  noteKey?: string;
+  noteHintKey?: string;
   traits: ProtocolTrait[];
 };
 

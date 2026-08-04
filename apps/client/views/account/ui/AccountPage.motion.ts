@@ -18,9 +18,8 @@ export const BLOCK_MOTION: Variants = {
 };
 
 export const TAB_PANEL_MOTION: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE_OUT } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.18, ease: EASE_OUT } }
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } }
 };
 
 export const SPOTLIGHT_SPRING = { stiffness: 120, damping: 22, mass: 0.4 } as const;

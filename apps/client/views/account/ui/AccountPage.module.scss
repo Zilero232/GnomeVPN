@@ -44,31 +44,91 @@
 }
 
 .signOut {
+  position: relative;
   display: inline-flex;
+  overflow: hidden;
   align-items: center;
-  padding: 9px 14px;
-  border: 1px solid transparent;
+  padding: 9px 15px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: none;
+  background-color: color-mix(in srgb, var(--color-surface-raised) 45%, transparent);
   color: var(--color-text-muted);
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: var(--step-xs);
   gap: 9px;
   transition:
-    border-color 0.16s ease,
-    color 0.16s ease,
-    background-color 0.16s ease;
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s ease;
+
+  &:before {
+    position: absolute;
+    background: radial-gradient(circle at 50% 120%, rgb(255 77 94 / 22%), transparent 70%);
+    content: '';
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+
+  svg {
+    position: relative;
+    transition: transform 0.22s ease;
+  }
 
   &:hover:not(:disabled) {
-    border-color: rgb(255 77 94 / 24%);
-    background-color: rgb(255 77 94 / 8%);
+    border-color: rgb(255 77 94 / 38%);
     color: var(--color-danger);
+
+    &:before {
+      opacity: 1;
+    }
+
+    svg {
+      transform: translateX(2px);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
   }
 
   &:disabled {
     cursor: default;
-    opacity: 0.5;
+    opacity: 0.6;
+
+    svg {
+      animation: signOutPulse 1s ease-in-out infinite;
+    }
+  }
+}
+
+.signOutLabel {
+  position: relative;
+}
+
+@keyframes signOutPulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signOut {
+    &:active:not(:disabled) {
+      transform: none;
+    }
+
+    svg {
+      animation: none;
+      transition: none;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useState } from 'react';
 
 import type { AccountTabsProps } from './AccountTabs.types';
@@ -40,18 +40,15 @@ export const AccountTabs = ({ items, panelClassName }: AccountTabsProps) => {
         })}
       </nav>
 
-      <AnimatePresence initial={false} mode='wait'>
-        <motion.section
-          key={current?.value}
-          animate='visible'
-          className={current?.isBare ? undefined : panelClassName}
-          exit='exit'
-          initial='hidden'
-          variants={TAB_PANEL_MOTION}
-        >
-          {current?.content}
-        </motion.section>
-      </AnimatePresence>
+      <motion.section
+        key={current?.value}
+        animate='visible'
+        className={current?.isBare ? undefined : panelClassName}
+        initial='hidden'
+        variants={TAB_PANEL_MOTION}
+      >
+        {current?.render()}
+      </motion.section>
     </div>
   );
 };

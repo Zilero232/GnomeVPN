@@ -20,6 +20,8 @@ export const PROTOCOL_OPTIONS: ProtocolOption[] = [
     protocol: TUNNEL_PROTOCOL.wireguard,
     icon: 'shield',
     descKey: 'protocol.wireguardDesc',
+    noteKey: 'protocol.wireguardSingleDevice',
+    noteHintKey: 'protocol.wireguardSingleDeviceHint',
     traits: [
       { key: 'protocol.traitBlocking', grade: 'mid' },
       { key: 'protocol.traitSpeed', grade: 'high' }

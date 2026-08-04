@@ -31,20 +31,20 @@ export const AccountPage = () => {
       value: 'subscription',
       label: t('tabs.subscription'),
       icon: CreditCard,
-      content: <SubscriptionCard isLoading={isLoading} subscription={subscription} />
+      render: () => <SubscriptionCard isLoading={isLoading} subscription={subscription} />
     },
     {
       value: 'configs',
       label: tConfigs('title'),
       icon: FileKey,
-      content: <ConfigList />,
+      render: () => <ConfigList />,
       isBare: true
     },
     {
       value: 'profile',
       label: t('profile.title'),
       icon: UserRound,
-      content: <ProfileCard />
+      render: () => <ProfileCard />
     }
   ];
 
@@ -74,7 +74,7 @@ export const AccountPage = () => {
 
           <button className={s.signOut} disabled={signOut.isPending} type='button' onClick={() => signOut.mutate()}>
             <LogOut aria-hidden size={15} />
-            {t('signOut')}
+            <span className={s.signOutLabel}>{t('signOut')}</span>
           </button>
         </motion.header>
 
