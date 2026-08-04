@@ -99,6 +99,20 @@ connection outside the tunnel — the same split-identity break, by another rout
 The reject is scoped to the listed apps, never global: bypassed apps keep their
 IPv6.
 
+**Excluding an app from the tunnel does not keep it out of the TUN.** `auto_route`
+pulls every packet on the machine into `gnomevpn0`; the rules only decide which
+outbound it leaves by. A bypassed app still crosses the TUN stack, so that stack
+is on the hot path for traffic the user believes is untouched.
+
+That is why `stack` is `system` and not `gvisor`. gVisor is a userspace TCP/IP
+implementation — fine for web traffic, but it meters thousands of small UDP
+datagrams a second, and `endpoint_independent_nat` is off by default there while
+every other stack has it. Game protocols depend on that NAT behaviour, so on
+gVisor their translations kept breaking: World of Tanks froze even with only
+Chrome selected, while WireSock — which never touches a packet it was not asked
+to proxy — ran it fine. `udp_timeout` is raised to `5m` for the same reason: the
+default expires a session that idles between rounds.
+
 With no split apps, `final` is `proxy` and everything goes through the tunnel.
 The same rule engine also accepts domain and CIDR rules, so any future routing
 policy belongs in that config rather than in Rust.

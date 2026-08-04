@@ -5,6 +5,8 @@ use crate::types::{SplitConfig, SplitMode, TunnelConfig, TunnelProtocol};
 const TUNNEL_NAME: &str = "gnomevpn0";
 const TUNNEL_ADDRESS: &str = "10.8.0.2/24";
 const MTU: u32 = 1420;
+const TUN_STACK: &str = "system";
+const UDP_TIMEOUT: &str = "5m";
 const PROXY_TAG: &str = "proxy";
 const DIRECT_TAG: &str = "direct";
 const WG_KEEPALIVE: u32 = 25;
@@ -36,6 +38,8 @@ struct Inbound {
     #[serde(rename = "route_exclude_address")]
     route_exclude_address: Vec<String>,
     stack: String,
+    #[serde(rename = "udp_timeout")]
+    udp_timeout: String,
 }
 
 #[derive(Serialize)]
@@ -337,10 +341,10 @@ fn dns(config: &TunnelConfig, split: &SplitConfig) -> Dns {
         }
     }
 
-    let final_server = if split.apps.is_empty() || split.apps_mode == SplitMode::Disallowed {
-        tunnel_dns.clone()
-    } else {
+    let final_server = if routes_rest_direct(split) {
         LOCAL_DNS_TAG.to_string()
+    } else {
+        tunnel_dns.clone()
     };
 
     Dns {
@@ -353,6 +357,10 @@ fn dns(config: &TunnelConfig, split: &SplitConfig) -> Dns {
 
 fn is_ip_literal(host: &str) -> bool {
     host.parse::<std::net::IpAddr>().is_ok()
+}
+
+fn routes_rest_direct(split: &SplitConfig) -> bool {
+    (!split.apps.is_empty() && split.apps_mode == SplitMode::Allowed) || (!split.ips.is_empty() && split.ips_mode == SplitMode::Allowed)
 }
 
 fn tag_for(mode: SplitMode) -> &'static str {
@@ -384,10 +392,7 @@ fn route(split: &SplitConfig) -> Route {
         rules.push(Rule::ips(split.ips.clone(), tag_for(split.ips_mode)));
     }
 
-    let has_allowed =
-        (!split.apps.is_empty() && split.apps_mode == SplitMode::Allowed) || (!split.ips.is_empty() && split.ips_mode == SplitMode::Allowed);
-
-    let final_outbound = if has_allowed { DIRECT_TAG } else { PROXY_TAG };
+    let final_outbound = if routes_rest_direct(split) { DIRECT_TAG } else { PROXY_TAG };
 
     Route {
         rules,
@@ -466,7 +471,8 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
             auto_route: true,
             strict_route: true,
             route_exclude_address: LOCAL_NETWORKS.iter().map(|net| net.to_string()).collect(),
-            stack: "gvisor".to_string(),
+            stack: TUN_STACK.to_string(),
+            udp_timeout: UDP_TIMEOUT.to_string(),
         }],
         outbounds,
         endpoints,
