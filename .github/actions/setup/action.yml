@@ -40,6 +40,13 @@ runs:
         key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
         restore-keys: bun-${{ runner.os }}-
 
+    # The server's postinstall runs `prisma generate`, and prisma.config.ts
+    # resolves DIRECT_URL through env(), which throws when unset. `generate`
+    # never connects, so a placeholder satisfies it — the same trick the
+    # Dockerfiles use.
     - name: Install dependencies
       shell: bash
+      env:
+        DATABASE_URL: postgresql://placeholder
+        DIRECT_URL: postgresql://placeholder
       run: bun install --frozen-lockfile

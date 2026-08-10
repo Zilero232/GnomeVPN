@@ -48,6 +48,12 @@ jobs:
       - run: bun --filter @gnomevpn/tauri singbox
       - run: node apps/tauri/scripts/build-service.mjs
       - run: bun --filter @gnomevpn/tauri icon
-      - run: bun --filter @gnomevpn/client build
+
+      # `next build` runs with NODE_ENV=production, where client-env.ts requires
+      # NEXT_PUBLIC_API_URL outright. Nothing here ships, so a placeholder is
+      # enough — and it keeps the checks runnable on a fork with no secrets.
+      - env:
+          NEXT_PUBLIC_API_URL: https://api.invalid
+        run: bun --filter @gnomevpn/client build
 
       - run: bun run verify
