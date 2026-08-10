@@ -40,7 +40,7 @@ keyring = { version = "4", features = [
   "linux-keyutils-keyring-store",
   "dbus-secret-service-keyring-store",
 ] }
-sysinfo = { version = "0.33", default-features = false, features = ["system", "multithread"] }
+sysinfo = { version = "0.39", default-features = false, features = ["system", "multithread"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 interprocess = "2"
