@@ -165,11 +165,25 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
+      # No `cache: gradle` here: it hashes **/*.gradle* to build its key, and the
+      # gradle project does not exist yet — `tauri android init` generates
+      # gen/android later in this job, and gen/ is gitignored. With nothing to
+      # hash the action fails outright: "No file in ... matched to [**/*.gradle*,
+      # **/gradle-wrapper.properties, ...]". The cache below does the same job
+      # keyed on something that is actually in the checkout.
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: '21'
-          cache: gradle
+
+      - name: Cache gradle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('apps/tauri/Cargo.toml', 'apps/tauri/scripts/lib/android-overlay.mjs') }}
+          restore-keys: gradle-
 
       # build-tools is not part of the default package set, and without it there
       # is no apksigner to verify the signed apk with.
