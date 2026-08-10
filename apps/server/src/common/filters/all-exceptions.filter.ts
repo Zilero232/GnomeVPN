@@ -5,7 +5,7 @@ import type { Response } from 'express';
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { isNonNullish } from 'remeda';
 
-import { Prisma } from '../../../generated';
+import { isPrismaRequestError } from '../../core/prisma-error';
 
 const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
   400: 'VALIDATION_FAILED',
@@ -38,7 +38,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return;
     }
 
-    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    if (isPrismaRequestError(exception)) {
       const mapped = PRISMA_ERROR[exception.code];
 
       if (mapped) {
