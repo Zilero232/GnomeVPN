@@ -1,6 +1,6 @@
 import type { SshClient } from '@gnomevpn/scripts/ssh';
 
-import { all, arg, dirOf, dockerExec, dockerShell, line, orElse, quiet, silent } from '@gnomevpn/scripts/shell';
+import { all, arg, dirOf, dockerExec, dockerShell, line, orElse, silent } from '@gnomevpn/scripts/shell';
 import pWaitFor from 'p-wait-for';
 
 import type { ConfigurePanelInput, EnsuredWireguardKeys, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
@@ -63,32 +63,33 @@ export const enablePortHopping = async (ssh: SshClient) => {
   await ssh.exec(orElse([all([silent('command -v netfilter-persistent'), 'netfilter-persistent save']), 'true']));
 };
 
-const readRemoteKey = async (ssh: SshClient, path: string): Promise<string> => {
-  const result = await ssh.exec(inContainer(quiet(`cat ${path}`)));
-
-  return result.stdout.trim();
-};
-
 export const ensureWireguardKeys = async (ssh: SshClient): Promise<EnsuredWireguardKeys> => {
-  const [existingPrivate, existingPublic] = await Promise.all([readRemoteKey(ssh, WG_KEY_PATH), readRemoteKey(ssh, WG_PUB_PATH)]);
+  const fresh = generateWireguardKeys();
 
-  if (existingPrivate && existingPublic) {
-    return { privateKey: existingPrivate, publicKey: existingPublic, wasGenerated: false };
-  }
-
-  const { privateKey, publicKey } = generateWireguardKeys();
-
-  await ssh.exec(
+  const result = await ssh.exec(
     inContainer(
       all([
         line(['mkdir', '-p', dirOf(WG_KEY_PATH)]),
-        `printf "%s" ${arg(privateKey)} > ${WG_KEY_PATH}`,
-        `printf "%s" ${arg(publicKey)} > ${WG_PUB_PATH}`
+        orElse([silent(line(['test', '-s', WG_KEY_PATH])), `printf "%s" ${arg(fresh.privateKey)} > ${WG_KEY_PATH}`]),
+        orElse([silent(line(['test', '-s', WG_PUB_PATH])), `printf "%s" ${arg(fresh.publicKey)} > ${WG_PUB_PATH}`]),
+        line(['cat', WG_KEY_PATH]),
+        'echo',
+        line(['cat', WG_PUB_PATH])
       ])
     )
   );
 
-  return { privateKey, publicKey, wasGenerated: true };
+  if (result.exitCode !== 0) {
+    throw new Error(`cannot reach the panel container to read the WireGuard keys: ${result.stderr.trim() || 'no output'}`);
+  }
+
+  const [privateKey, publicKey] = result.stdout.trim().split('\n');
+
+  if (!privateKey || !publicKey) {
+    throw new Error('the panel container returned no WireGuard keys');
+  }
+
+  return { privateKey, publicKey, wasGenerated: privateKey === fresh.privateKey };
 };
 
 const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput) => {
