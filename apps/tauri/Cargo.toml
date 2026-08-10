@@ -54,7 +54,7 @@ tauri-plugin-safe-area-insets-css = "0.2.0"
 tun2proxy = "0.8"
 tun = { version = "0.8", features = ["async"] }
 boringtun = "0.7"
-base64 = "0.22"
+base64 = "0.23"
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "process", "fs", "sync"] }
 jni = "0.21"
 android_logger = "0.14"
