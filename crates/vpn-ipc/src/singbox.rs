@@ -3,6 +3,10 @@ use serde::Serialize;
 use crate::types::{SplitConfig, SplitMode, TunnelConfig, TunnelProtocol};
 
 const TUNNEL_NAME: &str = "gnomevpn0";
+
+fn tunnel_name() -> Option<String> {
+    (!cfg!(target_os = "macos")).then(|| TUNNEL_NAME.to_string())
+}
 const TUNNEL_ADDRESS: &str = "10.8.0.2/24";
 const MTU: u32 = 1420;
 const TUN_STACK: &str = "system";
@@ -27,8 +31,8 @@ struct Inbound {
     #[serde(rename = "type")]
     kind: String,
     tag: String,
-    #[serde(rename = "interface_name")]
-    interface_name: String,
+    #[serde(rename = "interface_name", skip_serializing_if = "Option::is_none")]
+    interface_name: Option<String>,
     address: Vec<String>,
     mtu: u32,
     #[serde(rename = "auto_route")]
@@ -465,11 +469,11 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
         inbounds: vec![Inbound {
             kind: "tun".to_string(),
             tag: "tun-in".to_string(),
-            interface_name: TUNNEL_NAME.to_string(),
+            interface_name: tunnel_name(),
             address: vec![TUNNEL_ADDRESS.to_string()],
             mtu: MTU,
             auto_route: true,
-            strict_route: true,
+            strict_route: cfg!(not(target_os = "macos")),
             route_exclude_address: LOCAL_NETWORKS.iter().map(|net| net.to_string()).collect(),
             stack: TUN_STACK.to_string(),
             udp_timeout: UDP_TIMEOUT.to_string(),

@@ -1,7 +1,6 @@
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+use std::net::Ipv4Addr;
 use std::sync::Arc;
 
-use tokio::net::TcpSocket;
 use tokio::sync::oneshot;
 use tokio::time::{interval, timeout, Duration};
 
@@ -16,12 +15,15 @@ const TUNNEL_ADDRESS: Ipv4Addr = Ipv4Addr::new(10, 8, 0, 2);
 
 const READY_TIMEOUT: Duration = Duration::from_secs(25);
 const READY_INTERVAL: Duration = Duration::from_millis(400);
-const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
 const WATCH_INTERVAL: Duration = Duration::from_secs(1);
 
-const PROBE_TARGETS: [SocketAddr; 2] = [
-    SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 443),
-    SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443),
+#[cfg(target_os = "windows")]
+const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
+
+#[cfg(target_os = "windows")]
+const PROBE_TARGETS: [std::net::SocketAddr; 2] = [
+    std::net::SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 443),
+    std::net::SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443),
 ];
 
 async fn tunnel_is_up() -> bool {
@@ -36,26 +38,39 @@ async fn traffic() -> Traffic {
         .unwrap_or_default()
 }
 
-async fn probe_through_tunnel(target: SocketAddr) -> bool {
-    let Ok(socket) = TcpSocket::new_v4() else {
+#[cfg(target_os = "windows")]
+async fn probe_through_tunnel(target: std::net::SocketAddr) -> bool {
+    let Ok(socket) = tokio::net::TcpSocket::new_v4() else {
         return false;
     };
 
-    if socket.bind(SocketAddr::V4(SocketAddrV4::new(TUNNEL_ADDRESS, 0))).is_err() {
+    let source = std::net::SocketAddr::V4(std::net::SocketAddrV4::new(TUNNEL_ADDRESS, 0));
+
+    if socket.bind(source).is_err() {
         return false;
     }
 
     matches!(timeout(PROBE_TIMEOUT, socket.connect(target)).await, Ok(Ok(_)))
 }
 
-async fn tunnel_carries_traffic() -> bool {
-    for target in PROBE_TARGETS {
-        if probe_through_tunnel(target).await {
-            return true;
-        }
+async fn tunnel_is_ready() -> bool {
+    if !tunnel_is_up().await {
+        return false;
     }
 
-    false
+    #[cfg(target_os = "windows")]
+    {
+        for target in PROBE_TARGETS {
+            if probe_through_tunnel(target).await {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    true
 }
 
 async fn wait_until_ready(process: &mut Singbox) -> Result<(), TunnelError> {
@@ -69,7 +84,7 @@ async fn wait_until_ready(process: &mut Singbox) -> Result<(), TunnelError> {
                 return Err(TunnelError::Singbox(reason));
             }
 
-            if tunnel_is_up().await && tunnel_carries_traffic().await {
+            if tunnel_is_ready().await {
                 return Ok(());
             }
         }
@@ -77,7 +92,7 @@ async fn wait_until_ready(process: &mut Singbox) -> Result<(), TunnelError> {
 
     timeout(READY_TIMEOUT, probe)
         .await
-        .map_err(|_| TunnelError::Singbox("tunnel did not start carrying traffic in time".into()))?
+        .map_err(|_| TunnelError::Singbox("tunnel did not come up in time".into()))?
 }
 
 pub async fn run_tunnel(
@@ -120,7 +135,7 @@ pub async fn run_tunnel(
         return Err(error);
     }
 
-    log::info!("tunnel is up on {TUNNEL_ADDRESS} and carrying traffic; sing-box owns routing");
+    log::info!("tunnel is up on {TUNNEL_ADDRESS}; sing-box owns routing");
     emit(TunnelEvent::Connected {
         assigned_ip: TUNNEL_ADDRESS.to_string(),
     });
