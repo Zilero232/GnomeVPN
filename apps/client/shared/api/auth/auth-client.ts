@@ -1,9 +1,10 @@
 import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
+import { STORAGE_KEYS } from '@/shared/constants';
 import { clearTokenFromVault, isServer, logger, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
 
-const STORAGE_KEY = 'gnomevpn.auth-token';
+const STORAGE_KEY = STORAGE_KEYS.authToken;
 
 const persistToVault = async (token: string) => {
   try {

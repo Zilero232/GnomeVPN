@@ -20,9 +20,10 @@ export type FeatureCard = (typeof FEATURE_CARDS)[number];
 
 export const PLATFORMS = [
   { key: 'windows', name: 'Windows', isNative: true },
+  { key: 'macos', name: 'macOS', isNative: true },
+  { key: 'linux', name: 'Linux', isNative: true },
   { key: 'android', name: 'Android', isNative: true },
-  { key: 'apple', name: 'macOS · iOS', isNative: false },
-  { key: 'linux', name: 'Linux', isNative: false }
+  { key: 'ios', name: 'iOS', isNative: false }
 ] as const;
 
 export const LOCATIONS = [

@@ -5,7 +5,7 @@ import type { SplitConfig, SplitMode } from '@gnomevpn/schemas';
 import { useEffect, useState } from 'react';
 import { isDeepEqual } from 'remeda';
 
-import { emptySplitConfig, getSplitConfig, logger, setSplitConfig } from '@/shared/lib';
+import { emptySplitConfig, logger, splitSetting } from '@/shared/lib';
 
 import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 
@@ -25,7 +25,7 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
 
     const load = async () => {
       try {
-        const stored = await getSplitConfig();
+        const stored = await splitSetting.get();
 
         if (ignore) {
           return;
@@ -50,7 +50,7 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
 
     const load = async () => {
       try {
-        const stored = await getSplitConfig();
+        const stored = await splitSetting.get();
 
         if (!ignore) {
           setApplied(stored);
@@ -85,7 +85,7 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
     setIsApplying(true);
 
     try {
-      await setSplitConfig(draft);
+      await splitSetting.set(draft);
       await onApplied?.();
       setApplied(draft);
 
@@ -94,7 +94,7 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
       logger.error(`cannot apply split config: ${String(error)}`);
 
       try {
-        await setSplitConfig(applied);
+        await splitSetting.set(applied);
       } catch (rollbackError) {
         logger.error(`cannot roll split config back: ${String(rollbackError)}`);
       }

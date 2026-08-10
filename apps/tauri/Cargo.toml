@@ -34,12 +34,20 @@ tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-updater = "2"
 tauri-plugin-autostart = "2"
+keyring = { version = "4", features = [
+  "apple-native-keyring-store",
+  "windows-native-keyring-store",
+  "linux-keyutils-keyring-store",
+  "dbus-secret-service-keyring-store",
+] }
+sysinfo = { version = "0.33", default-features = false, features = ["system", "multithread"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 interprocess = "2"
-keyring = "4"
 lnk = "0.6"
-sysinfo = { version = "0.33", default-features = false, features = ["system", "multithread"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+plist = "1"
 
 [target.'cfg(target_os = "android")'.dependencies]
 tauri-plugin-safe-area-insets-css = "0.2.0"

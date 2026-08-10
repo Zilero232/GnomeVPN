@@ -2,15 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import {
-  getAutoConnect,
-  getAutoReconnect,
-  isAutoStartEnabled,
-  logger,
-  setAutoConnect as persistAutoConnect,
-  setAutoReconnect as persistAutoReconnect,
-  setAutoStart as persistAutoStart
-} from '@/shared/lib';
+import { autoConnectSetting, autoReconnectSetting, isAutoStartEnabled, logger, setAutoStart as persistAutoStart } from '@/shared/lib';
 
 import type { UseStartupSettings } from './use-startup-settings.types';
 
@@ -22,7 +14,7 @@ export const useStartupSettings = (): UseStartupSettings => {
 
   useEffect(() => {
     const load = async () => {
-      const [start, connect, reconnect] = await Promise.all([isAutoStartEnabled(), getAutoConnect(), getAutoReconnect()]);
+      const [start, connect, reconnect] = await Promise.all([isAutoStartEnabled(), autoConnectSetting.get(), autoReconnectSetting.get()]);
 
       setAutoStartState(start);
       setAutoConnectState(connect);
@@ -45,12 +37,12 @@ export const useStartupSettings = (): UseStartupSettings => {
 
   const toggleAutoConnect = async (value: boolean) => {
     setAutoConnectState(value);
-    await persistAutoConnect(value);
+    await autoConnectSetting.set(value);
   };
 
   const toggleAutoReconnect = async (value: boolean) => {
     setAutoReconnectState(value);
-    await persistAutoReconnect(value);
+    await autoReconnectSetting.set(value);
   };
 
   return {

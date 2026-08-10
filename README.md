@@ -195,21 +195,21 @@ service.
 
 ```bash
 bun install
-bun run setup        # .env from the example, database up, schema pushed
+cp .env.example .env
+bun run dev:infra    # database, waits until it is healthy
+bun --filter @gnomevpn/server db:push
 
 bun run dev          # client + API
 bun run tauri:dev    # desktop app
 bun run android:dev  # android, needs a device or emulator
 ```
 
-`bun run setup` is idempotent — it never overwrites an existing `.env`, and it
-stops rather than dropping data if the local database disagrees with the schema.
-The steps it wraps are still available on their own:
+One `.env` covers the whole monorepo. `db:push` refuses rather than dropping
+data when the local database disagrees with the schema — reset the dev volume if
+that happens:
 
 ```bash
-cp .env.example .env                      # one env for the whole monorepo
-bun run dev:infra                         # database, waits until it is healthy
-bun --filter @gnomevpn/server db:push
+bun run dev:infra:down && docker volume rm gnomevpn_gnomevpn-postgres-data
 ```
 
 The desktop app needs `wintun.dll` and `sing-box.exe` next to the service — both
@@ -250,28 +250,29 @@ Full walkthrough — domain, secrets, `.env`, first launch — in
 
 ## Scripts
 
-| Command                   | What it does                                 |
-| ------------------------- | -------------------------------------------- |
-| `bun run setup`           | first run: env, database, schema             |
-| `bun run dev`             | client + API in watch mode                   |
-| `bun run dev:infra`       | database only, waits until healthy           |
-| `bun run tauri:dev`       | desktop app                                  |
-| `bun run android:dev`     | Android app                                  |
-| `bun run verify`          | every check below, in one command            |
-| `bun run fix`             | every autofixer, in one command              |
-| `bun run typecheck`       | types across all packages                    |
-| `bun lint`                | ESLint                                       |
-| `bun run format`          | Prettier                                     |
-| `bun run lint:css`        | Stylelint                                    |
-| `bun run lint:rust`       | clippy across the Rust workspace             |
-| `bun run tauri:build`     | installers                                   |
-| `bun run android:build`   | APK / AAB                                    |
-| `bun run release`         | build, sign & publish desktop + Android      |
-| `bun run deploy:web`      | build images, push to ghcr, deploy web + API |
-| `bun run provision:nodes` | set up VPN nodes                             |
+| Command                   | What it does                       |
+| ------------------------- | ---------------------------------- |
+| `bun run dev`             | client + API in watch mode         |
+| `bun run dev:infra`       | database only, waits until healthy |
+| `bun run tauri:dev`       | desktop app                        |
+| `bun run android:dev`     | Android app                        |
+| `bun run verify`          | every check below, in one command  |
+| `bun run fix`             | every autofixer, in one command    |
+| `bun run typecheck`       | types across all packages          |
+| `bun lint`                | ESLint                             |
+| `bun run format`          | Prettier                           |
+| `bun run lint:css`        | Stylelint                          |
+| `bun run lint:rust`       | clippy across the Rust workspace   |
+| `bun run tauri:build`     | installers                         |
+| `bun run android:build`   | APK / AAB                          |
+| `bun run provision:nodes` | set up VPN nodes                   |
 
 Rust is checked with `cargo clippy --workspace` and `cargo fmt --all --check`.
-There is no CI — run the checks locally before every commit.
+
+Releases and deploys are GitHub Actions, not local commands: `release.yml` on a
+`v*` tag builds and publishes every platform, `deploy.yml` ships the web and API
+images. `verify.yml` runs the checks above on every push — run `bun run verify`
+locally first anyway.
 
 <br/>
 

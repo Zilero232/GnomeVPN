@@ -9,7 +9,7 @@ import { useNodes } from '@/entities/vpn/node';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
 import { useVpnConnectionContext } from '@/features/vpn/connect';
 import { ROUTES } from '@/shared/constants';
-import { getLastNodeId, getProtocol, showMainWindow } from '@/shared/lib';
+import { lastNodeIdSetting, protocolSetting, showMainWindow } from '@/shared/lib';
 
 export const TrayProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
@@ -33,7 +33,7 @@ export const TrayProvider = ({ children }: { children: ReactNode }) => {
       return router.push(ROUTES.account);
     }
 
-    const lastNodeId = await getLastNodeId();
+    const lastNodeId = await lastNodeIdSetting.get();
     const preferred = nodes.find((node) => node.id === lastNodeId && node.status !== 'offline');
     const node = active ?? preferred ?? fallback;
 
@@ -43,7 +43,7 @@ export const TrayProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    await connect({ nodeId: node.id, protocol: await getProtocol(), country: node.country });
+    await connect({ nodeId: node.id, protocol: await protocolSetting.get(), country: node.country });
   };
 
   const releaseOnQuit = async () => {

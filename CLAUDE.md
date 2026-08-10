@@ -7,9 +7,9 @@ Guidance for Claude Code in this repo. Keep it short, link out for details.
 GnomeVPN — a commercial VPN built on Hysteria2 (QUIC/UDP). Bun-workspaces monorepo.
 
 - **Web client**: Next.js 16 / React 19 (`apps/client/`)
-- **Desktop**: Tauri 2 shell (`apps/tauri/`) + a privileged Windows service (`crates/vpn-service/`)
+- **Desktop**: Tauri 2 shell (`apps/tauri/`) + a privileged service on all three OSes (`crates/vpn-service/`)
 - **API**: NestJS on Bun + Prisma + Postgres, auth via better-auth (`apps/server/`)
-- **Tunnel**: Hysteria2 on the nodes (served by the 3x-ui panel), wintun adapter on Windows
+- **Tunnel**: Hysteria2 on the nodes (served by the 3x-ui panel); sing-box owns the TUN adapter on the desktop
 - **Shared types**: Zod schemas in `packages/schemas/` (`@gnomevpn/schemas`)
 
 ## Why Hysteria2 and not Reality
@@ -39,43 +39,67 @@ crates/
 └── vpn-service/     # Privileged service: tunnel, routes, DNS (CLAUDE.md)
 packages/
 ├── schemas/         # Zod schemas, imported by client and server
-└── scripts/         # shared script layer: reporter, ssh, shell, env, local
+└── scripts/         # shared script layer: reporter, ssh, shell
 scripts/
-├── deploy/          # build images, ship them to the VPS
-├── provision/       # VPN node setup over SSH
-├── release/         # desktop + android releases
-└── setup/           # first-run and release-env bootstrap
+└── provision/       # VPN node setup over SSH — the only local pipeline left
+.github/workflows/
+├── verify.yml       # bun run verify on every push and PR
+├── release.yml      # v* tag → desktop matrix + android → publish
+└── deploy.yml       # master → images to ghcr → pull on the VPS
 infra/
 ├── caddy/           # TLS + reverse proxy
 └── xray/            # the 3x-ui compose stack shipped to every node
 ```
 
-Anything two scripts share lives in `@gnomevpn/scripts`, never copied between
-them: `reporter` (the `[scope] message` output), `ssh` (one `SshClient` for
-provisioning _and_ deploy), `shell` (build remote commands — `arg()` quotes
-untrusted values, `quiet()` keeps stdout while `silent()` drops it), `env`
-(`requireEnv`) and `local` (`$`, `workspace`, `findGh`).
+**Releases and deploys are workflows, not local commands.** Building for a
+platform means building on it — Tauri cannot meaningfully cross-compile and
+macOS cannot be built off a Mac — so the matrix is not a convenience, it is the
+only way to ship all four targets. `tauri-action` owns the desktop bundles and
+the merged `latest.json`; nothing in this repo hand-rolls an updater manifest.
+
+Provisioning stays local because it talks to nodes over SSH with credentials
+that live in `.env.nodes`, and because it is run by a human deciding to add a
+node — not by a commit.
+
+What the provision scripts share lives in `@gnomevpn/scripts`, never copied
+between them: `reporter` (the `[scope] message` output), `ssh` (one `SshClient`)
+and `shell` (build remote commands — `arg()` quotes untrusted values, `quiet()`
+keeps stdout while `silent()` drops it).
 
 `nodes.json` and `.env.nodes` sit at the repo root — both gitignored, both
 holding secrets; `nodes.example.json` is the committed template.
 
 ## The split that shapes everything
 
-**On Windows** the desktop app is two processes:
+**On every desktop OS** the app is two processes:
 
-- `GnomeVPN.exe` — the window. **No administrator rights.**
-- `GnomeVPNService` — runs as LocalSystem. Spawns `sing-box.exe`, which owns wintun, the routing table and DNS.
+- `GnomeVPN` — the window. **No administrator rights.**
+- `gnomevpn-service` — runs privileged. Spawns `sing-box`, which owns the TUN adapter, the routing table and DNS.
 
-They talk over a named pipe. This is why the app never shows a UAC prompt, and why every request reaching the service is validated — any local process can open that pipe, and the service can rewrite the system's routes.
+Only the transport under them differs. Windows registers `GnomeVPNService` with
+the SCM and talks over a named pipe; macOS and Linux run the same binary as a
+launchd daemon / systemd unit and talk over a Unix socket at
+`/var/run/gnomevpn/service.sock`. Everything above the socket — the framing, the
+request types, the supervisor, the retry loop, the sing-box config — is one
+implementation shared by all three.
 
-**Never move privileged work back into the GUI crate.** It would bring UAC back for every launch.
+This is why the app never raises an elevation prompt on launch, and why every
+request reaching the service is validated: any local process can open that
+socket, and the service can rewrite the system's routes. The pipe is guarded by
+an SDDL on Windows and by a peer-uid check (`SO_PEERCRED` / `getpeereid`, via
+`UnixStream::peer_cred`) on Unix — the two are the same defence, spelled in each
+platform's own vocabulary.
+
+**Never move privileged work back into the GUI crate.** It would bring the
+elevation prompt back to every launch.
 
 **On Android the split is by process, not by privilege.** `GnomeVpnService` runs
 in `:tunnel` (`android:process`), opens the TUN descriptor _and_ runs the engine
 on it — `src/mobile_vpn/` spawns `hysteria` under `tun2proxy` from inside that
 process. The descriptor never crosses back to the UI, which is what lets the
 tunnel survive the user swiping the app away. `build_hysteria_config` lives in
-`vpn-ipc` for that path; Windows uses `build_singbox_config` from the same crate.
+`vpn-ipc` for that path; every desktop OS uses `build_singbox_config` from the
+same crate.
 
 ## Per-app guidance
 
@@ -168,7 +192,12 @@ is its counterpart: every autofixer in the same order.
 The individual scripts (`typecheck`, `lint`, `format:check`, `lint:css`,
 `format:rust:check`, `lint:rust`) still exist when you want one of them alone.
 
-There is no CI — run `bun run verify` locally before every commit; nothing else will.
+`verify.yml` runs this on every push and pull request, but run it locally before
+every commit anyway — the pipeline is the backstop, not the first check.
+
+`verify` needs a Rust toolchain (`rustup toolchain install`, pinned by
+`rust-toolchain.toml`). Without it `cargo fmt` and `cargo clippy` cannot run and
+the command stops at that step — the TypeScript half having already passed.
 
 ## Things that have already bitten us
 

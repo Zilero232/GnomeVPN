@@ -2,7 +2,26 @@ use std::io::BufReader;
 use std::sync::Arc;
 
 use gnomevpn_ipc::{read_frame, write_frame, Request, Response, SplitConfig, TunnelConfig, TunnelEvent, TunnelStatus, PIPE_NAME, PROTOCOL_VERSION};
+#[cfg(target_os = "windows")]
 use interprocess::os::windows::named_pipe::{pipe_mode, DuplexPipeStream};
+
+#[cfg(target_os = "windows")]
+type Stream = DuplexPipeStream<pipe_mode::Bytes>;
+
+#[cfg(unix)]
+type Stream = std::os::unix::net::UnixStream;
+
+fn open() -> std::io::Result<Stream> {
+    #[cfg(target_os = "windows")]
+    {
+        DuplexPipeStream::<pipe_mode::Bytes>::connect_by_path(PIPE_NAME)
+    }
+
+    #[cfg(unix)]
+    {
+        std::os::unix::net::UnixStream::connect(PIPE_NAME)
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum ClientError {
@@ -21,12 +40,12 @@ impl serde::Serialize for ClientError {
 }
 
 pub struct ServiceClient {
-    stream: DuplexPipeStream<pipe_mode::Bytes>,
+    stream: Stream,
 }
 
 impl ServiceClient {
     pub fn connect() -> Result<Self, ClientError> {
-        let stream = DuplexPipeStream::<pipe_mode::Bytes>::connect_by_path(PIPE_NAME).map_err(|e| ClientError::Unavailable(e.to_string()))?;
+        let stream = open().map_err(|e| ClientError::Unavailable(e.to_string()))?;
 
         let mut client = Self { stream };
 

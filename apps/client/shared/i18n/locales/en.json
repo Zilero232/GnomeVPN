@@ -56,7 +56,7 @@
       "step2Title": "Pick a country",
       "step2Body": "Every node is a separate server. Switch on the fly, no manual reconnect.",
       "step3Title": "Connect",
-      "step3Body": "Through our app for Windows and Android in one tap. Or download a config and open it in any Hysteria2 client: macOS, Linux, iOS."
+      "step3Body": "Through our app for Windows, macOS, Linux and Android in one tap. Or download a config and open it in any Hysteria2 client."
     },
     "pricing": {
       "title": "Pricing",
@@ -82,7 +82,7 @@
       "q2": "What happens when I cancel?",
       "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
       "q3": "Which devices are supported?",
-      "a3": "Our app covers Windows and Android. On macOS, Linux and iOS it works through a config from your account — open it in any Hysteria2 client such as Hiddify, Streisand or NekoBox.",
+      "a3": "Our app covers Windows, macOS, Linux and Android. On iOS it works through a config from your account — open it in any Hysteria2 client such as Hiddify, Streisand or NekoBox.",
       "q4": "Why so cheap?",
       "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
     },
@@ -119,9 +119,10 @@
       "native": "Native app",
       "config": "Via config",
       "windowsBody": "A full client with split tunneling and autostart. Never asks for administrator rights.",
+      "macosBody": "A native app running the same tunnel. It asks for permission once, when the service is installed.",
+      "linuxBody": "deb, rpm and AppImage. The service installs through systemd and sing-box runs the tunnel.",
       "androidBody": "Available on Google Play. The tunnel survives being swiped away and keeps running in the background.",
-      "appleBody": "Grab the config from your account and open it in Streisand, Hiddify or any Hysteria2 client.",
-      "linuxBody": "The same config works in NekoBox, sing-box or the native Hysteria2 client."
+      "iosBody": "Grab the config from your account and open it in Streisand, Hiddify or any Hysteria2 client."
     },
     "locations": {
       "title": "Where the servers are",
@@ -396,15 +397,21 @@
   },
   "downloadApp": {
     "title": "Download GnomeVPN",
-    "description": "Desktop app for Windows. Sign in with your account and connect.",
+    "description": "The app for Windows, macOS, Linux and Android. Sign in and connect.",
     "platforms": {
       "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
       "android": "Android"
     },
     "notAvailable": "Not available",
     "loadFailed": "Could not load the release.",
     "openReleases": "Open releases",
-    "version": "Version {version}"
+    "version": "Version {version}",
+    "groups": {
+      "desktop": "Desktop",
+      "mobile": "Mobile"
+    }
   },
   "privacy": {
     "title": "Privacy Policy",

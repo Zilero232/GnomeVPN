@@ -3,15 +3,15 @@
 import { useEffect, useRef } from 'react';
 
 import {
-  getAutoConnect,
-  getLastNodeId,
-  getProtocol,
+  autoConnectSetting,
   hideAppWindow,
   isVpnServiceAvailable,
+  lastNodeIdSetting,
   logger,
+  manuallyDisconnectedSetting,
+  protocolSetting,
   takeTileConnectRequest,
-  vpnStatus,
-  wasManuallyDisconnected
+  vpnStatus
 } from '@/shared/lib';
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
@@ -38,7 +38,7 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
     hasAttemptedRef.current = true;
 
     const run = async () => {
-      const [isEnabled, wasDisconnectedByUser] = await Promise.all([getAutoConnect(), wasManuallyDisconnected()]);
+      const [isEnabled, wasDisconnectedByUser] = await Promise.all([autoConnectSetting.get(), manuallyDisconnectedSetting.get()]);
 
       const isFromTile = fromTileRef.current;
 
@@ -53,7 +53,7 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
         return;
       }
 
-      const lastNodeId = await getLastNodeId();
+      const lastNodeId = await lastNodeIdSetting.get();
       const target = nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ?? nodes.find((node) => node.status !== 'offline');
 
       if (!target) {
@@ -66,7 +66,7 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
 
       await connect({
         nodeId: target.id,
-        protocol: await getProtocol(),
+        protocol: await protocolSetting.get(),
         country: target.country,
         isAutomatic: true
       });

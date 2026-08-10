@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { getLastNodeId, isBrowser, logger, vpnStatus } from '@/shared/lib';
+import { isBrowser, lastNodeIdSetting, logger, vpnStatus } from '@/shared/lib';
 
 import type { UseAdoptTunnelInput } from './use-adopt-tunnel.types';
 
@@ -30,7 +30,7 @@ export const useAdoptTunnel = ({ status, onAdopted }: UseAdoptTunnelInput) => {
         return;
       }
 
-      const [current, lastNodeId] = await Promise.all([vpnStatus(), getLastNodeId()]);
+      const [current, lastNodeId] = await Promise.all([vpnStatus(), lastNodeIdSetting.get()]);
 
       if (isStale || isAlreadyConnected()) {
         return;

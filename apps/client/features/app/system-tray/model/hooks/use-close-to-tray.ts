@@ -1,8 +1,8 @@
 'use client';
 
-import { useLocalStorage } from '@siberiacancode/reactuse';
+import { useEffect, useState } from 'react';
 
-import { STORAGE_KEYS } from '@/shared/constants';
+import { closeToTraySetting } from '@/shared/lib';
 
 type UseCloseToTray = {
   closeToTray: boolean;
@@ -10,7 +10,36 @@ type UseCloseToTray = {
 };
 
 export const useCloseToTray = (): UseCloseToTray => {
-  const { value, set } = useLocalStorage<boolean>(STORAGE_KEYS.closeToTray, true);
+  const [closeToTray, setState] = useState(true);
 
-  return { closeToTray: value ?? true, setCloseToTray: set };
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    let cancelled = false;
+
+    closeToTraySetting.get().then((value) => {
+      if (!cancelled) {
+        setState(value);
+      }
+    });
+
+    closeToTraySetting.subscribe(setState).then((off) => {
+      if (cancelled) {
+        off();
+      } else {
+        unlisten = off;
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, []);
+
+  const setCloseToTray = (value: boolean) => {
+    setState(value);
+    closeToTraySetting.set(value);
+  };
+
+  return { closeToTray, setCloseToTray };
 };

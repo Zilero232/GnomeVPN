@@ -1,6 +1,4 @@
-#[cfg(target_os = "windows")]
 const SERVICE: &str = "GnomeVPN";
-#[cfg(target_os = "windows")]
 const ACCOUNT: &str = "session-token";
 
 #[derive(Debug, thiserror::Error)]
@@ -15,18 +13,18 @@ impl serde::Serialize for VaultError {
     }
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 fn entry() -> Result<keyring::Entry, VaultError> {
     keyring::Entry::new(SERVICE, ACCOUNT).map_err(|e| VaultError::Backend(e.to_string()))
 }
 
 #[tauri::command]
 pub async fn vault_save_token(token: String) -> Result<(), VaultError> {
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
         entry()?.set_password(&token).map_err(|e| VaultError::Backend(e.to_string()))
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(desktop))]
     {
         let _ = token;
         Ok(())
@@ -35,7 +33,7 @@ pub async fn vault_save_token(token: String) -> Result<(), VaultError> {
 
 #[tauri::command]
 pub async fn vault_read_token() -> Result<Option<String>, VaultError> {
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
         match entry()?.get_password() {
             Ok(token) => Ok(Some(token)),
@@ -43,7 +41,7 @@ pub async fn vault_read_token() -> Result<Option<String>, VaultError> {
             Err(error) => Err(VaultError::Backend(error.to_string())),
         }
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(desktop))]
     {
         Ok(None)
     }
@@ -51,14 +49,14 @@ pub async fn vault_read_token() -> Result<Option<String>, VaultError> {
 
 #[tauri::command]
 pub async fn vault_clear_token() -> Result<(), VaultError> {
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     {
         match entry()?.delete_credential() {
             Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
             Err(error) => Err(VaultError::Backend(error.to_string())),
         }
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(desktop))]
     {
         Ok(())
     }

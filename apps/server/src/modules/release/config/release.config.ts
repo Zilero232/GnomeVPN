@@ -13,9 +13,13 @@ export const CACHE_TTL_MS = 10 * 60_000;
 export const EXTENSION_TO_PLATFORM: Record<string, ReleasePlatform> = {
   exe: 'windows',
   msi: 'windows',
+  dmg: 'macos',
+  appimage: 'linux',
+  deb: 'linux',
+  rpm: 'linux',
   apk: 'android'
 };
 
-export const PLATFORM_EXTENSION_PRIORITY = ['exe', 'msi', 'apk'];
+export const PLATFORM_EXTENSION_PRIORITY = ['exe', 'msi', 'dmg', 'appimage', 'deb', 'rpm', 'apk'];
 
 export const UPDATER_MANIFEST_NAME = 'latest.json';

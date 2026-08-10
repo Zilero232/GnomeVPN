@@ -1,0 +1,250 @@
+name: release
+
+# Tauri cannot meaningfully cross-compile, and macOS cannot be built off a Mac
+# at all, so each platform builds on its own runner. tauri-action creates the
+# draft on the first job to reach it, reuses it afterwards, and merges every
+# platform's entry into one latest.json — which is why nothing here hand-rolls
+# an updater manifest.
+#
+# Repository secrets — Settings → Secrets and variables → Actions:
+#   NEXT_PUBLIC_API_URL              baked into every bundle, e.g. https://api.gnomevpn.ru
+#   TAURI_SIGNING_PRIVATE_KEY        contents of ~/.tauri/gnomevpn.key
+#                                    (bun run --filter @gnomevpn/tauri signer:generate)
+#   ANDROID_KEY_ALIAS                keystore alias
+#   ANDROID_KEY_PASSWORD             keystore + key password
+#   ANDROID_KEY_BASE64               the keystore itself, base64
+#
+# The keystore is generated once, by hand, and never regenerated — a new key
+# cannot update an APK that is already installed:
+#   keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
+#     -keyalg RSA -keysize 2048 -validity 10000
+#   base64 -i gnomevpn.keystore
+#
+# GITHUB_TOKEN is provided by Actions; nothing to add for it.
+#
+# Actions are pinned to a commit SHA, not a tag: a tag can be moved, and these
+# jobs hold the signing keys. Dependabot bumps them.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+# Granted per job instead: only the three that touch the release need write.
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  desktop:
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            label: windows
+          - os: macos-15
+            label: macos
+          - os: ubuntu-24.04
+            label: linux
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: ${{ matrix.label }}
+
+      # 50 MB per job, and the version only moves when the fetch script does.
+      - name: Cache sing-box
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: apps/tauri/bin/singbox
+          key: singbox-${{ runner.os }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
+
+      - name: Install Linux build dependencies
+        if: matrix.label == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+
+      # A no-op when the cache hit.
+      - run: bun --filter @gnomevpn/tauri singbox
+
+      # wintun has no versioned URL and its licence forbids modifying the file,
+      # so it is taken exactly as published.
+      - name: Fetch wintun
+        if: matrix.label == 'windows'
+        shell: bash
+        run: |
+          curl -sSL https://www.wintun.net/builds/wintun-0.14.1.zip -o wintun.zip
+          tar -xf wintun.zip
+          cp wintun/bin/amd64/wintun.dll apps/tauri/bin/wintun/wintun.dll
+
+      # The privileged service is a separate crate that tauri only knows as a
+      # bundled resource, so it has to exist before the bundle is assembled.
+      - run: node apps/tauri/scripts/build-service.mjs --release
+      - run: bun --filter @gnomevpn/tauri icon
+
+      - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        with:
+          projectPath: apps/tauri
+          tagName: v__VERSION__
+          releaseName: GnomeVPN v__VERSION__
+          # Stays a draft until Android has uploaded too; `publish` flips it.
+          releaseDraft: true
+
+  android:
+    # Waits for the draft the desktop matrix creates — this job uploads into an
+    # existing release rather than making its own.
+    needs: desktop
+
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      # build-tools is not part of the default package set, and without it there
+      # is no apksigner to verify the signed apk with.
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
+        with:
+          packages: platform-tools build-tools;34.0.0
+
+      # setup-android ships the SDK but not the NDK, and without it cargo cannot
+      # cross-compile to the android targets.
+      - uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1
+        id: ndk
+        with:
+          ndk-version: r27c
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: android
+          rust-targets: aarch64-linux-android x86_64-linux-android
+
+      # 63 MB across three ABIs, pinned by the fetch script.
+      - name: Cache hysteria
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: apps/tauri/android/libs
+          key: hysteria-${{ hashFiles('apps/tauri/scripts/fetch-hysteria.mjs') }}
+
+      # A no-op when the cache hit. Android runs hysteria out of jniLibs, so it
+      # has to be in place before the overlay is applied.
+      - run: bun --filter @gnomevpn/tauri hysteria
+
+      - name: Build the client bundle
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: bun --filter @gnomevpn/client build
+
+      # `tauri android init` regenerates gen/android, so the overlay and the
+      # signing config are re-applied after it, never before.
+      - name: Prepare the android project
+        working-directory: apps/tauri
+        env:
+          NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: |
+          bunx tauri android init
+          bunx tauri icon icon.manifest.json -o icons
+          node ./scripts/setup-android-libs.mjs
+
+      - name: Wire release signing
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+        run: node apps/tauri/scripts/android-signing.mjs
+
+      - name: Build apk and aab
+        working-directory: apps/tauri
+        env:
+          NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+          NODE_ENV: production
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: |
+          bunx tauri android build --apk --target aarch64 --target x86_64
+          bunx tauri android build --aab --target aarch64 --target x86_64
+
+      # The universal build is the one that ships; gradle also leaves per-ABI
+      # artifacts next to it.
+      - name: Collect and verify
+        id: artifacts
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          gen=apps/tauri/gen/android
+          apk=$(find "$gen" -path '*/outputs/*' -name '*universal*release*.apk' | head -1)
+          aab=$(find "$gen" -path '*/outputs/*' -name '*release*.aab' | head -1)
+
+          if [ -z "$apk" ] || [ -z "$aab" ]; then
+            echo "apk or aab missing under $gen" >&2
+            exit 1
+          fi
+
+          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort | tail -1)
+          "$apksigner" verify --verbose "$apk"
+
+          mkdir -p target/android-release
+          cp "$apk" "target/android-release/GnomeVPN_${version}_android.apk"
+          cp "$aab" "target/android-release/GnomeVPN_${version}_android.aab"
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.artifacts.outputs.tag }}
+        run: gh release upload "$TAG" target/android-release/* --clobber
+
+  publish:
+    needs: [desktop, android]
+    # Three desktop bundles should still ship if the Android build failed.
+    if: always() && needs.desktop.result == 'success'
+
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="v$(node -p "require('./package.json').version")"
+          gh release edit "$tag" --draft=false --latest

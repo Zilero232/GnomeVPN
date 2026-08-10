@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { toast } from 'sonner';
 import { match } from 'ts-pattern';
 
-import { setLastNodeId } from '@/shared/lib';
+import { lastNodeIdSetting } from '@/shared/lib';
 
 import type { HandleTunnelEventInput, UseTunnelEventsInput } from './use-tunnel-events.types';
 
@@ -34,7 +34,7 @@ export const useTunnelEvents = ({ isCurrent, onConnected, onReconnecting, onTraf
         wasConnectedRef.current = true;
 
         if (nodeIdRef.current) {
-          await setLastNodeId(nodeIdRef.current);
+          await lastNodeIdSetting.set(nodeIdRef.current);
         }
 
         await notifyConnected(countryRef.current);

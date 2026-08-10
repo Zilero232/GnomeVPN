@@ -10,12 +10,12 @@ import { useErrorMessage } from '@/entities/app/locale';
 import { DEFAULT_PROTOCOL } from '@/entities/vpn/protocol';
 import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
-  getAutoReconnect,
+  autoReconnectSetting,
   getDeviceId,
-  getSplitConfig,
   logger,
-  setManuallyDisconnected,
+  manuallyDisconnectedSetting,
   settleAll,
+  splitSetting,
   vpnConnect,
   vpnDisconnect,
   vpnStatus
@@ -115,7 +115,7 @@ export const useVpnConnection = () => {
     protocolRef.current = protocol;
 
     if (!isAutomatic) {
-      await setManuallyDisconnected(false);
+      await manuallyDisconnectedSetting.set(false);
     }
 
     tunnel.markConnecting(nodeId);
@@ -132,7 +132,7 @@ export const useVpnConnection = () => {
     });
 
     try {
-      const [deviceId, autoReconnect, split] = await Promise.all([getDeviceId(), getAutoReconnect(), getSplitConfig()]);
+      const [deviceId, autoReconnect, split] = await Promise.all([getDeviceId(), autoReconnectSetting.get(), splitSetting.get()]);
 
       const config = await connectTunnel({ nodeId, deviceId, protocol });
 
@@ -167,7 +167,7 @@ export const useVpnConnection = () => {
     generationRef.current += 1;
 
     if (!isAutomatic) {
-      await setManuallyDisconnected(true);
+      await manuallyDisconnectedSetting.set(true);
     }
 
     await teardown();

@@ -1,19 +1,14 @@
 export {
-  getAutoConnect,
-  getAutoReconnect,
-  getLastNodeId,
-  getProtocol,
-  getSplitConfig,
+  autoConnectSetting,
+  autoReconnectSetting,
+  closeToTraySetting,
   initAutoStartDefault,
   isAutoStartEnabled,
-  setAutoConnect,
-  setAutoReconnect,
+  lastNodeIdSetting,
+  manuallyDisconnectedSetting,
+  protocolSetting,
   setAutoStart,
-  setLastNodeId,
-  setManuallyDisconnected,
-  setProtocol,
-  setSplitConfig,
-  wasManuallyDisconnected
+  splitSetting
 } from './app-settings';
 export { clientKind } from './client-kind';
 export { getDeviceId, useDeviceId } from './device-id';

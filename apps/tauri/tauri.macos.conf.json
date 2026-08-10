@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "GnomeVPN",
+        "url": "/app",
+        "width": 520,
+        "height": 780,
+        "minWidth": 520,
+        "minHeight": 780,
+        "center": true,
+        "visible": false,
+        "resizable": false,
+        "maximizable": false,
+        "backgroundColor": "#070b0a",
+        "dragDropEnabled": false,
+        "decorations": true,
+        "hiddenTitle": true,
+        "theme": "Dark"
+      }
+    ]
+  },
+  "bundle": {
+    "targets": ["dmg", "app"],
+    "resources": {
+      "bin/singbox/sing-box": "sing-box",
+      "bin/service/gnomevpn-service": "gnomevpn-service",
+      "icons/128x128.png": "icons/128x128.png",
+      "icons/tray/connected.png": "icons/tray/connected.png",
+      "icons/tray/disconnected.png": "icons/tray/disconnected.png"
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5MzI1MENEMDY5Q0FBMTIKUldRU3Fwd0d6VkF5K1FWL2Q3MVhVTjZ3R3RKODhSa0JVVHRiQWxkSTgvT0VzUWZJcnk3aVhJcVUK",
+      "endpoints": ["https://api.gnomevpn.ru/release/updater"],
+      "dialog": false
+    }
+  }
+}

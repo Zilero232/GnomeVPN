@@ -1,0 +1,138 @@
+name: deploy
+
+# Builds the two images, pushes them to ghcr, then tells the VPS to pull and
+# restart. The VPS holds no clone of the repository — only docker-compose.yml
+# and a hand-written .env — so the compose file is copied on every deploy.
+#
+# Repository secrets — Settings → Secrets and variables → Actions:
+#   NEXT_PUBLIC_API_URL       baked into the web image at build time
+#   DEPLOY_SSH_HOST           control VPS
+#   DEPLOY_SSH_USER
+#   DEPLOY_SSH_KEY            private key — preferred
+#   DEPLOY_SSH_PASSWORD       only used when no key is set
+#   DEPLOY_PATH               where docker-compose.yml lives, e.g. /opt/gnomevpn
+#
+# Actions are pinned to a commit SHA, not a tag: a moved tag would run unknown
+# code against the production host. Dependabot bumps them.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - apps/client/**
+      - apps/server/**
+      - packages/**
+      - docker-compose.yml
+      - .github/workflows/deploy.yml
+
+# Never cancel a half-finished deploy.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  images:
+    permissions:
+      contents: read
+      packages: write
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    outputs:
+      owner: ${{ steps.owner.outputs.value }}
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      # ghcr rejects an image name with capitals, and the owner may have them.
+      - name: Lowercase the image prefix
+        id: owner
+        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push the web image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: apps/client/Dockerfile
+          push: true
+          tags: ghcr.io/${{ steps.owner.outputs.value }}/gnomevpn-web:latest
+          build-args: NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Build and push the server image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          push: true
+          tags: ghcr.io/${{ steps.owner.outputs.value }}/gnomevpn-server:latest
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+  vps:
+    needs: images
+
+    permissions:
+      contents: read
+
+    # Attach protection rules and scope the deploy secrets to this environment.
+    environment: production
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          source: docker-compose.yml
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      # The path travels as an env var rather than being interpolated into the
+      # script — expression interpolation inside a shell body is how injection
+      # gets in.
+      #
+      # `touch .env.nodes` first: the compose file bind-mounts it, and docker
+      # turns a missing bind-mount source into a directory.
+      - name: Pull, restart, migrate
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          envs: DEPLOY_PATH
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            touch .env.nodes
+            docker compose pull web server
+            docker compose up -d
+            docker image prune -f
+            docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true
+            docker compose exec -T server bunx prisma migrate deploy

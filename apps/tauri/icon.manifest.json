@@ -1,5 +1,5 @@
 {
-  "default": "../client/public/brand/logo-mark.svg",
+  "default": "../client/public/brand/logo-mark-desktop.svg",
   "bg_color": "#070B0A",
   "android_bg": "../client/public/brand/logo-mark-background.svg",
   "android_fg": "../client/public/brand/logo-mark-foreground.svg"

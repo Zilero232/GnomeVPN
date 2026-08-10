@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { DOWNLOAD_PLATFORMS, useRelease } from '@/entities/app/release';
+import { DOWNLOAD_PLATFORM_KINDS, DOWNLOAD_PLATFORMS, useRelease } from '@/entities/app/release';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Spinner } from '@/shared/ui';
 
 import type { DownloadAppDialogProps } from './DownloadAppDialog.types';
@@ -42,11 +42,22 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
 
         {release && (
           <>
-            <div className={s.grid}>
-              {DOWNLOAD_PLATFORMS.map(({ id, labelKey, Icon }) => (
-                <PlatformCard key={id} asset={release.assets.find((asset) => asset.platform === id)} Icon={Icon} label={t(`platforms.${labelKey}`)} />
-              ))}
-            </div>
+            {DOWNLOAD_PLATFORM_KINDS.map((kind) => (
+              <section key={kind} className={s.group}>
+                <h3 className={s.groupTitle}>{t(`groups.${kind}`)}</h3>
+
+                <div className={s.grid} data-kind={kind}>
+                  {DOWNLOAD_PLATFORMS.filter((platform) => platform.kind === kind).map(({ id, labelKey, Icon }) => (
+                    <PlatformCard
+                      key={id}
+                      asset={release.assets.find((asset) => asset.platform === id)}
+                      Icon={Icon}
+                      label={t(`platforms.${labelKey}`)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
 
             <div className={s.meta}>
               <span>{t('version', { version: release.version })}</span>

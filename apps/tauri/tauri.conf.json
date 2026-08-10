@@ -10,24 +10,6 @@
     "beforeDevCommand": "bun --filter @gnomevpn/client dev"
   },
   "app": {
-    "windows": [
-      {
-        "label": "main",
-        "title": "GnomeVPN",
-        "url": "/app",
-        "width": 520,
-        "height": 780,
-        "minWidth": 520,
-        "minHeight": 780,
-        "center": true,
-        "visible": false,
-        "resizable": false,
-        "maximizable": false,
-        "backgroundColor": "#070b0a",
-        "decorations": false,
-        "dragDropEnabled": false
-      }
-    ],
     "security": {
       "csp": null
     }

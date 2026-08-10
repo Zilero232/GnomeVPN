@@ -2,20 +2,20 @@ pub mod apps;
 pub mod latency;
 #[cfg(mobile)]
 pub mod mobile_vpn;
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 pub mod service;
 pub mod vault;
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 pub mod vpn;
 
 use tauri::Manager;
 
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 use service::commands::service_repair;
 use vault::{vault_clear_token, vault_read_token, vault_save_token};
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 use vpn::commands::{vpn_connect, vpn_disconnect, vpn_service_available, vpn_status};
-#[cfg(target_os = "windows")]
+#[cfg(desktop)]
 use vpn::state::VpnState;
 
 const AUTOSTART_FLAG: &str = "--autostart";
@@ -113,24 +113,25 @@ pub fn run() {
                 }
             });
 
-            if !started_by_autostart() {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
-
             Ok(())
         });
 
-    #[cfg(all(desktop, not(debug_assertions)))]
+    #[cfg(desktop)]
     let builder = builder.on_page_load(|webview, payload| {
+        #[cfg(not(debug_assertions))]
         if payload.event() == tauri::webview::PageLoadEvent::Started {
             let _ = webview.eval(HARDEN_WEBVIEW_JS);
         }
+
+        if payload.event() == tauri::webview::PageLoadEvent::Finished && !started_by_autostart() {
+            let window = webview.window();
+
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
     });
 
-    #[cfg(target_os = "windows")]
+    #[cfg(desktop)]
     let builder = builder.manage(VpnState::default()).invoke_handler(tauri::generate_handler![
         vpn_connect,
         vpn_disconnect,
@@ -164,14 +165,6 @@ pub fn run() {
             vault_read_token,
             vault_clear_token
         ]);
-
-    #[cfg(not(any(target_os = "windows", mobile)))]
-    let builder = builder.invoke_handler(tauri::generate_handler![
-        latency::commands::vpn_probe_latency,
-        vault_save_token,
-        vault_read_token,
-        vault_clear_token
-    ]);
 
     builder.run(tauri::generate_context!()).expect("error while running tauri application");
 }

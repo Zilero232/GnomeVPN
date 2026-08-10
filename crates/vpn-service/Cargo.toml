@@ -13,13 +13,16 @@ gnomevpn-ipc.workspace = true
 thiserror.workspace = true
 log.workspace = true
 
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs", "net", "signal"] }
 parking_lot.workspace = true
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
 netdev = "0.45.0"
+simplelog = "0.12"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-service = "0.7"
 interprocess = "2"
 widestring = "1"
-simplelog = "0.12"
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", features = ["process"] }

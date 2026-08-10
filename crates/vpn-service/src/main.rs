@@ -1,10 +1,11 @@
+#[cfg(any(target_os = "windows", unix))]
 mod pipe;
+#[cfg(any(target_os = "windows", unix))]
+mod service;
+#[cfg(any(target_os = "windows", unix))]
 mod tunnel;
 
-#[cfg(target_os = "windows")]
-mod service;
-
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", unix))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     match std::env::args().nth(1).as_deref() {
         Some("install") => {
@@ -21,8 +22,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", unix)))]
 fn main() {
-    eprintln!("gnomevpn-service is Windows-only; on other platforms the GUI runs the tunnel itself");
+    eprintln!("gnomevpn-service supports Windows, macOS and Linux only");
     std::process::exit(1);
 }

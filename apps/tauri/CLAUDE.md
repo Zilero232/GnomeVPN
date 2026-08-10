@@ -10,8 +10,8 @@ Guidance for the desktop shell. Extends the root [../../CLAUDE.md](../../CLAUDE.
 src/
 ├── lib.rs           # plugin registration, command handlers
 ├── vault/           # session token in the OS credential store
-├── vpn/             # Windows only — talks to the privileged service
-│   ├── client.rs    # named-pipe client for the service
+├── vpn/             # desktop only — talks to the privileged service
+│   ├── client.rs    # named pipe on Windows, Unix socket elsewhere
 │   ├── commands.rs  # #[tauri::command] entry points
 │   └── state.rs     # the open connection
 └── mobile_vpn/      # Android only — owns the tunnel itself
@@ -29,9 +29,15 @@ scripts/             # native binary sync, service build, android overlay
 
 ## Two tunnels, one contract
 
-Windows has a privileged service because creating the adapter needs administrator
-rights. Android splits by process instead: `GnomeVpnService` runs in `:tunnel`
-and owns the descriptor and the engine, so the tunnel outlives the UI process.
+Every desktop OS has a privileged service because creating the adapter needs
+administrator (or root) rights. Android splits by process instead:
+`GnomeVpnService` runs in `:tunnel` and owns the descriptor and the engine, so
+the tunnel outlives the UI process.
+
+`src/vpn/` is `#[cfg(desktop)]`, not Windows-only: `client.rs` swaps a named pipe
+for a Unix socket behind one type alias and `commands.rs` never learns which it
+got. `service/commands.rs` does the same for elevation — UAC, the macOS
+authorisation dialog, or `pkexec`.
 
 Both ends expose the same four commands (`vpn_connect`, `vpn_disconnect`,
 `vpn_status`, `vpn_service_available`) and the same `TunnelEvent` stream, so the
@@ -174,6 +180,17 @@ The `invoke_handler` list in `lib.rs` is mirrored by `RustCommands` in [`apps/cl
 
 `bundle.createUpdaterArtifacts` must stay `true`. It is what produces the `.sig` files and `latest.json`; without it a release ships only the raw installers, the updater has no manifest to read, and auto-update silently stops working. Release `v0.1.1` shipped that way — the flag was added in `v0.1.2`.
 
+**A local `tauri:build` therefore ends with `A public key has been found, but no
+private key`** unless `~/.tauri/gnomevpn.key` exists. The bundles are already
+written by then — the failure is the signing step alone. CI has the key as
+`TAURI_SIGNING_PRIVATE_KEY`; locally you only need it if you are cutting a
+release by hand.
+
+**Never `signer:generate` to silence that error.** The public half is committed
+in the three platform configs, and a fresh key would not match it: every client
+already installed would reject the update as unsigned, with no way back except
+a manual reinstall.
+
 ## Platform config
 
 `tauri.conf.json` holds only what every platform needs. Anything desktop-shaped
@@ -182,21 +199,53 @@ the native binaries (`wintun.dll`, `sing-box.exe`, the service), the tray icons,
 NSIS installer hooks and the whole `updater` plugin block. Listing them in the
 base config breaks the Linux and macOS builds and ships dead weight to Android.
 
-`tauri.android.conf.json` overrides the identifier and the window, which is
-sized for a desktop window in the base config and must not be on a phone.
+`tauri.macos.conf.json` and `tauri.linux.conf.json` do the same for their
+bundles — `sing-box` and the service as resources, dmg/AppImage/deb/rpm targets,
+and the updater block. Neither carries `wintun.dll`: TUN is in the kernel there.
+
+`tauri.android.conf.json` overrides the identifier and the window. Each desktop
+platform config carries its own window block — arrays are replaced, not merged,
+so there is no shared one to inherit from.
+
+## The window is revealed on page load, not in `setup`
+
+Every platform config creates the window with `"visible": false`. Showing it from
+`setup` — which is what used to happen — puts an empty frame on screen before
+the webview has parsed anything, so the user watches React hydrate and every
+entry animation run. `on_page_load` with `PageLoadEvent::Finished` shows it
+instead, and the first frame they see is already painted. Autostart still keeps
+it hidden.
+
+Anything animated over a `backdrop-filter` or a wide `box-shadow` needs
+`will-change` for the same class of reason: without it the webview builds the
+compositing layer during the first frame of the animation and repaints the blur
+and the shadow on every frame after. That is what made the first dialog and the
+first dropdown of a session stutter.
 
 The `tray-icon` Cargo feature is scoped the same way — Android has no tray, so
 enabling it for every target only grows the APK.
 
 ## Scripts
 
-- `predev` / `prebuild` — sync the native binaries, build the service, regenerate icons
-- `sync-bin.mjs` — copies `wintun.dll` and `sing-box.exe` into `target/{debug,release}`. Both are loaded from the service's own directory, so a dev run cannot find them otherwise.
-- `build-service.mjs` — builds the service and **verifies the binary actually changed**. A running service holds its own file: cargo then exits successfully while keeping the old build. In dev this only warns; in release it fails.
-- `setup-android-libs.mjs` — re-applies the `android/` overlay onto `gen/android`.
-- `kill` — `fkill gnomevpn.exe`
+These are build hooks, not a pipeline: the release itself is
+[`.github/workflows/release.yml`](../../.github/workflows/release.yml), which
+calls the same files.
 
-`scripts/lib/` holds what the three share: `shell.mjs` (paths and the `[scope]`
+- `predev` / `prebuild` — fetch sing-box, sync the native binaries, build the service, regenerate icons
+- `fetch-singbox.mjs` — downloads the pinned sing-box for the host platform into `bin/singbox/`. Skips when the file is already there; `--force` re-downloads.
+- `sync-bin.mjs` — copies `wintun.dll` and `sing-box` into `target/{debug,release}`. Both are loaded from the service's own directory, so a dev run cannot find them otherwise. `bundle.resources` covers the packaged app; this covers `tauri dev`.
+- `build-service.mjs` — builds the service and, on Windows, **verifies the binary actually changed**. A running service holds its own file: cargo then exits successfully while keeping the old build. In dev this only warns; in release it fails. Unix replaces a running binary happily, so the check is skipped there.
+- `setup-android-libs.mjs` — re-applies the `android/` overlay onto `gen/android`.
+- `android-signing.mjs` — materialises the keystore from `ANDROID_KEY_BASE64` and patches the release signing into the generated `build.gradle.kts`. Runs after `tauri android init`, never before — init regenerates the file.
+- `check-api-url.mjs` — refuses to build an APK pointed at localhost.
+- `kill` — `fkill` on the app process
+
+**Tauri's `externalBin` cannot replace `sync-bin.mjs`.** A sidecar must be named
+with a target-triple suffix and is reachable only through the shell plugin from
+the Tauri process. sing-box is spawned by the privileged service — a separate
+process, running as root, that looks for a plain `sing-box` next to itself.
+
+`scripts/lib/` holds what they share: `shell.mjs` (paths and the `[scope]`
 logger — kept local rather than pulled from `@gnomevpn/scripts`, because these
 scripts run under `node`, which cannot import the package's TypeScript), plus
 `android-manifest.mjs` and `android-overlay.mjs`. **A new Android

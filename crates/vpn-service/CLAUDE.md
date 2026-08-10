@@ -2,16 +2,21 @@
 
 Guidance for the privileged service. Extends the root [../../CLAUDE.md](../../CLAUDE.md); those rules still apply.
 
-Runs as **LocalSystem** on Windows. Creating the wintun adapter and editing the routing table needs administrator rights, which is why this process exists at all — the GUI stays unprivileged.
+Runs privileged on all three desktop platforms — **LocalSystem** on Windows, **root** under launchd on macOS and systemd on Linux. Creating the TUN adapter and editing the routing table needs those rights, which is why this process exists at all — the GUI stays unprivileged.
 
 ## Layout
 
 ```text
 src/
 ├── main.rs          # install / uninstall / run
-├── service/         # SCM registration and lifecycle
+├── service/
+│   ├── install.rs      # Windows: SCM registration
+│   ├── runner.rs       # Windows: SCM lifecycle
+│   ├── install_unix.rs # launchd plist / systemd unit
+│   └── runner_unix.rs  # signal handling, logging
 ├── pipe/
-│   ├── server.rs    # named pipe, ACL, event pump
+│   ├── server.rs    # Windows: named pipe, SDDL, event pump
+│   ├── uds.rs       # Unix: socket, peer-uid check, event pump
 │   └── session.rs   # request handling, decoupled from transport
 └── tunnel/
     ├── engine.rs    # spawns sing-box, waits for the adapter, emits events
@@ -20,6 +25,33 @@ src/
     ├── supervisor.rs # owns the single tunnel
     └── mod.rs       # spawn + retry
 ```
+
+Everything outside `service/` and the two transport files is shared: `session`,
+`supervisor`, `engine`, `singbox`, `adapter` and the retry loop have no
+platform branches beyond a path or a signal.
+
+## What differs per platform, and nothing else
+
+|              | Windows                              | macOS                                   | Linux               |
+| ------------ | ------------------------------------ | --------------------------------------- | ------------------- |
+| Transport    | `\\.\pipe\gnomevpn-service`          | `/var/run/gnomevpn/service.sock`        | same                |
+| Caller check | `PIPE_SDDL`                          | peer uid                                | peer uid            |
+| Registration | SCM                                  | launchd daemon                          | systemd unit        |
+| Config dir   | `%ProgramData%\GnomeVPN`             | `/Library/Application Support/GnomeVPN` | `/var/lib/gnomevpn` |
+| Logs         | `%ProgramData%\GnomeVPN\service.log` | `/Library/Logs/GnomeVPN`                | `/var/log/gnomevpn` |
+| TUN name     | `gnomevpn0`                          | kernel picks `utunN`                    | `gnomevpn0`         |
+
+**macOS ignores `interface_name`.** The kernel numbers utun devices itself, so
+looking the adapter up by name finds nothing and the tunnel would never report
+`Connected`. `adapter::find` falls back to matching the interface that carries
+`TUNNEL_ADDRESS` — keep that fallback.
+
+**sing-box gets SIGTERM before SIGKILL on Unix.** It installs pf/nftables rules
+and routes; killing it outright leaves them behind, and a leaked default route
+is exactly the class of breakage `route delete 0.0.0.0` caused on Windows.
+`Singbox::stop` signals, waits `SHUTDOWN_GRACE`, then kills.
+
+The config directory is `0700`: it holds the tunnel password.
 
 ## How the tunnel is built
 
@@ -117,8 +149,8 @@ With no split apps, `final` is `proxy` and everything goes through the tunnel.
 The same rule engine also accepts domain and CIDR rules, so any future routing
 policy belongs in that config rather than in Rust.
 
-The config is written into `C:\ProgramData\GnomeVPN`, never into the shared temp
-directory — it holds the tunnel password.
+The config is written into the per-platform directory in the table above, never
+into the shared temp directory — it holds the tunnel password.
 
 **Android does not use any of this.** It still runs `hysteria` under
 `tun2proxy` inside `apps/tauri`, because `VpnService` hands the app a descriptor

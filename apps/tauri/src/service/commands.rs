@@ -1,4 +1,11 @@
+use std::path::Path;
 use std::process::Command;
+
+const BINARY: &str = if cfg!(target_os = "windows") {
+    "gnomevpn-service.exe"
+} else {
+    "gnomevpn-service"
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ServiceError {
@@ -18,41 +25,72 @@ impl serde::Serialize for ServiceError {
     }
 }
 
-/// Registers and starts the privileged service, prompting for elevation once.
-///
-/// `gnomevpn-service.exe install` is idempotent: it creates the service when
-/// missing and starts it when merely stopped, so this one call repairs both
-/// states. The GUI itself runs unprivileged, so the install is launched through
-/// `Start-Process -Verb RunAs`, which raises the UAC dialog.
+#[cfg(target_os = "windows")]
+fn elevate(binary: &Path) -> Command {
+    let mut command = Command::new("powershell");
+
+    command.args([
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        &format!(
+            "$p = Start-Process -FilePath '{}' -ArgumentList 'install' -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
+            binary.display()
+        ),
+    ]);
+
+    command
+}
+
+#[cfg(target_os = "macos")]
+fn shell_quoted(binary: &Path) -> String {
+    let escaped = binary.display().to_string().replace('\'', r"'\''");
+
+    format!("'{escaped}'")
+}
+
+#[cfg(target_os = "macos")]
+fn elevate(binary: &Path) -> Command {
+    let mut command = Command::new("osascript");
+
+    let script = format!(
+        r#"do shell script "{} install" with administrator privileges"#,
+        shell_quoted(binary).replace('\\', r"\\").replace('"', r#"\""#)
+    );
+
+    command.args(["-e", &script]);
+
+    command
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn elevate(binary: &Path) -> Command {
+    let mut command = Command::new("pkexec");
+
+    command.arg(binary).arg("install");
+
+    command
+}
+
 #[tauri::command]
 pub async fn service_repair() -> Result<(), ServiceError> {
     let exe = std::env::current_exe()
         .ok()
-        .and_then(|path| path.parent().map(|dir| dir.join("gnomevpn-service.exe")))
+        .and_then(|path| path.parent().map(|dir| dir.join(BINARY)))
         .filter(|path| path.exists())
         .ok_or(ServiceError::BinaryMissing)?;
 
     log::info!("service_repair: elevating to install/start the service");
 
-    let status = Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            &format!(
-                "$p = Start-Process -FilePath '{}' -ArgumentList 'install' -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
-                exe.display()
-            ),
-        ])
-        .status()
-        .map_err(|error| {
-            log::error!("service_repair: failed to spawn powershell: {error}");
-            ServiceError::Launch
-        })?;
+    let status = elevate(&exe).status().map_err(|error| {
+        log::error!("service_repair: failed to spawn the elevation helper: {error}");
+
+        ServiceError::Launch
+    })?;
 
     match status.code() {
         Some(0) => Ok(()),
-        Some(1) | None => Err(ServiceError::Declined),
+        Some(1) | Some(126) | None => Err(ServiceError::Declined),
         Some(code) => Err(ServiceError::InstallFailed(code)),
     }
 }

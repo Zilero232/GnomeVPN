@@ -17,11 +17,36 @@ pub struct Singbox {
     config_path: PathBuf,
 }
 
+const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(3);
+
 impl Singbox {
     pub async fn stop(mut self) {
+        self.request_shutdown().await;
+
         let _ = self.child.kill().await;
         let _ = tokio::fs::remove_file(&self.config_path).await;
     }
+
+    #[cfg(unix)]
+    async fn request_shutdown(&mut self) {
+        let Some(pid) = self
+            .child
+            .id()
+            .and_then(|id| i32::try_from(id).ok())
+            .and_then(rustix::process::Pid::from_raw)
+        else {
+            return;
+        };
+
+        if rustix::process::kill_process(pid, rustix::process::Signal::TERM).is_err() {
+            return;
+        }
+
+        let _ = tokio::time::timeout(SHUTDOWN_GRACE, self.child.wait()).await;
+    }
+
+    #[cfg(not(unix))]
+    async fn request_shutdown(&mut self) {}
 
     pub fn has_exited(&mut self) -> Option<String> {
         match self.child.try_wait() {
@@ -85,12 +110,30 @@ fn config_dir() -> Result<PathBuf, TunnelError> {
     #[cfg(target_os = "windows")]
     let base = PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string())).join("GnomeVPN");
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    let base = PathBuf::from("/Library/Application Support/GnomeVPN");
+
+    #[cfg(all(unix, not(target_os = "macos")))]
     let base = PathBuf::from("/var/lib/gnomevpn");
 
     std::fs::create_dir_all(&base).map_err(|error| TunnelError::Singbox(format!("cannot create {}: {error}", base.display())))?;
 
+    restrict(&base)?;
+
     Ok(base)
+}
+
+#[cfg(unix)]
+fn restrict(dir: &std::path::Path) -> Result<(), TunnelError> {
+    use std::os::unix::fs::PermissionsExt;
+
+    std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o700))
+        .map_err(|error| TunnelError::Singbox(format!("cannot lock down {}: {error}", dir.display())))
+}
+
+#[cfg(not(unix))]
+fn restrict(_dir: &std::path::Path) -> Result<(), TunnelError> {
+    Ok(())
 }
 
 pub struct SpawnInput<'a> {

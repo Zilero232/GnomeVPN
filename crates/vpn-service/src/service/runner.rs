@@ -13,7 +13,7 @@ use crate::tunnel::supervisor::Supervisor;
 define_windows_service!(ffi_service_main, service_main);
 
 pub fn start() -> Result<(), Box<dyn std::error::Error>> {
-    init_logging();
+    super::init_logging(&log_dir());
 
     match service_dispatcher::start(SERVICE_NAME, ffi_service_main) {
         Ok(()) => Ok(()),
@@ -90,21 +90,6 @@ fn run_pipe_server() {
     }
 }
 
-fn init_logging() {
-    use simplelog::{ColorChoice, CombinedLogger, LevelFilter, TermLogger, TerminalMode, WriteLogger};
-
-    let log_dir = std::path::PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string())).join("GnomeVPN");
-
-    let _ = std::fs::create_dir_all(&log_dir);
-
-    let config = simplelog::Config::default();
-    let mut loggers: Vec<Box<dyn simplelog::SharedLogger>> = Vec::new();
-
-    if let Ok(file) = std::fs::OpenOptions::new().create(true).append(true).open(log_dir.join("service.log")) {
-        loggers.push(WriteLogger::new(LevelFilter::Info, config.clone(), file));
-    }
-
-    loggers.push(TermLogger::new(LevelFilter::Info, config, TerminalMode::Mixed, ColorChoice::Auto));
-
-    let _ = CombinedLogger::init(loggers);
+fn log_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string())).join("GnomeVPN")
 }

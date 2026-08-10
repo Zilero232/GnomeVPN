@@ -1,4 +1,4 @@
-import { getDeviceId as read, setDeviceId as write } from '../app-settings';
+import { deviceIdSetting } from '../app-settings';
 import { isServer } from '../env';
 
 const STORAGE_KEY = 'gnomevpn.device-id';
@@ -20,7 +20,7 @@ const fromBrowserStorage = (): string => {
 };
 
 const resolveDeviceId = async (): Promise<string> => {
-  const stored = await read();
+  const stored = await deviceIdSetting.get();
 
   if (stored) {
     return stored;
@@ -28,7 +28,7 @@ const resolveDeviceId = async (): Promise<string> => {
 
   const created = isServer() ? crypto.randomUUID() : fromBrowserStorage();
 
-  await write(created);
+  await deviceIdSetting.set(created);
 
   return created;
 };

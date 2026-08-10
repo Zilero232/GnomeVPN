@@ -1,7 +1,5 @@
 'use client';
 
-import { clsx } from 'clsx';
-
 import { BrandMark } from '@/shared/ui';
 
 import { useWindowControls, useWindowPlatform } from '../../model/hooks';
@@ -13,19 +11,17 @@ export const TitleBar = () => {
   const platform = useWindowPlatform();
   const { minimize, close } = useWindowControls();
 
-  if (!platform) {
+  if (!platform || platform === 'macos') {
     return null;
   }
 
-  const isMacos = platform === 'macos';
-
   return (
-    <div className={clsx(s.root, isMacos && s.rootMacos)}>
+    <div className={s.root}>
       <div data-tauri-drag-region className={s.dragRegion}>
         <BrandMark className={s.brand} size='sm' tone='muted' />
       </div>
 
-      {!isMacos && <TitleBarControls onClose={close} onMinimize={minimize} />}
+      <TitleBarControls onClose={close} onMinimize={minimize} />
     </div>
   );
 };

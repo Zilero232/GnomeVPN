@@ -1,0 +1,53 @@
+name: verify
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Least privilege: this workflow only ever reads the checkout.
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    # Pinned rather than `latest` so a runner image bump cannot change the result
+    # of a green build without a commit.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: verify
+
+      - name: Cache sing-box
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: apps/tauri/bin/singbox
+          key: singbox-Linux-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
+
+      # tauri links against webkit2gtk; without these clippy cannot build its
+      # dependencies and the Rust half of `verify` never runs.
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+
+      # apps/tauri's build script validates every path in `bundle.resources` and
+      # points `frontendDist` at ../client/out, so clippy cannot touch the crate
+      # until sing-box, the service, the icons and the frontend all exist.
+      - run: bun --filter @gnomevpn/tauri singbox
+      - run: node apps/tauri/scripts/build-service.mjs
+      - run: bun --filter @gnomevpn/tauri icon
+      - run: bun --filter @gnomevpn/client build
+
+      - run: bun run verify

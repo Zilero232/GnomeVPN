@@ -16,3 +16,9 @@ pub const PROTOCOL_VERSION: u32 = 1;
 
 #[cfg(target_os = "windows")]
 pub const PIPE_NAME: &str = r"\\.\pipe\gnomevpn-service";
+
+#[cfg(unix)]
+pub const SOCKET_DIR: &str = "/var/run/gnomevpn";
+
+#[cfg(unix)]
+pub const PIPE_NAME: &str = "/var/run/gnomevpn/service.sock";

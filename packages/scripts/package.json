@@ -4,8 +4,6 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    "./env": "./src/env/index.ts",
-    "./local": "./src/local/index.ts",
     "./reporter": "./src/reporter/index.ts",
     "./shell": "./src/shell/index.ts",
     "./ssh": "./src/ssh/index.ts"
@@ -19,7 +17,7 @@
     "shell-quote": "^1.10.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "catalog:",
     "@types/shell-quote": "^1.7.5",
     "typescript": "catalog:"
   }

@@ -2,62 +2,73 @@
 
 ## Что где работает
 
-| Компонент         | Где            | Как обновляется           |
-| ----------------- | -------------- | ------------------------- |
-| Лендинг + кабинет | VPS, Caddy     | `bun run deploy:web`      |
-| API               | VPS, Docker    | `bun run deploy:web`      |
-| База              | VPS, Docker    | там же                    |
-| Десктоп + Android | у пользователя | `bun run release`         |
-| VPN-узлы          | отдельные VPS  | `bun run provision:nodes` |
+| Компонент         | Где            | Как обновляется              |
+| ----------------- | -------------- | ---------------------------- |
+| Лендинг + кабинет | VPS, Caddy     | CI: `deploy.yml`             |
+| API               | VPS, Docker    | CI: `deploy.yml`             |
+| База              | VPS, Docker    | там же                       |
+| Десктоп + Android | у пользователя | CI: `release.yml` по тегу v* |
+| VPN-узлы          | отдельные VPS  | `bun run provision:nodes`    |
 
-CI нет — всё собирается и выкатывается локально с рабочей машины. Образы кладутся
+Всё, кроме провижининга узлов, собирается в GitHub Actions. Образы кладутся
 в ghcr.io; **VPS ничего не собирает** — только забирает готовые образы.
 
 ---
 
-## Локальный релиз и деплой
+## Релиз
 
-Всё делается локальными скриптами с рабочей машины. Секреты берутся из единого
-корневого `.env` и сгенерированного `.env.release` (оба вне git), ничего вводить
-руками не нужно.
-
-### Разовая подготовка
+Тег запускает `release.yml`:
 
 ```bash
-bun run setup:release
+npm version patch        # или отредактируй version в package.json
+git push --follow-tags
 ```
 
-Ставит `gh` через winget, генерирует Android-keystore
-(`apps/tauri/gnomevpn.keystore`) и пишет `ANDROID_KEY_*` в `.env.release`.
-Keystore и `.env.release` в git не попадают — **сохрани их копию отдельно**,
-иначе следующий релиз подпишется другим ключом и обновление у пользователей не
-сойдётся. Если ключ подписи десктопа зашифрован, впиши его пароль в
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` в `.env.release`.
+Дальше CI сам: три раннера (Windows, macOS, Linux) собирают десктоп через
+`tauri-action`, отдельная джоба — Android, последняя публикует релиз.
+Кросс-компиляция тут не годится: Tauri её не поддерживает, а macOS вообще
+нельзя собрать не на Mac — отсюда матрица раннеров.
 
-`gh` после установки требует один вход: `gh auth login`.
+`tauri-action` сам сливает `latest.json` по всем платформам, поэтому автообновление
+получает одну запись на каждую ОС.
 
-### Релиз десктопа и Android
+### Разовая подготовка секретов
+
+Settings → Secrets and variables → Actions:
+
+| Секрет                                    | Что это                                              |
+| ----------------------------------------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`                     | адрес API, вшивается в сборку                        |
+| `TAURI_SIGNING_PRIVATE_KEY`               | содержимое `~/.tauri/gnomevpn.key`                   |
+| `ANDROID_KEY_ALIAS`                       | алиас ключа подписи APK                              |
+| `ANDROID_KEY_PASSWORD`                    | пароль keystore и ключа                              |
+| `ANDROID_KEY_BASE64`                      | сам keystore в base64                                |
+| `DEPLOY_SSH_HOST` / `_USER` / `_PASSWORD` | control-VPS                                          |
+| `DEPLOY_PATH`                             | каталог с docker-compose.yml, обычно `/opt/gnomevpn` |
+
+Ключ подписи обновлений создаётся один раз:
 
 ```bash
-bun run release            # десктоп + Android в один релиз vX.Y.Z
-bun run release --desktop  # только Windows
-bun run release --android  # только Android
+bun run --filter @gnomevpn/tauri signer:generate   # пишет ~/.tauri/gnomevpn.key
 ```
 
-Создаёт (или переиспользует) черновик `vX.Y.Z` по версии из `package.json`,
-собирает и подписывает, заливает артефакты и публикует релиз. Повторный запуск
-на той же версии дозаливает в существующий черновик.
-
-### Деплой веб + API
+Android-keystore — тоже один раз, локально:
 
 ```bash
-bun run deploy:web
+keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
+  -keyalg RSA -keysize 2048 -validity 10000
+base64 -i gnomevpn.keystore | pbcopy                # → ANDROID_KEY_BASE64
 ```
 
-Собирает образы web и server, пушит в ghcr.io, заходит по SSH на VPS
-(`PROVISION_SSH_*` из `.env`), копирует `docker-compose.yml`, делает
-`pull && up -d` и применяет миграции. VPS остаётся тем же — только забирает
-образы.
+**Сохрани keystore вне репозитория.** Потеряешь — обновить уже установленные APK
+будет нечем, а новый ключ Play Store не примет.
+
+## Деплой веб + API
+
+`deploy.yml` срабатывает на push в master (или вручную). Собирает образы web и
+server, пушит в ghcr.io, заходит по SSH на VPS, копирует `docker-compose.yml`,
+делает `pull && up -d` и применяет миграции. VPS остаётся тем же — только
+забирает образы.
 
 ---
 
@@ -170,11 +181,12 @@ openssl rand -base64 32
 
 ## 4. Ключи для релиза
 
-CI нет, поэтому секретов в GitHub тоже нет. Всё живёт локально:
+Релиз и деплой идут через Actions, поэтому почти всё живёт в секретах репозитория.
+Локально остаётся только провижининг:
 
-- **SSH к VPS** — `PROVISION_SSH_*` в корневом `.env` (см. раздел 3).
+- **SSH к узлам** — `PROVISION_SSH_*` в корневом `.env` (см. раздел 3).
 - **Ключ подписи десктопа** — `~/.tauri/gnomevpn.key` (см. ниже).
-- **Android-keystore** — создаётся `bun run setup:release`, пишется в `.env.release`.
+- **Android-keystore** — создаётся `keytool` один раз, живёт в секретах репозитория.
 
 ### Ключ подписи обновлений
 
@@ -188,14 +200,15 @@ bun --filter @gnomevpn/tauri signer:generate
 
 Дальше:
 
-1. `~/.tauri/gnomevpn.key.pub` → `apps/tauri/tauri.windows.conf.json`, поле `plugins.updater.pubkey`
+1. `~/.tauri/gnomevpn.key.pub` → поле `plugins.updater.pubkey` в
+   `tauri.windows.conf.json`, `tauri.macos.conf.json` и `tauri.linux.conf.json`
 2. Там же `"active": false` → `true`
 
-Релиз (`bun run release`) читает приватный ключ из `~/.tauri/gnomevpn.key` сам.
-Если ключ зашифрован — впиши его пароль в `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` в
-`.env.release`.
+CI берёт приватный ключ из секрета `TAURI_SIGNING_PRIVATE_KEY`. Если ключ
+зашифрован — заведи второй секрет `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` и
+подставь его в `release.yml`.
 
-Подписать файл вручную (обычно не нужно — `bun run release` делает это сам):
+Подписать файл вручную (обычно не нужно — CI делает это сам):
 
 ```bash
 bun --filter @gnomevpn/tauri signer:sign -- <путь-к-файлу>
@@ -225,7 +238,7 @@ curl -I https://gnomevpn.ru           # 200
 
 ## 6. Миграции базы
 
-История миграций лежит в `apps/server/prisma/migrations`. `bun run deploy:web`
+История миграций лежит в `apps/server/prisma/migrations`. `deploy.yml`
 применяет их сам: при наличии файлов миграций он делает `migrate resolve`
 (baseline для базы, собранной ранее через `db push`) и затем `migrate deploy`.
 
@@ -236,7 +249,7 @@ cd apps/server
 bunx prisma migrate dev --name <название>
 ```
 
-Следующий `bun run deploy:web` её накатит.
+Следующий запуск `deploy.yml` её накатит.
 
 ---
 

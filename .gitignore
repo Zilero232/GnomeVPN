@@ -1,15 +1,35 @@
+# Dependencies
 node_modules/
+
+# Build output
 .next/
 out/
 dist/
 generated/
 target/
-*.log
+apps/tauri/gen/
+
+# Vendored native binaries — fetched per platform, never committed
+apps/tauri/bin/singbox/sing-box
+apps/tauri/bin/singbox/sing-box.exe
+apps/tauri/bin/hysteria/hysteria
+apps/tauri/bin/hysteria/hysteria.exe
+apps/tauri/bin/wintun/wintun.dll
+apps/tauri/bin/service/
+apps/tauri/android/libs/
+
+# Secrets and local config
 .env
 .env.local
 .env.nodes
-.env.release
-apps/tauri/*.keystore
 nodes.json
-apps/tauri/gen/
+apps/tauri/*.keystore
+
+# Agent tooling
+.agents/
+.claude/
+skills-lock.json
 .codebase-memory/
+
+# Logs
+*.log

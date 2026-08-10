@@ -65,6 +65,7 @@
     0 28px 60px -24px rgb(0 0 0 / 90%);
   list-style: none;
   transform-origin: top left;
+  will-change: transform, opacity;
 }
 
 .option {

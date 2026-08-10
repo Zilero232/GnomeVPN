@@ -55,12 +55,14 @@ export const pickExecutable = async (): Promise<string | null> => {
     return null;
   }
 
-  const { open } = await import('@tauri-apps/plugin-dialog');
+  const [{ open }, { platform }] = await Promise.all([import('@tauri-apps/plugin-dialog'), import('@tauri-apps/plugin-os')]);
+
+  const current = platform();
 
   const selected = await open({
     multiple: false,
-    directory: false,
-    filters: [{ name: 'Executable', extensions: ['exe'] }]
+    directory: current === 'macos',
+    ...(current === 'windows' && { filters: [{ name: 'Executable', extensions: ['exe'] }] })
   });
 
   return typeof selected === 'string' ? selected : null;

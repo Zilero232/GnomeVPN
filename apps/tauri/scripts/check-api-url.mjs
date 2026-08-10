@@ -9,7 +9,7 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 if (!url) {
   log.fail(
     'NEXT_PUBLIC_API_URL is unset, so the bundle would fall back to localhost. ' +
-      'Use "bun run release:android", which loads .env.release, or set it explicitly.'
+      'Release builds get it from the repository secret of the same name; set it explicitly for a local one.'
   );
 }
 

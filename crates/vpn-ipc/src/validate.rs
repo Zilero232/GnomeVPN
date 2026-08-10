@@ -12,7 +12,11 @@ const MAX_SPLIT_APPS: usize = 128;
 
 const MAX_SPLIT_IPS: usize = 128;
 
+#[cfg(target_os = "windows")]
 const MAX_PATH_LEN: usize = 260;
+
+#[cfg(not(target_os = "windows"))]
+const MAX_PATH_LEN: usize = 1024;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ValidationError {
@@ -88,6 +92,14 @@ fn is_windows_drive_path(path: &str) -> bool {
     chars.next().is_some_and(|drive| drive.is_ascii_alphabetic()) && chars.next() == Some(':') && chars.next() == Some('\\')
 }
 
+fn is_absolute_app_path(path: &str) -> bool {
+    if cfg!(target_os = "windows") {
+        path.starts_with(r"\\") || is_windows_drive_path(path)
+    } else {
+        path.starts_with('/')
+    }
+}
+
 fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), ValidationError> {
     if paths.len() > MAX_SPLIT_APPS {
         return Err(reject(field, "too many entries"));
@@ -106,9 +118,7 @@ fn validate_app_paths(field: &'static str, paths: &[String]) -> Result<(), Valid
             return Err(reject(field, format!("suspicious path: {path}")));
         }
 
-        let is_absolute = path.starts_with(r"\\") || is_windows_drive_path(path);
-
-        if !is_absolute {
+        if !is_absolute_app_path(path) {
             return Err(reject(field, format!("not an absolute path: {path}")));
         }
     }

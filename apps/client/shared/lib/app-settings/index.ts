@@ -1,19 +1,12 @@
+export { initAutoStartDefault, isAutoStartEnabled, setAutoStart } from './autostart';
 export {
-  getAutoConnect,
-  getAutoReconnect,
-  getDeviceId,
-  getLastNodeId,
-  getProtocol,
-  getSplitConfig,
-  initAutoStartDefault,
-  isAutoStartEnabled,
-  setAutoConnect,
-  setAutoReconnect,
-  setAutoStart,
-  setDeviceId,
-  setLastNodeId,
-  setManuallyDisconnected,
-  setProtocol,
-  setSplitConfig,
-  wasManuallyDisconnected
-} from './app-settings';
+  autoConnectSetting,
+  autoReconnectSetting,
+  closeToTraySetting,
+  deviceIdSetting,
+  lastNodeIdSetting,
+  manuallyDisconnectedSetting,
+  protocolSetting,
+  splitSetting
+} from './settings';
+export type { Setting } from './store';

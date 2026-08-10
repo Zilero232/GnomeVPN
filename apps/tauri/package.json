@@ -6,18 +6,20 @@
   "scripts": {
     "tauri": "tauri",
     "icon": "tauri icon icon.manifest.json -o icons",
-    "predev": "bun run kill && node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs && bun run icon",
+    "predev": "bun run kill && bun run singbox && node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs && bun run icon",
     "dev": "tauri dev",
-    "prebuild": "node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs --release && bun run icon",
+    "prebuild": "bun run singbox && node ./scripts/sync-bin.mjs && node ./scripts/build-service.mjs --release && bun run icon",
+    "singbox": "node ./scripts/fetch-singbox.mjs",
     "build": "tauri build",
-    "android:init": "bun --env-file .env tauri android init && bun run icon && node ./scripts/setup-android-libs.mjs",
-    "android:dev": "bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android dev",
-    "android:build": "bun run icon && node ./scripts/setup-android-libs.mjs && node ./scripts/check-api-url.mjs && bun --env-file .env tauri android build --apk",
+    "android:init": "bun run hysteria && bun --env-file .env tauri android init && bun run icon && node ./scripts/setup-android-libs.mjs",
+    "android:dev": "bun run hysteria && bun run icon && node ./scripts/setup-android-libs.mjs && bun --env-file .env tauri android dev",
+    "android:build": "bun run hysteria && bun run icon && node ./scripts/setup-android-libs.mjs && node ./scripts/check-api-url.mjs && bun --env-file .env tauri android build --apk",
     "service:build": "node ./scripts/build-service.mjs",
     "signer:sign": "tauri signer sign",
     "signer:generate": "tauri signer generate -w ~/.tauri/gnomevpn.key --ci",
-    "kill": "fkill --force --silent gnomevpn.exe",
-    "info": "tauri info"
+    "kill": "fkill --force --silent gnomevpn.exe GnomeVPN gnomevpn",
+    "info": "tauri info",
+    "hysteria": "node ./scripts/fetch-hysteria.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2"
