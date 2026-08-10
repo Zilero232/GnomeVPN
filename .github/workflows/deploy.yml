@@ -31,6 +31,13 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# The docker builds carry their own placeholders, but a `bun install` added here
+# later would fire the server postinstall, and prisma.config.ts resolves
+# DIRECT_URL through env(). Cheap insurance.
+env:
+  DATABASE_URL: postgresql://placeholder
+  DIRECT_URL: postgresql://placeholder
+
 permissions: {}
 
 jobs:

@@ -8,7 +8,7 @@ import type { TunnelEvent } from '../ipc';
 import type { InstalledApp, LatencyByNode, ProbeLatencyInput, VpnConnectInput, VpnTraffic } from './vpn-bridge.types';
 
 import { callRust } from '../ipc';
-import { isTauriDesktop } from '../tauri-platform';
+import { isTauriDesktop, isTauriMobile } from '../tauri-platform';
 
 export const emptySplitConfig = (): SplitConfig => ({
   appsMode: SPLIT_MODE.allowed,
@@ -78,7 +78,8 @@ export const vpnTraffic = async (): Promise<VpnTraffic> => callRust({ command: '
 
 export const isVpnServiceAvailable = async (): Promise<boolean> => callRust({ command: 'vpn_service_available', fallback: false });
 
-export const takeTileConnectRequest = async (): Promise<boolean> => callRust({ command: 'vpn_take_tile_request', fallback: false });
+export const takeTileConnectRequest = async (): Promise<boolean> =>
+  isTauriMobile() ? callRust({ command: 'vpn_take_tile_request', fallback: false }) : false;
 
 export const hideAppWindow = async (): Promise<void> => {
   await callRust({ command: 'vpn_hide_window', fallback: null });

@@ -30,6 +30,13 @@ on:
   push:
     tags: ['v*']
 
+# Every `bun install` here — including the one tauri-action runs itself — fires
+# the server postinstall, and prisma.config.ts resolves DIRECT_URL through env().
+# `generate` never connects, so a placeholder satisfies it.
+env:
+  DATABASE_URL: postgresql://placeholder
+  DIRECT_URL: postgresql://placeholder
+
 # Granted per job instead: only the three that touch the release need write.
 permissions: {}
 
