@@ -141,5 +141,24 @@ jobs:
             docker compose pull web server
             docker compose up -d
             docker image prune -f
+
+            # `up -d` returns as soon as the container is started, not once the
+            # app inside answers. Reaching straight for `exec` hit the container
+            # mid-restart: "is restarting, wait until the container is running".
+            # The compose healthcheck already knows when the API is up.
+            for attempt in $(seq 1 30); do
+              state=$(docker inspect -f '{{.State.Health.Status}}' gnomevpn-server 2>/dev/null || echo missing)
+
+              [ "$state" = healthy ] && break
+
+              if [ "$attempt" = 30 ]; then
+                echo "server never became healthy (last state: $state)" >&2
+                docker compose logs --tail 50 server >&2
+                exit 1
+              fi
+
+              sleep 5
+            done
+
             docker compose exec -T server bunx prisma migrate resolve --applied 20260723000000_baseline || true
             docker compose exec -T server bunx prisma migrate deploy
