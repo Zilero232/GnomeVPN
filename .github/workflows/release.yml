@@ -67,7 +67,7 @@ jobs:
 
       # 50 MB per job, and the version only moves when the fetch script does.
       - name: Cache sing-box
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: apps/tauri/bin/singbox
           key: singbox-${{ runner.os }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
@@ -151,7 +151,7 @@ jobs:
 
       # 63 MB across three ABIs, pinned by the fetch script.
       - name: Cache hysteria
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: apps/tauri/android/libs
           key: hysteria-${{ hashFiles('apps/tauri/scripts/fetch-hysteria.mjs') }}
