@@ -25,10 +25,14 @@ name: release
 # Actions are pinned to a commit SHA, not a tag: a tag can be moved, and these
 # jobs hold the signing keys. Dependabot bumps them.
 
+# Chained behind verify rather than triggered by the tag directly, so a tag on a
+# commit that does not pass the checks never produces signed artefacts. verify
+# listens to `v*` tags for exactly this handoff.
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
+  workflow_run:
+    workflows: [verify]
+    types: [completed]
 
 # Every `bun install` here — including the one tauri-action runs itself — fires
 # the server postinstall, and prisma.config.ts resolves DIRECT_URL through env().
@@ -41,11 +45,19 @@ env:
 permissions: {}
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event.workflow_run.head_branch || github.ref }}
   cancel-in-progress: false
 
 jobs:
   desktop:
+    # verify runs for branches and pull requests too, and `workflow_run` carries
+    # no ref filter — head_branch is the tag name on a tag push, so that is what
+    # separates a release from an ordinary commit.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'v'))
+
     permissions:
       contents: write
 
@@ -66,6 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - uses: ./.github/actions/setup
@@ -130,6 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
@@ -246,6 +260,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - name: Publish the release
