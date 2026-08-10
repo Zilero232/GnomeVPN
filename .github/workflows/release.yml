@@ -61,6 +61,13 @@ jobs:
   # frontendDist at ../client/out, so clippy cannot touch the crate until
   # sing-box, the service, the icons and the frontend all exist.
   checks:
+    # The root `permissions: {}` leaves GITHUB_TOKEN with no scopes at all, and
+    # this repository is private: without `contents: read` the clone comes back
+    # as `fatal: repository '...' not found`, a 404 rather than a 403. Every
+    # other job here declares `contents: write` and so never hit it.
+    permissions:
+      contents: read
+
     runs-on: ubuntu-24.04
     timeout-minutes: 30
 
