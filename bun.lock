@@ -38,7 +38,7 @@
       "dependencies": {
         "@base-ui-components/react": "^1.0.0-rc.0",
         "@dicebear/collection": "9.4.3",
-        "@dicebear/core": "9.4.3",
+        "@dicebear/core": "10.4.0",
         "@gnomevpn/schemas": "workspace:*",
         "@hookform/resolvers": "^5.7.1",
         "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
@@ -283,7 +283,7 @@
 
     "@dicebear/collection": ["@dicebear/collection@9.4.3", "", { "dependencies": { "@dicebear/adventurer": "9.4.3", "@dicebear/adventurer-neutral": "9.4.3", "@dicebear/avataaars": "9.4.3", "@dicebear/avataaars-neutral": "9.4.3", "@dicebear/big-ears": "9.4.3", "@dicebear/big-ears-neutral": "9.4.3", "@dicebear/big-smile": "9.4.3", "@dicebear/bottts": "9.4.3", "@dicebear/bottts-neutral": "9.4.3", "@dicebear/croodles": "9.4.3", "@dicebear/croodles-neutral": "9.4.3", "@dicebear/dylan": "9.4.3", "@dicebear/fun-emoji": "9.4.3", "@dicebear/glass": "9.4.3", "@dicebear/icons": "9.4.3", "@dicebear/identicon": "9.4.3", "@dicebear/initials": "9.4.3", "@dicebear/lorelei": "9.4.3", "@dicebear/lorelei-neutral": "9.4.3", "@dicebear/micah": "9.4.3", "@dicebear/miniavs": "9.4.3", "@dicebear/notionists": "9.4.3", "@dicebear/notionists-neutral": "9.4.3", "@dicebear/open-peeps": "9.4.3", "@dicebear/personas": "9.4.3", "@dicebear/pixel-art": "9.4.3", "@dicebear/pixel-art-neutral": "9.4.3", "@dicebear/rings": "9.4.3", "@dicebear/shapes": "9.4.3", "@dicebear/thumbs": "9.4.3", "@dicebear/toon-head": "9.4.3" }, "peerDependencies": { "@dicebear/core": "^9.0.0" } }, "sha512-XBKz1cVOqRBbzDzck8CkjlJASfx1e6O2rW+h0gc3d1R1mzzYAWjaiB1RV8TevrRMZff5fc9lgeLtaRrZPfv0uQ=="],
 
-    "@dicebear/core": ["@dicebear/core@9.4.3", "", { "dependencies": { "@types/json-schema": "^7.0.15" } }, "sha512-9ITrQI57k3p5hKuU8HZJ1d0kPdrmTKEJDOdlKQ8CpaChbtmnD1R+dtWmNz5IesYThXM8F64pJ0ZvJ2rsY8Hciw=="],
+    "@dicebear/core": ["@dicebear/core@10.4.0", "", {}, "sha512-IeMZboyput2XB2Lypf650AZ7YDdqzsp3HIaHWEYe+M9AX9/mylDgHLNdSA0OquUy1clFtGNYWnzibb1ZMJzLFw=="],
 
     "@dicebear/croodles": ["@dicebear/croodles@9.4.3", "", { "peerDependencies": { "@dicebear/core": "^9.0.0" } }, "sha512-8i6dGQ8IvX+s7qoSuoO3UovX2IFA3DhK1LkKbH8+YNXJvR2TM0XFflrvQlv+QjxLoBlianAZ6e9vxWJyyIdNaA=="],
 

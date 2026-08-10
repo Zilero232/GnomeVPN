@@ -13,7 +13,7 @@
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",
     "@dicebear/collection": "9.4.3",
-    "@dicebear/core": "9.4.3",
+    "@dicebear/core": "10.4.0",
     "@gnomevpn/schemas": "workspace:*",
     "@hookform/resolvers": "^5.7.1",
     "@saurl/tauri-plugin-safe-area-insets-css-api": "^0.1.0",
