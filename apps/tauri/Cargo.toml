@@ -56,5 +56,5 @@ tun = { version = "0.8", features = ["async"] }
 boringtun = "0.7"
 base64 = "0.22"
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "process", "fs", "sync"] }
-jni = "0.21"
+jni = "0.22"
 android_logger = "0.14"
