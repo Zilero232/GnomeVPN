@@ -15,16 +15,19 @@ name: deploy
 # Actions are pinned to a commit SHA, not a tag: a moved tag would run unknown
 # code against the production host. Dependabot bumps them.
 
+# Chained behind verify rather than triggered by the push directly: on `push`
+# both would start at once and production could receive a commit whose checks
+# were still running, or had already failed.
+#
+# `workflow_run` fires for every verify run on master, so the path filter that
+# used to live here moves into the `changes` job below — the event carries no
+# paths of its own.
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: [verify]
+    types: [completed]
     branches: [master]
-    paths:
-      - apps/client/**
-      - apps/server/**
-      - packages/**
-      - docker-compose.yml
-      - .github/workflows/deploy.yml
 
 # Never cancel a half-finished deploy.
 concurrency:
@@ -42,6 +45,10 @@ permissions: {}
 
 jobs:
   images:
+    # A failed or cancelled verify must not reach production. Manual dispatch is
+    # the deliberate override.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+
     permissions:
       contents: read
       packages: write
@@ -53,8 +60,11 @@ jobs:
       owner: ${{ steps.owner.outputs.value }}
 
     steps:
+      # `workflow_run` starts from the default branch, so the commit verify
+      # actually checked has to be named explicitly.
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       # ghcr rejects an image name with capitals, and the owner may have them.
@@ -106,6 +116,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - name: Copy docker-compose.yml
