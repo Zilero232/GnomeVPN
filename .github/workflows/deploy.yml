@@ -13,21 +13,14 @@ name: deploy
 #   DEPLOY_PATH               where docker-compose.yml lives, e.g. /opt/gnomevpn
 #
 # Actions are pinned to a commit SHA, not a tag: a moved tag would run unknown
-# code against the production host. Dependabot bumps them.
+# code against the production host. Bumping them is a manual edit — the comment
+# next to each SHA says which release it is.
 
-# Chained behind verify rather than triggered by the push directly: on `push`
-# both would start at once and production could receive a commit whose checks
-# were still running, or had already failed.
-#
-# `workflow_run` fires for every verify run on master, so the path filter that
-# used to live here moves into the `changes` job below — the event carries no
-# paths of its own.
+# Manual only: production goes out when someone decides it does, not on every
+# commit that lands. Run it from Actions → deploy → Run workflow, on a commit
+# whose verify is already green.
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: [verify]
-    types: [completed]
-    branches: [master]
 
 # Never cancel a half-finished deploy.
 concurrency:
@@ -45,10 +38,6 @@ permissions: {}
 
 jobs:
   images:
-    # A failed or cancelled verify must not reach production. Manual dispatch is
-    # the deliberate override.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-
     permissions:
       contents: read
       packages: write
@@ -60,11 +49,8 @@ jobs:
       owner: ${{ steps.owner.outputs.value }}
 
     steps:
-      # `workflow_run` starts from the default branch, so the commit verify
-      # actually checked has to be named explicitly.
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       # ghcr rejects an image name with capitals, and the owner may have them.
@@ -72,16 +58,16 @@ jobs:
         id: owner
         run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
 
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push the web image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
           file: apps/client/Dockerfile
@@ -92,7 +78,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=web
 
       - name: Build and push the server image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
           file: apps/server/Dockerfile
@@ -114,9 +100,8 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - name: Copy docker-compose.yml

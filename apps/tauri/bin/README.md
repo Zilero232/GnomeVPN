@@ -1,6 +1,6 @@
 # Нативные зависимости
 
-Бинарники в git не попадают — только лицензии и этот файл.
+В git попадает только `wintun.dll` (см. ниже) — остальное качается скриптами.
 
 `sing-box` качается скриптом под текущую платформу:
 
@@ -13,8 +13,9 @@ bun --filter @gnomevpn/tauri singbox --force  # перекачать
 не нужно. Версия зафиксирована в `scripts/fetch-singbox.mjs` — она же должна
 стоять ниже в этом файле.
 
-`wintun.dll` качается вручную: у wintun.net нет стабильного URL под автоматизацию,
-а лицензия запрещает модифицировать файл.
+`wintun.dll` — единственный, который **лежит в репозитории**: у wintun.net нет
+релиз-фида, URL может исчезнуть, а лицензия прямо разрешает распространять DLL
+вместе с ПО (пункт 3(d)). Качать в CI её не нужно.
 
 ## wintun.dll
 
@@ -34,8 +35,10 @@ Linux и macOS в этом файле не нуждаются — TUN там в�
 
 ### Как обновить wintun
 
+sha256 текущей DLL: `e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce`
+
 1. Скачать архив с <https://www.wintun.net>
-2. Взять `wintun/bin/amd64/wintun.dll` и `wintun/LICENSE.txt`
+2. Взять `wintun/bin/amd64/wintun.dll` и `wintun/LICENSE.txt`, закоммитить DLL
 3. Положить сюда, обновив версию в этом файле
 
 ### Куда попадает при сборке
@@ -57,25 +60,18 @@ Linux и macOS в этом файле не нуждаются — TUN там в�
 Запускайте `bun run tauri:dev` из терминала, открытого от имени администратора.
 Устранение UAC на каждый Connect — задача Этапа 4 (привилегированный хелпер).
 
-## hysteria/hysteria.exe
+## hysteria — только Android
 
-Клиент Hysteria2 — держит туннель по QUIC/UDP. Служба поднимает его
-дочерним процессом (`hysteria client -c ...`) с SOCKS-инбаундом на loopback
-и переливает туда трафик из TUN-адаптера. Без файла `vpn_connect` падает с
-`hysteria error: hysteria.exe not found next to the service`.
+Десктоп hysteria не использует: там всё делает sing-box. На Android `VpnService`
+выдаёт готовый дескриптор, поэтому туннель поднимает `hysteria` под `tun2proxy`,
+и бинарник живёт как `libhysteria.so` в `android/libs/<abi>/`.
 
-- **Версия:** 2.10.0, сборка windows-amd64
+- **Версия:** 2.12.1 — под три ABI качает `scripts/fetch-hysteria.mjs`
 - **Источник:** <https://github.com/apernet/hysteria/releases>
 - **Лицензия:** MIT
 
-### Как обновить hysteria
-
-1. Скачать `hysteria-windows-amd64.exe` из релизов apernet/hysteria
-2. Переименовать в `hysteria.exe` и положить в `hysteria/`
-3. Обновить версию в этом файле
-
-Кладётся рядом со службой тем же `tauri.windows.conf.json`, а для dev-запуска
-копируется в `target/debug/` скриптом `scripts/sync-bin.mjs`.
+Имя `libhysteria.so`, а не `hysteria`, потому что Android исполняет файлы только
+из каталога нативных библиотек — всё остальное помечено non-exec.
 
 ## singbox/sing-box[.exe]
 

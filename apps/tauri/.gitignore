@@ -10,9 +10,6 @@
 # Tray state icons are authored, not generated — `tauri icon` never writes here
 !/icons/tray/
 
-# Downloaded manually, see bin/README.md — required for the TUN device on Windows
-/bin/wintun/wintun.dll
-
 # Downloaded manually, see bin/README.md — runs the Hysteria2 tunnel
 /bin/hysteria/hysteria.exe
 
