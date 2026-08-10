@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "node-ssh": "^13.2.1",
-    "p-retry": "^8.0.0",
+    "p-retry": "catalog:",
     "shell-quote": "^1.10.0"
   },
   "devDependencies": {

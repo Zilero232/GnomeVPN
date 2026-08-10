@@ -111,6 +111,7 @@
         "helmet": "^8.0.0",
         "nestjs-zod": "^5.5.0",
         "nodemailer": "^9.0.5",
+        "p-retry": "catalog:",
         "pg": "catalog:",
         "react": "catalog:",
         "react-email": "^6.9.2",
@@ -152,7 +153,7 @@
       "version": "0.0.0",
       "dependencies": {
         "node-ssh": "^13.2.1",
-        "p-retry": "^8.0.0",
+        "p-retry": "catalog:",
         "shell-quote": "^1.10.0",
       },
       "devDependencies": {
@@ -168,6 +169,7 @@
     "@types/react": "^19.2.18",
     "better-auth": "^1.6.26",
     "date-fns": "^4.4.0",
+    "p-retry": "^8.0.0",
     "pg": "^8.23.0",
     "react": "^19.2.8",
     "remeda": "^2.39.0",
