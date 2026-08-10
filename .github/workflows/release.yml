@@ -26,11 +26,11 @@ name: release
 # jobs hold the signing keys. Bumping them is a manual edit — the comment next to
 # each SHA says which release it is.
 
-# The tag triggers this directly. The gate is the `checks` job below rather than
-# a separate chained workflow: `workflow_run` cannot filter on a tag, so it fired
-# for every branch and pull request and needed an `if:` to sort them out, and it
-# ran the whole frontend-and-service build twice for one release — once to check
-# it, once to ship it.
+# The tag triggers this directly. The gate is the `checks` job below rather than a
+# separate chained workflow: `workflow_run` cannot filter on a tag, so it fired for
+# every branch and pull request and needed an `if:` to sort them out, and it ran
+# the whole frontend-and-service build twice for one release — once to check it,
+# once to ship it.
 on:
   push:
     tags: ['v*']
@@ -51,13 +51,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The gate. Nothing below it runs unless this passes, so a tag on a commit that
-  # does not typecheck never produces signed artefacts. It is the same `bun run
-  # verify` that verify.yml runs for master and pull requests — the build steps
-  # ahead of it are what that command needs in place: the tauri build script
-  # validates every path in `bundle.resources` and points frontendDist at
-  # ../client/out, so clippy cannot touch the crate until sing-box, the service,
-  # the icons and the frontend all exist.
+  # The gate, and the only automated run of the checks left in this repo: nothing
+  # below it runs unless it passes, so a tag on a commit that does not typecheck
+  # never produces signed artefacts. Ordinary commits are checked by `bun run
+  # verify` locally — there is no workflow watching master.
+  #
+  # The build steps ahead of it are what that command needs in place: the tauri
+  # build script validates every path in `bundle.resources` and points
+  # frontendDist at ../client/out, so clippy cannot touch the crate until
+  # sing-box, the service, the icons and the frontend all exist.
   checks:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

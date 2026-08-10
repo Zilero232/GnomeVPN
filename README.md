@@ -270,9 +270,9 @@ Full walkthrough — domain, secrets, `.env`, first launch — in
 Rust is checked with `cargo clippy --workspace` and `cargo fmt --all --check`.
 
 Releases and deploys are GitHub Actions, not local commands: `release.yml` on a
-`v*` tag builds and publishes every platform, `deploy.yml` ships the web and API
-images. `verify.yml` runs the checks above on every push — run `bun run verify`
-locally first anyway.
+`v*` tag runs the checks above and then builds and publishes every platform,
+`deploy.yml` ships the web and API images when someone runs it. Nothing watches
+master, so `bun run verify` before a commit is the only check that happens.
 
 <br/>
 

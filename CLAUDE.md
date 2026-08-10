@@ -43,9 +43,8 @@ packages/
 scripts/
 └── provision/       # VPN node setup over SSH — the only local pipeline left
 .github/workflows/
-├── verify.yml       # bun run verify on every push and PR
-├── release.yml      # v* tag → desktop matrix + android → publish
-└── deploy.yml       # master → images to ghcr → pull on the VPS
+├── release.yml      # v* tag → checks → desktop matrix + android → publish
+└── deploy.yml       # manual → images to ghcr → pull on the VPS
 infra/
 ├── caddy/           # TLS + reverse proxy
 └── xray/            # the 3x-ui compose stack shipped to every node
@@ -192,8 +191,10 @@ is its counterpart: every autofixer in the same order.
 The individual scripts (`typecheck`, `lint`, `format:check`, `lint:css`,
 `format:rust:check`, `lint:rust`) still exist when you want one of them alone.
 
-`verify.yml` runs this on every push and pull request, but run it locally before
-every commit anyway — the pipeline is the backstop, not the first check.
+**Nothing in CI checks an ordinary commit.** There is no workflow watching master
+or pull requests — the only automated run is the `checks` job in `release.yml`,
+which gates a `v*` tag. So this command is the first check and the last one:
+a broken commit reaches master silently and surfaces at release time.
 
 `verify` needs a Rust toolchain (`rustup toolchain install`, pinned by
 `rust-toolchain.toml`). Without it `cargo fmt` and `cargo clippy` cannot run and
