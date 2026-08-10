@@ -1,11 +1,10 @@
 name: verify
 
-# Tags are here so a release can chain behind this run: `release` triggers off a
-# completed verify, and without the tag event there would be nothing to wait for.
+# No tag event: release.yml runs these same checks itself, as its first job, so a
+# tag would otherwise build the frontend and the service twice for one release.
 on:
   push:
     branches: [master]
-    tags: ['v*']
   pull_request:
 
 # Least privilege: this workflow only ever reads the checkout.

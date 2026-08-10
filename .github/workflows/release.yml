@@ -26,14 +26,15 @@ name: release
 # jobs hold the signing keys. Bumping them is a manual edit — the comment next to
 # each SHA says which release it is.
 
-# Chained behind verify rather than triggered by the tag directly, so a tag on a
-# commit that does not pass the checks never produces signed artefacts. verify
-# listens to `v*` tags for exactly this handoff.
+# The tag triggers this directly. The gate is the `checks` job below rather than
+# a separate chained workflow: `workflow_run` cannot filter on a tag, so it fired
+# for every branch and pull request and needed an `if:` to sort them out, and it
+# ran the whole frontend-and-service build twice for one release — once to check
+# it, once to ship it.
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
-  workflow_run:
-    workflows: [verify]
-    types: [completed]
 
 # Every `bun install` here — including the one tauri-action runs itself — fires
 # the server postinstall, and prisma.config.ts resolves DIRECT_URL through env().
@@ -46,20 +47,60 @@ env:
 permissions: {}
 
 concurrency:
-  group: release-${{ github.event.workflow_run.head_branch || github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  # The gate. Nothing below it runs unless this passes, so a tag on a commit that
+  # does not typecheck never produces signed artefacts. It is the same `bun run
+  # verify` that verify.yml runs for master and pull requests — the build steps
+  # ahead of it are what that command needs in place: the tauri build script
+  # validates every path in `bundle.resources` and points frontendDist at
+  # ../client/out, so clippy cannot touch the crate until sing-box, the service,
+  # the icons and the frontend all exist.
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: verify
+
+      - name: Cache sing-box
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: apps/tauri/bin/singbox
+          key: singbox-${{ runner.os }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
+
+      # tauri links against webkit2gtk; without these clippy cannot build its
+      # dependencies and the Rust half of `verify` never runs.
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
+
+      - run: bun --filter @gnomevpn/tauri singbox
+      - run: node apps/tauri/scripts/build-service.mjs
+      - run: bun --filter @gnomevpn/tauri icon
+
+      # Nothing built here ships — the real bundles come from the jobs below,
+      # with the real API URL. A placeholder keeps NODE_ENV=production happy,
+      # where client-env.ts requires NEXT_PUBLIC_API_URL outright.
+      - env:
+          NEXT_PUBLIC_API_URL: https://api.invalid
+        run: bun --filter @gnomevpn/client build
+
+      - run: bun run verify
+
   # The draft exists before either build so desktop and android can upload into
   # it at the same time instead of android queueing behind the matrix.
   draft:
-    # verify runs for branches and pull requests too, and `workflow_run` carries
-    # no ref filter — head_branch is the tag name on a tag push, so that is what
-    # separates a release from an ordinary commit.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'v'))
+    needs: checks
 
     permissions:
       contents: write
@@ -70,13 +111,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - name: Create the draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMITISH: ${{ github.event.workflow_run.head_sha || github.sha }}
+          COMMITISH: ${{ github.sha }}
         run: |
           set -euo pipefail
           tag="v$(node -p "require('./package.json').version")"
@@ -109,7 +149,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - uses: ./.github/actions/setup
@@ -162,7 +201,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       # No `cache: gradle` here: it hashes **/*.gradle* to build its key, and the
@@ -293,7 +331,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
           persist-credentials: false
 
       - name: Publish the release
