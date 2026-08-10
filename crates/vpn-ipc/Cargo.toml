@@ -8,7 +8,7 @@ description = "Wire protocol shared by the GnomeVPN GUI and the privileged servi
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-getrandom = "0.2"
+getrandom = "0.4"
 hex = "0.4"
 serde_yml = "0.0.13"
 quinn = { version = "0.11", default-features = false, features = ["runtime-tokio", "rustls-ring"] }
