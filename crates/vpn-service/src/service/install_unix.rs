@@ -76,6 +76,7 @@ fn run(program: &str, args: &[&str]) -> io::Result<()> {
 
 pub fn install() -> io::Result<()> {
     let binary = std::env::current_exe()?;
+    let binary = fs::canonicalize(&binary).unwrap_or(binary);
     let unit = unit_path();
 
     if let Some(parent) = unit.parent() {

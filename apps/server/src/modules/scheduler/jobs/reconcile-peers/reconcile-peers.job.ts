@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { isEmpty } from 'remeda';
 
 import type { CollectOrphansInput, PeerIdentity, ReconcileNode, RemoveRevokedInput, SyncEnabledInput } from './reconcile-peers.job.types';
 
@@ -45,13 +46,19 @@ export class ReconcilePeersJob {
       xray.onlineEmails()
     ]);
 
-    await this.removeRevoked({ xray, peers, nodeClients });
-    await this.syncEnabled({ xray, peers, nodeClients });
-    await this.collectOrphans({ xray, nodeId: node.id, peers, nodeClients, online });
+    const removed = await this.removeRevoked({ xray, peers, nodeClients });
+    const synced = await this.syncEnabled({ xray, peers, nodeClients });
+    const collected = await this.collectOrphans({ xray, nodeId: node.id, peers, nodeClients, online });
+
+    if (removed || synced || collected) {
+      await xray.restartCore();
+    }
   }
 
-  private async removeRevoked({ xray, peers, nodeClients }: RemoveRevokedInput): Promise<void> {
+  private async removeRevoked({ xray, peers, nodeClients }: RemoveRevokedInput): Promise<boolean> {
     const gone = peers.filter((peer) => peer.state === 'revoked');
+
+    let removed = false;
 
     for (const peer of gone) {
       const claimed = await this.prisma.peer.deleteMany({
@@ -66,11 +73,14 @@ export class ReconcilePeersJob {
 
       if (nodeClients.has(email)) {
         await xray.deleteClient(email);
+        removed = true;
       }
     }
+
+    return removed;
   }
 
-  private async syncEnabled({ xray, peers, nodeClients }: SyncEnabledInput): Promise<void> {
+  private async syncEnabled({ xray, peers, nodeClients }: SyncEnabledInput): Promise<boolean> {
     const toEnable: string[] = [];
     const toDisable: string[] = [];
 
@@ -92,19 +102,27 @@ export class ReconcilePeersJob {
       }
     }
 
+    if (isEmpty(toEnable) && isEmpty(toDisable)) {
+      return false;
+    }
+
     await Promise.all([xray.setClientsEnabled({ emails: toEnable, enabled: true }), xray.setClientsEnabled({ emails: toDisable, enabled: false })]);
+
+    return true;
   }
 
-  private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<void> {
+  private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<boolean> {
     if (online === null) {
       this.suspects.delete(nodeId);
 
-      return;
+      return false;
     }
 
     const known = new Set(peers.map((peer) => this.emailOf(peer)));
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
+
+    let collected = false;
 
     for (const email of nodeClients.keys()) {
       if (known.has(email)) {
@@ -118,9 +136,12 @@ export class ReconcilePeersJob {
       }
 
       await xray.deleteClient(email);
+      collected = true;
     }
 
     this.suspects.set(nodeId, seenNow);
+
+    return collected;
   }
 
   @Cron(RECONCILE_CRON)

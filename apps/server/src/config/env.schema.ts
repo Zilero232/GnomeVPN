@@ -1,28 +1,31 @@
 import { z } from 'zod';
 
+const boolean = (fallback: 'false' | 'true') =>
+  z
+    .enum(['true', 'false'])
+    .default(fallback)
+    .transform((value) => value === 'true');
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
+
   DATABASE_URL: z.url(),
   DIRECT_URL: z.url(),
-  BETTER_AUTH_SECRET: z.string().min(1),
+
   API_URL: z.url(),
+  BETTER_AUTH_SECRET: z.string().min(1),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
+
   YOOKASSA_SHOP_ID: z.string().default(''),
   YOOKASSA_SECRET_KEY: z.string().default(''),
   YOOKASSA_RETURN_URL: z.url().default('http://localhost:3000/account'),
   YOOKASSA_RETURN_URL_DESKTOP: z.string().default('gnomevpn://account'),
-  YOOKASSA_RECURRING: z
-    .enum(['true', 'false'])
-    .default('false')
-    .transform((value) => value === 'true'),
+  YOOKASSA_RECURRING: boolean('false'),
 
   SMTP_HOST: z.string().default(''),
   SMTP_PORT: z.coerce.number().default(465),
-  SMTP_SECURE: z
-    .enum(['true', 'false'])
-    .default('true')
-    .transform((value) => value === 'true'),
+  SMTP_SECURE: boolean('true'),
   SMTP_USER: z.string().default(''),
   SMTP_PASSWORD: z.string().default(''),
   EMAIL_FROM: z.string().default(''),

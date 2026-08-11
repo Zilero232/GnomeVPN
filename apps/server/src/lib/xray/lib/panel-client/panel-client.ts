@@ -1,10 +1,18 @@
 import { isEmpty } from 'remeda';
 
-import type { PanelClientInput, PanelInbound, PanelOnlines, PanelResponse, PanelServerStatus, SetClientsEnabledInput } from './panel-client.types';
+import type {
+  AddClientInput,
+  PanelClientInput,
+  PanelInbound,
+  PanelOnlines,
+  PanelResponse,
+  PanelServerStatus,
+  SetClientsEnabledInput
+} from './panel-client.types';
 
 import { AppServiceUnavailableException } from '../../../../common/exceptions';
 import { collectOnlineEmails } from '../collect-online-emails';
-import { PANEL_ROUTES } from './panel-client.constants';
+import { NO_LIMIT, PANEL_ROUTES } from './panel-client.constants';
 
 export class PanelClient {
   private readonly baseUrl: string;
@@ -18,35 +26,28 @@ export class PanelClient {
   }
 
   private async send<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), this.timeout);
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method,
+      signal: AbortSignal.timeout(this.timeout),
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: 'application/json',
+        ...(body ? { 'Content-Type': 'application/json' } : {})
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
 
-    try {
-      const response = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        signal: controller.signal,
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          Accept: 'application/json',
-          ...(body ? { 'Content-Type': 'application/json' } : {})
-        },
-        body: body ? JSON.stringify(body) : undefined
-      });
-
-      if (!response.ok) {
-        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path} returned ${response.status}`);
-      }
-
-      const payload = (await response.json()) as PanelResponse<T>;
-
-      if (!payload.success) {
-        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path}: ${payload.msg}`);
-      }
-
-      return payload.obj;
-    } finally {
-      clearTimeout(timer);
+    if (!response.ok) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path} returned ${response.status}`);
     }
+
+    const payload = (await response.json()) as PanelResponse<T>;
+
+    if (!payload.success) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `panel ${path}: ${payload.msg}`);
+    }
+
+    return payload.obj;
   }
 
   private get<T>(path: string): Promise<T> {
@@ -85,6 +86,22 @@ export class PanelClient {
     const result = await this.post<{ deleted: number }>(PANEL_ROUTES.deleteOrphans);
 
     return result.deleted ?? 0;
+  }
+
+  async addClient({ inboundId, email, auth }: AddClientInput): Promise<void> {
+    await this.post(PANEL_ROUTES.addClient, {
+      inboundIds: [inboundId],
+      client: {
+        email,
+        auth,
+        enable: true,
+        limitIp: NO_LIMIT,
+        totalGB: NO_LIMIT,
+        expiryTime: NO_LIMIT,
+        tgId: NO_LIMIT,
+        reset: NO_LIMIT
+      }
+    });
   }
 
   async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {

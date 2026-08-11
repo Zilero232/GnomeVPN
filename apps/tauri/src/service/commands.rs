@@ -72,13 +72,18 @@ fn elevate(binary: &Path) -> Command {
     command
 }
 
+fn service_binary() -> Option<std::path::PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+
+    [dir.join(BINARY), dir.join("../Resources").join(BINARY)]
+        .into_iter()
+        .find(|path| path.exists())
+}
+
 #[tauri::command]
 pub async fn service_repair() -> Result<(), ServiceError> {
-    let exe = std::env::current_exe()
-        .ok()
-        .and_then(|path| path.parent().map(|dir| dir.join(BINARY)))
-        .filter(|path| path.exists())
-        .ok_or(ServiceError::BinaryMissing)?;
+    let exe = service_binary().ok_or(ServiceError::BinaryMissing)?;
 
     log::info!("service_repair: elevating to install/start the service");
 

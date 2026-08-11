@@ -7,7 +7,7 @@ import { isWindows, paths, reporter } from './lib/shell.mjs';
 
 // Kept in step with bin/README.md. The build must carry the with_quic
 // (Hysteria2) and with_gvisor (TUN) tags — the official release archives do.
-const VERSION = '1.13.14';
+const VERSION = '1.13.18';
 
 const TARGETS = {
   'darwin-arm64': { archive: 'darwin-arm64.tar.gz', binary: 'sing-box' },

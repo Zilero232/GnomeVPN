@@ -24,8 +24,10 @@ const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
 const STALL_TIMEOUT: Duration = Duration::from_secs(60);
 const STALL_MIN_BYTES: u64 = 32 * 1024;
+const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
 
 static ATTEMPT: Mutex<Option<CancellationToken>> = Mutex::new(None);
+static SOCKS: Mutex<Option<SocketAddr>> = Mutex::new(None);
 
 fn arm_attempt(token: &CancellationToken) {
     if let Ok(mut guard) = ATTEMPT.lock() {
@@ -36,6 +38,12 @@ fn arm_attempt(token: &CancellationToken) {
 fn disarm_attempt() {
     if let Ok(mut guard) = ATTEMPT.lock() {
         *guard = None;
+    }
+}
+
+fn set_socks(addr: Option<SocketAddr>) {
+    if let Ok(mut guard) = SOCKS.lock() {
+        *guard = addr;
     }
 }
 
@@ -50,6 +58,21 @@ pub fn restart_attempt() {
         Some(token) => token.cancel(),
         None => log::warn!("restart requested with no attempt running"),
     }
+}
+
+pub async fn redial_if_dead() {
+    let Some(socks) = SOCKS.lock().ok().and_then(|guard| *guard) else {
+        return;
+    };
+
+    let reachable = matches!(timeout(PROBE_TIMEOUT, tokio::net::TcpStream::connect(socks)).await, Ok(Ok(_)));
+
+    if reachable {
+        return;
+    }
+
+    log::warn!("socks inbound is gone after a wake-up; redialling");
+    restart_attempt();
 }
 
 fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
@@ -292,11 +315,14 @@ where
 
     let args = proxy_args(hysteria.socks_addr(), &credentials, &config.dns);
 
+    set_socks(Some(hysteria.socks_addr()));
+
     let result = tokio::select! {
         tunnel = run_tun2proxy(args, fd, cancellation.clone()) => tunnel,
         reason = watch_hysteria(&mut hysteria, cancellation.clone()) => Err(reason),
     };
 
+    set_socks(None);
     hysteria.stop().await;
 
     result

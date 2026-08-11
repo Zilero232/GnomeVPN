@@ -9,9 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
 import android.net.Network
-import android.net.NetworkCapabilities
 import android.net.VpnService
 import android.os.Build
 import android.os.Handler
@@ -26,8 +24,7 @@ import java.net.InetAddress
 class GnomeVpnService : VpnService() {
     private var descriptor: ParcelFileDescriptor? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private var networkCallback: ConnectivityManager.NetworkCallback? = null
-    private var activeNetwork: Network? = null
+    private var watcher: NetworkWatcher? = null
     private var isStopping = false
     private val trafficHandler = Handler(Looper.getMainLooper())
 
@@ -152,59 +149,18 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun watchNetwork() {
-        if (networkCallback != null) {
+        if (watcher != null) {
             return
         }
 
-        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
+        val started = NetworkWatcher(
+            context = this,
+            onNetworkBound = ::bindUnderlying,
+            onPathChanged = TunnelEngine::nativeNetworkChanged,
+        )
 
-        var isFirstDelivery = true
-
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                if (activeNetwork == network) {
-                    return
-                }
-
-                val isSwitch = !isFirstDelivery
-
-                isFirstDelivery = false
-                activeNetwork = network
-                bindUnderlying(network)
-
-                if (isSwitch) {
-                    Log.i(TAG, "underlying network changed; restarting the engine")
-                    TunnelEngine.nativeNetworkChanged()
-                }
-            }
-
-            override fun onCapabilitiesChanged(
-                network: Network,
-                capabilities: NetworkCapabilities,
-            ) {
-                if (activeNetwork == network) {
-                    bindUnderlying(network)
-                }
-            }
-
-            override fun onLost(network: Network) {
-                if (activeNetwork != network) {
-                    return
-                }
-
-                activeNetwork = null
-                runCatching { setUnderlyingNetworks(null) }
-            }
-        }
-
-        runCatching { manager.registerDefaultNetworkCallback(callback) }
-            .onSuccess {
-                networkCallback = callback
-                Log.i(TAG, "watching the underlying network")
-            }
-            .onFailure { error ->
-                Log.e(TAG, "cannot watch the network; the tunnel will not survive a switch", error)
-            }
+        started.start()
+        watcher = started
     }
 
     private fun bindUnderlying(network: Network) {
@@ -213,13 +169,8 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun unwatchNetwork() {
-        val callback = networkCallback ?: return
-        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-
-        runCatching { manager?.unregisterNetworkCallback(callback) }
-
-        networkCallback = null
-        activeNetwork = null
+        watcher?.stop()
+        watcher = null
     }
 
     private fun acquireWakeLock() {

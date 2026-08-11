@@ -132,7 +132,34 @@ same reason WireGuard/OpenVPN clients survive Doze — they keepalive by default
 **The keepalive only prevents the idle-out; it does not detect a session that
 died anyway** — a roaming network, a restarted node, a panel that dropped the
 client. For that `watch_hysteria` also runs a `StallDetector` over the tunnel
-interface counters (`mobile_vpn/counters.rs` reads `/proc/net/dev`).
+counters, which `mobile_vpn/counters.rs` receives from tun2proxy's own
+traffic-status callback rather than reading from the kernel.
+
+That distinction matters: the counters describe **tun2proxy**, not the
+interface. If tun2proxy stops pumping, both numbers freeze together, and a
+detector that only compares them sees a quiet tunnel rather than a dead one.
+
+**Nothing wakes the tunnel up on its own, which is why the wake-up path is
+explicit.** A QUIC session that died while the screen was off leaves no trace to
+trip over: the process is alive, the descriptor is open, and no network event
+fires because the path never changed. `NetworkWatcher` therefore listens for
+`ACTION_USER_PRESENT`/`ACTION_SCREEN_ON` as well as for the network, and both
+funnel into `nativeNetworkChanged`.
+
+`redial_if_dead` is what keeps that from becoming a new bug. It connects to
+hysteria's own SOCKS inbound, which stops accepting once the QUIC session is
+gone: a refused connect means the session died, a successful one means the
+tunnel is merely idle and the wake-up is not our business. Tearing down
+unconditionally on every unlock would break the one case that must survive
+untouched — a phone left in a pocket.
+
+**The network callback is deliberately not `registerDefaultNetworkCallback`.**
+Once the tunnel is up it _is_ this process's default network, so the callback
+reports the TUN rather than the Wi-Fi or cellular link underneath it and a real
+handover can pass unseen. `NetworkWatcher` requests `NET_CAPABILITY_INTERNET`
+explicitly and fires only when a **different** `Network` reaches
+`NET_CAPABILITY_VALIDATED` — the shape AmneziaVPN uses, and it debounces the
+capability churn that would otherwise cause restart storms.
 
 **Idle is not death, and this distinction is the whole design.** A phone left
 alone puts nothing through the TUN for minutes — 145s of complete silence was

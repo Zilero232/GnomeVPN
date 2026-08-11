@@ -29,7 +29,7 @@ import {
   serializeByKey,
   stripCidrMask
 } from './lib';
-import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, UNLIMITED, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
+import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -141,30 +141,6 @@ export class XrayClient {
     );
   }
 
-  private async writeClients(clients: HysteriaClient[]): Promise<void> {
-    const inbound = await this.getInbound();
-
-    await this.writeInboundClients({
-      inbound,
-      protocol: 'hysteria',
-      settings: { ...parseSettings(inbound), clients },
-      remark: INBOUND_REMARK
-    });
-  }
-
-  private newClient({ email, auth }: HysteriaClient): HysteriaClient {
-    return {
-      email,
-      auth,
-      enable: true,
-      limitIp: UNLIMITED,
-      totalGB: UNLIMITED,
-      expiryTime: UNLIMITED,
-      tgId: UNLIMITED,
-      reset: UNLIMITED
-    };
-  }
-
   async createClient(email: string): Promise<CreateClientResult> {
     return serializeByKey(this.nodeKey, async () => {
       const clients = await this.listClients();
@@ -172,13 +148,15 @@ export class XrayClient {
 
       if (existing) {
         await this.panel.setClientsEnabled({ emails: [email], enabled: true });
+        await this.restartCore();
 
         return { nodeCredential: existing.auth, email };
       }
 
+      const inbound = await this.getInbound();
       const auth = generateAuth();
 
-      await this.writeClients([...clients, this.newClient({ email, auth })]);
+      await this.panel.addClient({ inboundId: inbound.id, email, auth });
       await this.restartCore();
 
       return { nodeCredential: auth, email };

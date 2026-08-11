@@ -34,16 +34,15 @@ pub fn start() -> Result<(), Box<dyn std::error::Error>> {
 async fn unwind(supervisor: &Supervisor) {
     supervisor.stop();
 
-    let deadline = tokio::time::Instant::now() + TEARDOWN_GRACE;
-
-    while supervisor.status() != gnomevpn_ipc::TunnelStatus::Disconnected {
-        if tokio::time::Instant::now() >= deadline {
-            log::warn!("tunnel did not unwind within {TEARDOWN_GRACE:?}; killing sing-box anyway");
-
-            break;
+    let settled = tokio::time::timeout(TEARDOWN_GRACE, async {
+        while supervisor.status() != gnomevpn_ipc::TunnelStatus::Disconnected {
+            tokio::time::sleep(TEARDOWN_POLL).await;
         }
+    })
+    .await;
 
-        tokio::time::sleep(TEARDOWN_POLL).await;
+    if settled.is_err() {
+        log::warn!("tunnel did not unwind within {TEARDOWN_GRACE:?}; killing sing-box anyway");
     }
 
     crate::tunnel::singbox::reap_orphans().await;

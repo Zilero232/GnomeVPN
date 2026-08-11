@@ -34,7 +34,12 @@ static SESSION: Mutex<Option<Session>> = Mutex::new(None);
 #[no_mangle]
 pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeNetworkChanged(_env: JNIEnv, _class: JClass) {
     install_logger();
-    engine::restart_attempt();
+
+    if let Ok(guard) = SESSION.lock() {
+        if let Some(session) = guard.as_ref() {
+            session.runtime.spawn(engine::redial_if_dead());
+        }
+    }
 }
 
 fn read_string(env: &mut JNIEnv, value: &JString) -> Option<String> {

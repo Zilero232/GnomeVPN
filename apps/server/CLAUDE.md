@@ -169,6 +169,27 @@ The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built
 
 Each client has its own `auth` password, generated in `XrayClient.createClient` and stored as the peer's tunnel credential (in the `xrayUserId` column, reused as-is). `ensureInbound` **updates** an existing inbound rather than replacing it, and `updateInbound` preserves the current client list so a re-provision does not strand live sessions.
 
+**Adding a client goes through `POST /panel/api/clients/add`, never a rewrite of
+the inbound.** The old path read the whole client array, appended to it and wrote
+it back, which races with itself — two connects at once and the first client is
+lost. The panel's endpoint takes one client and owns that read-modify-write
+itself.
+
+The `auth` is still generated here rather than left to the panel: it mints one
+when the field is omitted, but it does not return it, and the credential has to
+be known to be handed to the device.
+
+**The explicit `restartCore()` afterwards is load-bearing.** The panel only calls
+`SetToNeedRestart()`, which sets a flag — nothing acts on it on its own, and
+`CheckXrayRunningJob` restarts on a crash, not on that flag. `updateInbound`
+behaves identically, which is why the old path called `restartCore()` too. Drop
+it and the client sits in the database while the running core has never heard of
+it, so the very first connection fails auth with a 404.
+
+WireGuard peers keep the rewrite-and-restart path entirely: `fillProtocolDefaults`
+in 3x-ui has no WireGuard branch, so that endpoint cannot serve their
+`publicKey`/`allowedIPs` shape.
+
 The masquerade target is `MASQUERADE_HOST` in `scripts/provision/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
 
 **Verify a node end-to-end, never by "the panel returned 200".** A Hysteria2 client written without its full field set is stored by the panel but dropped from the running core (`clients: null`), and every connection then fails auth with a 404. The only trustworthy check is to run a real hysteria client against the node and confirm a request returns the node's own IP — ideally from the target network, since the whole reason for Hysteria2 is a TSPU that treats UDP/QUIC differently from TCP.

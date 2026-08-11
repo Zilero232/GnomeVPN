@@ -11,7 +11,7 @@ import type {
 } from './yookassa.types';
 
 import { describeCard } from './lib';
-import { API_URL, CURRENCY } from './yookassa.constants';
+import { API_URL, CURRENCY, REQUEST_TIMEOUT_MS } from './yookassa.constants';
 
 export class YooKassaClient {
   private readonly shopId: string;
@@ -42,7 +42,8 @@ export class YooKassaClient {
   private async request<T>(path: string, init: RequestInit, idempotenceKey?: string): Promise<T> {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
-      headers: this.headers(idempotenceKey)
+      headers: this.headers(idempotenceKey),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
     });
 
     if (!res.ok) {
