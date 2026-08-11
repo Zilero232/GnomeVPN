@@ -18,18 +18,18 @@ import type {
 } from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
+import { PanelClient } from './panel-client';
+import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
 import {
   currentClients,
   generateAuth,
-  PanelClient,
   parseSettings,
   parseSniffing,
   parseStreamSettings,
   parseWireguardSettings,
   serializeByKey,
   stripCidrMask
-} from './lib';
-import { INBOUND_REMARK, REQUEST_TIMEOUT_MS, WG_INBOUND_REMARK, WG_PEER_ID_BYTES, XRAY_STATE_RUNNING } from './xray.constants';
+} from './xray.helpers';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);

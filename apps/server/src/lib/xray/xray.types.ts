@@ -13,6 +13,17 @@ export type XrayInbound = {
   sniffing?: string | Record<string, unknown>;
 };
 
+export type XrayInboundSettings = {
+  clients?: ({ email?: string; auth?: string } | null)[];
+};
+
+export type XrayWireguardSettings = {
+  secretKey?: string;
+  clients?: ({ email?: string; publicKey?: string; allowedIPs?: string[] } | null)[];
+  peers?: unknown;
+  mtu?: number;
+};
+
 export type HysteriaClient = {
   email: string;
   auth: string;

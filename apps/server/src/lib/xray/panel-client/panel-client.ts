@@ -10,9 +10,20 @@ import type {
   SetClientsEnabledInput
 } from './panel-client.types';
 
-import { AppServiceUnavailableException } from '../../../../common/exceptions';
-import { collectOnlineEmails } from '../collect-online-emails';
+import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { NO_LIMIT, PANEL_ROUTES } from './panel-client.constants';
+
+const collectOnlineEmails = (payload: PanelOnlines): Set<string> | null => {
+  if (!payload) {
+    return null;
+  }
+
+  if (Array.isArray(payload)) {
+    return new Set(payload);
+  }
+
+  return new Set(Object.values(payload).flat());
+};
 
 export class PanelClient {
   private readonly baseUrl: string;
