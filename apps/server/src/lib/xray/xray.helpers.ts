@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 
-import type { XrayInbound, XrayInboundSettings, XrayWireguardSettings } from './xray.types';
+import type { XrayInbound, XrayInboundSettings } from './inbounds';
+import type { XrayWireguardSettings } from './wireguard';
 
 import { AUTH_BYTES } from './xray.constants';
 

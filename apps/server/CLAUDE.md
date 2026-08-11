@@ -33,14 +33,22 @@ A module is `x.module.ts` + `x.controller.ts` + `services/`, plus `dto/`, `guard
 
 **Nothing but the class lives in a service or controller file.** Constants, lookup tables and pure functions go elsewhere, so the file reads as behaviour rather than a mix of data and logic:
 
-| What                               | Where                                                                                  |
-| ---------------------------------- | -------------------------------------------------------------------------------------- |
-| Constants, timeouts, lookup tables | `config/x.config.ts`                                                                   |
-| Pure functions                     | `lib/<name>/` — one folder per function, with its own `index.ts` and `<name>.types.ts` |
-| Types                              | `x.types.ts` next to the file that owns them                                           |
+| What                               | Where                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| Constants, timeouts, lookup tables | `config/x.config.ts`, or `<name>.constants.ts` inside the folder that owns them   |
+| Pure functions                     | `lib/<name>/` — one folder per **concern**, with `index.ts` and `<name>.types.ts` |
+| Types                              | `x.types.ts` next to the file that owns them                                      |
 
-`lib/` is never a pile of loose files: each helper gets a folder, so its types
-sit beside it and the barrel re-exports both.
+**A folder is one concern, not one function.** Each gets its own `index.ts`,
+`<name>.types.ts` and `<name>.constants.ts` where it needs them, so a reader
+opens `wireguard/` and finds every WireGuard thing and nothing else.
+
+The unit is the concern because the alternative was tried: `lib/xray` once held
+seven folders and fifteen files for a handful of lines — `strip-cidr-mask/` was a
+single regex behind its own barrel, `generate-auth/` a single `randomBytes` call.
+Reaching either meant `lib/xray/lib/<name>/<name>.ts`, three levels of
+indirection to arrive at one statement. A helper too small to have its own types
+belongs in the `<name>.helpers.ts` of the concern that uses it.
 
 ```ts
 // no — a service file holding data
@@ -111,6 +119,27 @@ Webhooks are the only thing that activates a subscription; the browser returning
 releasing it, building the tunnel config. `sessions` and `configs` sit on top and
 never touch `XrayClient` directly, which is why the same "create → persist →
 roll back on failure" dance is written once instead of twice.
+
+`XrayClient` itself is a **facade over four concerns**, each its own folder:
+
+```text
+lib/xray/
+├── panel-client/   # the 3x-ui HTTP API, and nothing above it
+├── inbounds/       # find/create an inbound, shape its payload — used by both protocols
+├── hysteria/       # Hysteria2 clients: create, delete, enable
+├── wireguard/      # WireGuard peers: IP allocation, collision checks, its own inbound
+└── xray.ts         # the facade the rest of the server calls
+```
+
+The name is historical and misleads: `XrayClient` talks to the **3x-ui panel**,
+not to Xray-core. The panel runs the core; Hysteria2 is an inbound inside it,
+which is why a fix released for the standalone `apernet/hysteria` server does not
+reach these nodes.
+
+It was one 300-line class holding both protocols, and that is how a restart bug
+hid in it: WireGuard needs the core restarted after a rewrite, Hysteria2 needs it
+after a client changes, and with both paths interleaved the second was easy to
+miss. Splitting by protocol makes each rule visible where it applies.
 
 ## Session slots
 
