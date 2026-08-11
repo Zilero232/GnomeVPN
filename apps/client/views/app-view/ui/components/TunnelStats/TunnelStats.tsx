@@ -2,6 +2,7 @@
 
 import { clsx } from 'clsx';
 import { ArrowDown, ArrowUp } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
@@ -9,6 +10,7 @@ import type { TunnelStatsProps } from './TunnelStats.types';
 
 import { formatBytes, formatSpeed, formatUptime } from '../../../lib';
 import { useSpeed } from '../../../model/hooks';
+import { VALUE_MOTION } from './TunnelStats.motion';
 
 import s from './TunnelStats.module.scss';
 
@@ -17,6 +19,8 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
   const speed = useSpeed(traffic);
   const [uptime, setUptime] = useState('00:00:00');
+
+  const isPending = !connectedAt;
 
   useEffect(() => {
     if (!connectedAt || !isVisible) {
@@ -36,7 +40,9 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
     <div aria-hidden={!isVisible} className={clsx(s.root, !isVisible && s.hidden)}>
       <div className={s.uptime}>
         <span className={s.label}>{t('uptime')}</span>
-        <span className={s.clock}>{uptime}</span>
+        <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.clock} {...VALUE_MOTION}>
+          {uptime}
+        </motion.span>
       </div>
 
       <div className={s.grid}>
@@ -45,12 +51,16 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
           <div className={s.metric}>
             <span className={s.label}>{t('sent')}</span>
-            <span className={s.value}>{formatSpeed(speed.tx)}</span>
+            <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
+              {formatSpeed(speed.tx)}
+            </motion.span>
           </div>
 
           <div className={s.metric}>
             <span className={s.label}>{t('sentTotal')}</span>
-            <span className={s.value}>{formatBytes(traffic.tx)}</span>
+            <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
+              {formatBytes(traffic.tx)}
+            </motion.span>
           </div>
         </div>
 
@@ -59,12 +69,16 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
           <div className={s.metric}>
             <span className={s.label}>{t('received')}</span>
-            <span className={s.value}>{formatSpeed(speed.rx)}</span>
+            <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
+              {formatSpeed(speed.rx)}
+            </motion.span>
           </div>
 
           <div className={s.metric}>
             <span className={s.label}>{t('receivedTotal')}</span>
-            <span className={s.value}>{formatBytes(traffic.rx)}</span>
+            <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
+              {formatBytes(traffic.rx)}
+            </motion.span>
           </div>
         </div>
       </div>

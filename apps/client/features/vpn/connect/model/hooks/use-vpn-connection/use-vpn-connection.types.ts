@@ -1,13 +1,10 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
 
-import type { TunnelEvent } from '@/shared/lib';
+import type { TunnelEvent, VpnTraffic } from '@/shared/lib';
+
+export type { VpnTraffic };
 
 export type VpnConnectionStatus = 'connected' | 'connecting' | 'disconnected';
-
-export type VpnTraffic = {
-  rx: number;
-  tx: number;
-};
 
 export type TunnelEventInput = {
   generation: number;

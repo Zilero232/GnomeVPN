@@ -272,6 +272,8 @@ class GnomeVpnService : VpnService() {
     }
 
     private fun publishTraffic() {
+        TunnelTraffic.markStart(this)
+
         val ticker = object : Runnable {
             override fun run() {
                 if (descriptor == null) {

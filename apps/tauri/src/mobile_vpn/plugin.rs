@@ -39,9 +39,12 @@ struct NativeDirResult {
 }
 
 #[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TrafficResult {
     pub rx: u64,
     pub tx: u64,
+    #[serde(default)]
+    pub uptime_seconds: u64,
 }
 
 #[derive(Serialize)]

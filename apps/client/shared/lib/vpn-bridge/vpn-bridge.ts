@@ -74,7 +74,7 @@ export const vpnDisconnect = async (): Promise<void> => {
 
 export const vpnStatus = async (): Promise<string> => callRust({ command: 'vpn_status', fallback: 'disconnected' });
 
-export const vpnTraffic = async (): Promise<VpnTraffic> => callRust({ command: 'vpn_traffic', fallback: { rx: 0, tx: 0 } });
+export const vpnTraffic = async (): Promise<VpnTraffic> => callRust({ command: 'vpn_traffic', fallback: { rx: 0, tx: 0, uptimeSeconds: 0 } });
 
 export const isVpnServiceAvailable = async (): Promise<boolean> => callRust({ command: 'vpn_service_available', fallback: false });
 

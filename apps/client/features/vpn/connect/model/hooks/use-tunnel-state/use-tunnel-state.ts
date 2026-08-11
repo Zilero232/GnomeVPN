@@ -9,13 +9,21 @@ const EMPTY_TRAFFIC: VpnTraffic = { rx: 0, tx: 0 };
 export const useTunnelState = () => {
   const [status, setStatus] = useState<VpnConnectionStatus>('disconnected');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
-  const [traffic, setTraffic] = useState<VpnTraffic>(EMPTY_TRAFFIC);
+  const [traffic, setTrafficState] = useState<VpnTraffic>(EMPTY_TRAFFIC);
   const [connectedAt, setConnectedAt] = useState<Date | null>(null);
+
+  const setTraffic = (next: VpnTraffic) => {
+    setTrafficState(next);
+
+    if (next.uptimeSeconds && next.uptimeSeconds > 0) {
+      setConnectedAt(new Date(Date.now() - next.uptimeSeconds * 1_000));
+    }
+  };
 
   const markConnecting = (nodeId: string) => {
     setStatus('connecting');
     setActiveNodeId(nodeId);
-    setTraffic(EMPTY_TRAFFIC);
+    setTrafficState(EMPTY_TRAFFIC);
   };
 
   const markConnected = () => {
@@ -32,7 +40,7 @@ export const useTunnelState = () => {
   const reset = () => {
     setStatus('disconnected');
     setActiveNodeId(null);
-    setTraffic(EMPTY_TRAFFIC);
+    setTrafficState(EMPTY_TRAFFIC);
     setConnectedAt(null);
   };
 

@@ -23,4 +23,5 @@ export type LatencyByNode = Record<string, number | null>;
 export type VpnTraffic = {
   rx: number;
   tx: number;
+  uptimeSeconds?: number;
 };

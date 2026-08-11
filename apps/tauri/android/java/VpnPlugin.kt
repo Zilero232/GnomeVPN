@@ -3,6 +3,7 @@ package ru.gnomevpn.app
 import android.app.Activity
 import android.content.Intent
 import android.net.VpnService
+import android.os.SystemClock
 import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
 import app.tauri.annotation.ActivityCallback
@@ -135,6 +136,14 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         }
     }
 
+    private fun uptimeSeconds(since: Long): Long {
+        if (since <= 0) {
+            return 0
+        }
+
+        return ((SystemClock.elapsedRealtime() - since) / 1_000).coerceAtLeast(0)
+    }
+
     @Command
     fun traffic(invoke: Invoke) {
         val counters = TunnelTraffic.read(activity)
@@ -142,6 +151,7 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
 
         result.put("rx", counters.rx)
         result.put("tx", counters.tx)
+        result.put("uptimeSeconds", uptimeSeconds(counters.since))
         invoke.resolve(result)
     }
 
