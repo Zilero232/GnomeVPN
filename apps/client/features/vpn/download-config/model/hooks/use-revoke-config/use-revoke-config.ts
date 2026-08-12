@@ -1,3 +1,5 @@
+import type { DownloadedConfig } from '@gnomevpn/schemas';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -13,11 +15,27 @@ export const useRevokeConfig = () => {
 
   return useMutation({
     mutationFn: revokeConfig,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.configs() });
 
+      const previous = queryClient.getQueryData<DownloadedConfig[]>(QUERY_KEYS.configs());
+
+      queryClient.setQueryData<DownloadedConfig[]>(QUERY_KEYS.configs(), (configs) => configs?.filter((config) => config.id !== id));
+
+      return { previous };
+    },
+    onSuccess: () => {
       toast.success(t('revoked'));
     },
-    onError: toastError
+    onError: (error, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(QUERY_KEYS.configs(), context.previous);
+      }
+
+      toastError(error);
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+    }
   });
 };

@@ -2,16 +2,14 @@
 
 import { SplitSquareHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 import { useVpnConnectionContext } from '@/features/vpn/connect';
 
 import { useSplitTunneling } from '../../model/hooks';
+import { SplitTunnelingDialog } from '../SplitTunnelingDialog';
 
 import s from './SplitTunnelingButton.module.scss';
-
-const SplitTunnelingDialog = dynamic(() => import('../SplitTunnelingDialog').then((module) => module.SplitTunnelingDialog), { ssr: false });
 
 export const SplitTunnelingButton = () => {
   const t = useTranslations('splitTunneling');

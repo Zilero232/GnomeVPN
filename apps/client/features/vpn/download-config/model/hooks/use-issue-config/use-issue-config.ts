@@ -13,8 +13,8 @@ export const useIssueConfig = () => {
 
   return useMutation({
     mutationFn: issueConfig,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
 
       toast.success(t('created'), { description: t('createdHint') });
     },
