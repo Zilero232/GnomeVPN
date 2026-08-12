@@ -379,6 +379,7 @@
     "nodeOffline": "Недоступен",
     "nodeOfflineHint": "Узел не отвечает — попробуйте другую страну",
     "nodeLatency": "{value} мс",
+    "nodeLatencyStale": "Измерено до подключения",
     "nodeActive": "Выбрана сейчас",
     "nodeGradeFast": "Быстрое соединение",
     "nodeGradeFair": "Среднее соединение",

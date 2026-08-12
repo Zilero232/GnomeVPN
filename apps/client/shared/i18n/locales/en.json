@@ -379,6 +379,7 @@
     "nodeOffline": "Unavailable",
     "nodeOfflineHint": "This node is not responding — pick another country",
     "nodeLatency": "{value} ms",
+    "nodeLatencyStale": "Measured before connecting",
     "nodeActive": "Currently selected",
     "nodeGradeFast": "Fast connection",
     "nodeGradeFair": "Moderate connection",

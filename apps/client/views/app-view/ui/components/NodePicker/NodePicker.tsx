@@ -76,10 +76,16 @@ export const NodePicker = ({ nodes, activeNodeId, isLoading, isError, isLocked, 
           </span>
 
           {isOnline && isNonNullish(rttMs) ? (
-            <span className={clsx(s.meter, grade && s[grade])}>
+            <span className={clsx(s.meter, grade && s[grade], isLocked && s.meterStale)} title={isLocked ? t('nodeLatencyStale') : undefined}>
               <Text as='span' className={s.latency}>
                 {t('nodeLatency', { value: rttMs })}
               </Text>
+
+              {isLocked && (
+                <Text as='span' className={s.srOnly}>
+                  {t('nodeLatencyStale')}
+                </Text>
+              )}
 
               {grade && (
                 <Text as='span' className={s.srOnly}>

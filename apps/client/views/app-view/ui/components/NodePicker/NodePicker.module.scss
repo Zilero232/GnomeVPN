@@ -139,6 +139,10 @@
     background-color 0.2s ease;
 }
 
+.meterStale {
+  opacity: 0.55;
+}
+
 .latency {
   color: var(--color-text-muted);
   font-family: var(--font-mono);
