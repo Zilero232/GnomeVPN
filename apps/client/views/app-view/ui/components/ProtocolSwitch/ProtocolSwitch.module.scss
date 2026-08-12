@@ -1,5 +1,6 @@
 .root {
   position: relative;
+  z-index: 40;
 }
 
 .trigger {
@@ -56,16 +57,28 @@
   border: 1px solid rgb(230 240 236 / 9%);
   border-radius: 14px;
   margin: 0;
-  backdrop-filter: blur(22px) saturate(160%);
-  background-color: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
-  background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 8%) inset,
     0 0 0 1px rgb(0 0 0 / 40%),
     0 28px 60px -24px rgb(0 0 0 / 90%);
   list-style: none;
   transform-origin: top left;
-  will-change: transform, opacity;
+  will-change: transform;
+}
+
+.menu:after {
+  position: absolute;
+  border-radius: inherit;
+  backdrop-filter: blur(22px) saturate(160%);
+  background-color: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+  background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
+  content: '';
+  inset: 0;
+}
+
+.menu > * {
+  position: relative;
+  z-index: 1;
 }
 
 .option {
