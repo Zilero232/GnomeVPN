@@ -17,6 +17,9 @@ const READY_TIMEOUT: Duration = Duration::from_secs(25);
 const READY_INTERVAL: Duration = Duration::from_millis(400);
 const WATCH_INTERVAL: Duration = Duration::from_secs(1);
 
+const STALL_TIMEOUT: Duration = Duration::from_secs(60);
+const STALL_MIN_BYTES: u64 = 32 * 1024;
+
 #[cfg(target_os = "windows")]
 const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
 
@@ -36,6 +39,41 @@ async fn traffic() -> Traffic {
     tokio::task::spawn_blocking(|| adapter::traffic(TUNNEL_NAME, TUNNEL_ADDRESS))
         .await
         .unwrap_or_default()
+}
+
+#[derive(Default)]
+struct StallDetector {
+    last_seen: Option<(u64, u64)>,
+    deaf_for: Duration,
+    asked: u64,
+}
+
+impl StallDetector {
+    fn observe(&mut self, current: &Traffic) -> Option<String> {
+        let (rx, tx) = self.last_seen.replace((current.rx, current.tx))?;
+
+        if current.rx > rx {
+            self.deaf_for = Duration::ZERO;
+            self.asked = 0;
+
+            return None;
+        }
+
+        let sent = current.tx.saturating_sub(tx);
+
+        if sent == 0 {
+            return None;
+        }
+
+        self.asked = self.asked.saturating_add(sent);
+        self.deaf_for += WATCH_INTERVAL;
+
+        if self.deaf_for < STALL_TIMEOUT || self.asked < STALL_MIN_BYTES {
+            return None;
+        }
+
+        Some(format!("sent {} bytes over {}s with no reply", self.asked, self.deaf_for.as_secs()))
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -141,6 +179,7 @@ pub async fn run_tunnel(
     });
 
     let mut watch = interval(WATCH_INTERVAL);
+    let mut detector = StallDetector::default();
 
     let result = loop {
         tokio::select! {
@@ -163,6 +202,12 @@ pub async fn run_tunnel(
                     rx: traffic.rx,
                     tx: traffic.tx,
                 });
+
+                if let Some(reason) = detector.observe(&traffic) {
+                    log::error!("tunnel stalled: {reason}");
+
+                    break Err(TunnelError::Stalled(reason));
+                }
             }
         }
     };

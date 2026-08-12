@@ -94,4 +94,6 @@ pub fn spawn(runtime: &Handle, supervisor: Arc<Supervisor>, config: TunnelConfig
 pub enum TunnelError {
     #[error("sing-box error: {0}")]
     Singbox(String),
+    #[error("tunnel carries no traffic: {0}")]
+    Stalled(String),
 }
