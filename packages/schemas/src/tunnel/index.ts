@@ -1,5 +1,6 @@
 export { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
 export {
+  configStatusSchema,
   DEFAULT_TUNNEL_PROTOCOL,
   downloadedConfigSchema,
   SPLIT_MODE,
@@ -12,6 +13,7 @@ export {
 } from './outputs';
 
 export type {
+  ConfigStatus,
   ConnectRequest,
   DisconnectRequest,
   DownloadedConfig,

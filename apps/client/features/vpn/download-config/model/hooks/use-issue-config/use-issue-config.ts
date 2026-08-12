@@ -15,6 +15,7 @@ export const useIssueConfig = () => {
     mutationFn: issueConfig,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configStatus() });
 
       toast.success(t('created'), { description: t('createdHint') });
     },

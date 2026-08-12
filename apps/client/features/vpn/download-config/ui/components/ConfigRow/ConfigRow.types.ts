@@ -1,7 +1,7 @@
-import type { DownloadedConfig } from '@gnomevpn/schemas';
+import type { ConfigWithStatus } from '../../../model/hooks';
 
 export type ConfigRowProps = {
-  config: DownloadedConfig;
+  config: ConfigWithStatus;
   isBlocked?: boolean;
   isRevoking: boolean;
   onRevoke: () => void;

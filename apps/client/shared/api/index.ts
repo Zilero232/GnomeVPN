@@ -2,7 +2,7 @@ export { authClient, clearToken, getAuthToken, restoreTokenFromVault, saveAuthTo
 export { resetSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
-export { issueConfig, listConfigs, readConfigText, revokeConfig } from './configs';
+export { issueConfig, listConfigs, listConfigStatus, readConfigText, revokeConfig } from './configs';
 export type { ConfigDownload } from './configs';
 export { api, ApiError, apiErrorCode, toApiError } from './http';
 export { listNodeEndpoints, listNodes } from './nodes';

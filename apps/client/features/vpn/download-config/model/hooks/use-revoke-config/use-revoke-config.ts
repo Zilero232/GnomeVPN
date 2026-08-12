@@ -35,7 +35,10 @@ export const useRevokeConfig = () => {
       toastError(error);
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configs() }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.configStatus() })
+      ]);
     }
   });
 };

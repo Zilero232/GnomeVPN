@@ -56,6 +56,9 @@ export const downloadedConfigSchema = z.object({
   country: z.string().min(1),
   countryCode: z.string().min(1),
   protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
-  createdAt: z.string(),
-  isOnline: z.boolean().default(false)
+  createdAt: z.string()
+});
+
+export const configStatusSchema = z.object({
+  onlineIds: z.array(z.string().min(1))
 });

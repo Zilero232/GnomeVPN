@@ -6,7 +6,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { CurrentUserId } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import { CONFIG_FILE_CONTENT_TYPE } from './config';
-import { DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/configs.dto';
+import { ConfigStatusDto, DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/configs.dto';
 import { contentDisposition } from './lib';
 import { ConfigAccessService, ConfigIssueService } from './services';
 
@@ -21,6 +21,12 @@ export class ConfigsController {
   @ZodResponse({ type: [DownloadedConfigDto] })
   list(@CurrentUserId() userId: string) {
     return this.configIssue.list(userId);
+  }
+
+  @Get('status')
+  @ZodResponse({ type: ConfigStatusDto })
+  async status(@CurrentUserId() userId: string) {
+    return { onlineIds: await this.configIssue.onlineIds(userId) };
   }
 
   @Post()

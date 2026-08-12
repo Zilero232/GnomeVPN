@@ -38,13 +38,9 @@ export class ConfigIssueService {
         nodeId: true,
         protocol: true,
         createdAt: true,
-        userId: true,
-        kind: true,
         node: { select: { country: true, countryCode: true } }
       }
     });
-
-    const online = await this.peers.onlinePeerIds(rows, { assumeOnlineWhenNodeSilent: false });
 
     return rows.map((row) => ({
       id: row.id,
@@ -53,9 +49,19 @@ export class ConfigIssueService {
       country: row.node.country,
       countryCode: row.node.countryCode,
       protocol: row.protocol,
-      createdAt: row.createdAt.toISOString(),
-      isOnline: online.has(row.id)
+      createdAt: row.createdAt.toISOString()
     }));
+  }
+
+  async onlineIds(userId: string): Promise<string[]> {
+    const rows = await this.prisma.peer.findMany({
+      where: { userId, kind: 'config' },
+      select: { id: true, nodeId: true, protocol: true, userId: true, kind: true, name: true }
+    });
+
+    const online = await this.peers.onlinePeerIds(rows, { assumeOnlineWhenNodeSilent: false });
+
+    return rows.filter((row) => online.has(row.id)).map((row) => row.id);
   }
 
   async issue({ userId, nodeId, name, protocol }: IssueConfigInput): Promise<ConfigFile> {

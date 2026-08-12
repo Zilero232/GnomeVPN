@@ -2,6 +2,7 @@ import type { z } from 'zod';
 
 import type { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
 import type {
+  configStatusSchema,
   downloadedConfigSchema,
   splitConfigSchema,
   splitModeSchema,
@@ -16,6 +17,7 @@ export type TunnelConfig = z.infer<typeof tunnelConfigSchema>;
 export type TunnelProtocol = z.infer<typeof tunnelProtocolSchema>;
 export type WireguardConfig = z.infer<typeof wireguardConfigSchema>;
 export type DownloadedConfig = z.infer<typeof downloadedConfigSchema>;
+export type ConfigStatus = z.infer<typeof configStatusSchema>;
 export type IssueConfigRequest = z.infer<typeof issueConfigSchema>;
 export type RevokeConfigRequest = z.infer<typeof revokeConfigSchema>;
 export type SplitMode = z.infer<typeof splitModeSchema>;
