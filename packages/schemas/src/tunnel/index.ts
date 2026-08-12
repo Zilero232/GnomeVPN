@@ -2,7 +2,6 @@ export { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeCon
 export {
   DEFAULT_TUNNEL_PROTOCOL,
   downloadedConfigSchema,
-  portRangeSchema,
   SPLIT_MODE,
   splitConfigSchema,
   splitModeSchema,

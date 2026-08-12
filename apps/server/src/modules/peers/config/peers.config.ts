@@ -1,7 +1,6 @@
 export const TUNNEL = {
   insecure: true,
-  dns: ['1.1.1.1', '8.8.8.8'],
-  portRange: { from: 20_000, to: 45_000 }
+  dns: ['1.1.1.1', '8.8.8.8']
 } as const;
 
 export const PEER_PREFIX = {
@@ -11,7 +10,7 @@ export const PEER_PREFIX = {
 
 export const WG = {
   listenPort: 51820,
-  mtu: 1420,
+  mtu: 1360,
   allowedIps: ['0.0.0.0/0'],
   subnet: '10.9.0.0/24',
   addressPrefix: 24,

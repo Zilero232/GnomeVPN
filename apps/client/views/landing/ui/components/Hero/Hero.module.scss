@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   position: relative;
   padding: 72px 0 40px;
@@ -14,7 +16,7 @@
   opacity: 0.9;
   pointer-events: none;
 
-  @media (width <= 900px) {
+  @include below(2xl) {
     display: none;
   }
 }

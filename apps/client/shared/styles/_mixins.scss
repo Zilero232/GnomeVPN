@@ -1,4 +1,5 @@
 @forward '@/shared/styles/animations';
+@forward '@/shared/styles/breakpoints';
 
 @mixin stack($gap: 16px) {
   display: flex;

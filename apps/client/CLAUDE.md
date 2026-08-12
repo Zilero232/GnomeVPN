@@ -56,6 +56,24 @@ Every `callRust` needs a `fallback` — the same bundle renders in a browser and
 
 Settings that autoconnect reads live in `plugin-store`, not `localStorage` — autoconnect runs before the webview has one.
 
+## Breakpoints come from the scale
+
+`shared/styles/_breakpoints.scss` holds seven steps — `xs` 420, `sm` 520, `md` 560,
+`lg` 640, `wide` 700, `xl` 760, `2xl` 900 — reached through `@include below(md)`
+and `@include from(2xl)`. Both are forwarded by `shared/styles/mixins`, which most
+SCSS modules already `@use`.
+
+A hand-written `@media (width <= 620px)` is what this replaces: eleven distinct
+values had accumulated across twenty-five call sites — 400 next to 420, 460 next
+to 520, 620 next to 640 — so a layout fixed at one width stayed broken at its
+neighbour. Add a step to the map rather than a pixel value to a component.
+
+**`wide` exists because rounding a `from()` is not the same as rounding a
+`below()`.** Folding 700 into 760 looked like the same kind of near-neighbour
+merge as the others, but it is a min-width query: it withheld the two-column grid
+in `ProtocolPicker` and `SubscriptionCard` from every viewport between 700 and 759. Widening a `below()` degrades early and stays readable; narrowing a `from()`
+takes a layout away.
+
 ## Verification
 
 ```bash

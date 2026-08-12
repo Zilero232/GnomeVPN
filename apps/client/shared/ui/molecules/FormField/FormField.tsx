@@ -1,6 +1,6 @@
 'use client';
 
-import { Field } from '@base-ui-components/react/field';
+import { Field } from '@base-ui/react/field';
 import { clsx } from 'clsx';
 
 import type { FormFieldProps } from './FormField.types';

@@ -8,7 +8,7 @@ fn tunnel_name() -> Option<String> {
     (!cfg!(target_os = "macos")).then(|| TUNNEL_NAME.to_string())
 }
 const TUNNEL_ADDRESS: &str = "10.8.0.2/24";
-const MTU: u32 = 1420;
+const MTU: u32 = 1360;
 const TUN_STACK: &str = "system";
 const UDP_TIMEOUT: &str = "5m";
 const PROXY_TAG: &str = "proxy";

@@ -388,7 +388,7 @@ class GnomeVpnService : VpnService() {
 
         private const val TUN_ADDRESS = "10.8.0.2"
         private const val TUN_PREFIX = 24
-        private const val MTU = 1420
+        private const val MTU = 1360
         private const val TRAFFIC_INTERVAL_MS = 1_000L
 
         // Half routes rather than 0.0.0.0/0: replacing the physical default

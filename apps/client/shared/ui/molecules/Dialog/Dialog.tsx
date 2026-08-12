@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from 'react';
 
-import { Dialog as BaseDialog } from '@base-ui-components/react/dialog';
+import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
 

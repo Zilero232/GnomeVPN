@@ -153,6 +153,71 @@ tunnel is merely idle and the wake-up is not our business. Tearing down
 unconditionally on every unlock would break the one case that must survive
 untouched — a phone left in a pocket.
 
+**The TUN MTU is 1360 because a cellular path is shorter than Ethernet, and
+oversized UDP is dropped rather than fragmented.** A TUN packet does not travel
+alone: QUIC adds a frame header, a packet header and an AEAD tag, then UDP and IP,
+which is roughly 54–76 bytes on top. At the old 1420 that put a full-size packet
+at 1474–1496 bytes, while the real ceiling on a GTP-tunnelled carrier link is
+1464 (`1500 − GTP 8 − UDP 8 − IPv4 20`) and only 1444 on an IPv6 bearer.
+
+So full-size packets exceeded the path and were silently discarded — small ones
+went through, which is why it looked like "the VPN stopped working" on mobile data
+while Wi-Fi at 1500 had room to spare. 1360 leaves ~30 bytes of margin under the
+IPv6-bearer ceiling.
+
+`MTU` is declared in **four** places and they must agree:
+`mobile_vpn/engine.rs` (tun2proxy), `GnomeVpnService.kt`
+(`VpnService.Builder`), `vpn-ipc/src/singbox.rs` (the desktop TUN — a laptop
+tethered to a phone has the same ceiling) and `peers.config.ts` (`WG.mtu`, where
+WireGuard's own 60-byte overhead put 1420 at 1480, over the same limit).
+
+For scale, `wireguard-android` defaults its own MTU to **1280**, the IPv6 minimum,
+so 1360 is still the more optimistic of the two.
+
+`quic.disablePathMTUDiscovery` is on for the same reason. With a deliberately
+conservative MTU there is nothing for the probes to find, and each probe is a
+large packet sent into a path that cannot carry it.
+
+`keepAlivePeriod` is 5s, not the default: carrier-grade NAT expires idle UDP
+mappings, and while measured cellular medians sit around 65s the low end of the
+observed range reaches 10s.
+
+**Bandwidth is deliberately left unset.** Hysteria2 only uses its Brutal
+congestion control when the client declares `up`/`down`; without them it falls
+back to BBR, which is the right choice on a link whose capacity swings with signal
+strength and cell handovers. Declaring a fixed rate above the instantaneous
+capacity is documented to backfire.
+
+**Port hopping was removed, and putting it back needs server work first.** The
+client used to be handed `portRange: 20000-45000`, which makes hysteria
+periodically move to another port in that range — `server` became
+`IP:443,20000-45000`. That only works when the node redirects the whole range to
+the listening port with nftables/iptables DNAT rules, which the hysteria docs are
+explicit about. Ours listens on 443/UDP alone and `openTunnelPort` opens only
+that, so every hop sent packets to a port nothing was listening on: an independent
+cause of mid-session drops, on top of the MTU one.
+
+It went from all four layers — the server config, the Zod schema, the IPC type and
+the hysteria config builder — rather than being left switched off, because a
+dormant field is what someone turns back on without knowing about the DNAT
+requirement. A config from an older server still carrying `portRange` parses fine;
+serde ignores the unknown field.
+
+**The tunnel is IPv4-only, and on some carriers that is a real limit.** The TUN
+carries one IPv4 address and half routes for IPv4 only, and `allowFamily` is never
+called — which, following `wireguard-android`'s own reasoning, is what keeps IPv6
+from leaking _around_ the tunnel rather than being blocked by it. So there is no
+split-identity leak, but on an IPv6-only bearer with NAT64 (MTS is rolling this
+out) there is also no connectivity. Adding an IPv6 route without teaching
+tun2proxy and the TUN to carry IPv6 would be worse than the current state: traffic
+would enter a tunnel that cannot deliver it.
+
+**Bandwidth is deliberately left unset.** Hysteria2 only uses its Brutal
+congestion control when the client declares `up`/`down`; without them it falls
+back to BBR, which is the right choice on a link whose capacity swings with signal
+strength and cell handovers. Declaring a fixed rate above the instantaneous
+capacity is documented to backfire.
+
 **The network callback is deliberately not `registerDefaultNetworkCallback`.**
 Once the tunnel is up it _is_ this process's default network, so the callback
 reports the TUN rather than the Wi-Fi or cellular link underneath it and a real

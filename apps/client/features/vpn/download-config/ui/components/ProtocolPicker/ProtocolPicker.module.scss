@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .list {
   display: grid;
   width: 100%;
@@ -152,7 +154,7 @@
   background-color: var(--color-warning);
 }
 
-@media (width >= 700px) {
+@include from(wide) {
   .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

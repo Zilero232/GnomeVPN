@@ -11,7 +11,7 @@ use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 use super::wireguard;
 use super::{counters, MobileVpnError};
 
-const MTU: u16 = 1420;
+const MTU: u16 = 1360;
 const BINARY_NAME: &str = "libhysteria.so";
 const CONFIG_NAME: &str = "hysteria-config.yaml";
 const LOG_NAME: &str = "hysteria.log";

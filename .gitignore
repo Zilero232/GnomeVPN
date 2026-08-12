@@ -24,9 +24,11 @@ apps/tauri/android/libs/
 nodes.json
 apps/tauri/*.keystore
 
-# Agent tooling
+# Agent tooling — rules and the reviewer are the repo's own, everything else is local
 .agents/
-.claude/
+.claude/*
+!.claude/rules/
+!.claude/agents/
 skills-lock.json
 .codebase-memory/
 

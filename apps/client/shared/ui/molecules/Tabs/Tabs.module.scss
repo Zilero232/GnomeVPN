@@ -36,11 +36,11 @@
   transition: color 0.18s ease;
   white-space: nowrap;
 
-  &:hover:not([data-selected]) {
+  &:hover:not([data-active]) {
     color: var(--color-text);
   }
 
-  &[data-selected] {
+  &[data-active] {
     color: var(--color-text);
   }
 

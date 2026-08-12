@@ -18,19 +18,11 @@ export const wireguardConfigSchema = z.object({
   mtu: z.number().int().positive().optional()
 });
 
-export const portRangeSchema = z
-  .object({
-    from: z.number().int().min(1).max(65_535),
-    to: z.number().int().min(1).max(65_535)
-  })
-  .refine((range) => range.from < range.to, { message: 'validation.portRangeOrder' });
-
 export const tunnelConfigSchema = z
   .object({
     protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
     server: z.string().min(1),
     port: z.number().int().positive(),
-    portRange: portRangeSchema.optional(),
     auth: z.string().default(''),
     serverName: z.string().default(''),
     insecure: z.boolean().default(false),

@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .wrapper {
   position: relative;
   overflow: hidden;
@@ -13,7 +15,7 @@
   gap: 12px;
   grid-template-columns: minmax(0, 1fr) 92px 92px;
 
-  @media (width <= 560px) {
+  @include below(md) {
     grid-template-columns: minmax(0, 1fr) 62px 62px;
   }
 }

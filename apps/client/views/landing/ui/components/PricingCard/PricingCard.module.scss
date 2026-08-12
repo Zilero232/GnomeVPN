@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   width: 100%;
 }
@@ -100,7 +102,7 @@
   align-items: center;
 }
 
-@media (width <= 860px) {
+@include below(2xl) {
   .plans {
     grid-template-columns: 1fr;
   }

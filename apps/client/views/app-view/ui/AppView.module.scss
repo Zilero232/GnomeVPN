@@ -9,7 +9,7 @@
 
   @include safe-padding(16px, 24px, 18px);
 
-  @media (width <= 560px) {
+  @include below(md) {
     @include safe-padding(16px, 14px, 18px);
   }
 }

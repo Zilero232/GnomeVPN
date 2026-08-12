@@ -181,7 +181,7 @@
   content: '';
 }
 
-@media (width <= 560px) {
+@include below(md) {
   .card {
     padding-right: clamp(1rem, 4vw, 1.5rem);
     padding-left: clamp(1rem, 4vw, 1.5rem);

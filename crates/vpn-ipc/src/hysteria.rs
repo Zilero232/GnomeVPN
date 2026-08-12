@@ -52,6 +52,8 @@ struct HysteriaQuic {
     max_idle_timeout: String,
     #[serde(rename = "keepAlivePeriod")]
     keep_alive_period: String,
+    #[serde(rename = "disablePathMTUDiscovery")]
+    disable_path_mtu_discovery: bool,
 }
 
 #[derive(Serialize)]
@@ -85,15 +87,8 @@ pub fn build_hysteria_config(config: &TunnelConfig, socks: SocketAddr, credentia
         udp: HysteriaResolverUdp { addr: format!("{entry}:53") },
     });
 
-    let server = match config.port_range {
-        Some(range) if range.is_valid() => {
-            format!("{}:{},{}-{}", config.server, config.port, range.from, range.to)
-        }
-        _ => format!("{}:{}", config.server, config.port),
-    };
-
     let client = HysteriaClientConfig {
-        server,
+        server: format!("{}:{}", config.server, config.port),
         auth: config.auth.clone(),
         tls: HysteriaTls {
             sni: config.server_name.clone(),
@@ -110,7 +105,8 @@ pub fn build_hysteria_config(config: &TunnelConfig, socks: SocketAddr, credentia
             init_conn_receive_window: 20_971_520,
             max_conn_receive_window: 20_971_520,
             max_idle_timeout: "120s".to_string(),
-            keep_alive_period: "8s".to_string(),
+            keep_alive_period: "5s".to_string(),
+            disable_path_mtu_discovery: true,
         },
         fast_open: true,
         resolver,

@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -64,7 +66,7 @@
   gap: 6px;
 }
 
-@media (width <= 560px) {
+@include below(md) {
   .panel {
     padding: 22px 18px;
   }
