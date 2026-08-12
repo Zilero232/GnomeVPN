@@ -9,6 +9,7 @@ import { validateEnv } from '../../config/env.schema';
 import { basePrisma } from '../../core';
 import { ChangeEmail, ResetPassword, sendEmail, VerifyEmail } from '../email';
 import { withClientCallback } from './auth-callback-url';
+import { SESSION_EXPIRES_IN, SESSION_UPDATE_AGE } from './auth.constants';
 
 const env = validateEnv(process.env);
 const logger = new Logger('Auth');
@@ -18,6 +19,10 @@ export const auth = betterAuth({
   baseURL: env.API_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: allowedOrigins,
+  session: {
+    expiresIn: SESSION_EXPIRES_IN,
+    updateAge: SESSION_UPDATE_AGE
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
