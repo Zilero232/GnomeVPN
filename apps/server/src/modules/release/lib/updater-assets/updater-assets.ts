@@ -16,8 +16,16 @@ export const parseManifestBody = (body: string): unknown => {
 };
 
 const proxiedUrl = ({ assets, apiUrl, githubUrl }: ProxiedUrlInput): string | null => {
-  const fileName = last(githubUrl.split('/'));
-  const asset = assets.find((candidate) => candidate.name === fileName);
+  const segment = last(githubUrl.split('/'));
+
+  if (!segment) {
+    return null;
+  }
+
+  const assetId = Number(segment);
+  const asset = Number.isInteger(assetId)
+    ? assets.find((candidate) => candidate.id === assetId)
+    : assets.find((candidate) => candidate.name === decodeURIComponent(segment));
 
   return asset ? `${apiUrl}/release/download/${asset.id}` : null;
 };
