@@ -64,9 +64,11 @@ struct ShareResult {
     shared: bool,
 }
 
-#[derive(Deserialize)]
-struct AutoConnectResult {
-    requested: bool,
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AutoConnectResult {
+    pub requested: bool,
+    pub needs_attention: bool,
 }
 
 #[derive(Deserialize)]
@@ -135,13 +137,10 @@ impl<R: Runtime> VpnPlugin<R> {
             .map_err(|error| MobileVpnError::Service(error.to_string()))
     }
 
-    pub fn take_auto_connect(&self) -> Result<bool, MobileVpnError> {
-        let result: AutoConnectResult = self
-            .0
+    pub fn take_auto_connect(&self) -> Result<AutoConnectResult, MobileVpnError> {
+        self.0
             .run_mobile_plugin("consumeAutoConnect", Empty {})
-            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
-
-        Ok(result.requested)
+            .map_err(|error| MobileVpnError::Service(error.to_string()))
     }
 
     pub fn request_permission(&self) -> Result<bool, MobileVpnError> {

@@ -19,11 +19,13 @@ import type { UseAutoConnectParams } from './use-auto-connect.types';
 export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect }: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
   const fromTileRef = useRef(false);
+  const needsAttentionRef = useRef(false);
 
   useEffect(() => {
     takeTileConnectRequest()
-      .then((requested) => {
+      .then(({ requested, needsAttention }) => {
         fromTileRef.current ||= requested;
+        needsAttentionRef.current ||= needsAttention;
       })
       .catch((error: unknown) => {
         logger.error(`tile request check failed: ${String(error)}`);
@@ -71,7 +73,7 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
         isAutomatic: true
       });
 
-      if (isFromTile && (await vpnStatus()) === 'connected') {
+      if (isFromTile && !needsAttentionRef.current && (await vpnStatus()) === 'connected') {
         fromTileRef.current = false;
         await hideAppWindow();
       }

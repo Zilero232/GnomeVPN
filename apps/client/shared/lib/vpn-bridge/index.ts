@@ -17,4 +17,4 @@ export {
   vpnTraffic
 } from './vpn-bridge';
 
-export type { InstalledApp, LatencyByNode, ProbeLatencyInput, VpnConnectInput, VpnTraffic } from './vpn-bridge.types';
+export type { InstalledApp, LatencyByNode, ProbeLatencyInput, TileConnectRequest, VpnConnectInput, VpnTraffic } from './vpn-bridge.types';

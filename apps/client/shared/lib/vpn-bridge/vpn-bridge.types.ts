@@ -25,3 +25,8 @@ export type VpnTraffic = {
   tx: number;
   uptimeSeconds?: number;
 };
+
+export type TileConnectRequest = {
+  requested: boolean;
+  needsAttention: boolean;
+};

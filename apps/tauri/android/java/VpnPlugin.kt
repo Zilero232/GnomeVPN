@@ -174,12 +174,19 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
             false,
         ) ?: false
 
+        val needsAttention = activity.intent?.getBooleanExtra(
+            VpnTileService.EXTRA_NEEDS_ATTENTION,
+            false,
+        ) ?: false
+
         if (requested) {
             activity.intent?.removeExtra(VpnTileService.EXTRA_AUTO_CONNECT)
+            activity.intent?.removeExtra(VpnTileService.EXTRA_NEEDS_ATTENTION)
         }
 
         val result = JSObject()
         result.put("requested", requested)
+        result.put("needsAttention", needsAttention)
         invoke.resolve(result)
     }
 

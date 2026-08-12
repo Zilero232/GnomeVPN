@@ -3,7 +3,7 @@ use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime, State};
 
 use super::engine;
-use super::plugin::{TrafficResult, VpnPlugin};
+use super::plugin::{AutoConnectResult, TrafficResult, VpnPlugin};
 use super::state::MobileVpnState;
 use super::MobileVpnError;
 
@@ -61,7 +61,7 @@ pub async fn vpn_disconnect<R: Runtime>(app: AppHandle<R>, state: State<'_, Mobi
 }
 
 #[tauri::command]
-pub async fn vpn_take_tile_request<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+pub async fn vpn_take_tile_request<R: Runtime>(app: AppHandle<R>) -> Result<AutoConnectResult, MobileVpnError> {
     app.state::<VpnPlugin<R>>().take_auto_connect()
 }
 

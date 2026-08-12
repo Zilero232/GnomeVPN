@@ -38,7 +38,7 @@ class VpnTileService : TileService() {
 
     private fun startTunnel() {
         if (TunnelStore.load(this) == null || VpnService.prepare(this) != null) {
-            openApp()
+            openApp(needsAttention = true)
 
             return
         }
@@ -48,12 +48,13 @@ class VpnTileService : TileService() {
         render(isActive = true)
     }
 
-    private fun openApp() {
+    private fun openApp(needsAttention: Boolean) {
         val launch = packageManager.getLaunchIntentForPackage(packageName) ?: return
 
         launch
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(EXTRA_AUTO_CONNECT, true)
+            .putExtra(EXTRA_NEEDS_ATTENTION, needsAttention)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             val pending = PendingIntent.getActivity(
@@ -81,6 +82,7 @@ class VpnTileService : TileService() {
 
     companion object {
         const val EXTRA_AUTO_CONNECT = "ru.gnomevpn.app.AUTO_CONNECT"
+        const val EXTRA_NEEDS_ATTENTION = "ru.gnomevpn.app.NEEDS_ATTENTION"
 
         fun requestUpdate(context: Context) {
             requestListeningState(context, ComponentName(context, VpnTileService::class.java))
