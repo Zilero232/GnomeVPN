@@ -9,7 +9,6 @@ import { X } from 'lucide-react';
 import s from './Dialog.module.scss';
 
 export const Dialog = BaseDialog.Root;
-export const DialogTrigger = BaseDialog.Trigger;
 
 export const DialogContent = ({ className, children, ...props }: ComponentProps<typeof BaseDialog.Popup>) => (
   <BaseDialog.Portal>

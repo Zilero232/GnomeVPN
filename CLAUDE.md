@@ -134,8 +134,9 @@ Before writing a helper by hand, check whether an installed library already cove
 3. Typed branching → **`ts-pattern`** (`match`, `.with`, `.exhaustive`)
 4. Dates and durations → **`date-fns`**
 5. Byte sizes → **`pretty-bytes`**
-6. Retries with backoff → **`backon`** (Rust)
-7. Named pipes → **`interprocess`** (Rust). No hand-rolled `unsafe`.
+6. Animation → **`motion`**, presets in a sibling `<Component>.motion.ts`
+7. Retries with backoff → **`p-retry`** (TypeScript), **`backon`** (Rust)
+8. Named pipes → **`interprocess`** (Rust). No hand-rolled `unsafe`.
 
 The repo has no `unsafe` blocks. Keep it that way.
 

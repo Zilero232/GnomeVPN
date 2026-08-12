@@ -1,4 +1,6 @@
+#[cfg(desktop)]
 const SERVICE: &str = "GnomeVPN";
+#[cfg(desktop)]
 const ACCOUNT: &str = "session-token";
 
 #[derive(Debug, thiserror::Error)]

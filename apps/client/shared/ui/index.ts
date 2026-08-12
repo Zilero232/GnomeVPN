@@ -39,7 +39,6 @@ export {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   FormField,
   Segmented,
   SelectableCard,

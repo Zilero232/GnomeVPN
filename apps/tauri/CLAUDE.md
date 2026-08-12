@@ -203,6 +203,12 @@ dormant field is what someone turns back on without knowing about the DNAT
 requirement. A config from an older server still carrying `portRange` parses fine;
 serde ignores the unknown field.
 
+The provisioning half went with it. `enablePortHopping` installed the
+`REDIRECT --to-ports 443` DNAT rule on every node and `openTunnelPort` opened the
+whole `20000-45000/udp` range in ufw — both surviving the client-side removal, so
+each provision kept building a path nothing could reach. Restoring the feature
+means restoring both halves together, client and node, or it fails the same way.
+
 **The tunnel is IPv4-only, and on some carriers that is a real limit.** The TUN
 carries one IPv4 address and half routes for IPv4 only, and `allowFamily` is never
 called — which, following `wireguard-android`'s own reasoning, is what keeps IPv6
@@ -211,12 +217,6 @@ split-identity leak, but on an IPv6-only bearer with NAT64 (MTS is rolling this
 out) there is also no connectivity. Adding an IPv6 route without teaching
 tun2proxy and the TUN to carry IPv6 would be worse than the current state: traffic
 would enter a tunnel that cannot deliver it.
-
-**Bandwidth is deliberately left unset.** Hysteria2 only uses its Brutal
-congestion control when the client declares `up`/`down`; without them it falls
-back to BBR, which is the right choice on a link whose capacity swings with signal
-strength and cell handovers. Declaring a fixed rate above the instantaneous
-capacity is documented to backfire.
 
 **The network callback is deliberately not `registerDefaultNetworkCallback`.**
 Once the tunnel is up it _is_ this process's default network, so the callback

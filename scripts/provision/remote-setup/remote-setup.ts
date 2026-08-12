@@ -8,7 +8,7 @@ import type { ConfigurePanelInput, EnsuredWireguardKeys, ShipStackInput, WaitFor
 import { PANEL_USERNAME } from '../../../apps/server/src/lib/xray';
 import { WG } from '../../../apps/server/src/modules/peers/config';
 import { generateWireguardKeys } from '../../../apps/server/src/modules/peers/lib/wg-keys';
-import { CERT_PATH, HOP_PORT_FROM, HOP_PORT_TO, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
+import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
 import { WG_KEY_PATH, WG_PUB_PATH } from '../wireguard-inbound';
 import { CONTAINER_NAME, DOCKER_INSTALL_URL, PANEL_BOOT_INTERVAL_MS, PANEL_BOOT_TIMEOUT_MS, REMOTE_DIR } from './remote-setup.constants';
 
@@ -48,19 +48,11 @@ export const openTunnelPort = async (ssh: SshClient) => {
     return;
   }
 
-  const rules = [`${LISTEN_PORT}/udp`, `${PANEL_PORT}/tcp`, `${WG.listenPort}/udp`, `${HOP_PORT_FROM}:${HOP_PORT_TO}/udp`];
+  const rules = [`${LISTEN_PORT}/udp`, `${PANEL_PORT}/tcp`, `${WG.listenPort}/udp`];
 
   for (const rule of rules) {
     await ssh.exec(line(['ufw', 'allow', rule]));
   }
-};
-
-export const enablePortHopping = async (ssh: SshClient) => {
-  const rule = line(['PREROUTING -p udp', `--dport ${HOP_PORT_FROM}:${HOP_PORT_TO}`, `-j REDIRECT --to-ports ${LISTEN_PORT}`]);
-
-  await ssh.exec(orElse([silent(`iptables -t nat -C ${rule}`), `iptables -t nat -I ${rule}`]));
-
-  await ssh.exec(orElse([all([silent('command -v netfilter-persistent'), 'netfilter-persistent save']), 'true']));
 };
 
 export const ensureWireguardKeys = async (ssh: SshClient): Promise<EnsuredWireguardKeys> => {

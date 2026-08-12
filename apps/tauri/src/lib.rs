@@ -18,6 +18,7 @@ use vpn::commands::{vpn_connect, vpn_disconnect, vpn_service_available, vpn_stat
 #[cfg(desktop)]
 use vpn::state::VpnState;
 
+#[cfg(desktop)]
 const AUTOSTART_FLAG: &str = "--autostart";
 
 #[cfg(all(desktop, not(debug_assertions)))]
@@ -42,6 +43,7 @@ const HARDEN_WEBVIEW_JS: &str = r#"
 })();
 "#;
 
+#[cfg(desktop)]
 fn started_by_autostart() -> bool {
     std::env::args().any(|arg| arg == AUTOSTART_FLAG)
 }
@@ -65,7 +67,7 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_autostart::init(
         tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-        Some(vec!["--autostart"]),
+        Some(vec![AUTOSTART_FLAG]),
     ));
 
     #[cfg(mobile)]

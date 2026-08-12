@@ -11,7 +11,7 @@ export {
   splitSetting
 } from './app-settings';
 export { clientKind } from './client-kind';
-export { getDeviceId, useDeviceId } from './device-id';
+export { getDeviceId } from './device-id';
 export { isBrowser, isServer } from './env';
 export { callRust } from './ipc';
 export type { RustCommand, RustCommands, TunnelEvent } from './ipc';

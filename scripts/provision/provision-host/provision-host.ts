@@ -19,7 +19,7 @@ import { WG } from '../../../apps/server/src/modules/peers/config';
 import { upsertEnvGroup } from '../env-file';
 import { buildHysteriaInbound, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
 import { nodeKeyName, panelPasswordName, panelPathName, resolveNodeCredentials } from '../node-credentials';
-import { configurePanel, enablePortHopping, ensureCert, ensureDocker, ensureWireguardKeys, openTunnelPort, shipStack } from '../remote-setup';
+import { configurePanel, ensureCert, ensureDocker, ensureWireguardKeys, openTunnelPort, shipStack } from '../remote-setup';
 import { upsertNode } from '../upsert-node';
 import { buildWireguardInbound } from '../wireguard-inbound';
 import { ensureInbound, ensureWireguardInbound, isPanelReachable } from '../xray-panel';
@@ -43,7 +43,6 @@ const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> =>
 const prepareHost = async ({ ssh, xrayComposeContent }: PrepareHostInput) => {
   await ensureDocker(ssh);
   await openTunnelPort(ssh);
-  await enablePortHopping(ssh);
   await shipStack({ ssh, composeContent: xrayComposeContent });
 };
 

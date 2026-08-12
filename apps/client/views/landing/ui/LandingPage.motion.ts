@@ -56,8 +56,3 @@ export const ICON_HOVER = {
   rest: { rotate: 0, scale: 1 },
   hover: { rotate: -8, scale: 1.12, transition: { type: 'spring', stiffness: 500, damping: 18 } }
 } as const;
-
-export const SWEEP_MOTION: Variants = {
-  hidden: { scaleX: 0 },
-  visible: { scaleX: 1, transition: { duration: 0.7, ease: EASE_OUT, delay: 0.15 } }
-};
