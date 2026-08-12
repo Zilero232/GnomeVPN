@@ -8,7 +8,15 @@ import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
 import { CACHE_TTL_MS, GITHUB_RELEASE_URL, githubAssetUrl, UPDATER_MANIFEST_NAME } from '../config';
-import { findManifestAsset, githubFetch, githubReleaseSchema, pickInstallers, rewriteManifestUrls, updaterManifestSchema } from '../lib';
+import {
+  findManifestAsset,
+  githubFetch,
+  githubReleaseSchema,
+  parseManifestBody,
+  pickInstallers,
+  rewriteManifestUrls,
+  updaterManifestSchema
+} from '../lib';
 
 @Injectable()
 export class ReleaseService {
@@ -127,7 +135,7 @@ export class ReleaseService {
     }
 
     const body = await this.fetchAssetBody(asset.id);
-    const parsed = updaterManifestSchema.safeParse(JSON.parse(body));
+    const parsed = updaterManifestSchema.safeParse(parseManifestBody(body));
 
     if (!parsed.success) {
       throw this.unavailable(`Malformed ${UPDATER_MANIFEST_NAME}: ${parsed.error.message}`);

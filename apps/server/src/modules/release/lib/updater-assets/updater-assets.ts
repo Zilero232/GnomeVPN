@@ -7,6 +7,14 @@ import { UPDATER_MANIFEST_NAME } from '../../config';
 
 export const findManifestAsset = (assets: GithubAsset[]): GithubAsset | null => assets.find((asset) => asset.name === UPDATER_MANIFEST_NAME) ?? null;
 
+export const parseManifestBody = (body: string): unknown => {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
+};
+
 const proxiedUrl = ({ assets, apiUrl, githubUrl }: ProxiedUrlInput): string | null => {
   const fileName = last(githubUrl.split('/'));
   const asset = assets.find((candidate) => candidate.name === fileName);
