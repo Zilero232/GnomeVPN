@@ -1,511 +1,559 @@
-# Chatovo Style Guide
+# GnomeVPN Style Guide
 
-Проектные кодстайл-конвенции для `apps/client/`. Архитектурные правила — в [`docs/fsd.md`](./fsd.md).
+Project code-style conventions for `apps/client/`. Architectural rules live in [`docs/fsd.md`](./fsd.md).
 
-Инструменты:
+Tools:
 
-- **Biome** (`bun lint` / `bun lint:fix`) — форматтер + линтер + organize imports. Конфиг: корневой `biome.json`.
+- **ESLint** (`bun lint` / `bun lint:fix`) — linter + import sorting (`perfectionist/sort-imports`) + `padding-line-between-statements`. Config: the root `eslint.config.mjs`.
+- **Prettier** (`bun format` / `bun format:check`) — formatter. Config: `prettier.config.mjs`.
+- **Stylelint** (`bun lint:css`) — SCSS modules.
 - **TypeScript** strict + `noUnusedLocals` + `noUnusedParameters`.
-- FSD-границы и ряд React-конвенций держим руками + ловим на review (Biome не покрывает: порядок хуков, `padding-line-between-statements`, FSD cross-slice imports).
+- FSD boundaries and a handful of React conventions are kept by hand and caught at review (the linter does not cover hook order or FSD cross-slice imports).
 
-**Почему Biome:** один инструмент вместо ESLint+Prettier, на порядок быстрее, один конфиг без плагин-зоопарка. `useExhaustiveDependencies` закрыт; сортировка Tailwind-классов больше не актуальна (стили → SCSS modules).
+**Why ESLint + Prettier:** the `@siberiacancode/*` configs already carry a rule set for
+React/TS/SCSS, and `perfectionist` plus `padding-line-between-statements` autofix exactly
+the two things that would otherwise have to be kept by hand. It all runs under one
+command — `bun run verify` (typecheck + ESLint + Prettier + Stylelint + `cargo fmt`
++ `cargo clippy`).
 
 ---
 
-## 1. Структура слайса
+## 1. Slice structure
 
-Каждый слайс — папка с сегментами. Минимум — `ui/` + `index.ts`:
+Every slice is a folder of segments. The minimum is `ui/` + `index.ts`:
 
 ```
-widgets/voice-room/
+features/vpn/connect/
   index.ts          ← public API (barrel)
-  ui/               ← React-компоненты
-  model/            ← хуки, Zustand store, типы стейта
-  lib/              ← чистые утилиты слайса
-  api/              ← I/O-граница: подписки, мапперы, сервис-обёртки (если есть)
-  config/           ← константы, конфиг
+  ui/               ← React components
+  model/            ← hooks, contexts, state types
+  lib/              ← pure slice utilities
+  api/              ← the I/O boundary: subscriptions, mappers, service wrappers (when there are any)
+  config/           ← constants, configuration
 ```
+
+Slices are grouped by business domain (`app`, `auth`, `billing`, `vpn`) — a layer on top
+of canonical FSD, see [`docs/fsd.md`](./fsd.md) §3. Always import down to the slice level:
+`@/features/vpn/connect`, not `@/features/vpn`.
 
 ---
 
-## 2. Структура `ui/` слайса
+## 2. Slice `ui/` structure
 
-**Главный компонент** живёт плоско в `ui/`, файлы рядом:
-
-```
-widgets/voice-room/ui/
-  VoiceRoom.tsx          ← JSX + entry-компонент
-  VoiceRoom.types.ts     ← Props и локальные union-типы
-  VoiceRoom.module.scss  ← целевой формат; legacy — VoiceRoom.styles.ts (Tailwind, миграция)
-```
-
-**Подкомпоненты** (используются только внутри родителя) — каждый в папке `components/`:
+**The main component** lives flat in `ui/`, with its files next to it:
 
 ```
-widgets/channels-panel/ui/
-  ChannelsPanel.tsx
-  ChannelsPanel.styles.ts
+features/vpn/connect/ui/
+  ConnectButton.tsx          ← JSX + entry component
+  ConnectButton.types.ts     ← Props and local union types
+  ConnectButton.module.scss  ← component styles
+  ConnectButton.motion.ts    ← motion presets (when the component is animated)
+```
+
+**Subcomponents** (used only inside the parent) — each one in a `components/` folder:
+
+```
+features/vpn/split-tunneling/ui/SplitTunnelingDialog/
+  SplitTunnelingDialog.tsx
+  SplitTunnelingDialog.types.ts
+  SplitTunnelingDialog.module.scss
   components/
-    index.ts                   ← barrel: re-exports всех подкомпонентов
-    ChannelsHeader/
-      ChannelsHeader.tsx
-      ChannelsHeader.types.ts
-      ChannelsHeader.styles.ts
-      index.ts                 ← `export { ChannelsHeader } from './ChannelsHeader';`
-    ChannelsList/
+    index.ts                   ← barrel: re-exports every subcomponent
+    SplitModeToggle/
+      SplitModeToggle.tsx
+      SplitModeToggle.types.ts
+      SplitModeToggle.module.scss
+      index.ts                 ← `export { SplitModeToggle } from './SplitModeToggle';`
+    AppSection/
+      ...
+    AddressSection/
       ...
 ```
 
-Родитель импортирует через barrel:
+The parent imports through the barrel:
 
 ```ts
-// ✓ ОК
-import { ChannelsHeader, ChannelsList } from './components';
+// ✓ OK
+import { AddressSection, AppSection, SplitModeToggle } from './components';
 
-// ✗ НЕ ОК
-import { ChannelsHeader } from './components/ChannelsHeader';
+// ✗ NOT OK
+import { SplitModeToggle } from './components/SplitModeToggle';
 ```
 
-**Правила файлов:**
+**File rules:**
 
-- `.types.ts` — создаётся только если есть Props или локальные union-типы.
-- `.module.scss` — стили компонента (импорт `import s from './Foo.module.scss'`). В `shared/ui` — **обязательно**; в widgets/features — целевой формат (миграция с `.styles.ts`).
-- `shared/ui/` — атомарный слой (atoms/molecules/organisms/icons). **Не плоские `button.tsx`** — каждый примитив в PascalCase-папке (§2.1). Снаружи — `@/shared/ui`.
+- `.types.ts` — created only when there are Props or local union types.
+- `.module.scss` — component styles (imported as `import s from './Foo.module.scss'`). Required everywhere: in `shared/ui` as much as in widgets/features/views. There is no CSS-in-JS in this project.
+- `.motion.ts` — animation presets for `motion`, next to the component (`ConnectButton.motion.ts`, `ProtocolSwitch.motion.ts`). Don't duplicate an animation with a CSS transition.
+- `shared/ui/` — the atomic layer (atoms/molecules/organisms). **No flat `button.tsx`** — every primitive lives in a PascalCase folder (§2.1). From outside — `@/shared/ui`.
 
-### 2.1. Структура `shared/ui`
+### 2.1. `shared/ui` structure
 
-Каждый примитив — отдельная папка. Плоские kebab-case файлы в `atoms/` — legacy, не добавлять новые.
+Every primitive gets its own folder. Flat kebab-case files in `atoms/` are legacy; don't add new ones.
 
 ```
 shared/ui/
-  index.ts                    ← re-export atoms + molecules + organisms + icons
+  index.ts                    ← re-export atoms + molecules + organisms
   atoms/
-    index.ts                  ← re-export всех atoms
+    index.ts                  ← re-export every atom
     Button/
       Button.tsx
       Button.module.scss
-      Button.types.ts         ← опционально
-      index.ts                ← export * from './Button'; export type * from './Button.types';
-    Dialog/
-      Dialog.tsx
-      Dialog.module.scss
-      Dialog.types.ts
+      Button.types.ts         ← optional
+      Button.variants.ts      ← optional: variant/size maps
+      _tests/                 ← optional: Vitest next to the component
+      index.ts                ← export { Button } from './Button';
+    Select/
+      Select.tsx
+      Select.module.scss
+      Select.types.ts
       index.ts
   molecules/
     FormField/
       FormField.tsx
       FormField.module.scss
+      FormField.types.ts
+      index.ts
+    Dialog/
+      Dialog.tsx
+      Dialog.module.scss
       index.ts
   organisms/
-    ConfirmDialog/
+    StatusScreen/
       ...
-  icons/
-    LogoMark/
-      LogoMark.tsx
-      index.ts
 ```
 
-**Правила:**
+**Rules:**
 
-- Имена папок и файлов компонентов — **PascalCase** (`Button/`, `Button.tsx`).
-- Стили — **`*.module.scss`**; импорт shared-утилит: `@use '@/shared/styles/mixins' as *` (alias `@/` через `loadPaths` + `turbopack.resolveAlias` в `next.config.ts`, без `../../../`).
-- Headless + a11y — **`@base-ui-components/react`** (Dialog → `Dialog`, Menu → `Menu`, Select → `Select`, …); импорт из подпути пакета.
-- Типы React — **именованные** (`ComponentProps`, `ReactNode`, …), не `import type * as React`.
-- Внутри `shared/ui` — относительные импорты между слоями (`../../atoms/Button`). Снаружи — только `@/shared/ui`.
+- Component folder and file names are **PascalCase** (`Button/`, `Button.tsx`).
+- Styles are **`*.module.scss`**; shared utilities are imported as `@use '@/shared/styles/mixins' as *` (the `@/` alias comes from `loadPaths` + `turbopack.resolveAlias` in `next.config.ts`, so no `../../../`).
+- Headless + a11y — **`@base-ui/react`**; imported from the package subpath: `@base-ui/react/dialog`, `@base-ui/react/select`, `@base-ui/react/field`, `@base-ui/react/tabs`. Rename the base primitive at the import (`Select as BaseSelect`) so our own export can carry the plain name.
+- React types are **named imports** (`ComponentProps`, `ReactNode`, …), not `import type * as React`.
+- Inside `shared/ui`, imports between layers are relative (`../../atoms/Button`). From outside — only `@/shared/ui`.
+- The barrels at all three levels (`atoms/index.ts`, `molecules/index.ts`, `organisms/index.ts` and the root `shared/ui/index.ts`) use **explicit named** re-exports, with values and types in separate blocks.
 
 ### Slice barrel
 
 ```ts
-// widgets/voice-room/index.ts
-export { VoiceRoom } from './ui/VoiceRoom';
-export type { VoiceRoomProps } from './ui/VoiceRoom.types';
+// features/vpn/connect/index.ts
+export { useVpnConnectionContext, VpnConnectionProvider } from './model/context';
+export { useProtocolSelection } from './model/hooks';
+export type { VpnConnectionStatus, VpnTraffic } from './model/hooks';
+
+export { ConnectButton } from './ui/ConnectButton';
+export type { ConnectButtonProps } from './ui/ConnectButton.types';
 ```
 
-### Headless-контроллеры (`ui/controllers/`)
+### Effect hooks instead of a pile of `useEffect` in the component
 
-Сайд-эффект без разметки — компонент, который рендерит `null` и инкапсулирует один эффект (sync mic-state, sync tray, sounds, shortcuts). Каждый — папка в `ui/controllers/`, собираются в один фрагмент-оркестратор:
+A side effect with no markup is **its own hook in `model/hooks/`** — it returns nothing
+and encapsulates a single effect (autoconnect, the tunnel event subscription, traffic
+polling, the watchdog, notifications). The orchestrator is the Provider that calls them:
 
 ```tsx
-// ui/controllers/RoomControllers/RoomControllers.tsx
-export const RoomControllers = ({ roomId }: RoomControllersProps) => (
-  <>
-    <RoomDeviceController />
-    <MicStateController roomId={roomId} />
-    <RoomSoundsController />
-  </>
-);
-```
+// features/vpn/connect/model/context/VpnConnectionProvider.tsx
+export const VpnConnectionProvider = ({ children }: { children: ReactNode }) => {
+  const { isNativeApp } = usePlatform();
 
-Так эффекты не раздувают тело главного компонента, каждый изолирован и тестируется отдельно. Альтернатива «куча `useEffect` в `VoiceRoom.tsx`» — запрещена (превышает лимит 100 строк, секция 4).
+  const connection = useVpnConnection();
+  const { nodes, isLoading, isError } = useNodes();
+  const { hasAccess } = useSubscriptionStatus();
 
-### Примеры
+  useAutoConnect({
+    nodes,
+    hasAccess,
+    isConnected: connection.status !== 'disconnected',
+    isReady: isNativeApp && !isLoading && !isError,
+    connect: connection.connect
+  });
 
-**`VoiceRoom.types.ts`:**
-
-```ts
-import type { DisconnectReason } from 'livekit-client';
-
-export type VoiceRoomProps = {
-  roomName: string;
-  serverUrl: string;
-  token: string;
-  onConnectFailure: (reason: DisconnectReason) => void;
-  onLeave: () => void;
+  return <VpnConnectionContext.Provider value={connection}>{children}</VpnConnectionContext.Provider>;
 };
 ```
 
-**`VoiceRoom.styles.ts`** — два паттерна:
+This keeps effects from bloating the body of the main component; each one is isolated
+and can be reasoned about on its own. The alternative — a pile of `useEffect` inside
+`ConnectButton.tsx` — is forbidden (it blows past the 100-line limit, section 4).
+
+`useAutoConnect`, `useTunnelEvents`, `useTrafficPoll`, `useConnectWatchdog` and
+`useTunnelNotifications` each get their own folder in `features/vpn/connect/model/hooks/`.
+
+### Examples
+
+**`ConnectButton.types.ts`:**
 
 ```ts
-// A. Статичные классы
-export const voiceRoomStyles = {
-  root: 'flex h-full flex-col',
-  header: 'flex items-center gap-2 border-b px-4 py-2',
-} as const;
+import type { VpnConnectionStatus } from '../model/hooks/use-vpn-connection';
 
-// B. Варианты с условиями
-import { cva } from 'class-variance-authority';
-
-export const channelItemStyles = cva(
-  'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-  {
-    variants: {
-      active: {
-        true: 'bg-sidebar-accent text-sidebar-accent-foreground',
-        false: 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50',
-      },
-    },
-    defaultVariants: { active: false },
-  },
-);
+export type ConnectButtonProps = {
+  status: VpnConnectionStatus;
+  disabled?: boolean;
+  onToggle: () => void;
+};
 ```
 
-**`VoiceRoom.tsx`:**
+**`ConnectButton.module.scss`** — the component's styles; classes are read off `s`:
+
+```scss
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+```
+
+**`ConnectButton.tsx`:**
 
 ```tsx
 'use client';
 
-import { voiceRoomStyles as s } from './VoiceRoom.styles';
-import type { VoiceRoomProps } from './VoiceRoom.types';
+import type { ConnectButtonProps } from './ConnectButton.types';
 
-export const VoiceRoom = ({ token, serverUrl }: VoiceRoomProps) => (
-  <div className={s.root}>
-    <div className={s.header}>{/* ... */}</div>
-  </div>
+import s from './ConnectButton.module.scss';
+
+export const ConnectButton = ({ status, disabled, onToggle }: ConnectButtonProps) => (
+  <button className={s.root} disabled={disabled} type='button' onClick={onToggle}>
+    {status}
+  </button>
 );
 ```
 
 ---
 
-### 2.2. Структура `model/hooks`
+### 2.2. `model/hooks` structure
 
-Симметрично `ui/`: **хук со своими типами — в собственной папке**, плоский файл только если типов нет.
+Symmetrical to `ui/`: **a hook with types of its own gets its own folder**, a flat file only when there are no types.
 
 ```
-features/social/friend-chat/model/hooks/
-  index.ts                          ← barrel слайса
-  use-friend-chat-session/
-    use-friend-chat-session.ts      ← хук без типов — папка не обязательна,
-    index.ts                           но единообразие внутри слайса важнее
-  use-friend-chat-unread/
-    use-friend-chat-unread.ts
-    use-friend-chat-unread.types.ts ← есть Input/Output-тип → папка обязательна
+features/vpn/split-tunneling/model/hooks/
+  index.ts                        ← segment barrel
+  use-split-tunneling/
+    use-split-tunneling.ts
+    use-split-tunneling.types.ts
+    index.ts
+  use-app-source/
+    use-app-source.ts
+    use-app-source.types.ts       ← there is an Input/Output type → the folder is mandatory
     index.ts
 ```
 
-`index.ts` хука реэкспортит и хук, и типы:
+A hook with no types of its own does not strictly need a folder (`use-protocol-selection/`
+holds only `use-protocol-selection.ts` + `index.ts`), but consistency within a slice matters
+more: keep everything in folders.
+
+A hook's `index.ts` re-exports both the hook and its types:
 
 ```ts
-export { useFriendChatUnread } from './use-friend-chat-unread';
+export { useAutoConnect } from './use-auto-connect';
 
-export type * from './use-friend-chat-unread.types';
+export type { UseAutoConnectParams } from './use-auto-connect.types';
 ```
 
-Тип входа хука называется `Use<Name>Input` (§5). Если он повторяет пропсы компонента — не дублируй, а выведи: `Pick<VoiceRoomProps, 'roomId' | 'onLeave'>`.
+A hook's input type is named `Use<Name>Input` (§5) — `UseAppSourceInput`. When it merely
+repeats a component's props, don't duplicate it; derive it instead:
+`Pick<ConnectButtonProps, 'status' | 'onToggle'>`.
 
 ---
 
-## 3. Стили: SCSS modules vs legacy `.styles.ts`
+## 3. Styles: SCSS modules only
 
-| Слой | Формат |
+| Layer | Format |
 |---|---|
-| `shared/ui/**` | `*.module.scss` + CSS-переменные из `globals.scss` |
-| widgets / features / views (миграция) | целевой — `*.module.scss`; пока ещё встречается `*.styles.ts` с Tailwind-классами |
+| `shared/ui/**` | `*.module.scss` + CSS variables from `app/globals.scss` |
+| widgets / features / views | `*.module.scss` |
 
-| Случай | Куда |
+There is no CSS-in-JS in this project — no Tailwind, no `.styles.ts`, no `cva`.
+
+| Case | Where |
 |---|---|
-| Стили компонента в `shared/ui` | `<Name>.module.scss` |
-| Стили подкомпонента слайса | `<Name>.module.scss` (или legacy `.styles.ts` до миграции) |
-| 1-2 utility-класса, не реюзается | inline `className` + `clsx()` — только на время миграции |
-| Условные классы | maps в TSX (`variantClass[variant]`) или SCSS-модификаторы |
-- `cn(...)` | `clsx(...)` | склейка module-классов и опционального `className` prop |
+| Component styles in `shared/ui` | `<Name>.module.scss` |
+| Styles for a slice subcomponent | `<Name>.module.scss` next to it |
+| Conditional classes | `clsx(s.root, isBlocked && s.blocked)` or SCSS modifiers |
+| Primitive variants/sizes | a map in `<Name>.variants.ts` (`Button.variants.ts`) |
+| Animation | `motion` + presets in `<Name>.motion.ts` |
+| Media query | `@include below(md)` / `@include from(2xl)` from `shared/styles/mixins` — never raw pixels |
 
-Принцип — JSX читается, `s.root`/`s.header` рассказывают структуру.
+Joining module classes with an optional `className` prop is done with **`clsx`** (`import { clsx } from 'clsx'`).
+
+The principle: the JSX reads, and `s.root`/`s.panel` tell you the structure.
 
 ---
 
-## 4. Размер компонента
+## 4. Component size
 
-**100 строк JSX-файла максимум.**
+**100 lines per JSX file, maximum.**
 
-Перевалил — рефактор:
+Over the line means refactor:
 
-1. Подкомпоненты → `components/`.
-2. Логика → `model/` (хук).
-3. Утилиты → `lib/` слайса.
+1. Subcomponents → `components/`.
+2. Logic → `model/` (a hook).
+3. Utilities → the slice's `lib/`.
 
-**Barrel родственных примитивов — тоже не исключение.** `shared/ui` компоненты вида `Dialog`/`Sheet`/`DropdownMenu` экспортируют 8–15 мелких частей (`Dialog`, `DialogContent`, `DialogHeader`, …). Держать их одним файлом нельзя: каждая часть — в `components/<Name>/`, а `<Name>.tsx` остаётся тонким реэкспортом.
+**A multi-export primitive** (`Dialog` ships `Dialog`, `DialogContent`,
+`DialogHeader`, `DialogTitle`, `DialogDescription`) stays in one file **as long as it
+fits the limit** — `shared/ui/molecules/Dialog/Dialog.tsx` is thin wrappers over
+`@base-ui/react/dialog`, all five of them in 35 lines. The moment it goes over, the parts
+move out into `components/<Name>/` and `<Name>.tsx` stays as a thin re-export.
+Group by meaning, not one file per export: closely related parts
+(`Header`/`Title`/`Description`) live together.
 
-```
-shared/ui/atoms/Dialog/
-  Dialog.tsx                  ← только `export { ... } from './components'`
-  Dialog.types.ts
-  Dialog.module.scss
-  dialog-overlay-context.ts   ← общий контекст (иначе цикл импортов)
-  components/
-    index.ts
-    DialogRoot/DialogRoot.tsx
-    DialogContent/DialogContent.tsx
-    DialogHeader/DialogHeader.tsx   ← Header + Footer + Title + Description
-    DialogClose/DialogClose.tsx     ← Close + Portal + Overlay
-```
+Subcomponent nesting may go to a second level when a subcomponent has grown of its own
+accord: `views/app-view/ui/components/AppMenu/components/MenuItem/`. No deeper than that —
+it is a signal that the block should be lifted into a slice of its own.
 
-Группируй по смыслу, а не «файл на экспорт»: близкие части (`Header`/`Footer`/`Title`/`Description`) живут вместе.
-
-**Контекст, который шарят части, — отдельным модулем** рядом с `<Name>.tsx` (`dialog-overlay-context.ts`), не внутри компонента: иначе `components/*` импортируют родителя, а родитель — их. Общий для нескольких примитивов контекст — в `shared/ui/lib/` (`menu-radio-group-context.ts`).
+**Context shared between the parts goes in its own module** next to `<Name>.tsx`, not
+inside the component: otherwise `components/*` import the parent and the parent imports
+them. That is how `features/vpn/connect` is built — the context in
+`model/context/vpn-connection-context.ts`, the provider in a separate file alongside it.
 
 ---
 
 ## 5. Naming
 
-| Что | Как | Пример |
+| What | How | Example |
 |---|---|---|
-| Слайсы | kebab-case | `voice-room`, `channels-panel` |
-| Сегменты | kebab-case | `ui`, `model`, `lib`, `api`, `config` |
-| Папка компонента | PascalCase | `VoiceRoom/`, `ChannelsFooter/` |
-| Файл компонента | PascalCase + `.tsx` | `VoiceRoom.tsx` |
-| Файл типов | `<Name>.types.ts` | `VoiceRoom.types.ts` |
-| Файл стилей | `<Name>.module.scss` | `Button.module.scss` |
-| Файл хука | kebab-case | `use-room-state.ts` |
-| React-компонент (export) | PascalCase | `VoiceRoom` |
-| Хук | `use` + camelCase | `useEnterRoom`, `useRoomState` |
-| Утилита | camelCase | `groupMessages`, `formatTime` |
-| Тип Props | `<Name>Props` | `VoiceRoomProps` |
-| DTO тип | `<Name>Input/Output` | `EnterRoomInput` |
+| Slices | kebab-case | `split-tunneling`, `check-update` |
+| Segments | kebab-case | `ui`, `model`, `lib`, `api`, `config` |
+| Component folder | PascalCase | `SplitTunnelingDialog/`, `NodePicker/` |
+| Component file | PascalCase + `.tsx` | `SplitTunnelingDialog.tsx` |
+| Types file | `<Name>.types.ts` | `SplitTunnelingDialog.types.ts` |
+| Styles file | `<Name>.module.scss` | `Button.module.scss` |
+| Hook file | kebab-case | `use-split-tunneling.ts` |
+| React component (export) | PascalCase | `SplitTunnelingDialog` |
+| Hook | `use` + camelCase | `useAutoConnect`, `useSplitTunneling` |
+| Utility | camelCase | `matchesQuery`, `openExternal` |
+| Props type | `<Name>Props` | `ConnectButtonProps` |
+| DTO type | `<Name>Input/Output` | `UseAppSourceInput` |
 
-> Канон FSD: kebab-case для всех файлов. Chatovo отклонение: PascalCase для папок и файлов компонентов, kebab-case для хуков/утилит.
+> Canonical FSD: kebab-case for every file. GnomeVPN deviates: PascalCase for component folders and files, kebab-case for hooks and utilities.
 
 ---
 
-## 6. Импорты
+## 6. Imports
 
-### Алиасы
+### Aliases
 
-`@/` → корень `apps/client/`. Используем для всего кроме относительных в той же папке.
+`@/` → the `apps/client/` root. Used for everything except relatives inside the same folder.
 
-### Порядок групп
+### Group order
 
-Biome organize-imports (`bun lint:fix`) сортирует на 4 группы в этом порядке, **с пустой строкой между группами** (`:BLANK_LINE:` в `biome.json`):
+`perfectionist/sort-imports` (`bun lint:fix`) sorts imports into groups in this order, **with a blank line between groups**:
 
-1. **Внешние value-импорты** — пакеты, `node:`-builtins, `@chatovo/*`.
-2. **Локальные value-импорты** — `@/`-алиасы и относительные `./` `../`.
-3. **Стили** — `*.css` / `*.scss` (`:STYLE:`).
-4. **Все типы** — любой `import type`, внешний и локальный вместе.
+1. **External value imports** — packages, `node:` builtins, `@gnomevpn/*`.
+2. **Internal value imports** — `@/` aliases.
+3. **Types** — every `import type`, external and local together.
+4. **Relative value imports** — `./` and `../`.
+5. **Styles** — `*.css` / `*.scss`.
 
 ```ts
-// 1. внешние value
-import { useForm } from 'react-hook-form';
+// 1. external values
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 
-// 2. локальные value
-import { useCurrentUser } from '@/entities/auth/user';
-import { groupMessages } from '../lib/grouping';
+// 2. internal values
+import { logger } from '@/shared/lib';
+import { Badge, Button } from '@/shared/ui';
 
-// 3. стили
-import s from './VoiceRoom.module.scss';
+// 3. types (external + local)
+import type { Node } from '@gnomevpn/schemas';
+import type { SplitTunnelingDialogProps } from './SplitTunnelingDialog.types';
 
-// 4. типы (внешние + локальные)
-import type { Room } from '@chatovo/schemas/rooms';
-import type { VoiceRoomProps } from './VoiceRoom.types';
+// 4. relative values
+import { AddressSection, AppSection } from './components';
+
+// 5. styles
+import s from './SplitTunnelingDialog.module.scss';
 ```
 
-Конфигурация — `assist.actions.source.organizeImports.options.groups` в `biome.json`.
-Пустые строки между группами вставляет Biome при `bun lint:fix`; не удаляй их вручную.
+The configuration lives in the root `eslint.config.mjs` (via the `@siberiacancode/eslint` preset).
+ESLint inserts the blank lines between groups on `bun lint:fix`; don't strip them by hand.
 
-### Запреты
+### Prohibitions
 
-Deep import мимо barrel запрещён:
+A deep import past a barrel is forbidden:
 
 ```ts
-// ✗ ЗАПРЕЩЕНО
-import { ChannelsList } from '@/widgets/room/channels-panel/ui/components/ChannelsList';
+// ✗ FORBIDDEN
+import { SplitModeToggle } from '@/features/vpn/split-tunneling/ui/SplitTunnelingDialog/components/SplitModeToggle';
 import { Button } from '@/shared/ui/atoms/Button';
 
-// ✓ ОК
-import { ChannelsPanel } from '@/widgets/room/channels-panel';
+// ✓ OK
+import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { Button } from '@/shared/ui';
 ```
 
-`shared/ui` — единый корневой barrel `@/shared/ui` (атомарный слой под капотом). Внутри слайса — относительные ОК.
+`shared/ui` has a single root barrel, `@/shared/ui` (the atomic layer sits under it). Inside a slice, relative imports are fine.
 
-Biome не проверяет FSD-границы — ловим на review.
-
----
-
-## 7. Barrel-экспорты (`index.ts`)
-
-**Слайс:**
-
-```ts
-// widgets/voice-room/index.ts
-export { VoiceRoom } from './ui/VoiceRoom';
-export type { VoiceRoomProps } from './ui/VoiceRoom.types';
-```
-
-Только то, что нужно снаружи. Внутренние подкомпоненты — не экспортируем.
-
-**Папка компонента:**
-
-```ts
-// ui/VoiceRoom/index.ts
-export { VoiceRoom } from './VoiceRoom';
-export type { VoiceRoomProps } from './VoiceRoom.types';
-```
-
-**Подсистема в `model/`:** если хук собран из нескольких файлов в подпапке, `index.ts` рядом с ними экспортирует только публичную точку входа — Provider и хук. Внутренние модули и типы наружу не идут.
-
-```ts
-// entities/room/model/rooms-presence/index.ts
-export { RoomsPresenceProvider, useRoomsPresence } from './rooms-presence-context';
-```
-
-Wildcard-экспорты (`export * from`) — запрещены. Только явные именованные.
+ESLint does not check FSD boundaries — those are caught at review.
 
 ---
 
-## 8. Типы
+## 7. Barrel exports (`index.ts`)
 
-- **Всё через `type`** — Props, unions, алиасы, DTO. `interface` запрещён: Biome
-  `useConsistentTypeDefinitions: { style: type }` (autofix через `--unsafe`).
-- Props всегда в `<Name>.types.ts` рядом с компонентом.
-- `import type { ... }` — Biome enforce (`useImportType: error`), `bun lint:fix` чинит сам.
-- `export type { ... }` — Biome enforce (`useExportType: error`).
-- `unknown` вместо `any`. `any` запрещён (`noExplicitAny: error`).
-- Discriminated unions для вариантов состояния:
+**A slice:**
 
 ```ts
-export type ChatMessage =
-  | { type: 'text'; body: string }
-  | { type: 'file'; url: string; name: string; size: number; mime: string };
+// features/vpn/download-config/index.ts
+export { useConfigs, useIssueConfig, useRevokeConfig } from './model/hooks';
+export { ConfigList } from './ui/ConfigList';
+
+export type { ConfigListProps } from './ui/ConfigList.types';
 ```
 
-### 8.1 Порядок полей в Props и деструктуризации
+Only what is needed from outside. Internal subcomponents are not exported.
 
-Один порядок во всех трёх местах: **`type Props`**, **деструктуризация параметров**, **JSX-вызов компонента**. Так глаз ищет одно и то же одинаково.
-
-Порядок:
-
-1. **Данные** — string, number, boolean, объекты, refs, `children`.
-2. **Идентификаторы / стили** — `id`, `className`, `style`.
-3. **Обработчики событий** — `onClick`, `onSubmit`, `onChange`, любые `on<Event>`.
+**A component folder:**
 
 ```ts
-// ✓ ОК
-export type UserNameProps = {
-  name: string;
-  verified?: boolean;
-  profileUrl?: string | null;
-  size?: 'sm' | 'md';
-  className?: string;
-  onClick?: () => void;
+// ui/SplitTunnelingDialog/index.ts
+export { SplitTunnelingDialog } from './SplitTunnelingDialog';
+```
+
+**A subsystem in `model/`:** when a hook is assembled from several files in a subfolder, the `index.ts` next to them exports only the public entry point — the Provider and the hook. Internal modules and types do not go out.
+
+```ts
+// features/vpn/connect/model/context/index.ts
+export { VpnConnectionProvider } from './VpnConnectionProvider';
+export { useVpnConnectionContext } from './vpn-connection-context';
+```
+
+Wildcard exports (`export * from`) are forbidden. Explicit named exports only.
+
+---
+
+## 8. Types
+
+- **Everything through `type`** — Props, unions, aliases, DTOs. `interface` is forbidden:
+  ESLint `ts/consistent-type-definitions: ['error', 'type']`.
+- Props always live in `<Name>.types.ts` next to the component.
+- `import type { ... }` — enforced by ESLint (`ts/consistent-type-imports`), `bun lint:fix` fixes it.
+- `export type { ... }` — enforced the same way.
+- `unknown` instead of `any`. `any` is forbidden.
+- Discriminated unions for state variants:
+
+```ts
+export type TunnelEvent =
+  | { type: 'bytesUpdate'; rx: number; tx: number }
+  | { type: 'connected'; assignedIp: string }
+  | { type: 'connecting' }
+  | { type: 'disconnected' }
+  | { type: 'error'; message: string }
+  | { type: 'handshake' };
+```
+
+### 8.1 Field order in Props and destructuring
+
+One order in all three places: **`type Props`**, **the parameter destructuring**, and **the JSX call site**. That way the eye looks for the same thing the same way.
+
+The order:
+
+1. **Data** — strings, numbers, booleans, objects, refs, `children`.
+2. **Identifiers / styles** — `id`, `className`, `style`.
+3. **Event handlers** — `onClick`, `onSubmit`, `onChange`, any `on<Event>`.
+
+```ts
+// ✓ OK
+export type NodePickerProps = {
+  nodes: Node[];
+  activeNodeId: string | null;
+  isLoading: boolean;
+  isError: boolean;
+  isLocked: boolean;
+  latency?: LatencyByNode;
+  onSelect: (nodeId: string) => void;
 };
 
-export const UserName = ({
-  name,
-  verified,
-  profileUrl,
-  size = 'sm',
-  className,
-  onClick,
-}: UserNameProps) => {
+export const NodePicker = ({
+  nodes,
+  activeNodeId,
+  isLoading,
+  isError,
+  isLocked,
+  latency = {},
+  onSelect,
+}: NodePickerProps) => {
   ...
 };
 
 // JSX:
-<UserName
-  name={author}
-  profileUrl={profileUrl}
-  verified={verified}
-  className={s.author}
-  onClick={handleClick}
+<NodePicker
+  activeNodeId={selection.nodeId}
+  isError={isError}
+  isLoading={isLoading}
+  isLocked={status !== 'disconnected'}
+  latency={latency}
+  nodes={nodes}
+  onSelect={selection.select}
 />
 ```
 
-Логика: «что показываем» → «как выглядит» → «что делает». Сначала смысл, потом форма, потом поведение.
+The logic: "what we show" → "how it looks" → "what it does". Meaning first, then form, then behaviour.
 
-Внутри каждой группы порядок свободный, но **в трёх местах должен совпадать** (Props ↔ destructuring ↔ JSX). Расхождение ловится на ревью.
+Within each group the order is free, but **it must match in all three places** (Props ↔ destructuring ↔ JSX). A mismatch is caught at review.
 
 ---
 
-## 9. Arrow-функции: тело
+## 9. Arrow functions: the body
 
-**Все объявления (top-level и модульные) — block body с `return`.** Однострочные expression body запрещены: вид `=> { return ... }` единообразен независимо от размера тела, не приходится переписывать когда логика растёт.
+**Every declaration (top-level and module-level) uses a block body with `return`.** Single-line expression bodies are forbidden: `=> { return ... }` looks the same regardless of the body's size, so nothing has to be rewritten when the logic grows.
 
 ```ts
-// ✓ ОК
-const readRole = (user: User | null): UserRole => {
-  return user?.app_metadata?.role === 'admin' ? 'admin' : 'user';
+// ✓ OK
+const resolveDeviceId = async (): Promise<string> => {
+  const stored = await deviceIdSetting.get();
+
+  if (stored) {
+    return stored;
+  }
+
+  const created = isServer() ? crypto.randomUUID() : fromBrowserStorage();
+
+  await deviceIdSetting.set(created);
+
+  return created;
 };
 
-const resolveDisplayName = (user: User | null): string => {
-  return (
-    firstNonEmptyString([meta.display_name, meta.full_name, meta.name]) ??
-    user?.email?.split('@')[0] ??
-    'you'
-  );
-};
-
-// ✗ НЕ ОК
-const readRole = (user: User | null): UserRole =>
-  user?.app_metadata?.role === 'admin' ? 'admin' : 'user';
+// ✗ NOT OK
+const clientKind = (): CheckoutClient => (isTauriDesktop() ? 'desktop' : 'web');
 ```
 
-**Исключения — оставляем expression body:**
+**Exceptions — keep the expression body:**
 
-- **React-компоненты, возвращающие JSX напрямую** — JSX сам по себе является «телом», обёртка `{ return }` визуально дублирует:
+- **React components that return JSX directly** — the JSX is itself the "body", and a `{ return }` wrapper visually duplicates it:
 
   ```tsx
-  // ✓ ОК
-  export const Avatar = ({ src }: Props) => <img src={src} />;
-
-  export const Foo = (props: P) => (
-    <div>
-      <span>{props.text}</span>
-    </div>
+  // ✓ OK
+  export const ConnectButton = ({ status, disabled, onToggle }: ConnectButtonProps) => (
+    <button className={s.root} disabled={disabled} type='button' onClick={onToggle}>
+      {status}
+    </button>
   );
   ```
 
-- **Inline-колбэки** (аргументы функций, JSX-пропсы, методы хуков):
+- **Inline callbacks** (function arguments, JSX props, hook methods):
 
   ```ts
-  // ✓ ОК — это аргумент, не объявление
-  arr.map((x) => x.id);
-  arr.filter((x) => x.active);
+  // ✓ OK — this is an argument, not a declaration
+  nodes.map((node) => node.id);
+  nodes.filter((node) => node.isActive);
   pipe(xs, filter((x) => x > 0));
   useEffect(() => setOpen(true), []);
-  <Button onClick={() => router.push('/foo')} />
+  <Button onClick={() => router.push('/app')} />
   match(state).with('idle', () => null)
   ```
 
-- **Примитивы в `shared/ui/`** — своя конвенция (PascalCase-папки, SCSS modules, Base UI). См. §2.1.
+- **Primitives in `shared/ui/`** — their own convention (PascalCase folders, SCSS modules, Base UI). See §2.1.
 
-**Правило для review:** если стрелка справа от `=` (объявление функции) — block body. Если стрелка внутри `(...)` или `{...}` (аргумент) — на усмотрение, обычно expression.
+**The review rule:** if the arrow is to the right of an `=` (a function declaration), block body. If the arrow sits inside `(...)` or `{...}` (an argument), it's your call — usually an expression.
 
-### 9.5 `if` / `else` — всегда с фигурными скобками
+### 9.5 `if` / `else` — always with braces
 
-**Тело `if`, `else if`, `else` всегда в `{}`, даже на одну строку.** Однострочный `if (cond) doThing();` запрещён: добавление второго стейтмента в ветку не требует переписывать структуру, диффы чище, нет ловушки «забыл скобки». Enforced биомом (`style/useBlockStatements`, `error`) — `bun lint:fix` чинит автоматически.
+**The body of `if`, `else if` and `else` always goes in `{}`, even for a single line.** A one-liner `if (cond) doThing();` is forbidden: adding a second statement to the branch then needs no structural rewrite, diffs stay cleaner, and there is no "forgot the braces" trap. Enforced by ESLint (`curly`) — `bun lint:fix` fixes it automatically.
 
 ```ts
-// ✓ ОК
+// ✓ OK
 if (!isTauri()) {
   return;
 }
@@ -514,572 +562,657 @@ if (isManual) {
   toast.success(t('upToDate'));
 }
 
-// ✗ НЕ ОК
+// ✗ NOT OK
 if (!isTauri()) return;
 if (isManual) toast.success(t('upToDate'));
 ```
 
-Тернарник для возврата значения — по-прежнему ОК (это выражение, не стейтмент): `return a ? b : c;`.
+A ternary that returns a value is still fine (it is an expression, not a statement): `return a ? b : c;`.
 
 ---
 
-## 10. React-конвенции
+## 10. React conventions
 
-- Функциональные компоненты, arrow-функции.
-- `'use client'` в каждом файле с хуками/state/event handlers.
-- React Compiler включён — не нужны `useMemo`/`useCallback` для микро-оптимизаций. Оставляем только для семантического stable ref (зависимости `useEffect`, key в Map).
-- Обработчики событий — `on<Event>` camelCase: `onSubmit`, `onSelectRoom`.
-- Типы из React — **именованные импорты**: `import type { ComponentProps, ReactNode } from 'react'`. **`import type * as React from 'react'` запрещён.**
+- Function components, arrow functions.
+- `'use client'` in every file with hooks, state or event handlers.
+- The React Compiler is on — `useMemo`/`useCallback` are not needed for micro-optimisations. Keep them only for a semantically stable ref (`useEffect` dependencies, a key in a Map).
+- Event handlers are `on<Event>` in camelCase: `onSubmit`, `onSelect`.
+- React types come in as **named imports**: `import type { ComponentProps, ReactNode } from 'react'`. **`import type * as React from 'react'` is forbidden.**
 
-### 9.1 Порядок хуков
+### 9.1 Hook order
 
-Biome не сортирует хуки — соблюдаем руками + ловим на review.
+ESLint does not sort hooks — we keep the order by hand and catch it at review.
 
-Порядок групп:
+Group order:
 
 1. **Navigation** — `useRouter`, `usePathname`, `useSearchParams`, `useParams`.
-2. **Store / context** — `useCurrentUser`, `useAuthStore`, любые `use<Name>Store`.
-3. **Data** — TanStack Query/Mutation хуки.
+2. **Store / context** — `useCurrentUser`, `usePlatform`, any `use<Name>Context`.
+3. **Data** — TanStack Query/Mutation hooks.
 4. **State** — `useState`, `useReducer`.
 5. **Ref** — `useRef`.
 6. **Memo / callbacks** — `useMemo`, `useCallback`, `useTransition`, `useId`.
 7. **Effects** — `useEffect`, `useLayoutEffect`.
-8. **Derived const** — `const x = params.get(...)`, распакованные значения хуков.
+8. **Derived consts** — `const x = params.get(...)`, values unpacked out of hooks.
 
-Между группами — пустая строка. Внутри группы — без пустой.
+A blank line between groups. No blank line inside a group.
 
 ```tsx
-export const ChannelsPanel = () => {
+export const ConfigList = ({ className }: ConfigListProps) => {
   const router = useRouter();
-  const params = useSearchParams();
 
-  const { user, isAdmin } = useCurrentUser();
+  const { hasAccess, limits } = useSubscriptionStatus();
 
-  const rooms = useRooms();
-  const deleteMutation = useDeleteRoom();
+  const { nodes, isLoading: isLoadingNodes } = useNodes();
+  const { configs, isLoading: isLoadingConfigs } = useConfigs();
+  const revoke = useRevokeConfig();
 
-  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState(CONFIG_FILTER_ALL);
 
   useEffect(() => {
     // ...
-  }, [rooms.data]);
+  }, [configs]);
 
-  const activeRoom = params.get('name');
+  const isFull = configs.length >= limits.configLimit;
 
   return /* ... */;
 };
 ```
 
-**Правила перестановки:**
+**Rules for reordering:**
 
-- Не переставляй хук с data dependency: если `name` нужен `useRoomToken({ roomName: name })` — `name` обязан быть до хука. Если порядок групп противоречит — оставь как есть, пометь `// data dep: name → query`.
-- `if (...) useFoo()` — это баг `rules-of-hooks`, чинить, не сортировать.
+- Never move a hook that has a data dependency: if `nodeId` is needed by `useNodeLatency({ nodeId })`, then `nodeId` has to come before the hook. When the group order conflicts with that, leave it as is and mark it `// data dep: nodeId → query`.
+- `if (...) useFoo()` is a `rules-of-hooks` bug — fix it, don't sort it.
 
-**Кастомные хуки** — по семантике содержимого: `useRooms` (делает `useQuery`) → группа Data; `useCurrentUser` (обёртка контекста) → группа Store; `useDocumentTitle` (эффект) → группа Effects.
+**Custom hooks** are placed by what they contain: `useNodes` (which runs `useQuery`) → the Data group; `useCurrentUser` (a context wrapper) → the Store group; `useDocumentTitle` (an effect) → the Effects group.
 
-### 9.2 Зависимости хуков / Effects
+### 9.2 Hook / effect dependencies
 
-`deps`-массив `useEffect` — только то, что **реально должно триггерить перезапуск** эффекта. Знаем что эффекту нужен один `roomId` — не добавляем `room`, `router`, объекты мутаций «чтобы линтер молчал».
+A `useEffect` `deps` array holds only what **should genuinely retrigger** the effect. If we know the effect needs one `nodeId`, we don't add `node`, `router` or mutation objects "to keep the linter quiet".
 
-**Стабильные ref не идут в deps.** `router` из `next/navigation`, `reset`/`mutate` из react-query стабильны между рендерами. Добавлять их смысла нет — эффект не должен реагировать на их «смену». `// biome-ignore lint/correctness/useExhaustiveDependencies` с явной причиной — нормальная практика, не костыль.
+**Stable refs do not go in deps.** `router` from `next/navigation`, and `reset`/`mutate` from react-query, are stable between renders. There is no point adding them — the effect must not react to their "change". An `// eslint-disable-next-line react-hooks/exhaustive-deps` with an explicit reason is normal practice, not a crutch.
 
 ```tsx
-// ✗ ПЛОХО — лишние deps, объект мутации меняет ref каждый рендер
+// ✗ BAD — surplus deps, and the mutation object changes ref on every render
 useEffect(() => {
-  if (!roomId) router.replace(ROUTES.lobby);
-}, [roomId, room, router, tokenMutation]);
+  if (!nodeId) router.replace(ROUTES.account);
+}, [nodeId, node, router, connectMutation]);
 
-// ✓ ОК — триггер только roomId, причина зафиксирована
-// biome-ignore lint/correctness/useExhaustiveDependencies: redirect must fire only on roomId change; router is a stable ref
+// ✓ OK — the only trigger is nodeId, and the reason is recorded
+// eslint-disable-next-line react-hooks/exhaustive-deps -- redirect must fire only on nodeId change; router is a stable ref
 useEffect(() => {
-  if (!roomId) router.replace(ROUTES.lobby);
-}, [roomId]);
+  if (!nodeId) router.replace(ROUTES.account);
+}, [nodeId]);
 ```
 
-**Антипаттерн: `useEffect` + `mutate` для загрузки данных.** Объект мутации в deps → новый ref каждый рендер → рефетч-циклы. Декларативную загрузку делать через `useQuery` с ключом (`queryKey: [roomId]`) — react-query сам рефетчит при смене ключа, `useEffect` и `reset()` не нужны.
+**Anti-pattern: `useEffect` + `mutate` to load data.** A mutation object in deps means a new ref every render, which means refetch loops. Declarative loading goes through `useQuery` with a key (`queryKey: [nodeId]`) — react-query refetches on a key change by itself, and neither `useEffect` nor `reset()` is needed.
 
-### 9.3 Деструктуризация результатов query / mutation
+### 9.3 Destructuring query / mutation results
 
-Результат `useQuery` / кастомного query-хука **деструктурируем сразу**, не носим объект и не лазаем через точку:
+The result of `useQuery` or a custom query hook is **destructured on the spot** — don't carry the object around and don't reach through the dot:
 
 ```tsx
-// ✗ ПЛОХО — доступ через точку, объект-обёртка не нужен
-const roomById = useRoomById(roomId);
-const room = roomById.data;
-// ... roomById.isLoading, roomById.isError
+// ✗ BAD — dot access, and the wrapper object earns nothing
+const configsQuery = useConfigs();
+const configs = configsQuery.configs;
+// ... configsQuery.isLoading, configsQuery.isError
 
-// ✓ ОК — деструктуризация на месте, переименование под смысл
-const { data: room, isLoading } = useRoomById(roomId);
-const { data: publicTokenData, isError: publicTokenFailed } = usePublicRoomToken(roomId, enabled);
+// ✓ OK — destructured in place, renamed for meaning
+const { data: nodes, isLoading } = useQuery({ queryKey: QUERY_KEYS.nodes(), queryFn: listNodes });
+const { configs, isLoading: isLoadingConfigs } = useConfigs();
 ```
 
-`data` почти всегда переименовываем (`data: room`) — голое `data` не несёт смысла.
+`data` is almost always renamed (`data: nodes`) — a bare `data` carries no meaning.
 
-**Исключение — `useMutation`.** Объект мутации оставляем цельным: нужны и поля (`isPending`, `isError`, `error`, `data`), и методы (`mutateAsync`, `reset`). Деструктуризация 5+ имён хуже читается, а методы всё равно зовём как `tokenMutation.reset()`.
+**The exception is `useMutation`.** A mutation object is kept whole: both its fields (`isPending`, `isError`, `error`, `data`) and its methods (`mutateAsync`, `reset`) are needed. Destructuring five-plus names reads worse, and the methods get called as `revoke.reset()` anyway.
 
 ```tsx
-// ✓ ОК — mutation остаётся объектом
-const tokenMutation = useRoomTokenMutation();
-// ... tokenMutation.isPending, tokenMutation.mutateAsync(...), tokenMutation.reset()
+// ✓ OK — the mutation stays an object
+const revoke = useRevokeConfig();
+// ... revoke.isPending, revoke.mutateAsync(...), revoke.reset()
 ```
 
-### 9.4 Деструктуризация везде, где упрощает
+### 9.4 Destructure wherever it simplifies
 
-Принцип: **деструктурируй по максимуму** — для читаемости. Если значение используется через точку 2+ раза или приходит вложенным, вытащи его в локальную переменную. Меньше шума `obj.a.b`, имена говорят за себя.
+The principle: **destructure as much as you can** — for readability. If a value is reached through the dot twice or more, or arrives nested, pull it into a local variable. Less `obj.a.b` noise, and the names speak for themselves.
 
-**Вложенный доступ — деструктурируй родителя:**
+**Nested access — destructure the parent:**
 
 ```ts
-// ✗ ПЛОХО — row.sender.X повторяется
-senderName: resolveDisplayName({
-  displayName: row.sender.profile?.displayName,
-  name: row.sender.name,
-  email: row.sender.email,
-  userId: row.senderId,
+// ✗ BAD — config.node.X repeats
+buildLabel({
+  country: config.node.country,
+  code: config.node.countryCode,
+  server: config.node.server,
+  nodeId: config.nodeId,
 });
 
-// ✓ ОК — sender вытащен один раз
-const { sender, senderId } = row;
-senderName: resolveDisplayName({
-  displayName: sender?.profile?.displayName,
-  name: sender?.name,
-  email: sender?.email,
-  userId: senderId,
+// ✓ OK — node pulled out once
+const { node, nodeId } = config;
+
+buildLabel({
+  country: node?.country,
+  code: node?.countryCode,
+  server: node?.server,
+  nodeId,
 });
 ```
 
-**Параметры-функции: 3+ аргумента → один объект с деструктуризацией.** Позиционные аргументы (особенно одного типа — `string, string, string`) легко перепутать местами; объект самодокументирует и порядок не важен.
+**Function parameters: 3+ arguments → one destructured object.** Positional arguments (especially same-typed ones — `string, string, string`) are easy to swap by mistake; an object is self-documenting and order stops mattering.
 
 ```ts
-// ✗ ПЛОХО — 4 позиционных, легко перепутать
-resolveDisplayName(displayName, name, email, userId);
+// ✗ BAD — 4 positional, easy to mix up
+buildLabel(country, code, server, nodeId);
 
-// ✓ ОК — объект-параметр, деструктуризация в сигнатуре
-resolveDisplayName({ displayName, name, email, userId });
+// ✓ OK — an object parameter, destructured in the signature
+buildLabel({ country, code, server, nodeId });
 ```
 
-**Повторный `obj.x` (2+) — в локальную переменную / деструктуризацию:**
+**A repeated `obj.x` (2+) goes into a local variable / destructuring:**
 
 ```ts
-// ✗ ПЛОХО
+// ✗ BAD
 if (file.size === 0) ...;
 if (file.size > MAX) ...;
 const ext = extension(file.type);
 
-// ✓ ОК
+// ✓ OK
 const { size, type, name } = file;
+
 if (size === 0) ...;
 if (size > MAX) ...;
 const ext = extension(type);
 ```
 
-**Когда НЕ деструктурировать:**
+**When NOT to destructure:**
 
-- Одно обращение — `obj.x` один раз, деструктуризация лишняя церемония.
-- Теряется контекст — если `name` без префикса непонятно чьё, оставь `user.name` / переименуй (`const { name: senderName } = ...`).
-- Стабильный неймспейс-объект (`router`, `console`, `Math`) — не трогаем.
+- A single access — one `obj.x`, and destructuring is ceremony.
+- Context is lost — if a bare `name` leaves it unclear whose it is, keep `user.name` or rename (`const { name: nodeName } = ...`).
+- A stable namespace object (`router`, `console`, `Math`) — leave it alone.
 
 ---
 
-## 11. Сегменты `model/`, `lib/`, `api/`
+## 11. The `model/`, `lib/` and `api/` segments
 
-**`model/`** — хуки, Zustand store, контекст-провайдеры, типы стейта.
+**`model/`** — hooks, context providers, state types.
 
 ```
-entities/room/model/
-  hooks/                     ← группа хуков
-    index.ts                 ← barrel хуков
-    use-enter-room.ts
-    use-room-token.ts
-  rooms-presence/            ← подсистема = папка
-    index.ts                 ← barrel: { RoomsPresenceProvider, useRoomsPresence }
-    rooms-presence-context.tsx
-    use-rooms-presence-stream.ts
-  types.ts                   ← публичные типы слайса (если используются снаружи)
-  (без model/index.ts — barrel на уровне подпапок)
+features/vpn/connect/model/
+  hooks/                     ← a group of hooks
+    index.ts                 ← the hooks barrel
+    use-vpn-connection/
+    use-tunnel-state/
+  context/                   ← a subsystem is a folder
+    index.ts                 ← barrel: { VpnConnectionProvider, useVpnConnection }
+    VpnConnectionProvider.tsx
+    vpn-connection-context.ts
+  types.ts                   ← the slice's public types, when other slices use them
+  (no model/index.ts — the barrel sits on the subfolders)
 ```
 
-Файлы — kebab-case. Функции внутри — camelCase.
+Files are kebab-case. The functions inside them are camelCase.
 
-**Подсистема → папка.** Provider + context + хук (либо хук + 2+ модуля только для него) → отдельная папка с `index.ts` (напр. `rooms-presence/`). Хуки/контексты слайса группируются в `model/hooks/`, `model/contexts/` (см. barrel-правило ниже). Совсем плоский `model/` (1-2 файла без подпапок) допустим для мелких слайсов.
+**A subsystem is a folder.** A provider plus its context and hook (or a hook plus
+two or more modules that exist only for it) gets its own folder with an
+`index.ts` — `model/context/`, for instance. A slice's hooks and contexts are
+grouped into `model/hooks/` and `model/context/` (see the barrel rule below). A
+completely flat `model/` — one or two files, no subfolders — is fine for a small
+slice.
 
-**Группировка внутри `model/`.** Когда в слайсе много `model`-файлов, группируй их в подпапки по природе (`model/contexts/`, `model/hooks/`, `model/stores/`, `model/lib/`) — см. `features/room/room-control`, `widgets/chat/chat-panel`. Это организация **внутри** сегмента `model/`, не отдельный top-level сегмент `hooks/` (тот запрещён, см. ниже).
+**Grouping inside `model/`.** When a slice accumulates many `model` files, group
+them into subfolders by nature (`model/context/`, `model/hooks/`) — see
+`features/vpn/connect` and `features/vpn/split-tunneling`. That is organisation
+**inside** the `model/` segment, not a separate top-level `hooks/` segment (which
+is forbidden — see below).
 
-**Barrel-правило `model/`.** У каждой подпапки `model/` — свой `index.ts` (`model/hooks/index.ts`, `model/contexts/index.ts`, `model/stores/index.ts`). **Slice-level `model/index.ts` НЕ создаём.** Импорт снаружи подпапки — через её barrel:
+**The `model/` barrel rule.** Every `model/` subfolder gets its own `index.ts`
+(`model/hooks/index.ts`, `model/context/index.ts`). **Do not create a slice-level
+`model/index.ts`.** Importing from outside a subfolder goes through its barrel:
 
 ```ts
-// ✓ ОК
-import { useRoomControls } from '../model/hooks';
-import { DeafenProvider } from '../model/contexts';
-// slice index.ts
-export { useRoomControls } from './model/hooks';
+// ✓ OK
+import { useVpnConnection } from '../model/hooks';
+import { VpnConnectionProvider } from '../model/context';
+// the slice index.ts
+export { useVpnConnection } from './model/hooks';
 
-// ✗ НЕ ОК
-import { useRoomControls } from '../model/hooks/use-room-controls';  // deep мимо barrel
-import { useRoomControls } from '../model';                          // model/index не существует
+// ✗ NOT OK
+import { useVpnConnection } from '../model/hooks/use-vpn-connection'; // deep, past the barrel
+import { useVpnConnection } from '../model';                          // model/index does not exist
 ```
 
-Между файлами **внутри одной подпапки** — относительный импорт по файлу (`./use-x`, `../types`), не через свой barrel (самоимпорт). `model/types.ts` — это файл, не папка: импортируется напрямую `../model/types`, без barrel. Плоский `model/` (нет подпапок, только `use-x.ts` + `types.ts`) — barrel не нужен, импорт по файлу.
+Between files **inside one subfolder**, import by file (`./use-x`, `../types`),
+never through your own barrel — that is a self-import. `model/types.ts` is a
+file, not a folder: import it directly as `../model/types`, with no barrel. A
+flat `model/` — no subfolders, just `use-x.ts` and `types.ts` — needs no barrel
+at all; import by file.
 
-**Типы:**
+**Types:**
 
-- Локальные типы одного хука (`Props`, ввод/вывод, internal unions) — **рядом в том же файле**, не выносить.
-- Публичные типы слайса (используются другими слайсами через barrel) — в `model/types.ts`.
-- Если у подсистемы-папки свои внутренние типы — `model/<subsystem>/types.ts`.
+- Types local to one hook (`Props`, its input and output, internal unions) live
+  **beside it in the same file**. Do not hoist them.
+- The slice's public types — the ones other slices reach through the barrel — go
+  in `model/types.ts`.
+- A subsystem folder with internal types of its own gets
+  `model/<subsystem>/types.ts`.
 
-Не создавай отдельный сегмент `types/` или `hooks/` — это разделение по форме файла, а не по природе кода (антипаттерн FSD).
+Do not create a separate `types/` or `hooks/` segment. That splits code by the
+shape of the file rather than by its nature, which is an FSD anti-pattern.
 
-**`lib/`** — чистые функции без React-зависимостей:
-
-```
-entities/room/lib/
-  cache.ts          ← readRoomTokenCache / writeRoomTokenCache
-  validation.ts     ← isRoomNameValid
-  group-rooms.ts    ← фильтрация + сортировка коллекций
-```
-
-Если функция возвращает JSX — это компонент, переместить в `ui/`.
-
-**Эвристика `lib/` vs `model/`:** функция использует React (`useState`, `useEffect`, контекст) → `model/`. Чистая (получает аргументы, возвращает значение) → `lib/`. Класс ошибки, парсеры, мапперы — `lib/`. Набор значений-настроек/констант — `config/`.
-
-**`api/` в слайсе** — интеграция с внешним сервисом, привязанная к домену слайса: подписки, мапперы, сервис-специфичные обёртки. Отличие от `model/` — `api/` это I/O-граница (network, realtime, push-сервис), `model/` — хуки и типы стейта.
+**`lib/`** — pure functions with no React dependency:
 
 ```
-entities/user/
-  api/
-    auth-bridge.ts   ← subscribeAuth: подписка на authClient.useSession / onAuthStateChange
+features/vpn/split-tunneling/lib/
+  matches-query/       ← the fuzzy app-search matcher
+  with-picked-apps/    ← merges manually picked apps into the scanned list
+```
+
+A function that returns JSX is a component: move it to `ui/`.
+
+**Choosing between `lib/` and `model/`:** a function that uses React
+(`useState`, `useEffect`, a context) belongs in `model/`. A pure one — takes
+arguments, returns a value — belongs in `lib/`. Error classes, parsers and
+mappers are `lib/`. A set of settings or constants is `config/`.
+
+**A slice's `api/`** is an integration with an external service tied to that
+slice's domain: subscriptions, mappers, service-specific wrappers. It differs
+from `model/` in being an I/O boundary — network, realtime, a push service —
+where `model/` holds hooks and state types.
+
+```
+entities/vpn/node/
   model/
-    use-current-user.ts
-    types.ts
+    hooks/
 ```
 
-Эвристика: код **слушает/шлёт** во внешний сервис → `api/`. Код **читает/выводит** доменный стейт → `model/`. Project-agnostic RPC-клиент (не привязан к домену) → `shared/api/` (ниже).
+The heuristic: code that **listens to or sends to** an external service is
+`api/`; code that **reads or derives** domain state is `model/`. A
+project-agnostic RPC client, tied to no domain, goes in `shared/api/` (below).
 
-**`api/` в `shared/`** — axios-обёртки по доменам:
+**`api/` in `shared/`** — axios wrappers, one folder per domain:
 
 ```text
 shared/api/
-  http/      ← axios instance: baseURL, Bearer-токен, нормализация ошибок
-  rooms/     ← listRooms / createRoom / deleteRoom
-  livekit/   ← fetchLiveKitToken
-  auth/      ← better-auth client (authClient, getAuthToken, clearToken)
+  http/          ← the axios instance: baseURL, bearer token, error normalisation
+  nodes/         ← listNodes / listNodeEndpoints
+  configs/       ← downloadable tunnel configs
+  billing/       ← checkout and payment methods
+  auth/          ← the better-auth client
   index.ts
 ```
 
-HTTP через общий axios-инстанс из `shared/api/http`. Ручной `fetch` — не надо: инстанс уже вешает `Authorization` и разворачивает `{ error }` от сервера в `Error(message)`.
+HTTP goes through the shared axios instance from `shared/api/http`. A hand-rolled
+`fetch` is unnecessary: the instance already attaches `Authorization` and unwraps
+the server's `{ error }` into an `Error(message)`.
 
 ```ts
+import type { Node } from '@gnomevpn/schemas';
+
 import { api } from '../http';
 
-import type { CreateRoomRequest, Room } from '@chatovo/schemas';
-
-export const createRoom = async (input: CreateRoomRequest): Promise<Room> => {
-  const { data } = await api.post('/rooms', input);
+export const listNodes = async (): Promise<Node[]> => {
+  const { data } = await api.get('/nodes');
 
   return data;
 };
 ```
 
-Типы запроса/ответа — из `@chatovo/schemas` (тот же контракт, что валидирует NestJS). Функция возвращает `data`, ошибки летят исключением — их ловит React Query.
+Request and response types come from `@gnomevpn/schemas` — the same contract
+NestJS validates against. The function returns `data`; errors are thrown, and
+React Query catches them.
 
 ---
 
-## 12. Глобальные стили и SCSS
+## 12. Global styles and SCSS
 
-- Токены темы — CSS variables в `app/globals.scss` (`:root` + `.dark`).
-- Тёмная тема — `<html className="dark">` хардкодом (несовместимо с `next-themes` + Tauri).
-- Токены темы, отступы, размеры — `shared/styles/_tokens.scss` (`--space-*`, `--icon-*`, `--control-*`, цвета, радиусы). Подключается в `app/globals.scss`.
-- Компонентные стили — `*.module.scss`; общие миксины — `@use '@/shared/styles/mixins' as *` (`loadPaths` + `turbopack.resolveAlias` в `next.config.ts`).
-- `clsx` — склейка module-классов и `className` prop.
+- Theme tokens are CSS variables on `:root` in `app/globals.scss` — colours,
+  radii, type scale, spacing, the safe-area insets. There is no `_tokens.scss`
+  and no separate token file: `shared/styles/` holds only `_animations.scss`,
+  `_breakpoints.scss` and `_mixins.scss`.
+- The app is dark-only. There is no theme switch, no `.dark` class and no
+  `next-themes` — one palette, defined once on `:root`, with
+  `:root[data-desktop-app='true']` and `:root[data-mobile-app='true']` adjusting
+  only the title-bar height and the safe-area insets.
+- Component styles are `*.module.scss`. Shared mixins come in through
+  `@use '@/shared/styles/mixins' as *`, which works because `next.config.ts`
+  sets `sassOptions.loadPaths` to the client root and aliases `@` for Turbopack.
+- Breakpoints come from the scale in `_breakpoints.scss` — `@include below(md)`,
+  `@include from(2xl)` — never a hand-written `@media (width <= 620px)`. See
+  "Breakpoints come from the scale" in [apps/client/CLAUDE.md](../apps/client/CLAUDE.md).
+- `clsx` joins a module class with an incoming `className` prop.
+
+**Property order is enforced.** Stylelint runs
+`stylelint-config-idiomatic-order`, so a declaration out of order is an error,
+not a warning — `bun run lint:css:fix` sorts it.
 
 ---
 
-## 13. Пустые строки между логическими шагами
+## 13. Blank lines between logical steps
 
-Biome не автофиксит `padding-line-between-statements`. Соблюдаем руками.
+`padding-line-between-statements` is configured in the root `eslint.config.mjs`
+and `bun run lint:fix` applies it. Prettier only preserves blank lines and never
+inserts them, which is why the ESLint rule exists at all.
 
-**Пустая строка перед:**
+**A blank line before:**
 
-- `return` (если не первый statement)
+- `return`, when it is not the first statement
 - `throw`
-- `if` (early-return guard или branching)
-- `await` после которого идёт логически отдельный шаг
+- `if` — an early-return guard or a branch
+- an `await` that starts a logically separate step
 - `try` / `for` / `while` / `switch`
 
-**После `if`-блока** — пустая строка перед следующим statement.
+**After an `if` block**, a blank line before the next statement.
 
 ```ts
 // ✓
-const trimmed = room.trim();
+const path = await pickExecutable();
 
-if (!trimmed) throw new Error('Room name required');
+if (!path) {
+  return;
+}
 
-const accessToken = await getFreshAccessToken();
-const { token, url } = await fetchLiveKitToken({ room: trimmed }, accessToken);
+const stored = await splitSetting.get();
 
-writeRoomTokenCache(trimmed, { token, url });
-router.push(`/room?name=${encodeURIComponent(trimmed)}`);
+toggleApp(path);
+setDraft(stored);
 ```
 
 ```ts
-// ✓ множественные return
-if (!name) return null;
+// ✓ several returns
+if (!node) return null;
 
 if (query.isLoading) {
-  return <Loader />;
+  return <Spinner />;
 }
 
-return <VoiceRoom />;
+return <NodePicker />;
 ```
 
-**Исключения** (пустая НЕ нужна):
+**Exceptions** — no blank line needed:
 
-- Один statement в блоке.
-- Однотипные single-line guards подряд:
+- A single statement in a block.
+- Consecutive one-line guards of the same shape:
   ```ts
   if (!a) return null;
   if (!b) return null;
   if (!c) return null;
   ```
-- Последовательные `const` одного смыслового блока.
+- Consecutive `const` declarations belonging to one setup block.
 
 ---
 
-## 14. Shared схемы — `@chatovo/schemas`
+## 14. Shared schemas — `@gnomevpn/schemas`
 
-Zod схемы и типы, общие для client/server, — в `packages/schemas`:
+Zod schemas and the types shared between client and server live in
+`packages/schemas`:
 
 ```
 packages/schemas/src/
-  rooms/
-    inputs.ts    ← createRoomInputSchema
-    outputs.ts   ← roomSchema
-    types.ts     ← Room, CreateRoomInput, CreateRoomRawInput
+  auth/
+    inputs.ts    ← signInSchema, signUpSchema, changeEmailSchema
+    types.ts     ← SignInValues, SignUpValues, ChangeEmailValues
     index.ts
-  livekit/
-    ...
+  tunnel/
+    inputs.ts    ← issueConfigSchema
+    outputs.ts   ← tunnelConfigSchema
+    types.ts
+    index.ts
+  billing/, nodes/, subscription/, errors/, release/
 ```
+
+The package exposes a single root entry point — import from `@gnomevpn/schemas`,
+not from a subpath:
 
 ```ts
-// ✓ ОК
-import { createRoomInputSchema, type Room } from '@chatovo/schemas/rooms';
+// ✓ OK
+import type { ChangeEmailValues } from '@gnomevpn/schemas';
 
-// ✗ НЕ ОК
-import { Room } from '@/shared/api';
+import { changeEmailSchema } from '@gnomevpn/schemas';
+
+// ✗ NOT OK
+import { Node } from '@/shared/api';
 ```
 
-`@/shared/api` экспортирует только runtime функции (RPC wrappers, better-auth client).
+`@/shared/api` exports runtime functions only — the RPC wrappers and the
+better-auth client.
 
-**FormValues vs Request типы.** Одна zod-схема даёт два типа — `.default()` / `.transform()` делают `z.input` и `z.output` несовместимыми:
+**Form values vs request types.** One Zod schema can yield two types: `.default()`
+and `.transform()` make `z.input` and `z.output` incompatible. Where that
+happens, name them apart:
 
-- `CreateRoomFormValues = z.input<typeof schema>` — форма данных **до** валидации, для `defaultValues` формы.
-- `CreateRoomRequest = z.output<typeof schema>` — форма **после** валидации (default применён, transform отработал), для submit / API body.
+- `z.input<typeof schema>` is the shape **before** validation — what
+  `defaultValues` holds.
+- `z.output<typeof schema>` is the shape **after** it, with defaults applied and
+  transforms run — what submit and the API body see.
 
-Это ось «стадия валидации», не «HTTP request/response». Response-тип сущности — отдельный (`Room`), не `z.output` инпут-схемы.
+That axis is the validation stage, not HTTP request versus response. An entity's
+response type is its own (`Node`), never the `z.output` of an input schema.
+
+Most auth schemas have neither a default nor a transform, so a single
+`z.infer` type — `ChangeEmailValues` — serves both ends.
 
 ---
 
-## 15. Формы — react-hook-form + zodResolver
+## 15. Forms — react-hook-form + zodResolver
 
 ```tsx
+import type { ChangeEmailValues } from '@gnomevpn/schemas';
+
+import { changeEmailSchema } from '@gnomevpn/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { createRoomInputSchema, type CreateRoomInput, type CreateRoomRawInput } from '@chatovo/schemas/rooms';
 
-const DEFAULT_VALUES: CreateRoomRawInput = { name: '', isPrivate: false };
+const DEFAULT_VALUES: ChangeEmailValues = { newEmail: '' };
 
-const { formState: { errors }, handleSubmit, register, reset } = useForm<
-  CreateRoomRawInput,
-  unknown,
-  CreateRoomInput
->({
-  resolver: zodResolver(createRoomInputSchema),
-  defaultValues: DEFAULT_VALUES,
+const {
+  formState: { errors, isDirty },
+  handleSubmit,
+  register,
+  reset
+} = useForm<ChangeEmailValues>({
+  resolver: zodResolver(changeEmailSchema),
+  defaultValues: DEFAULT_VALUES
 });
 ```
 
-- Схема — в `@chatovo/schemas/<resource>`, не inline в форме.
-- Server-side ошибки — `setError('field', { message: err.message })`.
-- Boolean toggles вне формы — `useBoolean` из `@siberiacancode/reactuse`, не `useState`.
+- The schema comes from `@gnomevpn/schemas`, never inline in the form.
+- `DEFAULT_VALUES` is a module-level constant, not an object literal rebuilt on
+  every render.
+- Server-side errors go through `setError('field', { message })`.
+- Validation messages are i18n keys (`validation.emailInvalid`), resolved by
+  `useFieldError` from `@/entities/app/locale` — the schema never carries
+  user-visible prose.
+- A boolean toggle outside a form uses `useBoolean` from
+  `@siberiacancode/reactuse` rather than `useState` — except when the setter is
+  passed into an effect or a ref, where its identity changes every render.
 
 ---
 
 ## 16. Conditional render — ts-pattern
 
-3+ ветки render → `match`, не вложенные `if (...) return <X />` и не цепочки тернарников в JSX.
+Three or more render branches call for `match`, not nested
+`if (...) return <X />` and not a chain of ternaries inside JSX.
 
-Что матчить — два варианта, оба ОК:
+There are two things worth matching on, and both are fine:
 
-**A. На discriminated union из хука.** Хук собирает `state`-union, view только `match`. Берём когда логика сборки объёмна или переиспользуется:
+**A. A discriminated union from a hook.** The hook assembles a `state` union and
+the view only matches on it. Reach for this when the assembly is substantial or
+reused:
 
 ```tsx
 import { match } from 'ts-pattern';
 
 return match(state)
-  .with({ kind: 'loading' }, () => <RoomLoadingFallback />)
-  .with({ kind: 'active' }, ({ token, url }) => <VoiceRoom token={token} serverUrl={url} />)
+  .with({ kind: 'connecting' }, () => <ConnectingFallback />)
+  .with({ kind: 'connected' }, ({ nodeId }) => <ConnectedPanel nodeId={nodeId} />)
   .exhaustive();
 ```
 
-`.exhaustive()` даёт TS-ошибку если добавили вариант union но забыли case.
+`.exhaustive()` turns a forgotten case into a TypeScript error the moment a
+variant is added to the union.
 
-**B. На объекте сырых хуков.** `match` прямо на `{ ...поля хуков }`, паттерны через `P.nullish` / `P.string` и т.п. Берём когда веток немного, логика компактна, отдельный хук-слой был бы лишней церемонией:
-
-```tsx
-import { match, P } from 'ts-pattern';
-
-const { data: room, isLoading } = useRoomById(roomId);
-const { data: publicTokenData } = usePublicRoomToken(roomId, !!room && !room.isPrivate);
-const tokenData = room?.isPrivate ? tokenMutation.data : publicTokenData;
-
-return match({ roomId, isLoading, room, tokenData })
-  .with({ roomId: P.nullish }, () => null)
-  .with({ room: P.nullish, isLoading: true }, () => <RoomLoadingFallback />)
-  .with({ room: P.nullish }, () => <RoomNotFound />)
-  .with({ tokenData: P.nullish }, () => <RoomConnecting />)
-  .with({ tokenData: P.nonNullable, room: P.nonNullable }, ({ tokenData }) => (
-    <VoiceRoom serverUrl={tokenData.url} token={tokenData.token} />
-  ))
-  .exhaustive();
-```
-
-Порядок `.with` важен — первый совпавший паттерн выигрывает. Узкие значения в хендлерах
-бери из аргумента `match` (он narrowed), не из замыкания и не через `as` — каст обходит
-проверку типов.
-
-**Запрещено в любом случае** — `if`/тернарник-цепочки, собирающие JSX:
+**B. An object of raw hook results.** `match` runs straight on
+`{ ...hook fields }`, with patterns like `P.nullish` and `P.string`. Reach for
+this when there are only a few branches and a separate hook layer would be
+ceremony:
 
 ```tsx
-// ✗ НЕ ОК — condition hell в view
-return !roomId ? null : roomById.isLoading ? <Loading /> : !room ? <NotFound /> : <Room />;
+import { match } from 'ts-pattern';
+
+return match({ isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd })
+  .with({ isRecurringAvailable: false }, () => null)
+  .with({ hasPaymentMethod: false }, () => <BindCardPrompt />)
+  .with({ cancelAtPeriodEnd: true }, () => <ResumeAutoRenew />)
+  .otherwise(() => <CancelAutoRenew />);
 ```
 
-**Когда выносить в хук:** сборка state переиспользуется в 2+ местах, либо тело логики
-настолько объёмно, что view перестаёт читаться. Иначе вариант B инлайн в view — норма.
+The order of `.with` matters — the first matching pattern wins. Take narrowed
+values from the handler's argument, which `match` has already narrowed, never
+from the closure and never through an `as` cast: a cast sidesteps the check that
+makes this worth doing.
 
-### 15.1 Одна ветка — `&&`, не `? : null`
-
-Рендер «есть/нет» (одна ветка, иначе ничего) — `cond && <X />`, не `cond ? <X /> : null`:
+**Forbidden either way** — `if` and ternary chains that assemble JSX:
 
 ```tsx
-// ✗ НЕ ОК — лишний : null
-{isAdmin ? <span className={s.badge}>admin</span> : null}
-{room.isPrivate ? <Lock /> : null}
-
-// ✓ ОК
-{isAdmin && <span className={s.badge}>admin</span>}
-{room.isPrivate && <Lock />}
+// ✗ NOT OK — condition hell in the view
+return !nodeId ? null : nodes.isLoading ? <Spinner /> : !node ? <NotFound /> : <NodePanel />;
 ```
 
-Инверсия `cond ? null : <X />` → `!cond && <X />`.
+**When to move it into a hook:** the state assembly is reused in two or more
+places, or the logic is bulky enough that the view stops reading. Otherwise
+option B, inline in the view, is normal.
 
-**Условие обязано быть `boolean`.** `&&` рендерит левый операнд как есть — для
-не-boolean falsy (`0`, `''`, `NaN`) это выведет мусор (стрелочный `0` в разметке).
-Числовые/строковые проверки сначала приводим к boolean:
+### 15.1 One branch — use `&&`, not `? : null`
+
+A present-or-absent render — one branch, nothing otherwise — is `cond && <X />`,
+not `cond ? <X /> : null`:
 
 ```tsx
-// ✗ ОПАСНО — при пустом массиве отрендерит "0"
-{participants.length && <List />}
+// ✗ NOT OK — a pointless : null
+{isConnected ? <span className={s.badge}>online</span> : null}
+{node.isPremium ? <Lock /> : null}
 
-// ✓ ОК — явная boolean-проверка
-{participants.length > 0 && <List />}
-{!isEmpty(participants) && <List />}   // isEmpty из remeda
+// ✓ OK
+{isConnected && <span className={s.badge}>online</span>}
+{node.isPremium && <Lock />}
 ```
 
-Безопасны как условие: boolean-флаги (`isActive`), сравнения (`x === y`),
-`!x`, `!!x`, объект/`undefined` (`errors.name`), `isEmpty()`/`isNonNullish()`.
+Invert `cond ? null : <X />` into `!cond && <X />`.
 
-Тернарник остаётся для **двух** реальных веток (`cond ? <A /> : <B />`).
+**The condition must be a boolean.** `&&` renders its left operand as-is, so a
+non-boolean falsy value (`0`, `''`, `NaN`) prints as literal garbage — a stray
+`0` in the markup. Coerce numeric and string checks first:
+
+```tsx
+// ✗ DANGEROUS — renders "0" for an empty list
+{apps.length && <List />}
+
+// ✓ OK — an explicit boolean check
+{apps.length > 0 && <List />}
+{!isEmpty(apps) && <List />}   // isEmpty from remeda
+```
 
 ---
 
 ## 17. Drill cleanup
 
-Если данные доступны через глобальный хук — leaf берёт сам, не принимает props:
+If the data is reachable through a global hook, the leaf fetches it itself
+rather than accepting props:
 
 ```tsx
-// ✗ ПЛОХО — drilling
-<ChannelsList displayName={x} isAdmin={z} rooms={r} onDelete={d} />
+// ✗ BAD — drilling
+<ConfigList configLimit={l} deviceName={n} configs={c} onRevoke={d} />
 
-// ✓ ОК
-const ChannelsList = () => {
-  const rooms = useRooms();
-  const { displayName, isAdmin } = useCurrentUser();
+// ✓ OK
+const ConfigList = () => {
+  const { data: configs } = useConfigs();
+  const { configLimit } = useSubscriptionStatus();
   // ...
 };
 ```
 
-**Не делать generic параметризированные компоненты** для статичного контента:
+**Do not parameterise a component for static content:**
 
 ```tsx
-// ✗ НЕ ОК — text всегда один и тот же
-<RoomLoader text="Loading room..." />
+// ✗ NOT OK — the text never changes
+<Loader text="Loading nodes..." />
 
-// ✓ ОК
-<RoomLoadingFallback />   // текст внутри
-<RoomConnecting displayName="x" /> // только динамическая часть
+// ✓ OK
+<NodesLoadingFallback />          // the text lives inside
+<NodeConnecting country="NL" />   // only the dynamic part is a prop
 ```
 
-**Оставляем props когда:**
+**Keep props when:**
 
-- Данные приходят из `.map` (`<ChannelsRoomItem room={room} />`).
-- UI state оркестратора (`channelsOpened` в `AppSidebar`).
-- Колбэк требует контекст родителя.
+- The data comes from a `.map` (`<ConfigRow config={config} />`).
+- It is the orchestrator's UI state (`isOpen` in `SplitTunnelingDialog`).
+- A callback needs the parent's context.
 
 ---
 
-## 18. Server routes — OpenAPI
+## 18. Server routes — NestJS
+
+The API is NestJS on Bun, not a route-definition framework. The full convention
+lives in [apps/server/CLAUDE.md](../apps/server/CLAUDE.md); what matters from the
+client's side:
 
 ```
-apps/server/src/routes/
-  rooms/ users/ livekit/ chat/ github/
-    routes.ts    ← createRoute({...}) определения
-    handlers.ts  ← RouteHandler<typeof route, Env>
-    index.ts     ← OpenAPIHono<Env>().openapi(route, handler)
-  shared/
-    schemas.ts   ← errorSchema и прочие общие zod-схемы
-    types.ts     ← Env (тип Hono-контекста, общий для всех роутеров)
+apps/server/src/modules/nodes/
+  nodes.module.ts
+  nodes.controller.ts     ← thin: validate, delegate, return
+  services/               ← the business logic, one service per domain of work
+  dto/                    ← createZodDto(...) wrappers
+  lib/                    ← pure functions, one folder per concern
+  config/                 ← constants, timeouts, lookup tables
+  index.ts                ← the module's public API
 ```
 
-- `routes.ts` — только route definitions.
-- `handlers.ts` — только обработчики. Общий `type Env` (`{ Variables: AuthVars }`)
-  не дублируем по роутерам — он живёт в `shared/types.ts`, импортируется оттуда.
-- Validation внутри `createRoute({ request: { body: { content: { ... schema } } } })`, не отдельный `zValidator`. Схемы — из `@chatovo/schemas`.
-- Все ответы (включая 4xx/5xx) описаны в `responses`.
-- `404`/`403`/прочие доменные ошибки — `throw new HTTPException(status, { message })` (ловит глобальный `app.onError`), а не повтор `if (!x) return c.json(...)` по хендлерам. Общий guard выноси в helper (напр. `requireRoomId`).
-- `OpenAPIHono` создаётся с `defaultHook`, нормализующим провал zod-валидации в `{ error }` (иначе клиент получает сырой zod-объект → `[object Object]`).
-- Тип строки Prisma (с `include`) — выводи через `Prisma.<Model>GetPayload<{...}>` рядом с хендлером, не дублируй поля вручную и не выноси в `@chatovo/schemas` (там чистый Zod, без Prisma).
-- Mount: публичные роуты (`github`, `health`) — без `authMiddleware`; защищённые — `.use('/<path>/*', authMiddleware)`.
-- Стрим-роуты (SSE через `streamSSE`) не описываются `createRoute` — обычный
-  `.get()` с хендлером типа `Handler<Env>`, тело хендлера всё равно в `handlers.ts`.
+- DTOs wrap a shared schema: `export class NodeDto extends createZodDto(nodeSchema) {}`.
+  The schema itself lives in `@gnomevpn/schemas`, so client and server validate
+  against one definition.
+- Domain errors are thrown as the app exceptions from `common/exceptions` with a
+  code from `@gnomevpn/schemas` — `throw new AppServiceUnavailableException('NODE_UNAVAILABLE')`.
+  The client matches on the code, so the message is free text but the code is a
+  contract.
+- Import from a module's barrel across module boundaries, never into its files.
 
 ---
 
-## 19. Запреты
+## 19. Forbidden
 
-- `console.log` в коммите. Biome `noConsole: warn` (`shared/ui/**`, `scripts/**` — off).
-- `any` — Biome `noExplicitAny: error`. Используй `unknown`.
-- Non-null assertion `!` без обоснования — Biome `noNonNullAssertion: warn`.
-- Deep imports мимо barrel.
-- Cross-import между слайсами одного слоя.
-- ESLint, Prettier, CSS-in-JS. Только Biome + SCSS modules.
-- `axios` / ручной `fetch` для бизнес-вызовов. Только Hono RPC client.
-- Дублирование схем client/server. Только `@chatovo/schemas`.
-- `useState` для form fields. Только `react-hook-form`.
-- Вложенные `if (...) return <X />` на 3+ ветки. Используй `ts-pattern match`.
-- Prop-drilling когда leaf может вызвать хук сам.
+- `any` — use `unknown`. `ts/consistent-type-assertions` also warns on casts;
+  a cast that survives review needs a reason.
+- A non-null assertion `!` with no justification.
+- Deep imports past a barrel.
+- Cross-imports between slices of the same layer.
+- CSS-in-JS. SCSS modules only.
+- Duplicating a schema between client and server. Only `@gnomevpn/schemas`.
+- `useState` for form fields. Only `react-hook-form`.
+- Nested `if (...) return <X />` across three or more branches. Use
+  `ts-pattern`'s `match`.
+- Prop-drilling when the leaf can call the hook itself.
+- Comments. The code is expected to read on its own; the reasoning belongs in
+  CLAUDE.md or the commit message.
+- A user-visible string that does not go through i18n — and it goes into both
+  `en.json` and `ru.json`, never one of them.
 
 ---
 
-## 20. Чек-лист перед коммитом
+## 20. Checklist before a commit
 
 ```bash
-bun lint:fix                               # Biome: формат + organize imports + safe fixes
-bun lint                                   # должно быть 0 errors/warnings
-cd apps/client && bunx tsc --noEmit        # типы client
-cd apps/server && bunx tsc --noEmit        # типы server
-bun --filter @chatovo/client build          # сборка client
-bun --filter @chatovo/server build          # сборка server
+bun run fix        # every autofixer: eslint --fix, prettier, stylelint --fix, cargo fmt
+bun run verify     # typecheck, eslint, prettier, stylelint, cargo fmt --check, clippy
+bun run test       # Vitest across every workspace
+bun run test:rust  # cargo test --workspace
 ```
 
-`bun lint:fix` не чинит: пустые строки (секция 13), порядок хуков (секция 9.1), FSD-границы импортов (→ [`docs/fsd.md`](./fsd.md)).
+`bun run test`, never bare `bun test` — Bun's own runner claims that name,
+collects the same files and then fails them all, because it is not Vitest.
+
+Tests live in a `_tests/` folder beside what they test
+(`shared/lib/vpn-bridge/_tests/vpn-bridge.test.ts`); the Rust ones are
+`#[cfg(test)]` modules in the file they cover, and the Playwright specs are in
+`e2e/`.
+
+`bun run fix` does not fix: hook order (section 9.1) or FSD import boundaries
+(→ [`docs/fsd.md`](./fsd.md)).

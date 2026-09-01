@@ -53,8 +53,9 @@ concurrency:
 jobs:
   # The gate, and the only automated run of the checks left in this repo: nothing
   # below it runs unless it passes, so a tag on a commit that does not typecheck
-  # never produces signed artefacts. Ordinary commits are checked by `bun run
-  # verify` locally — there is no workflow watching master.
+  # or whose tests fail never produces signed artefacts. Ordinary commits are
+  # checked by `bun run verify` and `bun run test` locally — there is no workflow
+  # watching master.
   #
   # The build steps ahead of it are what that command needs in place: the tauri
   # build script validates every path in `bundle.resources` and points
@@ -105,6 +106,11 @@ jobs:
         run: bun --filter @gnomevpn/client build
 
       - run: bun run verify
+
+      # Tests are not part of `verify` — it is the lint-and-typecheck gate. They
+      # run here so a tag cannot ship past a red suite.
+      - run: bun run test
+      - run: bun run test:rust
 
   # The draft exists before either build so desktop and android can upload into
   # it at the same time instead of android queueing behind the matrix.

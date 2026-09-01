@@ -3,6 +3,18 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
+  "description": "GnomeVPN API — NestJS on Bun with Prisma, better-auth and the 3x-ui panel client.",
+  "homepage": "https://gnomevpn.ru",
+  "bugs": {
+    "url": "https://github.com/Zilero232/GnomeVPN/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zilero232/GnomeVPN.git",
+    "directory": "apps/server"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Alexandr Artemev",
   "main": "src/main.ts",
   "scripts": {
     "predev": "fkill :4000 --force --silent",
@@ -24,24 +36,23 @@
     "@nestjs/core": "11.1.28",
     "@nestjs/platform-express": "11.1.28",
     "@nestjs/schedule": "^6.1.3",
-    "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
-    "@noble/curves": "^2.3.0",
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@noble/curves": "^2.4.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "@react-email/render": "^2.1.0",
-    "@sindresorhus/slugify": "^3.0.0",
+    "@sindresorhus/slugify": "^3.0.1",
     "@thallesp/nestjs-better-auth": "2.7.0",
     "better-auth": "catalog:",
     "date-fns": "catalog:",
     "express": "^5.2.1",
     "helmet": "^8.0.0",
     "nestjs-zod": "^5.5.0",
-    "nodemailer": "^9.0.5",
+    "nodemailer": "^9.1.0",
     "p-retry": "catalog:",
     "pg": "catalog:",
     "react": "catalog:",
-    "react-email": "^6.9.2",
+    "react-email": "^6.9.3",
     "reflect-metadata": "^0.2.2",
     "remeda": "catalog:",
     "rxjs": "^7.8.1",
@@ -54,7 +65,7 @@
     "@types/pg": "catalog:",
     "@types/react": "catalog:",
     "dotenv": "^17.2.0",
-    "prisma": "^7.9.1",
+    "prisma": "^7.10.0",
     "typescript": "catalog:"
   }
 }

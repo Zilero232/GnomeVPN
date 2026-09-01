@@ -17,6 +17,7 @@ pub struct Singbox {
     config_path: PathBuf,
 }
 
+#[cfg(unix)]
 const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(3);
 
 impl Singbox {

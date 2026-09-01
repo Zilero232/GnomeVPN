@@ -1,58 +1,58 @@
-# Развёртывание GnomeVPN
+# Deploying GnomeVPN
 
-## Что где работает
+## What runs where
 
-| Компонент         | Где            | Как обновляется              |
-| ----------------- | -------------- | ---------------------------- |
-| Лендинг + кабинет | VPS, Caddy     | CI: `deploy.yml`             |
-| API               | VPS, Docker    | CI: `deploy.yml`             |
-| База              | VPS, Docker    | там же                       |
-| Десктоп + Android | у пользователя | CI: `release.yml` по тегу v* |
-| VPN-узлы          | отдельные VPS  | `bun run provision:nodes`    |
+| Component              | Where          | How it updates                |
+| ---------------------- | -------------- | ----------------------------- |
+| Landing page + account | VPS, Caddy     | CI: `deploy.yml`              |
+| API                    | VPS, Docker    | CI: `deploy.yml`              |
+| Database               | VPS, Docker    | same place                    |
+| Desktop + Android      | on the user    | CI: `release.yml` on a v* tag |
+| VPN nodes              | separate VPSes | `bun run provision:nodes`     |
 
-Всё, кроме провижининга узлов, собирается в GitHub Actions. Образы кладутся
-в ghcr.io; **VPS ничего не собирает** — только забирает готовые образы.
+Everything but node provisioning is built in GitHub Actions. Images are pushed
+to ghcr.io; **the VPS builds nothing** — it only pulls ready-made images.
 
 ---
 
-## Релиз
+## Release
 
-Тег запускает `release.yml`:
+A tag runs `release.yml`:
 
 ```bash
-npm version patch        # или отредактируй version в package.json
+npm version patch        # or edit version in package.json
 git push --follow-tags
 ```
 
-Дальше CI сам: три раннера (Windows, macOS, Linux) собирают десктоп через
-`tauri-action`, отдельная джоба — Android, последняя публикует релиз.
-Кросс-компиляция тут не годится: Tauri её не поддерживает, а macOS вообще
-нельзя собрать не на Mac — отсюда матрица раннеров.
+CI takes it from there: three runners (Windows, macOS, Linux) build the desktop
+via `tauri-action`, a separate job does Android, and the last one publishes the
+release. Cross-compilation is no good here: Tauri does not support it, and macOS
+cannot be built off a Mac at all — hence the runner matrix.
 
-`tauri-action` сам сливает `latest.json` по всем платформам, поэтому автообновление
-получает одну запись на каждую ОС.
+`tauri-action` merges `latest.json` across all platforms itself, so auto-update
+gets one entry per OS.
 
-### Разовая подготовка секретов
+### One-time secret setup
 
 Settings → Secrets and variables → Actions:
 
-| Секрет                                    | Что это                                              |
-| ----------------------------------------- | ---------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`                     | адрес API, вшивается в сборку                        |
-| `TAURI_SIGNING_PRIVATE_KEY`               | содержимое `~/.tauri/gnomevpn.key`                   |
-| `ANDROID_KEY_ALIAS`                       | алиас ключа подписи APK                              |
-| `ANDROID_KEY_PASSWORD`                    | пароль keystore и ключа                              |
-| `ANDROID_KEY_BASE64`                      | сам keystore в base64                                |
-| `DEPLOY_SSH_HOST` / `_USER` / `_PASSWORD` | control-VPS                                          |
-| `DEPLOY_PATH`                             | каталог с docker-compose.yml, обычно `/opt/gnomevpn` |
+| Secret                                    | What it is                                                    |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`                     | API address, baked into the build                             |
+| `TAURI_SIGNING_PRIVATE_KEY`               | contents of `~/.tauri/gnomevpn.key`                           |
+| `ANDROID_KEY_ALIAS`                       | alias of the APK signing key                                  |
+| `ANDROID_KEY_PASSWORD`                    | keystore and key password                                     |
+| `ANDROID_KEY_BASE64`                      | the keystore itself, in base64                                |
+| `DEPLOY_SSH_HOST` / `_USER` / `_PASSWORD` | control VPS                                                   |
+| `DEPLOY_PATH`                             | directory holding docker-compose.yml, usually `/opt/gnomevpn` |
 
-Ключ подписи обновлений создаётся один раз:
+The update signing key is created once:
 
 ```bash
-bun run --filter @gnomevpn/tauri signer:generate   # пишет ~/.tauri/gnomevpn.key
+bun run --filter @gnomevpn/tauri signer:generate   # writes ~/.tauri/gnomevpn.key
 ```
 
-Android-keystore — тоже один раз, локально:
+The Android keystore is also a one-time, local step:
 
 ```bash
 keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
@@ -60,21 +60,21 @@ keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
 base64 -i gnomevpn.keystore | pbcopy                # → ANDROID_KEY_BASE64
 ```
 
-**Сохрани keystore вне репозитория.** Потеряешь — обновить уже установленные APK
-будет нечем, а новый ключ Play Store не примет.
+**Keep the keystore outside the repository.** Lose it and there is nothing left
+to update already-installed APKs with, and Play Store will not accept a new key.
 
-## Деплой веб + API
+## Deploying web + API
 
-`deploy.yml` срабатывает на push в master (или вручную). Собирает образы web и
-server, пушит в ghcr.io, заходит по SSH на VPS, копирует `docker-compose.yml`,
-делает `pull && up -d` и применяет миграции. VPS остаётся тем же — только
-забирает образы.
+`deploy.yml` fires on a push to master (or manually). It builds the web and
+server images, pushes them to ghcr.io, SSHes into the VPS, copies
+`docker-compose.yml`, runs `pull && up -d` and applies migrations. The VPS stays
+the same — it only pulls the images.
 
 ---
 
-## 1. Домен
+## 1. Domain
 
-Зарегистрировать `gnomevpn.ru` и создать A-записи на IP сервера:
+Register `gnomevpn.ru` and create A records pointing at the server's IP:
 
 ```
 gnomevpn.ru        A    <IP>
@@ -82,11 +82,11 @@ www.gnomevpn.ru    A    <IP>
 api.gnomevpn.ru    A    <IP>
 ```
 
-Без этого Caddy не выпустит сертификат.
+Without them Caddy will not issue a certificate.
 
 ---
 
-## 2. Подготовка VPS
+## 2. Preparing the VPS
 
 ```bash
 curl -fsSL https://get.docker.com | sh
@@ -99,7 +99,7 @@ ufw enable
 mkdir -p /opt/gnomevpn
 ```
 
-Логин в реестр образов (токен с правом `read:packages`):
+Log in to the image registry (a token with the `read:packages` scope):
 
 ```bash
 echo "<GITHUB_TOKEN>" | docker login ghcr.io -u <username> --password-stdin
@@ -107,118 +107,121 @@ echo "<GITHUB_TOKEN>" | docker login ghcr.io -u <username> --password-stdin
 
 ---
 
-## 3. Файл .env на сервере
+## 3. The .env file on the server
 
-Создать `/opt/gnomevpn/.env`. Он не в git — только на VPS.
+Create `/opt/gnomevpn/.env`. It is not in git — it lives only on the VPS.
 
 ```env
 NODE_ENV=production
 PORT=4000
 
-# Postgres читает эти три переменные напрямую при создании базы
+# Postgres reads these three variables directly when it creates the database
 POSTGRES_USER=gnomevpn
-POSTGRES_PASSWORD=<длинный случайный пароль>
+POSTGRES_PASSWORD=<long random password>
 POSTGRES_DB=gnomevpn
 
-# postgres — имя сервиса в docker-compose, не localhost
-DATABASE_URL=postgresql://gnomevpn:<пароль>@postgres:5432/gnomevpn
-DIRECT_URL=postgresql://gnomevpn:<пароль>@postgres:5432/gnomevpn
+# postgres is the service name in docker-compose, not localhost
+DATABASE_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
+DIRECT_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 
-BETTER_AUTH_SECRET=<32+ случайных символа>
+BETTER_AUTH_SECRET=<32+ random characters>
 API_URL=https://api.gnomevpn.ru
 
 CORS_ORIGINS=https://gnomevpn.ru,tauri://localhost,http://tauri.localhost
 
-GITHUB_TOKEN=<PAT с правом Contents: Read — без него не работают обновления десктопа>
+GITHUB_TOKEN=<PAT with Contents: Read — without it desktop updates do not work>
 
-YOOKASSA_SHOP_ID=<из личного кабинета ЮKassa>
-YOOKASSA_SECRET_KEY=<оттуда же>
+YOOKASSA_SHOP_ID=<from the YooKassa dashboard>
+YOOKASSA_SECRET_KEY=<from the same place>
 YOOKASSA_RETURN_URL=https://gnomevpn.ru/account
-# Автосписания ЮKassa подключает вручную по заявке в поддержку.
+# YooKassa enables recurring charges by hand, on request to support.
 YOOKASSA_RECURRING=false
 
-# Почта: подтверждение адреса, смена почты, сброс пароля.
-# Адрес в EMAIL_FROM обязан совпадать с SMTP_USER, иначе провайдер отклонит
-# письмо с ошибкой "Sender address rejected: not owned by auth user".
+# Mail: address confirmation, email change, password reset.
+# The address in EMAIL_FROM must match SMTP_USER, or the provider rejects the
+# message with "Sender address rejected: not owned by auth user".
 SMTP_HOST=smtp.timeweb.ru
 SMTP_PORT=465
 SMTP_SECURE=true
 SMTP_USER=noreply@gnomevpn.ru
-SMTP_PASSWORD=<пароль почтового ящика>
+SMTP_PASSWORD=<mailbox password>
 EMAIL_FROM=GnomeVPN <noreply@gnomevpn.ru>
 
-# Куда ведут ссылки из писем.
+# Where the links in the emails lead.
 CLIENT_URL=https://gnomevpn.ru
 
 ```
 
-Ключи узлов сюда не пишутся. `bun provision` складывает их в отдельный файл
-`.env.nodes` рядом с `docker-compose.yml` — по паре на узел: `XRAY_KEY_<код
-страны>` (имя из колонки `node.api_token_env_var`) и `XRAY_PANEL_<код страны>`.
-Контейнер подхватывает оба файла, так что `.env` остаётся рукописным.
-Проверить, какие переменные нужны: `SELECT country, api_token_env_var FROM node;`
+Node keys are not written here. `bun provision` puts them in a separate
+`.env.nodes` file next to `docker-compose.yml` — one pair per node:
+`XRAY_KEY_<country code>` (the name from the `node.api_token_env_var` column)
+and `XRAY_PANEL_<country code>`. The container picks up both files, so `.env`
+stays hand-written. To check which variables are needed:
+`SELECT country, api_token_env_var FROM node;`
 
-Цены тарифов в `.env` не задаются — они живут в `PLANS` (`packages/schemas`),
-откуда их читает и сервер при списании, и лендинг при отрисовке.
+Plan prices are not set in `.env` — they live in `PLANS` (`packages/schemas`),
+where both the server reads them when charging and the landing page reads them
+when rendering.
 
-**Если в пароле есть `$`, его нужно удвоить: `$$`.** Docker Compose
-подставляет переменные внутри `.env`, и одиночный `$` съедается.
+**If the password contains a `$`, it has to be doubled: `$$`.** Docker Compose
+substitutes variables inside `.env`, and a single `$` gets eaten.
 
-Письма не заработают, пока у домена нет записей **SPF, DKIM и DMARC** —
-Gmail и mail.ru отправляют такие сообщения в спам или отклоняют совсем.
-Значения выдаёт почтовый провайдер. Пока SMTP не заполнен, регистрация и
-вход работают, а письма молча не отправляются (в лог пишется ошибка).
+Mail will not work until the domain has **SPF, DKIM and DMARC** records — Gmail
+and mail.ru send such messages to spam or reject them outright. The values come
+from the mail provider. Until SMTP is filled in, sign-up and sign-in work while
+the emails silently fail to send (the error is written to the log).
 
-Пароли генерируются так:
+Passwords are generated like this:
 
 ```bash
 openssl rand -base64 32
 ```
 
-**`CORS_ORIGINS` должен включать `tauri://localhost`** — иначе десктопное приложение не сможет обращаться к API.
+**`CORS_ORIGINS` must include `tauri://localhost`** — otherwise the desktop app will not be able to reach the API.
 
 ---
 
-## 4. Ключи для релиза
+## 4. Release keys
 
-Релиз и деплой идут через Actions, поэтому почти всё живёт в секретах репозитория.
-Локально остаётся только провижининг:
+Release and deploy both go through Actions, so almost everything lives in the
+repository secrets. Only provisioning stays local:
 
-- **SSH к узлам** — `PROVISION_SSH_*` в корневом `.env` (см. раздел 3).
-- **Ключ подписи десктопа** — `~/.tauri/gnomevpn.key` (см. ниже).
-- **Android-keystore** — создаётся `keytool` один раз, живёт в секретах репозитория.
+- **SSH to the nodes** — `PROVISION_SSH_*` in the root `.env` (see section 3).
+- **Desktop signing key** — `~/.tauri/gnomevpn.key` (see below).
+- **Android keystore** — created once with `keytool`, lives in the repository secrets.
 
-### Ключ подписи обновлений
+### The update signing key
 
-Нужен, чтобы приложение принимало обновления только от нас. Генерируется один раз:
+It is what makes the app accept updates only from us. Generated once:
 
 ```bash
 bun --filter @gnomevpn/tauri signer:generate
 ```
 
-Создаст два файла в `~/.tauri/` — вне репозитория, так ключ физически не может попасть в git.
+This creates two files in `~/.tauri/` — outside the repository, so the key
+physically cannot end up in git.
 
-Дальше:
+Then:
 
-1. `~/.tauri/gnomevpn.key.pub` → поле `plugins.updater.pubkey` в
-   `tauri.windows.conf.json`, `tauri.macos.conf.json` и `tauri.linux.conf.json`
-2. Там же `"active": false` → `true`
+1. `~/.tauri/gnomevpn.key.pub` → the `plugins.updater.pubkey` field in
+   `tauri.windows.conf.json`, `tauri.macos.conf.json` and `tauri.linux.conf.json`
+2. In the same files, `"active": false` → `true`
 
-CI берёт приватный ключ из секрета `TAURI_SIGNING_PRIVATE_KEY`. Если ключ
-зашифрован — заведи второй секрет `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` и
-подставь его в `release.yml`.
+CI takes the private key from the `TAURI_SIGNING_PRIVATE_KEY` secret. If the key
+is encrypted, add a second secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` and wire
+it into `release.yml`.
 
-Подписать файл вручную (обычно не нужно — CI делает это сам):
+Signing a file by hand (usually unnecessary — CI does it itself):
 
 ```bash
-bun --filter @gnomevpn/tauri signer:sign -- <путь-к-файлу>
+bun --filter @gnomevpn/tauri signer:sign -- <path-to-file>
 ```
 
-**Приватный ключ восстановить нельзя.** Потеряете — придётся выпускать новую версию с новым ключом, а у пользователей старой автообновление перестанет работать: они увидят обновление, но подпись не сойдётся. Сохраните копию отдельно от репозитория.
+**The private key cannot be recovered.** Lose it and you will have to ship a new version with a new key, and auto-update will stop working for users on the old one: they will see an update, but the signature will not match. Keep a copy outside the repository.
 
 ---
 
-## 5. Первый запуск
+## 5. First run
 
 ```bash
 cd /opt/gnomevpn
@@ -227,7 +230,7 @@ docker compose up -d
 docker compose logs -f
 ```
 
-Проверка:
+Check:
 
 ```bash
 curl https://api.gnomevpn.ru/health   # {"status":"ok"}
@@ -236,35 +239,35 @@ curl -I https://gnomevpn.ru           # 200
 
 ---
 
-## 6. Миграции базы
+## 6. Database migrations
 
-История миграций лежит в `apps/server/prisma/migrations`. `deploy.yml`
-применяет их сам: при наличии файлов миграций он делает `migrate resolve`
-(baseline для базы, собранной ранее через `db push`) и затем `migrate deploy`.
+The migration history lives in `apps/server/prisma/migrations`. `deploy.yml`
+applies them itself: when migration files are present it runs `migrate resolve`
+(a baseline for a database built earlier with `db push`) and then `migrate deploy`.
 
-Новую миграцию создать так:
+Create a new migration like this:
 
 ```bash
 cd apps/server
-bunx prisma migrate dev --name <название>
+bunx prisma migrate dev --name <name>
 ```
 
-Следующий запуск `deploy.yml` её накатит.
+The next `deploy.yml` run will apply it.
 
 ---
 
-## Полезные команды
+## Useful commands
 
 ```bash
-docker compose logs -f server     # логи API
-docker compose restart server     # перезапуск
-docker compose pull && docker compose up -d   # обновление вручную
+docker compose logs -f server     # API logs
+docker compose restart server     # restart
+docker compose pull && docker compose up -d   # manual update
 
-# бэкап базы
+# database backup
 docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
 ```
 
-Порт 5432 наружу не открыт. Для подключения клиентом использовать SSH-туннель:
+Port 5432 is not exposed. To connect with a client, use an SSH tunnel:
 
 ```bash
 ssh -L 5432:localhost:5432 user@<IP>
@@ -272,7 +275,7 @@ ssh -L 5432:localhost:5432 user@<IP>
 
 ---
 
-## Локальная проверка образов
+## Checking the images locally
 
 ```bash
 docker build -f apps/server/Dockerfile -t gnomevpn-server .

@@ -3,6 +3,18 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
+  "description": "Shared script layer for GnomeVPN provisioning — reporter, ssh and shell helpers.",
+  "homepage": "https://gnomevpn.ru",
+  "bugs": {
+    "url": "https://github.com/Zilero232/GnomeVPN/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zilero232/GnomeVPN.git",
+    "directory": "packages/scripts"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Alexandr Artemev",
   "exports": {
     "./reporter": "./src/reporter/index.ts",
     "./shell": "./src/shell/index.ts",

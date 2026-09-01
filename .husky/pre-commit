@@ -4,4 +4,5 @@ bun run typecheck
 if git diff --cached --name-only --diff-filter=ACMR | grep -qE '\.rs$|Cargo\.(toml|lock)$'; then
   cargo fmt --all --check
   bun run lint:rust
+  cargo test --workspace
 fi

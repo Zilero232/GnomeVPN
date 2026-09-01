@@ -491,3 +491,170 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
 
     serde_json::to_string_pretty(&singbox).unwrap_or_default()
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use super::*;
+    use crate::types::WireguardConfig;
+
+    fn hysteria_config() -> TunnelConfig {
+        TunnelConfig {
+            protocol: TunnelProtocol::Hysteria2,
+            server: "203.0.113.10".to_string(),
+            port: 443,
+            auth: "peer-password".to_string(),
+            server_name: "masquerade.example".to_string(),
+            insecure: true,
+            dns: vec!["1.1.1.1".to_string()],
+            wireguard: None,
+        }
+    }
+
+    fn wireguard_config() -> TunnelConfig {
+        TunnelConfig {
+            protocol: TunnelProtocol::Wireguard,
+            server: "203.0.113.10".to_string(),
+            port: 51820,
+            auth: String::new(),
+            server_name: String::new(),
+            insecure: false,
+            dns: vec!["1.1.1.1".to_string()],
+            wireguard: Some(WireguardConfig {
+                private_key: "private".to_string(),
+                address: "10.0.0.2/32".to_string(),
+                peer_public_key: "public".to_string(),
+                pre_shared_key: None,
+                allowed_ips: Vec::new(),
+                reserved: Vec::new(),
+                mtu: None,
+            }),
+        }
+    }
+
+    fn build(config: &TunnelConfig, split: &SplitConfig) -> Value {
+        let rendered = build_singbox_config(SingboxConfigInput {
+            config,
+            split,
+            cache_path: "/tmp/cache.db",
+        });
+
+        serde_json::from_str(&rendered).expect("valid json")
+    }
+
+    fn final_outbound(value: &Value) -> &str {
+        value["route"]["final"].as_str().expect("final outbound")
+    }
+
+    #[test]
+    fn emits_a_hysteria_outbound_and_no_endpoints() {
+        let value = build(&hysteria_config(), &SplitConfig::default());
+
+        let tags: Vec<&str> = value["outbounds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|out| out["tag"].as_str().unwrap())
+            .collect();
+
+        assert_eq!(tags, vec![PROXY_TAG, DIRECT_TAG]);
+        assert!(value["endpoints"].is_null());
+    }
+
+    #[test]
+    fn emits_a_wireguard_endpoint_instead_of_a_proxy_outbound() {
+        let value = build(&wireguard_config(), &SplitConfig::default());
+
+        let tags: Vec<&str> = value["outbounds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|out| out["tag"].as_str().unwrap())
+            .collect();
+
+        assert_eq!(tags, vec![DIRECT_TAG]);
+        assert_eq!(value["endpoints"].as_array().expect("endpoints").len(), 1);
+    }
+
+    #[test]
+    fn defaults_wireguard_allowed_ips_when_none_are_given() {
+        let value = build(&wireguard_config(), &SplitConfig::default());
+
+        let allowed = &value["endpoints"][0]["peers"][0]["allowed_ips"];
+
+        assert_eq!(allowed[0].as_str(), Some(DEFAULT_ALLOWED_IPS));
+    }
+
+    #[test]
+    fn routes_everything_through_the_proxy_without_a_split() {
+        let value = build(&hysteria_config(), &SplitConfig::default());
+
+        assert_eq!(final_outbound(&value), PROXY_TAG);
+    }
+
+    #[test]
+    fn sends_the_rest_direct_when_only_listed_apps_are_tunnelled() {
+        let split = SplitConfig {
+            apps_mode: SplitMode::Allowed,
+            apps: vec!["/usr/bin/firefox".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert_eq!(final_outbound(&build(&hysteria_config(), &split)), DIRECT_TAG);
+    }
+
+    #[test]
+    fn keeps_the_rest_proxied_when_listed_apps_are_excluded() {
+        let split = SplitConfig {
+            apps_mode: SplitMode::Disallowed,
+            apps: vec!["/usr/bin/firefox".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert_eq!(final_outbound(&build(&hysteria_config(), &split)), PROXY_TAG);
+    }
+
+    #[test]
+    fn sends_the_rest_direct_when_only_listed_ips_are_tunnelled() {
+        let split = SplitConfig {
+            ips_mode: SplitMode::Allowed,
+            ips: vec!["10.0.0.0/8".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert_eq!(final_outbound(&build(&hysteria_config(), &split)), DIRECT_TAG);
+    }
+
+    #[test]
+    fn carries_the_cache_path_into_the_experimental_block() {
+        let value = build(&hysteria_config(), &SplitConfig::default());
+
+        assert_eq!(value["experimental"]["cache_file"]["path"].as_str(), Some("/tmp/cache.db"));
+    }
+
+    #[test]
+    fn takes_the_process_name_from_either_path_separator() {
+        assert_eq!(process_name_of("/usr/bin/firefox").as_deref(), Some("firefox"));
+        assert_eq!(process_name_of(r"C:\Program Files\Firefox\firefox.exe").as_deref(), Some("firefox.exe"));
+    }
+
+    #[test]
+    fn has_no_process_name_for_a_path_that_ends_in_a_separator() {
+        assert_eq!(process_name_of("/usr/bin/"), None);
+        assert_eq!(process_name_of(""), None);
+    }
+
+    #[test]
+    fn recognises_ip_literals_but_not_hostnames() {
+        assert!(is_ip_literal("1.1.1.1"));
+        assert!(is_ip_literal("2001:db8::1"));
+        assert!(!is_ip_literal("example.com"));
+    }
+
+    #[test]
+    fn maps_the_split_mode_to_an_outbound_tag() {
+        assert_eq!(tag_for(SplitMode::Allowed), PROXY_TAG);
+        assert_eq!(tag_for(SplitMode::Disallowed), DIRECT_TAG);
+    }
+}

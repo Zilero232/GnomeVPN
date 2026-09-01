@@ -129,6 +129,7 @@ select,
   padding: 12px 15px;
   border: 1px solid rgb(230 240 236 / 9%);
   border-radius: 14px;
+  background-color: var(--color-surface-raised);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 8%) inset,
     0 0 0 1px rgb(0 0 0 / 40%),
@@ -140,7 +141,6 @@ select,
   position: absolute;
   border-radius: inherit;
   backdrop-filter: blur(22px) saturate(160%);
-  background-color: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
   background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
   content: '';
   inset: 0;
