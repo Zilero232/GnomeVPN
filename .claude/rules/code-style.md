@@ -78,8 +78,17 @@ it needs them. A helper too small to have its own types belongs in the
 `<name>.helpers.ts` of the concern that uses it — a one-line regex behind its own
 barrel is three levels of indirection for one statement.
 
+## Tests sit next to what they test
+
+A Vitest suite lives in a `_tests/` folder beside the source, named after it:
+`shared/lib/vpn-bridge/_tests/vpn-bridge.test.ts`. Rust tests are `#[cfg(test)]`
+modules at the bottom of the file they cover; Playwright specs live in `e2e/`.
+Only pure logic is covered — anything needing a database, a node over SSH or a
+live tunnel is verified by running it.
+
 ## Verify before claiming anything works
 
 `bun run verify` — typecheck, ESLint, Prettier, Stylelint, `cargo fmt --check`,
-`cargo clippy -D warnings`. Nothing in CI checks an ordinary commit, so this is
-the first check and the last one.
+`cargo clippy -D warnings`. `bun run test` and `bun run test:rust` are separate;
+bare `bun test` is Bun's own runner and fails the suite. Only the `checks` job in
+`release.yml` runs any of this in CI, so locally is the first check and the last.

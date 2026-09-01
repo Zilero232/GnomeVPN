@@ -217,3 +217,260 @@ pub fn validate_tunnel_config(config: &TunnelConfig) -> Result<(), ValidationErr
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hysteria_config() -> TunnelConfig {
+        TunnelConfig {
+            protocol: TunnelProtocol::Hysteria2,
+            server: "203.0.113.10".to_string(),
+            port: 443,
+            auth: "peer-password".to_string(),
+            server_name: "masquerade.example".to_string(),
+            insecure: true,
+            dns: vec!["1.1.1.1".to_string()],
+            wireguard: None,
+        }
+    }
+
+    fn wireguard_config() -> TunnelConfig {
+        TunnelConfig {
+            protocol: TunnelProtocol::Wireguard,
+            server: "203.0.113.10".to_string(),
+            port: 51820,
+            auth: String::new(),
+            server_name: String::new(),
+            insecure: false,
+            dns: vec!["1.1.1.1".to_string()],
+            wireguard: Some(WireguardConfig {
+                private_key: "private".to_string(),
+                address: "10.0.0.2/32".to_string(),
+                peer_public_key: "public".to_string(),
+                pre_shared_key: None,
+                allowed_ips: vec!["0.0.0.0/0".to_string()],
+                reserved: Vec::new(),
+                mtu: None,
+            }),
+        }
+    }
+
+    fn field_of(error: ValidationError) -> &'static str {
+        let ValidationError::Field { field, .. } = error;
+
+        field
+    }
+
+    #[test]
+    fn accepts_a_complete_hysteria_config() {
+        assert!(validate_tunnel_config(&hysteria_config()).is_ok());
+    }
+
+    #[test]
+    fn accepts_a_hostname_as_the_server() {
+        let config = TunnelConfig {
+            server: "node-01.example.com".to_string(),
+            ..hysteria_config()
+        };
+
+        assert!(validate_tunnel_config(&config).is_ok());
+    }
+
+    #[test]
+    fn rejects_a_private_or_loopback_server() {
+        for server in ["127.0.0.1", "10.0.0.1", "192.168.1.1", "169.254.1.1", "0.0.0.0", "::1"] {
+            let config = TunnelConfig {
+                server: server.to_string(),
+                ..hysteria_config()
+            };
+
+            let error = validate_tunnel_config(&config).expect_err(server);
+
+            assert_eq!(field_of(error), "server");
+        }
+    }
+
+    #[test]
+    fn rejects_a_server_that_is_not_a_hostname() {
+        let config = TunnelConfig {
+            server: "node one/../etc".to_string(),
+            ..hysteria_config()
+        };
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "server");
+    }
+
+    #[test]
+    fn rejects_an_empty_or_overlong_server() {
+        for server in [String::new(), "a".repeat(MAX_HOST_LEN + 1)] {
+            let config = TunnelConfig { server, ..hysteria_config() };
+
+            assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "server");
+        }
+    }
+
+    #[test]
+    fn rejects_port_zero() {
+        let config = TunnelConfig {
+            port: 0,
+            ..hysteria_config()
+        };
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "port");
+    }
+
+    #[test]
+    fn rejects_empty_or_non_ip_dns() {
+        for dns in [vec![], vec!["not-an-ip".to_string()]] {
+            let config = TunnelConfig { dns, ..hysteria_config() };
+
+            assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "dns");
+        }
+    }
+
+    #[test]
+    fn rejects_empty_or_overlong_hysteria_auth() {
+        for auth in [String::new(), "a".repeat(MAX_AUTH_LEN + 1)] {
+            let config = TunnelConfig { auth, ..hysteria_config() };
+
+            assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "auth");
+        }
+    }
+
+    #[test]
+    fn requires_a_server_name_for_hysteria() {
+        let config = TunnelConfig {
+            server_name: String::new(),
+            ..hysteria_config()
+        };
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "serverName");
+    }
+
+    #[test]
+    fn accepts_a_complete_wireguard_config() {
+        assert!(validate_tunnel_config(&wireguard_config()).is_ok());
+    }
+
+    #[test]
+    fn rejects_wireguard_without_its_section() {
+        let config = TunnelConfig {
+            wireguard: None,
+            ..wireguard_config()
+        };
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "wireguard");
+    }
+
+    #[test]
+    fn ignores_hysteria_fields_when_the_protocol_is_wireguard() {
+        let config = TunnelConfig {
+            auth: String::new(),
+            server_name: String::new(),
+            ..wireguard_config()
+        };
+
+        assert!(validate_tunnel_config(&config).is_ok());
+    }
+
+    #[test]
+    fn rejects_empty_wireguard_keys() {
+        let mut config = wireguard_config();
+
+        config.wireguard.as_mut().unwrap().private_key = String::new();
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "wireguard.privateKey");
+    }
+
+    #[test]
+    fn rejects_a_wireguard_address_that_is_not_a_cidr() {
+        let mut config = wireguard_config();
+
+        config.wireguard.as_mut().unwrap().address = "10.0.0.2/33".to_string();
+
+        assert_eq!(field_of(validate_tunnel_config(&config).unwrap_err()), "wireguard.address");
+    }
+
+    #[test]
+    fn accepts_ips_and_cidrs_in_a_split_config() {
+        let split = SplitConfig {
+            ips: vec![
+                "1.1.1.1".to_string(),
+                "10.0.0.0/8".to_string(),
+                "::1".to_string(),
+                "2001:db8::/32".to_string(),
+            ],
+            ..SplitConfig::default()
+        };
+
+        assert!(validate_split(&split).is_ok());
+    }
+
+    #[test]
+    fn rejects_a_split_entry_that_is_not_an_ip_or_cidr() {
+        for entry in ["not-an-ip", "10.0.0.0/33", "10.0.0.0/x", "example.com"] {
+            let split = SplitConfig {
+                ips: vec![entry.to_string()],
+                ..SplitConfig::default()
+            };
+
+            assert_eq!(field_of(validate_split(&split).unwrap_err()), "ips");
+        }
+    }
+
+    #[test]
+    fn rejects_more_split_entries_than_the_limit() {
+        let split = SplitConfig {
+            ips: vec!["1.1.1.1".to_string(); MAX_SPLIT_IPS + 1],
+            ..SplitConfig::default()
+        };
+
+        assert_eq!(field_of(validate_split(&split).unwrap_err()), "ips");
+    }
+
+    #[test]
+    fn rejects_a_traversal_or_nul_byte_in_an_app_path() {
+        let prefix = if cfg!(target_os = "windows") { r"C:\apps\" } else { "/usr/bin/" };
+
+        for suffix in ["../escape", "app\0"] {
+            let split = SplitConfig {
+                apps: vec![format!("{prefix}{suffix}")],
+                ..SplitConfig::default()
+            };
+
+            assert_eq!(field_of(validate_split(&split).unwrap_err()), "apps");
+        }
+    }
+
+    #[test]
+    fn rejects_a_relative_app_path() {
+        let split = SplitConfig {
+            apps: vec!["firefox.exe".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert_eq!(field_of(validate_split(&split).unwrap_err()), "apps");
+    }
+
+    #[test]
+    fn accepts_an_absolute_app_path() {
+        let path = if cfg!(target_os = "windows") {
+            r"C:\Program Files\Firefox\firefox.exe"
+        } else {
+            "/usr/bin/firefox"
+        };
+
+        let split = SplitConfig {
+            apps: vec![path.to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert!(validate_split(&split).is_ok());
+    }
+
+    #[test]
+    fn accepts_an_empty_split_config() {
+        assert!(validate_split(&SplitConfig::default()).is_ok());
+    }
+}

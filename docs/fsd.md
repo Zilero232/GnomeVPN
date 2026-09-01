@@ -1,159 +1,186 @@
-# Feature-Sliced Design — Chatovo
+# Feature-Sliced Design — GnomeVPN
 
-FSD-методология для `apps/client/`. Этот документ — рабочая справка по архитектуре фронтенда: иерархия слоёв, правила импортов, публичные API, сегменты.
+The FSD methodology for `apps/client/`. This document is the working reference for the frontend architecture: the layer hierarchy, import rules, public APIs, segments.
 
-Полная спецификация: [feature-sliced.design](https://feature-sliced.design). Линтер FSD-правил: [Steiger](https://github.com/feature-sliced/steiger).
+Full specification: [feature-sliced.design](https://feature-sliced.design). Linter for FSD rules: [Steiger](https://github.com/feature-sliced/steiger).
 
-> **Расхождения с каноном FSD в этом проекте** (осознанные, см. причины ниже):
+> **Where this project departs from canonical FSD** (deliberately — reasons below):
 >
-> | Канон FSD | Chatovo | Почему |
+> | Canonical FSD | GnomeVPN | Why |
 > |---|---|---|
-> | Корень `src/` | Корень `apps/client/` (без `src/`) | Монорепо: `apps/client` уже изолирует фронтенд. `@/` → `apps/client/`. |
-> | Слой `pages/` | Слой `views/` | `pages/` в корне Next.js включает Pages Router. `views/` его обходит. |
+> | `src/` root | `apps/client/` root (no `src/`) | Monorepo: `apps/client` already isolates the frontend. `@/` → `apps/client/`. |
+> | `pages/` layer | `views/` layer | `pages/` at the Next.js root turns on the Pages Router. `views/` sidesteps it. |
 >
-> Везде ниже, где канон говорит `pages` или `src/pages` — у нас `views`. Где говорит `src/` — у нас корень `apps/client/`.
+> Everywhere below where the canon says `pages` or `src/pages` — we have `views`. Where it says `src/` — we have the `apps/client/` root.
 
 ---
 
-## 1. Иерархия слоёв (сверху вниз)
+## 1. Layer hierarchy (top down)
 
-| # | Слой | Назначение | Слайсы? |
+| # | Layer | Purpose | Slices? |
 |---|---|---|---|
-| 1 | App | Роутинг, провайдеры, глобальные стили, entrypoint | Нет |
-| 2 | Views *(канон: Pages)* | Целые экраны / композиции уровня роута | Да |
-| 3 | Widgets | Крупные самодостаточные UI-блоки (переиспользуемые или независимые) | Да |
-| 4 | Features | Пользовательские интеракции с бизнес-ценностью (формы, действия) | Да |
-| 5 | Entities | Базовые бизнес-понятия (user, room, message) | Да |
-| 6 | Shared | UI-кит, API-клиент, утилиты, i18n, конфиг — project-agnostic | Нет |
+| 1 | App | Routing, providers, global styles, entrypoint | No |
+| 2 | Views *(canon: Pages)* | Whole screens / route-level compositions | Yes |
+| 3 | Widgets | Large self-contained UI blocks (reusable or standalone) | Yes |
+| 4 | Features | User interactions with business value (forms, actions) | Yes |
+| 5 | Entities | Core business concepts (user, node, subscription, protocol) | Yes |
+| 6 | Shared | UI kit, API client, utilities, i18n, config — project-agnostic | No |
 
-Слой `Processes` устарел — его содержимое переносится в `Features` или `App`.
+The `Processes` layer is deprecated — its contents move into `Features` or `App`.
 
-### Структура директорий
+### Directory structure
 
 ```
-apps/client/            # (канон: src/)
-├── app/                # Слой App (без слайсов — только сегменты)
-├── views/              # Слой Views (канон: pages/)
-│   └── <view-name>/
-├── widgets/            # Слой Widgets
-│   └── <domain>/       # auth | room | app | layout
+apps/client/            # (canon: src/)
+├── app/                # App layer (no slices — segments only)
+├── views/              # Views layer (canon: pages/)
+│   └── <view-name>/    # landing | auth | app-view | account | privacy | ...
+├── widgets/            # Widgets layer
+│   └── <domain>/       # app
 │       └── <widget-name>/
-├── features/           # Слой Features
-│   └── <domain>/       # auth | room | app
+├── features/           # Features layer
+│   └── <domain>/       # app | auth | billing | vpn
 │       └── <feature-name>/
-├── entities/           # Слой Entities
-│   └── <domain>/       # auth | room | app
+├── entities/           # Entities layer
+│   └── <domain>/       # app | auth | billing | vpn
 │       └── <entity-name>/
-└── shared/             # Слой Shared (без слайсов — только сегменты)
+└── shared/             # Shared layer (no slices — segments only)
     ├── api/
     ├── ui/
     ├── lib/
-    └── config/
+    ├── config/
+    ├── constants/
+    ├── i18n/
+    ├── seo/
+    └── styles/
 ```
 
-> **Доменная группировка слайсов.** В Chatovo слайсы внутри `features/`, `entities/`, `widgets/` сгруппированы по бизнес-домену (`auth`, `room`, `app`, `layout`). Это надстройка поверх FSD-канона (`<layer>/<slice>/`). Импорты: `@/features/auth/sign-in`, `@/entities/room/room`, `@/widgets/layout/authed-shell`. Группа `app` — кросс-доменная инфраструктура приложения (release, locale, tray, shortcuts, update). Группа `layout` — корневой shell.
+> **Slices grouped by domain.** In GnomeVPN the slices inside `features/`, `entities/` and `widgets/` are grouped by business domain (`app`, `auth`, `billing`, `vpn`). This is a layer on top of the FSD canon (`<layer>/<slice>/`). Imports: `@/features/auth/sign-in`, `@/entities/vpn/node`, `@/widgets/app/title-bar`. The `app` group is the cross-domain application infrastructure (release, locale, platform, system-tray, deep-link, check-update). The `views/` layer does not group its slices by domain — route screens sit directly in it (`views/app-view`, `views/account`).
 
 ---
 
-## 2. Золотое правило: направление импортов
+## 2. The golden rule: the direction of imports
 
 ```
 App → Views → Widgets → Features → Entities → Shared
 ```
 
-Модуль импортирует только из слоёв **строго ниже**. Запрещено:
+A module imports only from layers **strictly below** it. Forbidden:
 
-- **Вверх** — Feature не может импортить из Widget или View.
-- **Вбок внутри слоя** — один Feature не может импортить другой Feature.
+- **Upward** — a Feature cannot import from a Widget or a View.
+- **Sideways within a layer** — one Feature cannot import another Feature.
 
-**Исключение — cross-entity ссылки.** Когда Entity A нужен тип из Entity B, используй `@x`-паттерн: `entities/A/@x/B.ts` экспортирует только то, что B нужно от A.
-
----
-
-## 3. Слайсы
-
-Слайс — директория внутри слоя, названная по **бизнес-домену** (не по технической роли).
-
-- ✓ Хорошо: `user`, `room`, `auth`, `message`, `notification`
-- ✗ Плохо: `components`, `hooks`, `helpers`, `utils`
-
-**Правила:**
-
-- Каждый слайс изолирован — ноль связности с соседними слайсами того же слоя.
-- Связанные слайсы можно группировать в подпапки, но они остаются независимыми.
-- Имена слайсов — kebab-case.
-
-**Доменные группы (Chatovo):** слои `features/`, `entities/`, `widgets/` группируют слайсы по бизнес-домену:
-
-- `auth/` — авторизация (sign-in, sign-up, user)
-- `room/` — комнаты, голос, чат, presence
-- `app/` — инфраструктура приложения (release, locale, system-tray, shortcuts, check-app-update)
-- `layout/` (только widgets) — корневой shell
-
-Доменная папка — организационный контейнер, **не публичный API**. Импорт всегда до уровня слайса: `@/features/room/create`, не `@/features/room`.
+**The exception — cross-entity references.** When Entity A needs a type from Entity B, use the `@x` pattern: `entities/A/@x/B.ts` exports only what B needs from A. GnomeVPN has none of these yet — shared types come from `@gnomevpn/schemas`, not from a neighbouring entity.
 
 ---
 
-## 4. Сегменты
+## 3. Slices
 
-Сегменты организуют код внутри слайса по технической цели:
+A slice is a directory inside a layer, named after a **business domain** (not a technical role).
 
-| Сегмент | Содержит |
+- ✓ Good: `user`, `node`, `protocol`, `subscription`, `connect`, `split-tunneling`
+- ✗ Bad: `components`, `hooks`, `helpers`, `utils`
+
+**Rules:**
+
+- Every slice is isolated — zero coupling to neighbouring slices in the same layer.
+- Related slices may be grouped into subfolders, but they stay independent.
+- Slice names are kebab-case.
+
+**Domain groups (GnomeVPN):** the `features/`, `entities/` and `widgets/` layers group their slices by business domain:
+
+- `vpn/` — the tunnel, nodes, protocols, split-tunneling, device configs
+  (`features/vpn/connect`, `features/vpn/split-tunneling`, `features/vpn/download-config`;
+  `entities/vpn/node`, `entities/vpn/protocol`, `entities/vpn/device`)
+- `billing/` — plans, subscription, payment (`features/billing/checkout`, `entities/billing/subscription`)
+- `auth/` — sign-in, sign-up, password, profile (`features/auth/sign-in`, `features/auth/sign-up`,
+  `features/auth/forgot-password`, `features/auth/reset-password`, `features/auth/change-password`,
+  `features/auth/change-email`, `features/auth/update-name`, `features/auth/sign-out`;
+  `entities/auth/user`)
+- `app/` — application infrastructure (`features/app/check-update`, `features/app/deep-link`,
+  `features/app/system-tray`, `features/app/switch-locale`, `features/app/startup-settings`,
+  `features/app/service-repair`, `features/app/vpn-permission`, `features/app/download-app`;
+  `entities/app/locale`, `entities/app/platform`, `entities/app/release`;
+  `widgets/app/title-bar`)
+
+A domain folder is an organisational container, **not a public API**. Always import down to the slice level: `@/features/vpn/connect`, not `@/features/vpn`.
+
+---
+
+## 4. Segments
+
+Segments organise the code inside a slice by technical purpose:
+
+| Segment | Holds |
 |---|---|
-| `ui/` | Компоненты, форматтеры, стили |
-| `model/` | Типы, интерфейсы, сторы, схемы, бизнес-логика |
-| `api/` | Запросы на бэкенд, мапперы данных, query-хуки |
-| `lib/` | Внутренние утилиты только для этого слайса |
-| `config/` | Фиче-флаги, константы, конфигурация |
+| `ui/` | Components, formatters, styles |
+| `model/` | Types, interfaces, contexts, schemas, business logic |
+| `api/` | Backend requests, data mappers, query hooks |
+| `lib/` | Internal utilities for this slice only |
+| `config/` | Feature flags, constants, configuration |
 
-Кастомные сегменты допустимы — называй по тому, **что делают**, не что они есть.
-✗ Плохо: `hooks/`, `components/`. ✓ Хорошо: `model/`, `lib/`.
+Custom segments are allowed — name them after **what they do**, not what they are.
+✗ Bad: `hooks/`, `components/`. ✓ Good: `model/`, `lib/`.
 
 ---
 
-## 5. Публичный API (`index.ts`)
+## 5. Public API (`index.ts`)
 
-У каждого слайса — `index.ts` в корне, реэкспортирующий публичный интерфейс.
+Every slice has an `index.ts` at its root, re-exporting the public interface.
 
 ```ts
-// features/room/room-control/index.ts
-export { RoomControlBar } from './ui/RoomControlBar';
-export { useRoomControls } from './model/hooks';
-export { DeafenProvider } from './model/contexts';
+// features/vpn/connect/index.ts
+export { useVpnConnectionContext, VpnConnectionProvider } from './model/context';
+export { useProtocolSelection } from './model/hooks';
+export type { VpnConnectionStatus, VpnTraffic } from './model/hooks';
+
+export { ConnectButton } from './ui/ConnectButton';
+export type { ConnectButtonProps } from './ui/ConnectButton.types';
 ```
 
-**Правила:**
+**Rules:**
 
-- **Без wildcard-экспортов** — `export * from './ui/Foo'` запрещён. Явно.
-- **Минимальная поверхность** — экспортируй только то, что реально нужно другим слоям.
-- **Внешние импорты — только через index слайса** — никогда `@/features/auth/sign-in/ui/SignInForm` напрямую. Всегда `@/features/auth/sign-in`.
-- **Группа домена — не публичный API** — `@/features/auth` не существует, импортируется конкретный слайс. Доменная папка только организует файлы.
-- **`model/` — barrel в подпапках, не на уровне `model/`.** `model/hooks/index.ts`, `model/contexts/index.ts`, `model/stores/index.ts` — каждая подпапка свой barrel. Slice-level `model/index.ts` НЕ создаём. Slice `index.ts` и внутренние импорты идут через подпапку: `./model/hooks`, `../model/contexts`. Подробнее — [`docs/style.md`](./style.md) §11.
-- **Без циклических импортов** — не импортируй из собственного `index.ts` внутри слайса. Внутри — относительные пути.
-- **`shared/ui` — атомарный слой.** Сегменты `atoms/`, `molecules/`, `organisms/`, `icons/`. **Каждый компонент — своя PascalCase-папка** (`atoms/Button/`, `molecules/FormField/`, …) с файлами `Component.tsx`, `Component.module.scss`, опционально `Component.types.ts`, barrel `index.ts`. Сегментные barrel (`atoms/index.ts`, …) и корневой `shared/ui/index.ts` реэкспортят всё. Снаружи — только `@/shared/ui`, не `@/shared/ui/atoms/Button`. Headless-примитивы — **`@base-ui-components/react`**; стили — **SCSS modules**, токены — `app/globals.scss`. Подробнее — [`docs/style.md`](./style.md) §2.1.
+- **No wildcard exports** — `export * from './ui/Foo'` is forbidden. Be explicit.
+- **Minimal surface** — export only what other layers genuinely need.
+- **External imports go through the slice index** — never `@/features/auth/sign-in/ui/SignInForm` directly. Always `@/features/auth/sign-in`.
+- **A domain group is not a public API** — `@/features/auth` does not exist; the specific slice is what gets imported. The domain folder only organises files.
+- **`model/` — barrels in the subfolders, not at the `model/` level.** `model/hooks/index.ts`, `model/context/index.ts` — each subfolder gets its own barrel. We do NOT create a slice-level `model/index.ts`. The slice `index.ts` and internal imports go through the subfolder: `./model/hooks`, `../model/context`. More in [`docs/style.md`](./style.md) §11.
+- **No circular imports** — do not import from a slice's own `index.ts` inside that slice. Inside, use relative paths.
+- **`shared/ui` is an atomic layer.** Segments `atoms/`, `molecules/`, `organisms/`. **Each component gets its own PascalCase folder** (`atoms/Button/`, `molecules/FormField/`, `organisms/StatusScreen/`) with `Component.tsx`, `Component.module.scss`, optionally `Component.types.ts` and `Component.variants.ts`, and a barrel `index.ts`. The segment barrels (`atoms/index.ts`, …) and the root `shared/ui/index.ts` re-export everything. From outside — only `@/shared/ui`, not `@/shared/ui/atoms/Button`. Headless primitives — **`@base-ui/react`**; styles — **SCSS modules**, tokens — `app/globals.scss`. More in [`docs/style.md`](./style.md) §2.1.
 
 ---
 
-## 6. Интеграция с Next.js (App Router)
+## 6. Next.js integration (App Router)
 
-`app/` остаётся в корне `apps/client/`. Роут-файлы — тонкие обёртки, делегируют во `views/`:
+`app/` stays at the `apps/client/` root. Route files are thin wrappers that delegate to `views/`:
 
 ```tsx
-// app/(authed)/room/page.tsx — серверный, тонкий
-import { RoomPage } from '@/views/room';
+// app/app/page.tsx — server-side, thin
+import { createPageMetadata } from '@/shared/seo';
+import { AppGate } from '@/views/app-view';
 
-const Page = () => <RoomPage />;
+export const metadata = createPageMetadata({
+  title: 'Connection',
+  description: 'Pick a country and control the VPN tunnel.',
+  path: '/app',
+  index: false,
+  follow: false
+});
+
+const Page = () => <AppGate />;
 
 export default Page;
 ```
 
-Роут-файлы (`page.tsx`, `layout.tsx`) — серверные компоненты, без `'use client'`. Содержат только: metadata, обёртку, default export. Вся UI и логика — во `views/<name>/`.
+Route files (`page.tsx`, `layout.tsx`) are server components, no `'use client'`. They contain only: metadata, the wrapper, the default export. All the UI and the logic live in `views/<name>/`.
 
-> Канон FSD рекомендует `export { Page as default } from '@/views/...'` и пустую `pages/` с `.gitkeep`. В Chatovo слой назван `views/` — конфликта с Next.js Pages Router нет, `.gitkeep`-заглушка не нужна. Роут-обёртка пишется как обычный компонент (см. выше).
+> Canonical FSD recommends `export { Page as default } from '@/views/...'` and an empty `pages/` with a `.gitkeep`. In GnomeVPN the layer is named `views/` — there is no conflict with the Next.js Pages Router, so the `.gitkeep` placeholder is unnecessary. The route wrapper is written as an ordinary component (see above).
 
-### Path-алиасы
+Providers (`AppProviders`, `AuthProvider`, `DesktopShell`, `I18nProvider`, `VaultProvider`, …) live in `app/providers/` — that is a segment of the App layer, not a slice.
 
-`@/` указывает на `apps/client/` (канон: на `src/`):
+### Path aliases
+
+`@/` points at `apps/client/` (canon: at `src/`):
 
 ```jsonc
 // tsconfig.json
@@ -162,71 +189,83 @@ export default Page;
 
 ---
 
-## 7. Паттерны композиции
+## 7. Composition patterns
 
-**View** *(канон: Page)*:
+**View** *(canon: Page)*:
 
 ```
 View
-├── импортит Widget A (самодостаточный блок)
-├── импортит Widget B
-├── импортит Feature X (интерактивный элемент)
-└── использует Shared UI-примитивы для лейаута
+├── imports Widget A (self-contained block)
+├── imports Widget B
+├── imports Feature X (interactive element)
+└── uses Shared UI primitives for layout
 ```
 
 **Widget:**
 
 ```
 Widget
-├── импортит Feature(s) для интерактивности
-├── импортит Entity типы/компоненты для отображения
-└── использует Shared UI-примитивы
+├── imports Feature(s) for interactivity
+├── imports Entity types/components for display
+└── uses Shared UI primitives
 ```
 
 **Feature:**
 
 ```
 Feature
-├── импортит Entity типы/хуки для доменных данных
-└── использует Shared API-клиент, UI-примитивы, утилиты
+├── imports Entity types/hooks for domain data
+└── uses the Shared API client, UI primitives, utilities
 ```
 
----
-
-## 8. Чек-лист (проверять перед каждым изменением)
-
-- [ ] Файл в правильной директории слоя
-- [ ] Импорты идут только вниз — никогда вверх или вбок
-- [ ] У слайса есть публичный `index.ts` с явными именованными экспортами
-- [ ] Нет прямых импортов во внутренности слайса извне
-- [ ] Имена директорий и файлов — kebab-case (исключение — папки компонентов: PascalCase)
-- [ ] Функции-компоненты — именованные PascalCase-экспорты (никаких default-экспортов из слайсов)
-- [ ] Сегменты описывают цель (`model/`, `api/`), не техническую роль (`hooks/`, `components/`)
-- [ ] Роут-файлы — тонкие обёртки, делегируют во `views/`
-- [ ] Слой Shared не содержит бизнес-логики — только project-agnostic код
-- [ ] Слой Entities не содержит UI-логики интеракций — это уровень Features
-
-> **Naming в Chatovo:** канон FSD требует kebab-case для всех файлов. Chatovo-кодстайл (см. `style-guide.md` секция 7): kebab-case для слайсов/сегментов, **PascalCase для папок и файлов компонентов** (`VoiceRoom/VoiceRoom.tsx`), camelCase для хуков/утилит. Это локальная конвенция поверх FSD.
+An example from live code: `views/app-view` assembles `AppView` out of `widgets/app/title-bar`,
+`features/vpn/connect` (`ConnectButton`, `VpnConnectionProvider`),
+`features/vpn/split-tunneling`, `entities/vpn/node` (`useNodes`) and primitives from `@/shared/ui`.
 
 ---
 
-## 9. Частые ошибки
+## 8. Checklist (check before every change)
 
-| Ошибка | Фикс |
+- [ ] The file is in the right layer directory
+- [ ] Imports go downward only — never up, never sideways
+- [ ] The slice has a public `index.ts` with explicit named exports
+- [ ] Nothing imports a slice's internals from outside
+- [ ] Directory and file names are kebab-case (exception — component folders: PascalCase)
+- [ ] Component functions are named PascalCase exports (no default exports out of slices)
+- [ ] Segments describe purpose (`model/`, `api/`), not technical role (`hooks/`, `components/`)
+- [ ] Route files are thin wrappers that delegate to `views/`
+- [ ] The Shared layer holds no business logic — only project-agnostic code
+- [ ] The Entities layer holds no interaction UI logic — that is the Features level
+
+> **Naming in GnomeVPN:** canonical FSD requires kebab-case for every file. The GnomeVPN code style (see [`docs/style.md`](./style.md) §5): kebab-case for slices/segments, **PascalCase for component folders and files** (`TitleBar/TitleBar.tsx`), camelCase for hooks/utilities. This is a local convention on top of FSD.
+
+---
+
+## 9. Common mistakes
+
+| Mistake | Fix |
 |---|---|
-| Feature импортит из другого Feature | Вынести общую логику в Entities или Shared |
-| View содержит бизнес-логику напрямую | Вынести в Feature, скомпоновать во View |
-| `shared/hooks/useSignIn.ts` | Auth — бизнес-домен → `features/auth/sign-in/model/use-sign-in.ts` |
-| Widget импортит из View | Инвертировать: View импортит Widget |
-| Слайс экспортит всё через `export *` | Явные именованные реэкспорты |
-| Папка `components/` в корне слоя | Классифицировать: это Widget, Feature, Entity или Shared UI? |
-| Роут-файл содержит полную реализацию страницы | Перенести во `views/<name>/`, роут — тонкая обёртка |
+| A Feature imports from another Feature | Move the shared logic into Entities or Shared |
+| A View holds business logic directly | Move it into a Feature, compose it in the View |
+| `shared/hooks/useSignIn.ts` | Auth is a business domain → `features/auth/sign-in/model/use-sign-in.ts` |
+| A Widget imports from a View | Invert it: the View imports the Widget |
+| A slice exports everything via `export *` | Explicit named re-exports |
+| A `components/` folder at a layer root | Classify it: is this a Widget, a Feature, an Entity or Shared UI? |
+| A route file holds the full page implementation | Move it into `views/<name>/`; the route is a thin wrapper |
 
 ---
 
-## Дополнительно
+## 10. Tests
 
-- Полная спецификация: [feature-sliced.design](https://feature-sliced.design)
-- Линтер FSD-правил: [Steiger](https://github.com/feature-sliced/steiger)
-- Cross-entity паттерн `@x` — секция 2 выше
-- Кодстайл Chatovo поверх FSD (структура слайса, naming, размер компонента): `docs/style-guide.md`
+A test lives in a `_tests/` folder next to what it tests and covers pure logic only — `features/vpn/split-tunneling/lib/matches-query/_tests/`, `shared/api/configs/_tests/`, `shared/ui/atoms/Button/_tests/`. The runner is Vitest (`bun run test`, not `bun test`). E2E over the public routes — Playwright in the root `e2e/`.
+
+`_tests/` is not an FSD segment: it takes no part in the slice's public API and exports nothing outward.
+
+---
+
+## Further reading
+
+- Full specification: [feature-sliced.design](https://feature-sliced.design)
+- Linter for FSD rules: [Steiger](https://github.com/feature-sliced/steiger)
+- The `@x` cross-entity pattern — section 2 above
+- The GnomeVPN code style on top of FSD (slice structure, naming, component size): [`docs/style.md`](./style.md)

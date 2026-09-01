@@ -158,3 +158,124 @@ pub enum TunnelEvent {
 fn default_true() -> bool {
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn wireguard() -> WireguardConfig {
+        WireguardConfig {
+            private_key: "super-secret-private-key".to_string(),
+            address: "10.0.0.2/32".to_string(),
+            peer_public_key: "peer-public-key".to_string(),
+            pre_shared_key: Some("super-secret-shared-key".to_string()),
+            allowed_ips: vec!["0.0.0.0/0".to_string()],
+            reserved: Vec::new(),
+            mtu: Some(1420),
+        }
+    }
+
+    fn config() -> TunnelConfig {
+        TunnelConfig {
+            protocol: TunnelProtocol::Hysteria2,
+            server: "203.0.113.10".to_string(),
+            port: 443,
+            auth: "super-secret-auth".to_string(),
+            server_name: "masquerade.example".to_string(),
+            insecure: true,
+            dns: vec!["1.1.1.1".to_string()],
+            wireguard: None,
+        }
+    }
+
+    #[test]
+    fn keeps_the_tunnel_auth_out_of_the_debug_output() {
+        let rendered = format!("{:?}", config());
+
+        assert!(!rendered.contains("super-secret-auth"));
+        assert!(rendered.contains("[redacted]"));
+        assert!(rendered.contains("203.0.113.10"));
+    }
+
+    #[test]
+    fn keeps_the_wireguard_keys_out_of_the_debug_output() {
+        let rendered = format!("{:?}", wireguard());
+
+        assert!(!rendered.contains("super-secret-private-key"));
+        assert!(!rendered.contains("super-secret-shared-key"));
+        assert!(rendered.contains("peer-public-key"));
+        assert!(rendered.contains("10.0.0.2/32"));
+    }
+
+    #[test]
+    fn tags_each_protocol_with_its_singbox_name() {
+        assert_eq!(TunnelProtocol::Hysteria2.tag(), "hysteria2");
+        assert_eq!(TunnelProtocol::Wireguard.tag(), "wireguard");
+    }
+
+    #[test]
+    fn defaults_to_hysteria_when_the_protocol_is_absent() {
+        let request: Request =
+            serde_json::from_str(r#"{"type":"connect","config":{"server":"203.0.113.10","port":443,"dns":["1.1.1.1"]}}"#).expect("parse");
+
+        let Request::Connect {
+            config,
+            auto_reconnect,
+            split,
+        } = request
+        else {
+            panic!("expected a connect request");
+        };
+
+        assert_eq!(config.protocol, TunnelProtocol::Hysteria2);
+        assert!(auto_reconnect);
+        assert!(split.is_empty());
+    }
+
+    #[test]
+    fn serialises_the_protocol_in_camel_case() {
+        let json = serde_json::to_string(&TunnelProtocol::Wireguard).expect("serialise");
+
+        assert_eq!(json, r#""wireguard""#);
+    }
+
+    #[test]
+    fn round_trips_every_tunnel_event() {
+        let events = [
+            TunnelEvent::Connecting,
+            TunnelEvent::Handshake,
+            TunnelEvent::Connected {
+                assigned_ip: "10.0.0.2".to_string(),
+            },
+            TunnelEvent::BytesUpdate { rx: 1, tx: 2 },
+            TunnelEvent::Disconnected,
+            TunnelEvent::Error { message: "boom".to_string() },
+        ];
+
+        for event in events {
+            let json = serde_json::to_string(&event).expect("serialise");
+            let parsed: TunnelEvent = serde_json::from_str(&json).expect("parse");
+
+            assert_eq!(parsed, event);
+        }
+    }
+
+    #[test]
+    fn counts_a_split_config_as_empty_only_without_apps_and_ips() {
+        assert!(SplitConfig::default().is_empty());
+
+        let with_apps = SplitConfig {
+            apps: vec!["/usr/bin/firefox".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert!(!with_apps.is_empty());
+
+        let with_ips = SplitConfig {
+            ips: vec!["10.0.0.0/8".to_string()],
+            ..SplitConfig::default()
+        };
+
+        assert!(!with_ips.is_empty());
+    }
+}

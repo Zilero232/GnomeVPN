@@ -146,7 +146,10 @@ The repo has no `unsafe` blocks. Keep it that way.
 - **Two or more parameters → one object.** `connect({ nodeId, country })`, never
   `connect(nodeId, country)`. The shape lives in a sibling `*.types.ts` as
   `<Fn>Input`, so a call site never has to guess argument order.
-- No tests in this repo (removed deliberately); verify by building and running
+- Tests cover pure logic only — Vitest in `_tests/` folders beside the source,
+  `#[cfg(test)]` modules in the Rust crates, Playwright for public routes.
+  Anything that needs a database, a node over SSH or a live tunnel is verified
+  by building and running, not by a mock.
 - Everything user-visible goes through i18n, both `en.json` and `ru.json`
 - Import order: types → builtin/external → internal (`@/`) → relative → styles →
   side-effects. `perfectionist/sort-imports` enforces it; `bun lint:fix` sorts.
@@ -192,10 +195,31 @@ is its counterpart: every autofixer in the same order.
 The individual scripts (`typecheck`, `lint`, `format:check`, `lint:css`,
 `format:rust:check`, `lint:rust`) still exist when you want one of them alone.
 
+Tests are not part of `verify` — they run on their own:
+
+```bash
+bun run test              # Vitest, every workspace in one run
+bun run test:coverage     # the same plus a v8 coverage report
+bun run test:rust         # cargo test --workspace
+bun run test:e2e          # Playwright, starts the client dev server itself
+```
+
+**`bun run test`, never `bun test`.** Bare `bun test` is Bun's own runner, which
+claims the name before the script does — it collects the same files, then fails
+them all on `vi.setSystemTime is not a function`, because it is not Vitest.
+
+Vitest is wired as projects: `packages/schemas`, `packages/scripts`,
+`apps/server` and `apps/client` each own a `vitest.config.ts`, and the root one
+lists them. A test lives in a `_tests/` folder next to what it tests. The Rust
+tests are `#[cfg(test)]` modules inside `crates/vpn-ipc` — the protocol
+validation, the framing and the two config builders, which is where the pure
+logic is.
+
 **Nothing in CI checks an ordinary commit.** There is no workflow watching master
 or pull requests — the only automated run is the `checks` job in `release.yml`,
-which gates a `v*` tag. So this command is the first check and the last one:
-a broken commit reaches master silently and surfaces at release time.
+which gates a `v*` tag and runs `verify` plus both test suites. So these commands
+are the first check and the last one: a broken commit reaches master silently and
+surfaces at release time.
 
 `verify` needs a Rust toolchain (`rustup toolchain install`, pinned by
 `rust-toolchain.toml`). Without it `cargo fmt` and `cargo clippy` cannot run and

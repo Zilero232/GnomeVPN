@@ -39,11 +39,13 @@ export const serializeByKey = <T>(key: string, task: () => Promise<T>): Promise<
 
   chains.set(
     key,
-    next.finally(() => {
-      if (chains.get(key) === next) {
-        chains.delete(key);
-      }
-    })
+    next
+      .catch(() => undefined)
+      .finally(() => {
+        if (chains.get(key) === next) {
+          chains.delete(key);
+        }
+      })
   );
 
   return next;

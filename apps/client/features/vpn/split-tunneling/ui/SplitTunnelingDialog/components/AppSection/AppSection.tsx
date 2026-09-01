@@ -9,7 +9,7 @@ import { IconButton, Input } from '@/shared/ui';
 
 import type { AppSectionProps } from './AppSection.types';
 
-import { matchesQuery } from '../../../../lib';
+import { matchesQuery, withPickedApps } from '../../../../lib';
 import { useAppSource } from '../../../../model/hooks';
 import { SplitModeToggle } from '../SplitModeToggle';
 
@@ -25,8 +25,10 @@ export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: Ap
 
   const { apps, isLoading } = useAppSource({ source, isOpen });
 
+  const listed = withPickedApps({ apps, picked: draft.apps });
+
   const needle = query.trim().toLowerCase();
-  const matched = needle ? apps.filter((app) => matchesQuery({ name: app.name, needle })) : apps;
+  const matched = needle ? listed.filter((app) => matchesQuery({ name: app.name, needle })) : listed;
   const visible = sortBy(
     matched,
     (app) => (draft.apps.includes(app.path) ? 0 : 1),

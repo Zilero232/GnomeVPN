@@ -3,6 +3,18 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
+  "description": "GnomeVPN desktop and Android shell — Tauri 2 over the privileged VPN service.",
+  "homepage": "https://gnomevpn.ru",
+  "bugs": {
+    "url": "https://github.com/Zilero232/GnomeVPN/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zilero232/GnomeVPN.git",
+    "directory": "apps/tauri"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Alexandr Artemev",
   "scripts": {
     "tauri": "tauri",
     "icon": "tauri icon icon.manifest.json -o icons",

@@ -40,6 +40,7 @@ model Account {
   userId     String @map("user_id")
   accountId  String @map("account_id")
   providerId String @map("provider_id")
+  issuer     String
 
   accessToken           String?   @map("access_token")
   refreshToken          String?   @map("refresh_token")
@@ -54,6 +55,7 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([issuer, accountId])
   @@map("account")
 }
 

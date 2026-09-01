@@ -34,3 +34,9 @@ skills-lock.json
 
 # Logs
 *.log
+
+# Test artifacts
+coverage/
+e2e/.results/
+playwright-report/
+.playwright/

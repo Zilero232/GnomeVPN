@@ -1,7 +1,28 @@
 {
   "name": "gnomevpn",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "private": true,
+  "description": "GnomeVPN — a commercial VPN on Hysteria2 for web, desktop and Android. Bun-workspaces monorepo.",
+  "keywords": [
+    "vpn",
+    "hysteria2",
+    "sing-box",
+    "quic",
+    "nextjs",
+    "nestjs",
+    "tauri",
+    "bun"
+  ],
+  "homepage": "https://gnomevpn.ru",
+  "bugs": {
+    "url": "https://github.com/Zilero232/GnomeVPN/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zilero232/GnomeVPN.git"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Alexandr Artemev",
   "type": "module",
   "packageManager": "bun@1.3.1",
   "engines": {
@@ -13,17 +34,17 @@
       "packages/*"
     ],
     "catalog": {
-      "@types/bun": "^1.3.14",
-      "@types/pg": "^8.21.0",
+      "@types/bun": "^1.4.0",
+      "@types/pg": "^8.23.1",
       "@types/react": "^19.2.18",
-      "better-auth": "^1.6.26",
+      "better-auth": "^1.7.2",
       "date-fns": "^4.4.0",
-      "p-retry": "^8.0.0",
+      "p-retry": "^8.0.1",
       "pg": "^8.23.0",
       "react": "^19.2.8",
-      "remeda": "^2.39.0",
+      "remeda": "^2.45.0",
       "typescript": "~6.0.3",
-      "zod": "^4.4.3"
+      "zod": "^4.5.4"
     }
   },
   "scripts": {
@@ -38,6 +59,12 @@
     "android:init": "bun --filter @gnomevpn/tauri android:init",
     "android:dev": "bun --filter '@gnomevpn/server' --filter '@gnomevpn/tauri' --parallel android:dev",
     "android:build": "bun --env-file .env --env-file apps/tauri/.env apps/tauri/scripts/check-api-url.mjs && bun --filter @gnomevpn/client build && bun --filter @gnomevpn/tauri android:build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:rust": "cargo test --workspace",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -60,23 +87,33 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@playwright/test": "^1.62.1",
     "@siberiacancode/eslint": "^2.18.1",
-    "@siberiacancode/prettier": "^1.8.0",
+    "@siberiacancode/prettier": "^1.9.0",
     "@siberiacancode/stylelint": "^1.2.0",
     "@siberiacancode/tsconfig": "^1.2.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
     "@types/bun": "catalog:",
     "@types/pg": "catalog:",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "babel-plugin-react-compiler": "^1.0.0",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.1",
     "fkill-cli": "^9.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.3.0",
+    "jsdom": "^30.0.1",
+    "lint-staged": "^17.4.1",
     "prettier": "^3.9.6",
     "stylelint": "17.14.1",
     "stylelint-config-idiomatic-order": "^10.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-order": "^8.1.1",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
