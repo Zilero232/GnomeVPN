@@ -178,7 +178,14 @@
     "resetPassword": "New password",
     "resetPasswordAction": "Save password",
     "passwordReset": "Password changed — sign in with the new one",
-    "resetLinkInvalid": "This link is invalid or has expired. Request a new one."
+    "resetLinkInvalid": "This link is invalid or has expired. Request a new one.",
+    "verifyEmail": {
+      "TOKEN_EXPIRED": "That confirmation link has expired. Request a new one.",
+      "INVALID_TOKEN": "That confirmation link is not valid. Request a new one.",
+      "USER_NOT_FOUND": "We could not find an account for that link.",
+      "INVALID_USER": "That link belongs to a different account. Sign in as that account and open it again.",
+      "UNKNOWN": "We could not confirm your email. Request a new link."
+    }
   },
   "account": {
     "loading": "Loading…",
