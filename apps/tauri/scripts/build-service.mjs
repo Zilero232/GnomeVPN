@@ -14,6 +14,9 @@ const BINARY = isWindows ? 'gnomevpn-service.exe' : 'gnomevpn-service';
 
 const log = reporter('build-service');
 const isRelease = process.argv.includes('--release');
+
+// Cross-compiled builds land in target/<triple>/<profile>.
+const rustTarget = process.env.SERVICE_TARGET ?? '';
 const profile = isRelease ? 'release' : 'debug';
 
 const newestSourceMtime = () => {
@@ -54,11 +57,11 @@ const stopRunningService = () => {
 const build = () => {
   stopRunningService();
 
-  const args = ['build', '-p', 'gnomevpn-service', ...(isRelease ? ['--release'] : [])];
+  const args = ['build', '-p', 'gnomevpn-service', ...(rustTarget ? ['--target', rustTarget] : []), ...(isRelease ? ['--release'] : [])];
 
   execFileSync('cargo', args, { cwd: paths.workspace, stdio: 'inherit' });
 
-  const binary = join(paths.target, profile, BINARY);
+  const binary = join(paths.target, ...(rustTarget ? [rustTarget] : []), profile, BINARY);
 
   if (!existsSync(binary)) {
     log.fail(`not found: ${binary}`);

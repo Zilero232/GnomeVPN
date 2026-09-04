@@ -90,6 +90,20 @@ pub async fn vpn_request_permission<R: Runtime>(app: AppHandle<R>) -> Result<boo
 }
 
 #[tauri::command]
+pub async fn vpn_is_battery_unrestricted<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+    app.state::<VpnPlugin<R>>().is_battery_unrestricted()
+}
+
+#[tauri::command]
+pub async fn vpn_request_battery_unrestricted<R: Runtime>(app: AppHandle<R>) -> Result<bool, MobileVpnError> {
+    let handle = app.clone();
+
+    tauri::async_runtime::spawn_blocking(move || handle.state::<VpnPlugin<R>>().request_battery_unrestricted())
+        .await
+        .map_err(|error| MobileVpnError::Service(error.to_string()))?
+}
+
+#[tauri::command]
 pub async fn vpn_traffic<R: Runtime>(app: AppHandle<R>) -> Result<TrafficResult, MobileVpnError> {
     app.state::<VpnPlugin<R>>().traffic()
 }

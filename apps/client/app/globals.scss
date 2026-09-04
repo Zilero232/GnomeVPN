@@ -140,7 +140,6 @@ select,
 .gnomevpn-toaster [data-sonner-toast]:after {
   position: absolute;
   border-radius: inherit;
-  backdrop-filter: blur(22px) saturate(160%);
   background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
   content: '';
   inset: 0;

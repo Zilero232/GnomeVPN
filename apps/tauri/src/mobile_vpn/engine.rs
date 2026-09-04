@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::Mutex;
 
-use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, TunnelConfig, TunnelProtocol};
+use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, StallDetector, TunnelConfig, TunnelProtocol};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
 use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
@@ -22,9 +23,10 @@ const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
 const LOG_MAX_BYTES: u64 = 2 * 1024 * 1024;
 const RECONNECT_MIN_DELAY: Duration = Duration::from_secs(1);
 const RECONNECT_MAX_DELAY: Duration = Duration::from_secs(30);
-const STALL_TIMEOUT: Duration = Duration::from_secs(60);
-const STALL_MIN_BYTES: u64 = 32 * 1024;
 const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
+
+const PROBE_HOST: &str = "1.1.1.1";
+const PROBE_PORT: u16 = 53;
 
 static ATTEMPT: Mutex<Option<CancellationToken>> = Mutex::new(None);
 static SOCKS: Mutex<Option<SocketAddr>> = Mutex::new(None);
@@ -221,44 +223,58 @@ pub async fn run_tun2proxy(mut args: Args, fd: i32, cancellation: CancellationTo
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
 }
 
-#[derive(Default)]
-struct StallDetector {
-    last_seen: Option<counters::Traffic>,
-    deaf_for: Duration,
-    asked: u64,
+async fn reaches_through_tunnel(socks: SocketAddr, credentials: &SocksCredentials) -> bool {
+    let attempt = async {
+        let mut stream = tokio::net::TcpStream::connect(socks).await.ok()?;
+
+        stream.write_all(&[0x05, 0x01, 0x02]).await.ok()?;
+
+        let mut greeting = [0u8; 2];
+        stream.read_exact(&mut greeting).await.ok()?;
+
+        if greeting != [0x05, 0x02] {
+            return None;
+        }
+
+        let user = credentials.user.as_bytes();
+        let password = credentials.password.as_bytes();
+
+        let mut auth = vec![0x01, u8::try_from(user.len()).ok()?];
+        auth.extend_from_slice(user);
+        auth.push(u8::try_from(password.len()).ok()?);
+        auth.extend_from_slice(password);
+
+        stream.write_all(&auth).await.ok()?;
+
+        let mut auth_reply = [0u8; 2];
+        stream.read_exact(&mut auth_reply).await.ok()?;
+
+        if auth_reply[1] != 0x00 {
+            return None;
+        }
+
+        let host = PROBE_HOST.as_bytes();
+
+        let mut connect = vec![0x05, 0x01, 0x00, 0x03, u8::try_from(host.len()).ok()?];
+        connect.extend_from_slice(host);
+        connect.extend_from_slice(&PROBE_PORT.to_be_bytes());
+
+        stream.write_all(&connect).await.ok()?;
+
+        let mut reply = [0u8; 4];
+        stream.read_exact(&mut reply).await.ok()?;
+
+        Some(reply[1] == 0x00)
+    };
+
+    matches!(timeout(PROBE_TIMEOUT, attempt).await, Ok(Some(true)))
 }
 
-impl StallDetector {
-    fn observe(&mut self, current: counters::Traffic) -> Option<String> {
-        let previous = self.last_seen.replace(current)?;
-
-        if current.rx > previous.rx {
-            self.deaf_for = Duration::ZERO;
-            self.asked = 0;
-
-            return None;
-        }
-
-        let sent = current.tx.saturating_sub(previous.tx);
-
-        if sent == 0 {
-            return None;
-        }
-
-        self.asked = self.asked.saturating_add(sent);
-        self.deaf_for += LIVENESS_INTERVAL;
-
-        if self.deaf_for < STALL_TIMEOUT || self.asked < STALL_MIN_BYTES {
-            return None;
-        }
-
-        Some(format!("sent {} bytes over {}s with no reply", self.asked, self.deaf_for.as_secs()))
-    }
-}
-
-async fn watch_hysteria(hysteria: &mut Hysteria, cancellation: CancellationToken) -> MobileVpnError {
+async fn watch_hysteria(hysteria: &mut Hysteria, credentials: &SocksCredentials, cancellation: CancellationToken) -> MobileVpnError {
     let mut ticker = interval(LIVENESS_INTERVAL);
     let mut detector = StallDetector::default();
+
+    let socks = hysteria.socks_addr();
 
     loop {
         tokio::select! {
@@ -271,9 +287,14 @@ async fn watch_hysteria(hysteria: &mut Hysteria, cancellation: CancellationToken
                     return MobileVpnError::Hysteria(reason);
                 }
 
-                if let Some(reason) = detector.observe(counters::read()) {
+                if let Some(reason) = detector.observe(counters::read().into()) {
                     cancellation.cancel();
                     return MobileVpnError::Hysteria(reason);
+                }
+
+                if detector.is_idle() && detector.due_for_probe() && !reaches_through_tunnel(socks, credentials).await {
+                    cancellation.cancel();
+                    return MobileVpnError::Hysteria("the tunnel stopped answering while idle".into());
                 }
             }
         }
@@ -319,7 +340,7 @@ where
 
     let result = tokio::select! {
         tunnel = run_tun2proxy(args, fd, cancellation.clone()) => tunnel,
-        reason = watch_hysteria(&mut hysteria, cancellation.clone()) => Err(reason),
+        reason = watch_hysteria(&mut hysteria, &credentials, cancellation.clone()) => Err(reason),
     };
 
     set_socks(None);

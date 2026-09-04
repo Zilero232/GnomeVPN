@@ -239,18 +239,35 @@ the apps are asking and the tunnel is swallowing it. Only that, sustained for
 hands over to the existing reconnect loop. Unreadable counters mean "cannot tell",
 never "stalled".
 
+**That rule is blind exactly when the screen is off**, which is where the drop
+was reported: with nothing being sent there is no tx to climb, so a session that
+died in the pocket produces no evidence at all. `watch_hysteria` therefore also
+reaches through the tunnel every `PROBE_INTERVAL` while the detector is idle — a
+SOCKS5 CONNECT to a public address, which a dead QUIC session answers with
+`HostUnreachable`. The detector lives in
+[`vpn-ipc/src/stall.rs`](../../crates/vpn-ipc/src/stall.rs), not in `mobile_vpn`,
+because `#[cfg(mobile)]` means anything under it compiles but never runs under
+`cargo test` on the host. It also measures silence against `Instant` rather than
+adding a constant per tick: Doze freezes the timer, so a tick-counting detector
+needed many real minutes to reach a 60-second threshold.
+
 **Never measure the tunnel with `TrafficStats.getUidRxBytes()`.** It counts every
 socket the app owns, so it keeps climbing from ordinary API calls while the
 tunnel is dead — which is exactly how a broken tunnel looked healthy: status
 `connected`, counters rising, nothing loading. `TunnelTraffic` reads the same
 per-interface counters the engine watches.
 
-A battery-optimization exemption (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) was
-tried and **removed**: a foreground `VpnService` is already exempt enough that
-established VPNs (AmneziaVPN, etc.) never request it, and the permission trips an
-extra Play Store review. The keepalive is the real fix. Aggressive vendors
-(MIUI/EMUI/OneUI) may still need the app in their own autostart / protected-apps
-list, which is OS-level and cannot be set from code.
+**The battery-optimization exemption is back, and this time it is user-granted.**
+It was removed once on the reasoning that a foreground `VpnService` is exempt
+enough and the keepalive is the real fix. It is not: users still reported the
+tunnel dying 15-30 minutes after the screen went off, which is Doze freezing the
+`:tunnel` process and tearing down its UDP sockets. `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
+is in `PERMISSIONS` again — and, critically, **not** in `dropStalePermissions`,
+which silently deleted it on the same run and made the insert look like a no-op.
+`BatteryExemptionBanner` opens the system screen rather than the direct dialog
+Play Store objects to, and re-checks on window focus because leaving for Settings
+is the only signal that comes back. Aggressive vendors (MIUI/EMUI/OneUI) may
+still need the app in their own autostart list, which cannot be set from code.
 
 **Windows toasts ignore the `icon` field.** The icon comes from
 `Software\Classes\AppUserModelId\<identifier>\IconUri` in the registry, written
@@ -308,11 +325,13 @@ entry animation run. `on_page_load` with `PageLoadEvent::Finished` shows it
 instead, and the first frame they see is already painted. Autostart still keeps
 it hidden.
 
-Anything animated over a `backdrop-filter` or a wide `box-shadow` needs
-`will-change` for the same class of reason: without it the webview builds the
-compositing layer during the first frame of the animation and repaints the blur
-and the shadow on every frame after. That is what made the first dialog and the
-first dropdown of a session stutter.
+The same class of reason is why no menu or dialog panel carries a
+`backdrop-filter` any more: they sit on an opaque surface, so it blurred nothing
+visible while still forcing a compositing layer that the open animation then
+scaled as a raster — the panel arrived soft for the first frames. `will-change`
+went with it; without a filter to composite it only pinned that layer. The
+dialog **overlay** keeps its blur, because the page behind it really does show
+through.
 
 The `tray-icon` Cargo feature is scoped the same way — Android has no tray, so
 enabling it for every target only grows the APK.

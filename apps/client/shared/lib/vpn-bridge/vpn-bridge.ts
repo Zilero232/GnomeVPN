@@ -92,6 +92,10 @@ export const shareConfigFile = async (args: { fileName: string; content: string 
 
 export const hasVpnPermission = async (): Promise<boolean> => callRust({ command: 'vpn_has_permission', fallback: true });
 
+export const isBatteryUnrestricted = async (): Promise<boolean> => callRust({ command: 'vpn_is_battery_unrestricted', fallback: true });
+
+export const requestBatteryUnrestricted = async (): Promise<boolean> => callRust({ command: 'vpn_request_battery_unrestricted', fallback: false });
+
 export const requestVpnPermission = async (): Promise<boolean> => callRust({ command: 'vpn_request_permission', fallback: true });
 
 export const probeNodeLatency = async ({ targets }: ProbeLatencyInput): Promise<LatencyByNode> => {

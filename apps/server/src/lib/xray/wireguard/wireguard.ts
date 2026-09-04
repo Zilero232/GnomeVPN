@@ -8,7 +8,7 @@ import type { AddWireguardPeerInput, NewWireguardClientInput, WireguardClient, W
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { serializeByKey } from '../serialize';
-import { parseWireguardSettings, stripCidrMask } from '../xray.helpers';
+import { parseWireguardSettings, readSettings, stripCidrMask } from '../xray.helpers';
 import { WG_INBOUND_REMARK, WG_PEER_ID_BYTES } from './wireguard.constants';
 
 const newPeer = ({ email, publicKey, assignedIp }: NewWireguardClientInput): WireguardClient => ({
@@ -78,7 +78,13 @@ export class WireguardPeers {
 
   private async write(clients: WireguardClient[]): Promise<void> {
     const inbound = await this.inbounds.get(WG_INBOUND_REMARK);
-    const { peers: _legacyPeers, ...current } = parseWireguardSettings(inbound) as Record<string, unknown>;
+    const settings = readSettings<Record<string, unknown>>(inbound);
+
+    if (settings === null) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite a wireguard inbound whose settings could not be read');
+    }
+
+    const { peers: _legacyPeers, ...current } = settings;
 
     await this.inbounds.writeClients({
       inbound,

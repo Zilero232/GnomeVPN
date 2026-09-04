@@ -24,6 +24,7 @@ class NetworkWatcher(
 
     private var current: Network? = null
     private var validated = false
+    private var tunnelledOn: Network? = null
 
     fun start() {
         watchNetwork()
@@ -41,6 +42,7 @@ class NetworkWatcher(
 
         current = null
         validated = false
+        tunnelledOn = null
     }
 
     private fun connectivity(): ConnectivityManager? =
@@ -65,17 +67,25 @@ class NetworkWatcher(
                     return
                 }
 
-                val isHandover = validated && (network != current)
-
                 current = network
                 validated = isUsable
 
                 onNetworkBound(network)
 
-                if (isUsable && isHandover) {
-                    Log.i(TAG, "underlying path validated on a new network; redialling")
-                    onPathChanged()
+                if (!isUsable) {
+                    return
                 }
+
+                val previous = tunnelledOn
+
+                tunnelledOn = network
+
+                if (previous == null || previous == network) {
+                    return
+                }
+
+                Log.i(TAG, "underlying path validated on a new network; redialling")
+                onPathChanged()
             }
 
             override fun onLost(network: Network) {

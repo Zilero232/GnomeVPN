@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { usePlatform } from '@/entities/app/platform';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
+import { BatteryExemptionBanner } from '@/features/app/battery-exemption';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
@@ -105,6 +106,7 @@ export const AppView = () => {
       <MobileUpdateBanner />
 
       <VpnPermissionBanner isConnected={isOnline} />
+      <BatteryExemptionBanner isConnected={isOnline} />
 
       <ServiceRepairBanner />
     </main>

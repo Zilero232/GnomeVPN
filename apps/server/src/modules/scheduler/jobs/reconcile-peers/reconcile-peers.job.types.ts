@@ -12,11 +12,11 @@ export type PeerIdentity = {
   kind: PeerKind;
   name: string | null;
   nodeId: string;
+  protocol: TunnelProtocol;
 };
 
 export type ReconcilePeer = PeerIdentity & {
   id: string;
-  protocol: TunnelProtocol;
   state: PeerState;
 };
 

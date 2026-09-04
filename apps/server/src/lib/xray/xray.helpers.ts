@@ -30,3 +30,29 @@ export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> => 
 export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSettings => parseJson<XrayWireguardSettings>(inbound.settings);
 
 export const currentClients = (inbound: XrayInbound): unknown[] => parseSettings(inbound).clients ?? [];
+
+export const readSettings = <T>(inbound: XrayInbound): T | null => {
+  if (typeof inbound.settings !== 'string') {
+    return (inbound.settings as T | undefined) ?? null;
+  }
+
+  try {
+    return JSON.parse(inbound.settings) as T;
+  } catch {
+    return null;
+  }
+};
+
+export const readClients = (inbound: XrayInbound): unknown[] | null => {
+  if (typeof inbound.settings !== 'string') {
+    return inbound.settings?.clients === undefined ? null : (inbound.settings.clients as unknown[]);
+  }
+
+  try {
+    const parsed = JSON.parse(inbound.settings) as XrayInboundSettings;
+
+    return parsed.clients ?? [];
+  } catch {
+    return null;
+  }
+};

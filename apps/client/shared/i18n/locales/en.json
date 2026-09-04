@@ -475,6 +475,12 @@
     "allow": "Grant access",
     "requesting": "Waiting…"
   },
+  "batteryExemption": {
+    "title": "Battery optimisation is on",
+    "description": "Android puts the tunnel to sleep with the screen off, and the connection drops after a while. Allow unrestricted battery use to keep it alive.",
+    "allow": "Open settings",
+    "requesting": "Opening"
+  },
   "splitTunneling": {
     "open": "Split tunneling",
     "title": "Split tunneling",

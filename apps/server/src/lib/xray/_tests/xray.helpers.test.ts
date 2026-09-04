@@ -10,6 +10,8 @@ import {
   parseSniffing,
   parseStreamSettings,
   parseWireguardSettings,
+  readClients,
+  readSettings,
   stripCidrMask
 } from '../xray.helpers';
 
@@ -153,5 +155,63 @@ describe('generateAuth', () => {
 
   it('returns a different value on every call', () => {
     expect(generateAuth()).not.toBe(generateAuth());
+  });
+});
+
+describe('readClients', () => {
+  it('reads the client list out of a settings string', () => {
+    expect(readClients(inbound({ settings: '{"clients":[{"email":"a"},{"email":"b"}]}' }))).toEqual([{ email: 'a' }, { email: 'b' }]);
+  });
+
+  it('reads the client list out of an already parsed object', () => {
+    const clients = [{ email: 'a' }];
+
+    expect(readClients(inbound({ settings: { clients } }))).toBe(clients);
+  });
+
+  it('reports an empty node as empty, not as unreadable', () => {
+    expect(readClients(inbound({ settings: '{"clients":[]}' }))).toEqual([]);
+  });
+
+  it('treats settings with no clients key as read, holding nothing', () => {
+    expect(readClients(inbound({ settings: '{"secretKey":"key"}' }))).toEqual([]);
+  });
+
+  it('refuses to guess at malformed settings, where currentClients would answer an empty list', () => {
+    const broken = inbound({ settings: '{not json' });
+
+    expect(currentClients(broken)).toEqual([]);
+    expect(readClients(broken)).toBeNull();
+  });
+
+  it('refuses to guess when settings are absent altogether', () => {
+    expect(readClients(inbound({ settings: undefined as unknown as string }))).toBeNull();
+  });
+});
+
+describe('readSettings', () => {
+  it('parses a settings string', () => {
+    expect(readSettings(inbound({ settings: '{"secretKey":"key","mtu":1360}' }))).toEqual({ mtu: 1360, secretKey: 'key' });
+  });
+
+  it('passes an already parsed object through', () => {
+    const settings = { secretKey: 'key' };
+
+    expect(readSettings(inbound({ settings }))).toBe(settings);
+  });
+
+  it('refuses to guess at malformed settings, where parseWireguardSettings would answer an empty object', () => {
+    const broken = inbound({ settings: '{"secretKey":' });
+
+    expect(parseWireguardSettings(broken)).toEqual({});
+    expect(readSettings(broken)).toBeNull();
+  });
+
+  it('refuses to guess when settings are absent', () => {
+    expect(readSettings(inbound({ settings: undefined as unknown as string }))).toBeNull();
+  });
+
+  it('reports genuinely empty settings as empty rather than unreadable', () => {
+    expect(readSettings(inbound({ settings: '{}' }))).toEqual({});
   });
 });

@@ -20,6 +20,7 @@ import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService } from '../../../core';
 import { PEER_REF_SELECT, WG } from '../config';
 import { generateWireguardKeys, nextWireguardIp, peerClientName } from '../lib';
+import { peerClientNames } from '../peers.helpers';
 
 @Injectable()
 export class PeersService {
@@ -46,7 +47,7 @@ export class PeersService {
   }
 
   async issue({ node, nodeId, userId, kind, protocol, name }: IssuePeerInput): Promise<CreatedPeer> {
-    const email = peerClientName({ userId, kind, name, nodeId });
+    const email = peerClientName({ userId, kind, name, nodeId, protocol });
 
     if (protocol === TUNNEL_PROTOCOL.wireguard) {
       if (!nodeId) {
@@ -159,7 +160,7 @@ export class PeersService {
 
         const client = xrayClientForNode(node);
 
-        await Promise.all(nodePeers.map((peer) => client.deleteClient(peerClientName(peer)).catch(() => undefined)));
+        await Promise.all(nodePeers.flatMap((peer) => peerClientNames(peer).map((email) => client.deleteClient(email).catch(() => undefined))));
       })
     );
   }

@@ -14,6 +14,15 @@ pub struct Traffic {
     pub tx: u64,
 }
 
+impl From<Traffic> for gnomevpn_ipc::Traffic {
+    fn from(traffic: Traffic) -> Self {
+        Self {
+            rx: traffic.rx,
+            tx: traffic.tx,
+        }
+    }
+}
+
 unsafe extern "C" fn on_traffic(status: *const TrafficStatus, _context: *mut c_void) {
     let Some(status) = (unsafe { status.as_ref() }) else {
         return;

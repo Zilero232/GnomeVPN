@@ -13,7 +13,7 @@ import type {
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { PEER_PREFIX, peerClientName } from '../../../peers';
+import { PEER_PREFIX, peerClientName, peerClientNames } from '../../../peers';
 import { BOOT_GRACE_MS, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
 
 @Injectable()
@@ -30,8 +30,13 @@ export class ReconcilePeersJob {
       userId: peer.userId,
       kind: peer.kind,
       name: peer.name,
-      nodeId: peer.nodeId
+      nodeId: peer.nodeId,
+      protocol: peer.protocol
     });
+  }
+
+  private namesOf(peer: PeerIdentity): string[] {
+    return peerClientNames(peer);
   }
 
   private async reconcileNode(node: ReconcileNode): Promise<void> {
@@ -77,9 +82,11 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      const email = this.emailOf(peer);
+      for (const email of this.namesOf(peer)) {
+        if (!nodeClients.has(email)) {
+          continue;
+        }
 
-      if (nodeClients.has(email)) {
         await xray.deleteClient(email);
         removed = true;
       }
@@ -97,9 +104,9 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      const email = this.emailOf(peer);
+      const email = this.namesOf(peer).find((candidate) => nodeClients.has(candidate));
 
-      if (!nodeClients.has(email)) {
+      if (!email) {
         continue;
       }
 
@@ -130,7 +137,7 @@ export class ReconcilePeersJob {
       return false;
     }
 
-    const known = new Set(peers.map((peer) => this.emailOf(peer)));
+    const known = new Set(peers.flatMap((peer) => this.namesOf(peer)));
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
 
