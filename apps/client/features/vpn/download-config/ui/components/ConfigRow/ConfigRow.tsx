@@ -6,7 +6,7 @@ import { Copy, Download, QrCode, Share2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { isTauriMobile } from '@/shared/lib';
+import { usePlatform } from '@/entities/app/platform';
 import { Badge, Button, CountryFlag, Text } from '@/shared/ui';
 
 import type { ConfigRowProps } from './ConfigRow.types';
@@ -24,8 +24,10 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
 
   const [isQrOpen, setIsQrOpen] = useState(false);
 
+  const { isMobileApp } = usePlatform();
+
   const isWireguard = config.protocol === TUNNEL_PROTOCOL.wireguard;
-  const ShareOrDownload = isTauriMobile() ? Share2 : Download;
+  const ShareOrDownload = isMobileApp ? Share2 : Download;
 
   const isBusy = isPending || isRevoking;
 
@@ -62,13 +64,7 @@ export const ConfigRow = ({ config, isBlocked = false, isRevoking, onRevoke }: C
         </Button>
 
         {isWireguard ? (
-          <Button
-            aria-label={t(isTauriMobile() ? 'share' : 'redownload')}
-            disabled={isBusy || isBlocked}
-            size='icon'
-            variant='ghost'
-            onClick={download}
-          >
+          <Button aria-label={t(isMobileApp ? 'share' : 'redownload')} disabled={isBusy || isBlocked} size='icon' variant='ghost' onClick={download}>
             <ShareOrDownload aria-hidden size={15} />
           </Button>
         ) : (

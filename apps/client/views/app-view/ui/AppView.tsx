@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { usePlatform } from '@/entities/app/platform';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodeLatency, useNodes } from '@/entities/vpn/node';
+import { BatteryExemptionBanner } from '@/features/app/battery-exemption';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
@@ -27,7 +28,7 @@ export const AppView = () => {
   const { isDesktopApp } = usePlatform();
   const { hasAccess } = useSubscriptionStatus();
 
-  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnectionContext();
+  const { status, activeNodeId, traffic, connectedAt, connect, disconnect, reconnect } = useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
   const { protocol, select: selectProtocol } = useProtocolSelection();
@@ -66,7 +67,13 @@ export const AppView = () => {
             v{env.NEXT_PUBLIC_APP_VERSION}
           </Text>
 
-          {isDesktopApp && <SplitTunnelingButton />}
+          {isDesktopApp && (
+            <SplitTunnelingButton
+              hasActiveNode={Boolean(activeNodeId)}
+              isConnected={status !== 'disconnected'}
+              onReconnect={() => void reconnect()}
+            />
+          )}
 
           <AppMenu />
         </div>
@@ -99,6 +106,7 @@ export const AppView = () => {
       <MobileUpdateBanner />
 
       <VpnPermissionBanner isConnected={isOnline} />
+      <BatteryExemptionBanner isConnected={isOnline} />
 
       <ServiceRepairBanner />
     </main>

@@ -34,4 +34,32 @@ describe('peerClientName', () => {
   it('omits the node segment when no node id is given', () => {
     expect(peerClientName({ kind: 'session', name: 'desktop', userId: 'user-1' })).not.toContain('node-9');
   });
+
+  it('scopes a wireguard client so it cannot collide with the hysteria2 one', () => {
+    const shared = { kind: 'session', name: 'desktop', nodeId: 'nl-1', userId: 'user-1' } as const;
+
+    const hysteria = peerClientName({ ...shared, protocol: 'hysteria2' });
+    const wireguard = peerClientName({ ...shared, protocol: 'wireguard' });
+
+    expect(hysteria).not.toBe(wireguard);
+    expect(wireguard).toBe(`${hysteria}-wg`);
+  });
+
+  it('leaves a hysteria2 name exactly as it was before the protocol was part of it', () => {
+    const shared = { kind: 'session', name: 'desktop', nodeId: 'nl-1', userId: 'user-1' } as const;
+
+    expect(peerClientName({ ...shared, protocol: 'hysteria2' })).toBe(peerClientName(shared));
+  });
+
+  it('treats an absent protocol as hysteria2, so an existing client still matches', () => {
+    expect(peerClientName({ kind: 'config', name: 'laptop', userId: 'user-1' })).toBe('cfg-user-1-laptop');
+  });
+
+  it('scopes by protocol whether or not a node is named', () => {
+    const withNode = peerClientName({ kind: 'session', name: 'desktop', nodeId: 'nl-1', protocol: 'wireguard', userId: 'user-1' });
+    const without = peerClientName({ kind: 'session', name: 'desktop', protocol: 'wireguard', userId: 'user-1' });
+
+    expect(withNode).toBe('app-user-1-desktop-nl-1-wg');
+    expect(without).toBe('app-user-1-desktop-wg');
+  });
 });

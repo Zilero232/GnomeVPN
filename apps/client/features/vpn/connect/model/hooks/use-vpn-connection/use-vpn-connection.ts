@@ -23,29 +23,13 @@ import {
 
 import type { ConnectInput } from './use-vpn-connection.types';
 
+import { waitForDisconnected } from '../../../lib';
 import { useAdoptTunnel } from '../use-adopt-tunnel';
 import { useConnectWatchdog } from '../use-connect-watchdog';
 import { useTrafficPoll } from '../use-traffic-poll';
 import { useTunnelEvents } from '../use-tunnel-events';
 import { useTunnelNotifications } from '../use-tunnel-notifications';
 import { useTunnelState } from '../use-tunnel-state';
-
-const DISCONNECT_POLL_MS = 150;
-const DISCONNECT_TIMEOUT_MS = 8_000;
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-const waitForDisconnected = async () => {
-  const deadline = Date.now() + DISCONNECT_TIMEOUT_MS;
-
-  while (Date.now() < deadline) {
-    if ((await vpnStatus()) === 'disconnected') {
-      return;
-    }
-
-    await sleep(DISCONNECT_POLL_MS);
-  }
-};
 
 export const useVpnConnection = () => {
   const t = useTranslations('notifications');
@@ -181,7 +165,10 @@ export const useVpnConnection = () => {
     }
 
     await disconnect({ isAutomatic: true });
-    await waitForDisconnected();
+
+    if (!(await waitForDisconnected({ readStatus: vpnStatus }))) {
+      logger.warn('tunnel did not report disconnected before reconnecting');
+    }
 
     await connect({
       nodeId,

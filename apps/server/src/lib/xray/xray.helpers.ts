@@ -31,22 +31,28 @@ export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSetti
 
 export const currentClients = (inbound: XrayInbound): unknown[] => parseSettings(inbound).clients ?? [];
 
-const chains = new Map<string, Promise<unknown>>();
+export const readSettings = <T>(inbound: XrayInbound): T | null => {
+  if (typeof inbound.settings !== 'string') {
+    return (inbound.settings as T | undefined) ?? null;
+  }
 
-export const serializeByKey = <T>(key: string, task: () => Promise<T>): Promise<T> => {
-  const previous = chains.get(key) ?? Promise.resolve();
-  const next = previous.catch(() => undefined).then(task);
+  try {
+    return JSON.parse(inbound.settings) as T;
+  } catch {
+    return null;
+  }
+};
 
-  chains.set(
-    key,
-    next
-      .catch(() => undefined)
-      .finally(() => {
-        if (chains.get(key) === next) {
-          chains.delete(key);
-        }
-      })
-  );
+export const readClients = (inbound: XrayInbound): unknown[] | null => {
+  if (typeof inbound.settings !== 'string') {
+    return inbound.settings?.clients === undefined ? null : (inbound.settings.clients as unknown[]);
+  }
 
-  return next;
+  try {
+    const parsed = JSON.parse(inbound.settings) as XrayInboundSettings;
+
+    return parsed.clients ?? [];
+  } catch {
+    return null;
+  }
 };

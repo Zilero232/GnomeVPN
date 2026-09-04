@@ -170,6 +170,21 @@ tunnel is never silently evicted; `configs.list` passes `false`, so a config is
 only badged "connected" on evidence. Treating unknown as idle is what let a third
 device tear down somebody's active WireGuard tunnel.
 
+**The client email is scoped by protocol, and it has to be.** The database is
+unique on `(userId, kind, name, nodeId, protocol)` — five fields — while the
+email was built from four. One user issuing both a Hysteria2 and a WireGuard
+config under the same name on the same node therefore produced two rows and one
+email, and `clientEnabledByEmail` merges both protocols into a single map keyed
+on it: the WireGuard client overwrote the Hysteria2 one, and `syncEnabled` then
+disabled a live config against the wrong client's state. WireGuard names now
+carry a `-wg` suffix; Hysteria2 keeps its name exactly as before, so nothing
+already on a node had to be renamed.
+
+Clients created before that change still carry the unsuffixed name, so
+`peerClientNames` answers both — the scoped one first. Reconcile recognises
+either, which is what keeps `collectOrphans` from deleting a live WireGuard
+client the moment the rename ships, and revocation clears both.
+
 Order matters: `createClient` deletes any client with the same email first,
 because the panel rejects duplicates. Releasing the old peer _after_ creating the
 new one would delete the client that was just handed out — that bug cost a

@@ -91,6 +91,24 @@ impl<R: Runtime> VpnPlugin<R> {
         Ok(result.granted)
     }
 
+    pub fn is_battery_unrestricted(&self) -> Result<bool, MobileVpnError> {
+        let result: PermissionResult = self
+            .0
+            .run_mobile_plugin("isBatteryUnrestricted", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.granted)
+    }
+
+    pub fn request_battery_unrestricted(&self) -> Result<bool, MobileVpnError> {
+        let result: PermissionResult = self
+            .0
+            .run_mobile_plugin("requestBatteryUnrestricted", Empty {})
+            .map_err(|error| MobileVpnError::Service(error.to_string()))?;
+
+        Ok(result.granted)
+    }
+
     pub fn is_running(&self) -> Result<bool, MobileVpnError> {
         let result: RunningResult = self
             .0

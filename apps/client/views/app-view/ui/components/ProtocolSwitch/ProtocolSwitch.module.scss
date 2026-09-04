@@ -64,13 +64,11 @@
     0 28px 60px -24px rgb(0 0 0 / 90%);
   list-style: none;
   transform-origin: top left;
-  will-change: transform;
 }
 
 .menu:after {
   position: absolute;
   border-radius: inherit;
-  backdrop-filter: blur(22px) saturate(160%);
   background-image: linear-gradient(160deg, rgb(53 240 160 / 6%) 0%, transparent 45%);
   content: '';
   inset: 0;

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import type { XrayInbound } from '../inbounds';
 
@@ -10,6 +10,8 @@ import {
   parseSniffing,
   parseStreamSettings,
   parseWireguardSettings,
+  readClients,
+  readSettings,
   stripCidrMask
 } from '../xray.helpers';
 
@@ -21,28 +23,6 @@ const inbound = (patch: Partial<XrayInbound>): XrayInbound => ({
   settings: '{}',
   ...patch
 });
-
-const deferred = <T>() => {
-  let resolve!: (value: T) => void;
-  let reject!: (reason: unknown) => void;
-
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-
-  return { promise, reject, resolve };
-};
-
-const flush = () => new Promise((resolve) => setImmediate(resolve));
-
-const freshSerializeByKey = async () => {
-  vi.resetModules();
-
-  const helpers = await import('../xray.helpers');
-
-  return helpers.serializeByKey;
-};
 
 describe('stripCidrMask', () => {
   it('strips a trailing mask from an ipv4 address', () => {
@@ -178,148 +158,60 @@ describe('generateAuth', () => {
   });
 });
 
-describe('serializeByKey', () => {
-  it('runs tasks for the same key one after another', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const first = deferred<string>();
-    const second = deferred<string>();
-    const order: string[] = [];
-
-    const firstRun = serializeByKey('node', () => {
-      order.push('first-start');
-
-      return first.promise;
-    });
-
-    const secondRun = serializeByKey('node', () => {
-      order.push('second-start');
-
-      return second.promise;
-    });
-
-    await flush();
-    expect(order).toEqual(['first-start']);
-
-    first.resolve('a');
-    await flush();
-    expect(order).toEqual(['first-start', 'second-start']);
-
-    second.resolve('b');
-
-    await expect(firstRun).resolves.toBe('a');
-    await expect(secondRun).resolves.toBe('b');
+describe('readClients', () => {
+  it('reads the client list out of a settings string', () => {
+    expect(readClients(inbound({ settings: '{"clients":[{"email":"a"},{"email":"b"}]}' }))).toEqual([{ email: 'a' }, { email: 'b' }]);
   });
 
-  it('runs tasks for different keys concurrently', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const first = deferred<string>();
-    const second = deferred<string>();
-    const order: string[] = [];
+  it('reads the client list out of an already parsed object', () => {
+    const clients = [{ email: 'a' }];
 
-    const firstRun = serializeByKey('node-a', () => {
-      order.push('a-start');
-
-      return first.promise;
-    });
-
-    const secondRun = serializeByKey('node-b', () => {
-      order.push('b-start');
-
-      return second.promise;
-    });
-
-    await flush();
-    expect(order).toEqual(['a-start', 'b-start']);
-
-    first.resolve('a');
-    second.resolve('b');
-
-    await expect(firstRun).resolves.toBe('a');
-    await expect(secondRun).resolves.toBe('b');
+    expect(readClients(inbound({ settings: { clients } }))).toBe(clients);
   });
 
-  it('lets the next task on a key run after the previous one rejected', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const first = deferred<string>();
-    const second = deferred<string>();
-    const order: string[] = [];
-
-    const firstRun = serializeByKey('node', () => first.promise);
-
-    firstRun.catch(() => undefined);
-
-    const secondRun = serializeByKey('node', () => {
-      order.push('second-start');
-
-      return second.promise;
-    });
-
-    await flush();
-    expect(order).toEqual([]);
-
-    first.reject(new Error('boom'));
-    await flush();
-    expect(order).toEqual(['second-start']);
-
-    second.resolve('b');
-
-    await expect(secondRun).resolves.toBe('b');
+  it('reports an empty node as empty, not as unreadable', () => {
+    expect(readClients(inbound({ settings: '{"clients":[]}' }))).toEqual([]);
   });
 
-  it('leaves no unhandled rejection when a lone task fails', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const unhandled: unknown[] = [];
-    const record = (reason: unknown) => unhandled.push(reason);
-
-    process.on('unhandledRejection', record);
-
-    try {
-      await expect(serializeByKey('node', () => Promise.reject(new Error('panel is down')))).rejects.toThrow('panel is down');
-
-      await flush();
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      expect(unhandled).toEqual([]);
-    } finally {
-      process.off('unhandledRejection', record);
-    }
+  it('treats settings with no clients key as read, holding nothing', () => {
+    expect(readClients(inbound({ settings: '{"secretKey":"key"}' }))).toEqual([]);
   });
 
-  it('rejects for the caller whose task threw', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const failing = deferred<string>();
+  it('refuses to guess at malformed settings, where currentClients would answer an empty list', () => {
+    const broken = inbound({ settings: '{not json' });
 
-    const run = serializeByKey('node', () => failing.promise);
-    const followUp = serializeByKey('node', () => Promise.resolve('next'));
-    const settled = expect(run).rejects.toThrow('boom');
-
-    failing.reject(new Error('boom'));
-
-    await settled;
-    await expect(followUp).resolves.toBe('next');
+    expect(currentClients(broken)).toEqual([]);
+    expect(readClients(broken)).toBeNull();
   });
 
-  it('starts a fresh chain once every task on a key has settled', async () => {
-    const serializeByKey = await freshSerializeByKey();
-    const first = deferred<string>();
+  it('refuses to guess when settings are absent altogether', () => {
+    expect(readClients(inbound({ settings: undefined as unknown as string }))).toBeNull();
+  });
+});
 
-    const firstRun = serializeByKey('node', () => first.promise);
+describe('readSettings', () => {
+  it('parses a settings string', () => {
+    expect(readSettings(inbound({ settings: '{"secretKey":"key","mtu":1360}' }))).toEqual({ mtu: 1360, secretKey: 'key' });
+  });
 
-    first.resolve('a');
-    await expect(firstRun).resolves.toBe('a');
-    await flush();
+  it('passes an already parsed object through', () => {
+    const settings = { secretKey: 'key' };
 
-    const order: string[] = [];
+    expect(readSettings(inbound({ settings }))).toBe(settings);
+  });
 
-    const secondRun = serializeByKey('node', () => {
-      order.push('second-start');
+  it('refuses to guess at malformed settings, where parseWireguardSettings would answer an empty object', () => {
+    const broken = inbound({ settings: '{"secretKey":' });
 
-      return Promise.resolve('b');
-    });
+    expect(parseWireguardSettings(broken)).toEqual({});
+    expect(readSettings(broken)).toBeNull();
+  });
 
-    await flush();
-    expect(order).toEqual(['second-start']);
+  it('refuses to guess when settings are absent', () => {
+    expect(readSettings(inbound({ settings: undefined as unknown as string }))).toBeNull();
+  });
 
-    await expect(secondRun).resolves.toBe('b');
+  it('reports genuinely empty settings as empty rather than unreadable', () => {
+    expect(readSettings(inbound({ settings: '{}' }))).toEqual({});
   });
 });

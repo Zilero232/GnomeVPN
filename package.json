@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "private": true,
   "description": "GnomeVPN — a commercial VPN on Hysteria2 for web, desktop and Android. Bun-workspaces monorepo.",
   "keywords": [

@@ -4,11 +4,12 @@ import { clsx } from 'clsx';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
+import prettyBytes from 'pretty-bytes';
 import { useEffect, useState } from 'react';
 
 import type { TunnelStatsProps } from './TunnelStats.types';
 
-import { formatBytes, formatSpeed, formatUptime } from '../../../lib';
+import { formatSpeed, formatUptime } from '../../../lib';
 import { useSpeed } from '../../../model/hooks';
 import { VALUE_MOTION } from './TunnelStats.motion';
 
@@ -59,7 +60,7 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
           <div className={s.metric}>
             <span className={s.label}>{t('sentTotal')}</span>
             <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
-              {formatBytes(traffic.tx)}
+              {prettyBytes(traffic.tx)}
             </motion.span>
           </div>
         </div>
@@ -77,7 +78,7 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
           <div className={s.metric}>
             <span className={s.label}>{t('receivedTotal')}</span>
             <motion.span animate={{ opacity: isPending ? 0.35 : 1 }} className={s.value} {...VALUE_MOTION}>
-              {formatBytes(traffic.rx)}
+              {prettyBytes(traffic.rx)}
             </motion.span>
           </div>
         </div>

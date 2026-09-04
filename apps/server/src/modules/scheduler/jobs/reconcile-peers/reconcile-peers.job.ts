@@ -2,18 +2,26 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { isEmpty } from 'remeda';
 
-import type { CollectOrphansInput, PeerIdentity, ReconcileNode, RemoveRevokedInput, SyncEnabledInput } from './reconcile-peers.job.types';
+import type {
+  CollectOrphansInput,
+  NoteFailureInput,
+  PeerIdentity,
+  ReconcileNode,
+  RemoveRevokedInput,
+  SyncEnabledInput
+} from './reconcile-peers.job.types';
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { peerClientName } from '../../../peers';
-import { BOOT_GRACE_MS, RECONCILE_CRON } from '../../config';
+import { PEER_PREFIX, peerClientName, peerClientNames } from '../../../peers';
+import { BOOT_GRACE_MS, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
 
 @Injectable()
 export class ReconcilePeersJob {
   private readonly logger = new Logger(ReconcilePeersJob.name);
   private readonly bootedAt = Date.now();
   private readonly suspects = new Map<string, Set<string>>();
+  private readonly failures = new Map<string, number>();
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -22,8 +30,13 @@ export class ReconcilePeersJob {
       userId: peer.userId,
       kind: peer.kind,
       name: peer.name,
-      nodeId: peer.nodeId
+      nodeId: peer.nodeId,
+      protocol: peer.protocol
     });
+  }
+
+  private namesOf(peer: PeerIdentity): string[] {
+    return peerClientNames(peer);
   }
 
   private async reconcileNode(node: ReconcileNode): Promise<void> {
@@ -69,9 +82,11 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      const email = this.emailOf(peer);
+      for (const email of this.namesOf(peer)) {
+        if (!nodeClients.has(email)) {
+          continue;
+        }
 
-      if (nodeClients.has(email)) {
         await xray.deleteClient(email);
         removed = true;
       }
@@ -89,9 +104,9 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      const email = this.emailOf(peer);
+      const email = this.namesOf(peer).find((candidate) => nodeClients.has(candidate));
 
-      if (!nodeClients.has(email)) {
+      if (!email) {
         continue;
       }
 
@@ -111,6 +126,10 @@ export class ReconcilePeersJob {
     return true;
   }
 
+  private isServerOwned(email: string): boolean {
+    return Object.values(PEER_PREFIX).some((prefix) => email.startsWith(prefix));
+  }
+
   private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<boolean> {
     if (online === null) {
       this.suspects.delete(nodeId);
@@ -118,14 +137,14 @@ export class ReconcilePeersJob {
       return false;
     }
 
-    const known = new Set(peers.map((peer) => this.emailOf(peer)));
+    const known = new Set(peers.flatMap((peer) => this.namesOf(peer)));
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
 
     let collected = false;
 
     for (const email of nodeClients.keys()) {
-      if (known.has(email)) {
+      if (known.has(email) || !this.isServerOwned(email)) {
         continue;
       }
 
@@ -156,10 +175,32 @@ export class ReconcilePeersJob {
 
     const results = await Promise.allSettled(nodes.map((node) => this.reconcileNode(node)));
 
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        this.logger.warn(`Reconcile failed: ${describeError(result.reason)}`);
+    results.forEach((result, index) => {
+      const nodeId = nodes[index].id;
+
+      if (result.status === 'fulfilled') {
+        this.failures.delete(nodeId);
+
+        return;
       }
+
+      this.noteFailure({ nodeId, reason: result.reason });
+    });
+  }
+
+  private noteFailure({ nodeId, reason }: NoteFailureInput): void {
+    const streak = (this.failures.get(nodeId) ?? 0) + 1;
+
+    this.failures.set(nodeId, streak);
+
+    const message = `Reconcile failed for node ${nodeId} (${streak} in a row): ${describeError(reason)}`;
+
+    if (streak >= RECONCILE_FAILURE_ALERT_THRESHOLD) {
+      this.logger.error(`${message}. Revoked peers on this node stay connected until it converges.`);
+
+      return;
     }
+
+    this.logger.warn(message);
   }
 }

@@ -68,3 +68,8 @@ export type SetPeerEnabledInput = {
   where: Prisma.PeerWhereInput;
   enabled: boolean;
 };
+
+export type PeerWgData = {
+  wgAssignedIp: string | null;
+  wgPrivateKey: string | null;
+};

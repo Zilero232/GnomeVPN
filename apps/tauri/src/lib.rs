@@ -161,6 +161,8 @@ pub fn run() {
             mobile_vpn::commands::vpn_hide_window,
             mobile_vpn::commands::vpn_share_config,
             mobile_vpn::commands::vpn_has_permission,
+            mobile_vpn::commands::vpn_is_battery_unrestricted,
+            mobile_vpn::commands::vpn_request_battery_unrestricted,
             mobile_vpn::commands::vpn_request_permission,
             latency::commands::vpn_probe_latency,
             vault_save_token,

@@ -12,11 +12,11 @@ export type PeerIdentity = {
   kind: PeerKind;
   name: string | null;
   nodeId: string;
+  protocol: TunnelProtocol;
 };
 
 export type ReconcilePeer = PeerIdentity & {
   id: string;
-  protocol: TunnelProtocol;
   state: PeerState;
 };
 
@@ -34,4 +34,9 @@ export type CollectOrphansInput = {
   peers: ReconcilePeer[];
   nodeClients: Map<string, boolean>;
   online: Set<string> | null;
+};
+
+export type NoteFailureInput = {
+  nodeId: string;
+  reason: unknown;
 };

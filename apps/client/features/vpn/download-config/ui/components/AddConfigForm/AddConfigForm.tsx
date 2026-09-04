@@ -16,6 +16,7 @@ import { CountryFlag, FormField, Select, SubmitButton, Text } from '@/shared/ui'
 
 import type { AddConfigFormProps } from './AddConfigForm.types';
 
+import { isConfigNameTaken, takenConfigNames } from '../../../lib';
 import { useIssueConfig } from '../../../model/hooks';
 import { DeviceNameField } from '../DeviceNameField';
 import { ProtocolPicker } from '../ProtocolPicker';
@@ -49,12 +50,10 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
   const selectedNode = nodes.find((node) => node.id === nodeId);
   const isNodeOffline = isEmpty(reachableNodes) || selectedNode?.status === 'offline';
 
-  const takenNames = configs.filter((config) => config.nodeId === nodeId && config.protocol === protocol).map((config) => config.name);
+  const takenNames = takenConfigNames({ configs, nodeId, protocol });
 
   const onSubmit = handleSubmit((input) => {
-    const isTaken = configs.some((config) => config.name === input.name && config.nodeId === input.nodeId && config.protocol === input.protocol);
-
-    if (isTaken) {
+    if (isConfigNameTaken({ configs, slot: input })) {
       toast.error(tv('nameTaken'));
 
       return;

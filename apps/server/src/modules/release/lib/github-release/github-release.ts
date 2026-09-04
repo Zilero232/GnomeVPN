@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const githubAssetSchema = z.object({
+export const githubAssetSchema = z.object({
   id: z.number(),
   name: z.string(),
   size: z.number(),

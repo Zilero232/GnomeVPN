@@ -4,12 +4,14 @@ import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput 
 import type { AddWireguardPeerInput, WireguardInboundInput } from './wireguard';
 import type { XrayClientOptions } from './xray.types';
 
+import { AppServiceUnavailableException } from '../../common/exceptions';
 import { HysteriaClients } from './hysteria';
 import { inboundPayload, Inbounds } from './inbounds';
 import { PanelClient } from './panel-client';
+import { serializeByKey } from './serialize';
 import { WireguardPeers } from './wireguard';
 import { REQUEST_TIMEOUT_MS, XRAY_STATE_RUNNING } from './xray.constants';
-import { currentClients, generateAuth, serializeByKey } from './xray.helpers';
+import { generateAuth, readClients } from './xray.helpers';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -51,12 +53,20 @@ export class XrayClient {
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
-    return serializeByKey(this.nodeKey, async () => {
-      const current = await this.inbounds.get();
-      const clients = currentClients(current);
-      const settings = { ...(inbound.settings as object), clients };
+    return serializeByKey({
+      key: this.nodeKey,
+      task: async () => {
+        const current = await this.inbounds.get();
+        const clients = readClients(current);
 
-      await this.panel.updateInbound(current.id, inboundPayload({ ...inbound, settings }));
+        if (clients === null) {
+          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite an inbound whose clients could not be read');
+        }
+
+        const settings = { ...(inbound.settings as object), clients };
+
+        await this.panel.updateInbound(current.id, inboundPayload({ ...inbound, settings }));
+      }
     });
   }
 

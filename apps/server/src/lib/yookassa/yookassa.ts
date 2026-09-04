@@ -1,3 +1,5 @@
+import { Logger } from '@nestjs/common';
+
 import type {
   BindPaymentMethodInput,
   ChargeRecurringInput,
@@ -7,13 +9,16 @@ import type {
   PaymentMethodInfo,
   PaymentMethodResponse,
   PaymentResponse,
-  YooKassaClientOptions
+  YooKassaClientOptions,
+  YooKassaRequestInput
 } from './yookassa.types';
 
+import { AppServiceUnavailableException } from '../../common/exceptions';
 import { describeCard } from './lib';
 import { API_URL, CURRENCY, REQUEST_TIMEOUT_MS } from './yookassa.constants';
 
 export class YooKassaClient {
+  private readonly logger = new Logger(YooKassaClient.name);
   private readonly shopId: string;
   private readonly secretKey: string;
 
@@ -39,7 +44,7 @@ export class YooKassaClient {
     return { value: rub.toFixed(2), currency: CURRENCY };
   }
 
-  private async request<T>(path: string, init: RequestInit, idempotenceKey?: string): Promise<T> {
+  private async request<T>({ path, init, idempotenceKey }: YooKassaRequestInput): Promise<T> {
     const res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: this.headers(idempotenceKey),
@@ -47,18 +52,18 @@ export class YooKassaClient {
     });
 
     if (!res.ok) {
-      const detail = await res.text();
+      this.logger.error(`yookassa ${path} returned ${res.status}: ${await res.text()}`);
 
-      throw new Error(`yookassa ${path} failed: ${res.status} ${detail}`);
+      throw new AppServiceUnavailableException('PAYMENT_FAILED', `yookassa ${path} returned ${res.status}`);
     }
 
     return (await res.json()) as T;
   }
 
   async createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult> {
-    const payload = await this.request<PaymentResponse>(
-      '/payments',
-      {
+    const payload = await this.request<PaymentResponse>({
+      path: '/payments',
+      init: {
         method: 'POST',
         body: JSON.stringify({
           capture: true,
@@ -68,8 +73,8 @@ export class YooKassaClient {
           confirmation: { type: 'redirect', return_url: input.returnUrl }
         })
       },
-      input.idempotenceKey
-    );
+      idempotenceKey: input.idempotenceKey
+    });
 
     return {
       id: payload.id,
@@ -79,9 +84,9 @@ export class YooKassaClient {
   }
 
   async chargeRecurring(input: ChargeRecurringInput): Promise<CreatePaymentResult> {
-    const payload = await this.request<PaymentResponse>(
-      '/payments',
-      {
+    const payload = await this.request<PaymentResponse>({
+      path: '/payments',
+      init: {
         method: 'POST',
         body: JSON.stringify({
           amount: this.amount(input.amountRub),
@@ -90,8 +95,8 @@ export class YooKassaClient {
           payment_method_id: input.paymentMethodId
         })
       },
-      input.idempotenceKey
-    );
+      idempotenceKey: input.idempotenceKey
+    });
 
     return {
       id: payload.id,
@@ -101,9 +106,7 @@ export class YooKassaClient {
   }
 
   async getPayment(paymentId: string): Promise<PaymentInfo> {
-    const payload = await this.request<PaymentResponse>(`/payments/${paymentId}`, {
-      method: 'GET'
-    });
+    const payload = await this.request<PaymentResponse>({ path: `/payments/${paymentId}`, init: { method: 'GET' } });
 
     return {
       id: payload.id,
@@ -126,23 +129,23 @@ export class YooKassaClient {
   }
 
   async bindPaymentMethod(input: BindPaymentMethodInput): Promise<PaymentMethodInfo> {
-    const payload = await this.request<PaymentMethodResponse>(
-      '/payment_methods',
-      {
+    const payload = await this.request<PaymentMethodResponse>({
+      path: '/payment_methods',
+      init: {
         method: 'POST',
         body: JSON.stringify({
           type: 'bank_card',
           confirmation: { type: 'redirect', return_url: input.returnUrl }
         })
       },
-      input.idempotenceKey
-    );
+      idempotenceKey: input.idempotenceKey
+    });
 
     return this.toPaymentMethodInfo(payload);
   }
 
   async getPaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
-    const payload = await this.request<PaymentMethodResponse>(`/payment_methods/${paymentMethodId}`, { method: 'GET' });
+    const payload = await this.request<PaymentMethodResponse>({ path: `/payment_methods/${paymentMethodId}`, init: { method: 'GET' } });
 
     return this.toPaymentMethodInfo(payload);
   }

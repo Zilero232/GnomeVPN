@@ -68,3 +68,9 @@ export type PaymentMethodResponse = {
   card?: CardData;
   confirmation?: { confirmation_url?: string };
 };
+
+export type YooKassaRequestInput = {
+  path: string;
+  init: RequestInit;
+  idempotenceKey?: string;
+};

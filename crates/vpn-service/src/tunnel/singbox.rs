@@ -17,7 +17,6 @@ pub struct Singbox {
     config_path: PathBuf,
 }
 
-#[cfg(unix)]
 const SHUTDOWN_GRACE: std::time::Duration = std::time::Duration::from_secs(3);
 
 impl Singbox {
@@ -46,8 +45,26 @@ impl Singbox {
         let _ = tokio::time::timeout(SHUTDOWN_GRACE, self.child.wait()).await;
     }
 
-    #[cfg(not(unix))]
-    async fn request_shutdown(&mut self) {}
+    #[cfg(windows)]
+    async fn request_shutdown(&mut self) {
+        let Some(pid) = self.child.id() else {
+            return;
+        };
+
+        let asked = Command::new("taskkill.exe")
+            .args(["/PID", &pid.to_string()])
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .await;
+
+        if asked.is_err() {
+            return;
+        }
+
+        let _ = tokio::time::timeout(SHUTDOWN_GRACE, self.child.wait()).await;
+    }
 
     pub fn has_exited(&mut self) -> Option<String> {
         match self.child.try_wait() {

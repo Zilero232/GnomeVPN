@@ -51,10 +51,10 @@ infra/
 ```
 
 **Releases and deploys are workflows, not local commands.** Building for a
-platform means building on it — Tauri cannot meaningfully cross-compile and
-macOS cannot be built off a Mac — so the matrix is not a convenience, it is the
-only way to ship all four targets. `tauri-action` owns the desktop bundles and
-the merged `latest.json`; nothing in this repo hand-rolls an updater manifest.
+platform means building on it — macOS cannot be built off a Mac — so the matrix
+is not a convenience, it is the only way to ship every target. `tauri-action`
+owns the desktop bundles and the merged `latest.json`; nothing in this repo
+hand-rolls an updater manifest.
 
 Provisioning stays local because it talks to nodes over SSH with credentials
 that live in `.env.nodes`, and because it is run by a human deciding to add a
@@ -99,6 +99,51 @@ process. The descriptor never crosses back to the UI, which is what lets the
 tunnel survive the user swiping the app away. `build_hysteria_config` lives in
 `vpn-ipc` for that path; every desktop OS uses `build_singbox_config` from the
 same crate.
+
+## What the workflows assume
+
+The YAML carries almost no comments; the reasoning is here.
+
+**`release.yml`** — `checks` → `draft` → `desktop` + `android` → `publish`. A `v*` tag builds
+everything; a manual run takes a `targets` choice (`all` / `desktop` / `android`) to rebuild one
+platform without paying for the other.
+
+- The tag triggers it directly rather than through `workflow_run`, which cannot filter on a tag:
+  it fired for every branch and pull request, and ran the whole frontend-and-service build twice
+  for one release.
+- `checks` guards that the tag matches the root `package.json` version. A mismatch would ship
+  bundles named after one version while the updater manifest advertises another.
+- The root `permissions: {}` strips every scope, so `checks` has to declare `contents: read` back:
+  this repository is private, and without it the clone fails as a 404, not a 403.
+- The build steps before `bun run verify` exist because the tauri build script validates every
+  path in `bundle.resources` and points `frontendDist` at `../client/out` — clippy cannot touch
+  the crate until sing-box, the service, the icons and the frontend all exist.
+- Tests run in `checks` separately: they are not part of `verify`, which is the lint-and-typecheck
+  gate.
+- The draft is created before either build so desktop and android upload into it concurrently,
+  rather than android queueing behind the matrix. It stays a draft until `publish` flips it.
+- `publish` tolerates a failed android build and an android-only manual run, but refuses to
+  publish if something that was asked for actually failed.
+- **macOS builds twice, once per architecture.** Both run on the same arm64 runner, so
+  `SINGBOX_ARCH` and `SERVICE_TARGET` point the two fetch/build scripts at the target the bundle
+  is for, and the sing-box cache is keyed on the matrix label rather than the runner OS —
+  otherwise the second macOS job restores the first one's binary.
+- The android job cannot use `cache: gradle`: that action hashes `**/*.gradle*` for its key, and
+  `tauri android init` only generates `gen/android` later in the same job. With nothing to hash it
+  fails outright. `tauri android init` also regenerates the project, so the overlay and the
+  signing config are applied after it, never before.
+- `setup-android` ships the SDK but not the NDK, and `build-tools` is not in its default package
+  set — without it there is no `apksigner` to verify the signed apk with.
+
+**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS. Migrations run **before**
+`docker compose up -d`: doing it after means the new build serves traffic against the old schema
+and can query a column its migration has not added yet. `up -d` returns when the container
+starts, not when the app answers, so the deploy waits on the compose healthcheck.
+
+Both files pin every action to a commit SHA rather than a tag — a tag can be moved, and these
+jobs hold the signing keys and production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
+placeholders because the server postinstall runs `prisma generate`, which resolves `DIRECT_URL`
+through `env()` but never connects.
 
 ## Per-app guidance
 
@@ -209,8 +254,9 @@ claims the name before the script does — it collects the same files, then fail
 them all on `vi.setSystemTime is not a function`, because it is not Vitest.
 
 Vitest is wired as projects: `packages/schemas`, `packages/scripts`,
-`apps/server` and `apps/client` each own a `vitest.config.ts`, and the root one
-lists them. A test lives in a `_tests/` folder next to what it tests. The Rust
+`apps/server`, `apps/client` and `apps/tauri` each own a `vitest.config.ts`, and
+the root one lists them. The `tauri` project covers the build scripts under
+`apps/tauri/scripts/`, where the Android manifest patcher lives. A test lives in a `_tests/` folder next to what it tests. The Rust
 tests are `#[cfg(test)]` modules inside `crates/vpn-ipc` — the protocol
 validation, the framing and the two config builders, which is where the pure
 logic is.

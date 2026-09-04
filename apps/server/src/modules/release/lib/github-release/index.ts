@@ -1,1 +1,1 @@
-export { githubReleaseSchema, updaterManifestSchema } from './github-release';
+export { githubAssetSchema, githubReleaseSchema, updaterManifestSchema } from './github-release';

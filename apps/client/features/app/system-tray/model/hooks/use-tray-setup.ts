@@ -31,18 +31,18 @@ export const useTraySetup = ({ isConnected, country, onToggle, onOpenAccount, on
 
     const create = async () => {
       try {
-        const { menu, items } = await buildTrayMenu(
-          {
+        const { menu, items } = await buildTrayMenu({
+          labels: {
             toggle: t('connect'),
             account: t('account'),
             quit: t('quit')
           },
-          {
+          actions: {
             onToggle: () => actionsRef.current.onToggle(),
             onOpenAccount: () => actionsRef.current.onOpenAccount(),
             onBeforeQuit: () => actionsRef.current.onBeforeQuit()
           }
-        );
+        });
 
         const tray = await setupTray({ tooltip: t('tooltip'), menu, isConnected });
 

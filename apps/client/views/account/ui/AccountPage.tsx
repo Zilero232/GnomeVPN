@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useAvatarSeed, useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
+import { useVerifyEmailOutcome } from '@/features/auth/verify-email';
 import { ConfigList } from '@/features/vpn/download-config';
 import { Avatar, Text } from '@/shared/ui';
 
@@ -25,6 +26,8 @@ export const AccountPage = () => {
 
   const avatarSeed = useAvatarSeed({ fallback: email });
   const signOut = useSignOut();
+
+  useVerifyEmailOutcome();
 
   const tabs: AccountTab[] = [
     {

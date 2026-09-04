@@ -2,8 +2,12 @@ package ru.gnomevpn.app
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
+import android.os.Build
+import android.os.PowerManager
 import android.os.SystemClock
+import android.provider.Settings
 import androidx.activity.result.ActivityResult
 import androidx.core.content.FileProvider
 import app.tauri.annotation.ActivityCallback
@@ -44,6 +48,48 @@ class VpnPlugin(private val activity: Activity) : Plugin(activity) {
         val result = JSObject()
         result.put("granted", VpnService.prepare(activity) == null)
         invoke.resolve(result)
+    }
+
+    @Command
+    fun isBatteryUnrestricted(invoke: Invoke) {
+        val result = JSObject()
+
+        result.put("granted", isIgnoringBatteryOptimizations())
+        invoke.resolve(result)
+    }
+
+    @Command
+    fun requestBatteryUnrestricted(invoke: Invoke) {
+        val result = JSObject()
+
+        if (isIgnoringBatteryOptimizations()) {
+            result.put("granted", true)
+            invoke.resolve(result)
+
+            return
+        }
+
+        val opened = runCatching {
+            activity.startActivity(
+                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + activity.packageName)),
+            )
+        }.recoverCatching {
+            activity.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+        }.isSuccess
+
+        result.put("granted", false)
+        result.put("opened", opened)
+        invoke.resolve(result)
+    }
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true
+        }
+
+        val manager = activity.getSystemService(Activity.POWER_SERVICE) as? PowerManager ?: return true
+
+        return manager.isIgnoringBatteryOptimizations(activity.packageName)
     }
 
     @Command

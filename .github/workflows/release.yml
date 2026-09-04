@@ -1,10 +1,9 @@
 name: release
 
-# Tauri cannot meaningfully cross-compile, and macOS cannot be built off a Mac
-# at all, so each platform builds on its own runner. tauri-action creates the
-# draft on the first job to reach it, reuses it afterwards, and merges every
-# platform's entry into one latest.json — which is why nothing here hand-rolls
-# an updater manifest.
+#   checks ─ draft ─┬─ desktop ─┬─ publish
+#                   └─ android ─┘
+#
+# Why it is shaped this way: ../../CLAUDE.md, "What the workflows assume".
 #
 # Repository secrets — Settings → Secrets and variables → Actions:
 #   NEXT_PUBLIC_API_URL              baked into every bundle, e.g. https://api.gnomevpn.ru
@@ -19,31 +18,22 @@ name: release
 #   keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
 #     -keyalg RSA -keysize 2048 -validity 10000
 #   base64 -i gnomevpn.keystore
-#
-# GITHUB_TOKEN is provided by Actions; nothing to add for it.
-#
-# Actions are pinned to a commit SHA, not a tag: a tag can be moved, and these
-# jobs hold the signing keys. Bumping them is a manual edit — the comment next to
-# each SHA says which release it is.
 
-# The tag triggers this directly. The gate is the `checks` job below rather than a
-# separate chained workflow: `workflow_run` cannot filter on a tag, so it fired for
-# every branch and pull request and needed an `if:` to sort them out, and it ran
-# the whole frontend-and-service build twice for one release — once to check it,
-# once to ship it.
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      targets:
+        description: which platforms to build (a tag push always builds all)
+        type: choice
+        default: all
+        options: [all, desktop, android]
 
-# Every `bun install` here — including the one tauri-action runs itself — fires
-# the server postinstall, and prisma.config.ts resolves DIRECT_URL through env().
-# `generate` never connects, so a placeholder satisfies it.
 env:
   DATABASE_URL: postgresql://placeholder
   DIRECT_URL: postgresql://placeholder
 
-# Granted per job instead: only the three that touch the release need write.
 permissions: {}
 
 concurrency:
@@ -51,21 +41,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The gate, and the only automated run of the checks left in this repo: nothing
-  # below it runs unless it passes, so a tag on a commit that does not typecheck
-  # or whose tests fail never produces signed artefacts. Ordinary commits are
-  # checked by `bun run verify` and `bun run test` locally — there is no workflow
-  # watching master.
-  #
-  # The build steps ahead of it are what that command needs in place: the tauri
-  # build script validates every path in `bundle.resources` and points
-  # frontendDist at ../client/out, so clippy cannot touch the crate until
-  # sing-box, the service, the icons and the frontend all exist.
   checks:
-    # The root `permissions: {}` leaves GITHUB_TOKEN with no scopes at all, and
-    # this repository is private: without `contents: read` the clone comes back
-    # as `fatal: repository '...' not found`, a 404 rather than a 403. Every
-    # other job here declares `contents: write` and so never hit it.
     permissions:
       contents: read
 
@@ -77,6 +53,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Check the tag matches the version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          set -euo pipefail
+          root=$(node -p "require('./package.json').version")
+
+          if [ "$REF_TYPE" = tag ] && [ "$REF_NAME" != "v$root" ]; then
+            echo "tag $REF_NAME does not match root package.json version $root" >&2
+            exit 1
+          fi
+
+          echo "releasing v$root"
+
       - uses: ./.github/actions/setup
         with:
           cache-key: verify
@@ -87,8 +78,6 @@ jobs:
           path: apps/tauri/bin/singbox
           key: singbox-${{ runner.os }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
 
-      # tauri links against webkit2gtk; without these clippy cannot build its
-      # dependencies and the Rust half of `verify` never runs.
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
@@ -98,22 +87,15 @@ jobs:
       - run: node apps/tauri/scripts/build-service.mjs
       - run: bun --filter @gnomevpn/tauri icon
 
-      # Nothing built here ships — the real bundles come from the jobs below,
-      # with the real API URL. A placeholder keeps NODE_ENV=production happy,
-      # where client-env.ts requires NEXT_PUBLIC_API_URL outright.
       - env:
           NEXT_PUBLIC_API_URL: https://api.invalid
         run: bun --filter @gnomevpn/client build
 
       - run: bun run verify
 
-      # Tests are not part of `verify` — it is the lint-and-typecheck gate. They
-      # run here so a tag cannot ship past a red suite.
       - run: bun run test
       - run: bun run test:rust
 
-  # The draft exists before either build so desktop and android can upload into
-  # it at the same time instead of android queueing behind the matrix.
   draft:
     needs: checks
 
@@ -143,6 +125,7 @@ jobs:
 
   desktop:
     needs: draft
+    if: github.event_name == 'push' || contains(fromJSON('["all", "desktop"]'), inputs.targets)
 
     permissions:
       contents: write
@@ -153,10 +136,20 @@ jobs:
         include:
           - os: windows-2025
             label: windows
+            args: ''
           - os: macos-15
-            label: macos
+            label: macos-aarch64
+            args: --target aarch64-apple-darwin
+            rust-target: aarch64-apple-darwin
+            singbox-arch: arm64
+          - os: macos-15
+            label: macos-x86_64
+            args: --target x86_64-apple-darwin
+            rust-target: x86_64-apple-darwin
+            singbox-arch: x64
           - os: ubuntu-24.04
             label: linux
+            args: ''
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -169,13 +162,13 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-key: ${{ matrix.label }}
+          rust-targets: ${{ matrix.rust-target }}
 
-      # 50 MB per job, and the version only moves when the fetch script does.
       - name: Cache sing-box
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: apps/tauri/bin/singbox
-          key: singbox-${{ runner.os }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
+          key: singbox-${{ matrix.label }}-${{ hashFiles('apps/tauri/scripts/fetch-singbox.mjs') }}
 
       - name: Install Linux build dependencies
         if: matrix.label == 'linux'
@@ -183,12 +176,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev
 
-      # A no-op when the cache hit.
-      - run: bun --filter @gnomevpn/tauri singbox
+      - env:
+          SINGBOX_ARCH: ${{ matrix.singbox-arch }}
+        run: bun --filter @gnomevpn/tauri singbox
 
-      # The privileged service is a separate crate that tauri only knows as a
-      # bundled resource, so it has to exist before the bundle is assembled.
-      - run: node apps/tauri/scripts/build-service.mjs --release
+      - env:
+          SERVICE_TARGET: ${{ matrix.rust-target }}
+        run: node apps/tauri/scripts/build-service.mjs --release
       - run: bun --filter @gnomevpn/tauri icon
 
       - uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
@@ -201,11 +195,12 @@ jobs:
           projectPath: apps/tauri
           tagName: v__VERSION__
           releaseName: GnomeVPN v__VERSION__
-          # Stays a draft until Android has uploaded too; `publish` flips it.
           releaseDraft: true
+          args: ${{ matrix.args }}
 
   android:
     needs: draft
+    if: github.event_name == 'push' || contains(fromJSON('["all", "android"]'), inputs.targets)
 
     permissions:
       contents: write
@@ -218,12 +213,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # No `cache: gradle` here: it hashes **/*.gradle* to build its key, and the
-      # gradle project does not exist yet — `tauri android init` generates
-      # gen/android later in this job, and gen/ is gitignored. With nothing to
-      # hash the action fails outright: "No file in ... matched to [**/*.gradle*,
-      # **/gradle-wrapper.properties, ...]". The cache below does the same job
-      # keyed on something that is actually in the checkout.
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
@@ -238,14 +227,10 @@ jobs:
           key: gradle-${{ hashFiles('apps/tauri/Cargo.toml', 'apps/tauri/scripts/lib/android-overlay.mjs') }}
           restore-keys: gradle-
 
-      # build-tools is not part of the default package set, and without it there
-      # is no apksigner to verify the signed apk with.
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
         with:
           packages: platform-tools build-tools;34.0.0
 
-      # setup-android ships the SDK but not the NDK, and without it cargo cannot
-      # cross-compile to the android targets.
       - uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1
         id: ndk
         with:
@@ -256,15 +241,12 @@ jobs:
           cache-key: android
           rust-targets: aarch64-linux-android x86_64-linux-android
 
-      # 63 MB across three ABIs, pinned by the fetch script.
       - name: Cache hysteria
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: apps/tauri/android/libs
           key: hysteria-${{ hashFiles('apps/tauri/scripts/fetch-hysteria.mjs') }}
 
-      # A no-op when the cache hit. Android runs hysteria out of jniLibs, so it
-      # has to be in place before the overlay is applied.
       - run: bun --filter @gnomevpn/tauri hysteria
 
       - name: Build the client bundle
@@ -273,8 +255,6 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
         run: bun --filter @gnomevpn/client build
 
-      # `tauri android init` regenerates gen/android, so the overlay and the
-      # signing config are re-applied after it, never before.
       - name: Prepare the android project
         working-directory: apps/tauri
         env:
@@ -302,8 +282,6 @@ jobs:
           bunx tauri android build --apk --target aarch64 --target x86_64
           bunx tauri android build --aab --target aarch64 --target x86_64
 
-      # The universal build is the one that ships; gradle also leaves per-ABI
-      # artifacts next to it.
       - name: Collect and verify
         id: artifacts
         run: |
@@ -334,8 +312,11 @@ jobs:
 
   publish:
     needs: [desktop, android]
-    # Three desktop bundles should still ship if the Android build failed.
-    if: always() && needs.desktop.result == 'success'
+    if: |
+      always()
+      && needs.desktop.result != 'failure'
+      && needs.desktop.result != 'cancelled'
+      && (needs.desktop.result == 'success' || needs.android.result == 'success')
 
     permissions:
       contents: write

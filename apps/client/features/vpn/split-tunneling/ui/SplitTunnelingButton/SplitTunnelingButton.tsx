@@ -4,29 +4,26 @@ import { SplitSquareHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { useVpnConnectionContext } from '@/features/vpn/connect';
+import type { SplitTunnelingButtonProps } from './SplitTunnelingButton.types';
 
 import { useSplitTunneling } from '../../model/hooks';
 import { SplitTunnelingDialog } from '../SplitTunnelingDialog';
 
 import s from './SplitTunnelingButton.module.scss';
 
-export const SplitTunnelingButton = () => {
+export const SplitTunnelingButton = ({ isConnected, hasActiveNode, onReconnect }: SplitTunnelingButtonProps) => {
   const t = useTranslations('splitTunneling');
   const [isOpen, setIsOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
-  const { status, activeNodeId, reconnect } = useVpnConnectionContext();
-
-  const isConnected = status !== 'disconnected';
 
   const splitTunneling = useSplitTunneling({
     isOpen,
     onApplied: () => {
-      if (!isConnected || !activeNodeId) {
+      if (!isConnected || !hasActiveNode) {
         return;
       }
 
-      void reconnect();
+      onReconnect();
     }
   });
 

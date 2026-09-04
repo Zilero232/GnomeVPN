@@ -1,5 +1,6 @@
 import { createPageMetadata } from '@/shared/seo';
-import { AppGate } from '@/views/app-view';
+
+import { AppRouteGate } from './AppRouteGate';
 
 export const metadata = createPageMetadata({
   title: 'Подключение',
@@ -9,6 +10,6 @@ export const metadata = createPageMetadata({
   follow: false
 });
 
-const Page = () => <AppGate />;
+const Page = () => <AppRouteGate />;
 
 export default Page;

@@ -1,4 +1,4 @@
-import type { NotifyTone } from '../model';
+import type { NotifyTone } from '../model/types';
 
 export const NOTIFICATION_GROUP = 'gnomevpn';
 export const STATUS_NOTIFICATION_ID = 1;
