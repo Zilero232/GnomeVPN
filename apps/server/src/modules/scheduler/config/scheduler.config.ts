@@ -7,3 +7,5 @@ export const RENEW_WINDOW_HOURS = 24;
 export const CONFIG_GRACE_HOURS = 6;
 
 export const IN_FLIGHT_WINDOW_HOURS = 24;
+
+export const RECONCILE_FAILURE_ALERT_THRESHOLD = 5;

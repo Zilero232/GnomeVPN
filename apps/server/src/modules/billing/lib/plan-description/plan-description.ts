@@ -3,13 +3,10 @@ import type { Plan } from '@gnomevpn/schemas';
 import type { DescribeSubscriptionInput } from './plan-description.types';
 
 import { MONTH_FORMS, SUBSCRIPTION_PREFIX } from '../../config';
-
-const rules = new Intl.PluralRules('ru-RU');
-
-const months = (count: number): string => MONTH_FORMS[rules.select(count)] ?? MONTH_FORMS.many;
+import { pluralize } from '../pluralize';
 
 export const describeSubscription = ({ plan, kind }: DescribeSubscriptionInput): string =>
-  `${SUBSCRIPTION_PREFIX[kind]} ${plan.months} ${months(plan.months)}`;
+  `${SUBSCRIPTION_PREFIX[kind]} ${plan.months} ${pluralize({ count: plan.months, forms: MONTH_FORMS })}`;
 
 export const describePlan = (plan: Plan): string => describeSubscription({ plan, kind: 'purchase' });
 

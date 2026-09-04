@@ -30,23 +30,3 @@ export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> => 
 export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSettings => parseJson<XrayWireguardSettings>(inbound.settings);
 
 export const currentClients = (inbound: XrayInbound): unknown[] => parseSettings(inbound).clients ?? [];
-
-const chains = new Map<string, Promise<unknown>>();
-
-export const serializeByKey = <T>(key: string, task: () => Promise<T>): Promise<T> => {
-  const previous = chains.get(key) ?? Promise.resolve();
-  const next = previous.catch(() => undefined).then(task);
-
-  chains.set(
-    key,
-    next
-      .catch(() => undefined)
-      .finally(() => {
-        if (chains.get(key) === next) {
-          chains.delete(key);
-        }
-      })
-  );
-
-  return next;
-};

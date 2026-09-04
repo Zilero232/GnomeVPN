@@ -1,8 +1,8 @@
-import type { BindCardResult, BuyExtraDevicesInput, CheckoutClient, CheckoutResult, PlanId } from '@gnomevpn/schemas';
+import type { BindCardResult, BuyExtraDevicesInput, CheckoutClient, CheckoutResult, CreateCheckoutInput } from '@gnomevpn/schemas';
 
 import { api } from '../http';
 
-export const createCheckout = async (planId: PlanId, client: CheckoutClient): Promise<CheckoutResult> => {
+export const createCheckout = async ({ planId, client }: CreateCheckoutInput): Promise<CheckoutResult> => {
   const { data } = await api.post('/billing/checkout', { planId, client });
 
   return data;

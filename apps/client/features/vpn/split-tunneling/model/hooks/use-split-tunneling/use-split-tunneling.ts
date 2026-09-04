@@ -9,7 +9,8 @@ import { emptySplitConfig, logger, splitSetting } from '@/shared/lib';
 
 import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
 
-const toggleIn = (list: string[], value: string) => (list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value]);
+const toggleIn = ({ list, value }: { list: string[]; value: string }) =>
+  list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
 export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}) => {
   const [applied, setApplied] = useState<SplitConfig>(emptySplitConfig);
@@ -17,10 +18,6 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
   const [isApplying, setIsApplying] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
     let ignore = false;
 
     const load = async () => {
@@ -45,33 +42,11 @@ export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunneli
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    let ignore = false;
-
-    const load = async () => {
-      try {
-        const stored = await splitSetting.get();
-
-        if (!ignore) {
-          setApplied(stored);
-        }
-      } catch (error) {
-        logger.warn(`cannot read split config: ${String(error)}`);
-      }
-    };
-
-    void load();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
   const setAppsMode = (appsMode: SplitMode) => setDraft((current) => ({ ...current, appsMode }));
 
   const setIpsMode = (ipsMode: SplitMode) => setDraft((current) => ({ ...current, ipsMode }));
 
-  const toggleApp = (path: string) => setDraft((current) => ({ ...current, apps: toggleIn(current.apps, path) }));
+  const toggleApp = (path: string) => setDraft((current) => ({ ...current, apps: toggleIn({ list: current.apps, value: path }) }));
 
   const addIp = (cidr: string) => setDraft((current) => (current.ips.includes(cidr) ? current : { ...current, ips: [...current.ips, cidr] }));
 

@@ -12,7 +12,7 @@ export const useCheckout = () => {
   const toastError = useToastError();
 
   return useMutation({
-    mutationFn: (planId: PlanId) => createCheckout(planId, clientKind()),
+    mutationFn: (planId: PlanId) => createCheckout({ planId, client: clientKind() }),
     onSuccess: (result) => redirectToConfirmation(result.confirmationUrl),
     onError: toastError
   });

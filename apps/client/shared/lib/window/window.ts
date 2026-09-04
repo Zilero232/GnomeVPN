@@ -1,55 +1,72 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
+import type { SafeWindowInput } from './window.types';
+
 import { logger } from '../logger';
 
-const safeWindow = async (label: string, fn: () => Promise<void>) => {
+const safeWindow = async ({ label, run }: SafeWindowInput) => {
   try {
-    await fn();
+    await run();
   } catch (error) {
     logger.error(`Window ${label} failed: ${String(error)}`);
   }
 };
 
 export const minimizeMainWindow = async (): Promise<void> => {
-  await safeWindow('minimize', async () => {
-    await getCurrentWindow().minimize();
+  await safeWindow({
+    label: 'minimize',
+    run: async () => {
+      await getCurrentWindow().minimize();
+    }
   });
 };
 
 export const showMainWindow = async (): Promise<void> => {
-  await safeWindow('show', async () => {
-    const win = getCurrentWindow();
+  await safeWindow({
+    label: 'show',
+    run: async () => {
+      const win = getCurrentWindow();
 
-    await win.unminimize();
-    await win.show();
-    await win.setFocus();
+      await win.unminimize();
+      await win.show();
+      await win.setFocus();
+    }
   });
 };
 
 export const hideMainWindow = async (): Promise<void> => {
-  await safeWindow('hide', async () => {
-    await getCurrentWindow().hide();
+  await safeWindow({
+    label: 'hide',
+    run: async () => {
+      await getCurrentWindow().hide();
+    }
   });
 };
 
 export const toggleMainWindow = async (): Promise<void> => {
-  await safeWindow('toggle', async () => {
-    const win = getCurrentWindow();
+  await safeWindow({
+    label: 'toggle',
+    run: async () => {
+      const win = getCurrentWindow();
 
-    if (await win.isVisible()) {
-      await win.hide();
+      if (await win.isVisible()) {
+        await win.hide();
 
-      return;
+        return;
+      }
+
+      await win.unminimize();
+      await win.show();
+      await win.setFocus();
     }
-
-    await win.unminimize();
-    await win.show();
-    await win.setFocus();
   });
 };
 
 export const closeMainWindow = async (): Promise<void> => {
-  await safeWindow('close', async () => {
-    await getCurrentWindow().close();
+  await safeWindow({
+    label: 'close',
+    run: async () => {
+      await getCurrentWindow().close();
+    }
   });
 };

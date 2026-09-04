@@ -27,7 +27,7 @@ export const AppView = () => {
   const { isDesktopApp } = usePlatform();
   const { hasAccess } = useSubscriptionStatus();
 
-  const { status, activeNodeId, traffic, connectedAt, connect, disconnect } = useVpnConnectionContext();
+  const { status, activeNodeId, traffic, connectedAt, connect, disconnect, reconnect } = useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
   const { protocol, select: selectProtocol } = useProtocolSelection();
@@ -66,7 +66,13 @@ export const AppView = () => {
             v{env.NEXT_PUBLIC_APP_VERSION}
           </Text>
 
-          {isDesktopApp && <SplitTunnelingButton />}
+          {isDesktopApp && (
+            <SplitTunnelingButton
+              hasActiveNode={Boolean(activeNodeId)}
+              isConnected={status !== 'disconnected'}
+              onReconnect={() => void reconnect()}
+            />
+          )}
 
           <AppMenu />
         </div>

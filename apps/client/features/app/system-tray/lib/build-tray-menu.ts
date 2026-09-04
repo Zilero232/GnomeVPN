@@ -3,11 +3,11 @@ import { exit } from '@tauri-apps/plugin-process';
 
 import { logger } from '@/shared/lib';
 
-import type { TrayMenuActions, TrayMenuLabels } from '../model/types';
+import type { BuildTrayMenuInput } from './build-tray-menu.types';
 
 import { TRAY_MENU_ID } from '../config/menu-ids';
 
-export const buildTrayMenu = async (labels: TrayMenuLabels, actions: TrayMenuActions) => {
+export const buildTrayMenu = async ({ labels, actions }: BuildTrayMenuInput) => {
   const toggle = await MenuItem.new({
     id: TRAY_MENU_ID.toggle,
     text: labels.toggle,

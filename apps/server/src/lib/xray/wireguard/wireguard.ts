@@ -7,7 +7,8 @@ import type { PanelClient } from '../panel-client';
 import type { AddWireguardPeerInput, NewWireguardClientInput, WireguardClient, WireguardInboundInput } from './wireguard.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
-import { parseWireguardSettings, serializeByKey, stripCidrMask } from '../xray.helpers';
+import { serializeByKey } from '../serialize';
+import { parseWireguardSettings, stripCidrMask } from '../xray.helpers';
 import { WG_INBOUND_REMARK, WG_PEER_ID_BYTES } from './wireguard.constants';
 
 const newPeer = ({ email, publicKey, assignedIp }: NewWireguardClientInput): WireguardClient => ({
@@ -35,28 +36,31 @@ export class WireguardPeers {
   }
 
   async ensureInbound(inbound: WireguardInboundInput): Promise<void> {
-    return serializeByKey(this.nodeKey, async () => {
-      const current = await this.inbounds.find(WG_INBOUND_REMARK);
+    return serializeByKey({
+      key: this.nodeKey,
+      task: async () => {
+        const current = await this.inbounds.find(WG_INBOUND_REMARK);
 
-      if (!current) {
-        await this.inbounds.create(inbound, WG_INBOUND_REMARK);
+        if (!current) {
+          await this.inbounds.create(inbound, WG_INBOUND_REMARK);
 
-        return;
+          return;
+        }
+
+        const { peers: _legacyPeers, ...existing } = parseWireguardSettings(current);
+        const { clients: _fresh, ...incoming } = inbound.settings;
+
+        if (existing.secretKey === incoming.secretKey) {
+          return;
+        }
+
+        await this.inbounds.writeClients({
+          inbound: current,
+          protocol: 'wireguard',
+          settings: { ...existing, ...incoming },
+          remark: WG_INBOUND_REMARK
+        });
       }
-
-      const { peers: _legacyPeers, ...existing } = parseWireguardSettings(current);
-      const { clients: _fresh, ...incoming } = inbound.settings;
-
-      if (existing.secretKey === incoming.secretKey) {
-        return;
-      }
-
-      await this.inbounds.writeClients({
-        inbound: current,
-        protocol: 'wireguard',
-        settings: { ...existing, ...incoming },
-        remark: WG_INBOUND_REMARK
-      });
     });
   }
 
@@ -85,39 +89,42 @@ export class WireguardPeers {
   }
 
   async add({ email, publicKey, takenIps, allocateIp }: AddWireguardPeerInput): Promise<string> {
-    return serializeByKey(this.nodeKey, async () => {
-      const clients = await this.list();
-      const reused = clients.find((client) => client.email === email);
-      const reusedIps = new Set((reused?.allowedIPs ?? []).map(stripCidrMask));
+    return serializeByKey({
+      key: this.nodeKey,
+      task: async () => {
+        const clients = await this.list();
+        const reused = clients.find((client) => client.email === email);
+        const reusedIps = new Set((reused?.allowedIPs ?? []).map(stripCidrMask));
 
-      const claimed = [...takenIps, ...claimedIps(clients)].filter((ip) => !reusedIps.has(ip));
-      const assignedIp = allocateIp(claimed);
+        const claimed = [...takenIps, ...claimedIps(clients)].filter((ip) => !reusedIps.has(ip));
+        const assignedIp = allocateIp(claimed);
 
-      if (!assignedIp) {
-        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard subnet exhausted');
+        if (!assignedIp) {
+          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard subnet exhausted');
+        }
+
+        const peer = newPeer({ email, publicKey, assignedIp });
+
+        const conflictsWithPeer = (client: WireguardClient) =>
+          client.email === peer.email || client.publicKey === peer.publicKey || client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
+
+        const evicted = clients.filter((client) => client.email !== peer.email && conflictsWithPeer(client));
+
+        if (!isEmpty(evicted)) {
+          WireguardPeers.logger.error(
+            `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`
+          );
+
+          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard client collision on the node');
+        }
+
+        const kept = clients.filter((client) => !conflictsWithPeer(client));
+
+        await this.write([...kept, peer]);
+        await this.panel.restartCore();
+
+        return assignedIp;
       }
-
-      const peer = newPeer({ email, publicKey, assignedIp });
-
-      const conflictsWithPeer = (client: WireguardClient) =>
-        client.email === peer.email || client.publicKey === peer.publicKey || client.allowedIPs.some((ip) => peer.allowedIPs.includes(ip));
-
-      const evicted = clients.filter((client) => client.email !== peer.email && conflictsWithPeer(client));
-
-      if (!isEmpty(evicted)) {
-        WireguardPeers.logger.error(
-          `wireguard peer ${email} collides with ${evicted.map((client) => client.email).join(', ')} on ${this.nodeKey} — those clients would be evicted; aborting to avoid orphaning them`
-        );
-
-        throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'wireguard client collision on the node');
-      }
-
-      const kept = clients.filter((client) => !conflictsWithPeer(client));
-
-      await this.write([...kept, peer]);
-      await this.panel.restartCore();
-
-      return assignedIp;
     });
   }
 }

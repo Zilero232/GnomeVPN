@@ -18,8 +18,8 @@ import type {
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService } from '../../../core';
-import { WG } from '../config';
-import { generateWireguardKeys, nextWireguardIp, PEER_REF_SELECT, peerClientName } from '../lib';
+import { PEER_REF_SELECT, WG } from '../config';
+import { generateWireguardKeys, nextWireguardIp, peerClientName } from '../lib';
 
 @Injectable()
 export class PeersService {

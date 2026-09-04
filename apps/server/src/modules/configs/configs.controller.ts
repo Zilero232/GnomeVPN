@@ -6,8 +6,8 @@ import { ZodResponse } from 'nestjs-zod';
 import { CurrentUserId } from '../../common/decorators';
 import { SubscriptionGuard } from '../subscription';
 import { CONFIG_FILE_CONTENT_TYPE } from './config';
+import { contentDisposition } from './configs.helpers';
 import { ConfigStatusDto, DownloadedConfigDto, IssueConfigDto, RevokeConfigDto } from './dto/configs.dto';
-import { contentDisposition } from './lib';
 import { ConfigAccessService, ConfigIssueService } from './services';
 
 @Controller('configs')

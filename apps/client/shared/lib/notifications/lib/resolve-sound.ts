@@ -1,7 +1,7 @@
 import { platform } from '@tauri-apps/plugin-os';
 import { match } from 'ts-pattern';
 
-import type { NotifyTone } from '../model';
+import type { NotifyTone } from '../model/types';
 
 import { LINUX_SOUND, MACOS_SOUND, WINDOWS_SOUND } from '../config';
 

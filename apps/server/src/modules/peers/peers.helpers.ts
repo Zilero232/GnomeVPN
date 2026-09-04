@@ -1,5 +1,4 @@
-import type { CreatedPeer } from '../../peers.service.types';
-import type { PeerWgData } from './peer-wg-data.types';
+import type { CreatedPeer, PeerWgData } from './peers.service.types';
 
 export const peerWgData = (created: CreatedPeer): PeerWgData => ({
   wgAssignedIp: created.wgAssignedIp ?? null,

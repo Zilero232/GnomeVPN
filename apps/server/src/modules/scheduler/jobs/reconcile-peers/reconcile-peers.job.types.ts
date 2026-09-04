@@ -35,3 +35,8 @@ export type CollectOrphansInput = {
   nodeClients: Map<string, boolean>;
   online: Set<string> | null;
 };
+
+export type NoteFailureInput = {
+  nodeId: string;
+  reason: unknown;
+};
