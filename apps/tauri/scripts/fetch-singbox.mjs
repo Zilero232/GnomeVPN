@@ -20,7 +20,7 @@ const TARGETS = {
 const log = reporter('fetch-singbox');
 
 // The macOS matrix cross-compiles, so the bundle's arch is not the runner's.
-const arch = process.env.SINGBOX_ARCH ?? process.arch;
+const arch = process.env.SINGBOX_ARCH || process.arch;
 const key = `${process.platform}-${arch}`;
 const target = TARGETS[key];
 
