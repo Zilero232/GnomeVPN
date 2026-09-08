@@ -22,12 +22,12 @@ export const useConfigs = () => {
   });
 
   const online = new Set(status?.onlineIds ?? []);
-  const revoked = new Set(status?.revokedIds ?? []);
+  const broken = new Set(status?.brokenIds ?? []);
 
   const configs: ConfigWithStatus[] = (data ?? []).map((config) => ({
     ...config,
     isOnline: online.has(config.id),
-    isRevoked: revoked.has(config.id)
+    isBroken: broken.has(config.id)
   }));
 
   return { configs, isLoading };

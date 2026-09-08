@@ -304,7 +304,7 @@
     "copy": "Copy link",
     "copied": "Link copied",
     "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand",
-    "revoked": "No longer works — issue a new one"
+    "broken": "Not working"
   },
   "desktopOnly": {
     "title": "Connect from the app",
