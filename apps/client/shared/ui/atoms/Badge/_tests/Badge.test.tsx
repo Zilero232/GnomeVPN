@@ -49,4 +49,11 @@ describe('Badge', () => {
 
     expect(screen.getByText('Active')).toHaveAttribute('title', 'status');
   });
+
+  it('renders a danger tone distinctly from the others', () => {
+    const { container: accent } = render(<Badge tone='accent'>x</Badge>);
+    const { container: danger } = render(<Badge tone='danger'>x</Badge>);
+
+    expect(danger.firstElementChild?.className).not.toBe(accent.firstElementChild?.className);
+  });
 });

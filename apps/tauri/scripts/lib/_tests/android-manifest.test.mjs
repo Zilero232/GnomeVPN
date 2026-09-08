@@ -52,17 +52,10 @@ describe('patchManifest', () => {
       'POST_NOTIFICATIONS',
       'WAKE_LOCK',
       'ACCESS_NETWORK_STATE',
-      'RECEIVE_BOOT_COMPLETED',
-      'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS'
+      'RECEIVE_BOOT_COMPLETED'
     ]) {
       expect(xml).toContain(`android.permission.${permission}`);
     }
-  });
-
-  it('keeps the battery exemption, which dropStalePermissions used to delete on the same run', () => {
-    patchManifest(path);
-
-    expect(read()).toContain('REQUEST_IGNORE_BATTERY_OPTIMIZATIONS');
   });
 
   it('keeps ACCESS_NETWORK_STATE, without which registerNetworkCallback throws', () => {
@@ -85,7 +78,7 @@ describe('patchManifest', () => {
     patchManifest(path);
 
     const xml = read();
-    const occurrences = xml.split('REQUEST_IGNORE_BATTERY_OPTIMIZATIONS').length - 1;
+    const occurrences = xml.split('ACCESS_NETWORK_STATE').length - 1;
 
     expect(occurrences).toBe(1);
   });

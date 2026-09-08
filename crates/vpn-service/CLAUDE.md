@@ -46,14 +46,17 @@ looking the adapter up by name finds nothing and the tunnel would never report
 `Connected`. `adapter::find` falls back to matching the interface that carries
 `TUNNEL_ADDRESS` — keep that fallback.
 
-**sing-box is always asked to stop before it is killed.** It installs
-pf/nftables rules, WFP filters and routes; killing it outright leaves them
-behind, and a leaked default route pointing into a tunnel that no longer exists
-is exactly the class of breakage `route delete 0.0.0.0` caused — the user simply
-sees that the internet stopped working. `Singbox::stop` asks first, waits
-`SHUTDOWN_GRACE`, then kills. Unix sends SIGTERM; Windows has no such signal, so
-it posts a close request with `taskkill` **without** `/F`. `reap_orphans` is the
-one place that still forces the issue, and only for processes already orphaned.
+**sing-box gets SIGTERM before SIGKILL on Unix.** It installs pf/nftables rules
+and routes; killing it outright leaves them behind, and a leaked default route
+is exactly the class of breakage `route delete 0.0.0.0` caused on Windows.
+`Singbox::stop` signals, waits `SHUTDOWN_GRACE`, then kills.
+
+**Windows has no equivalent and must not fake one.** `taskkill` without `/F`
+posts WM_CLOSE to a top-level window, and sing-box is spawned by a service with
+no desktop and no window — the request goes nowhere while `taskkill` still
+reports success, so every disconnect burned the full `SHUTDOWN_GRACE` before the
+kill. That was tried and reverted; it made disconnects visibly slower and fixed
+nothing.
 
 The config directory is `0700`: it holds the tunnel password.
 

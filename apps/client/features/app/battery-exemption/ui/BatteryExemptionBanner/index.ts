@@ -1,1 +1,0 @@
-export { BatteryExemptionBanner } from './BatteryExemptionBanner';

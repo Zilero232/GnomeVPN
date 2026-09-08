@@ -54,6 +54,10 @@ export const useVpnConnection = () => {
       tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()]
     });
 
+    if (!(await waitForDisconnected({ readStatus: vpnStatus }))) {
+      logger.warn('the tunnel did not report disconnected before the teardown finished');
+    }
+
     tunnel.reset();
   };
 
@@ -165,10 +169,6 @@ export const useVpnConnection = () => {
     }
 
     await disconnect({ isAutomatic: true });
-
-    if (!(await waitForDisconnected({ readStatus: vpnStatus }))) {
-      logger.warn('tunnel did not report disconnected before reconnecting');
-    }
 
     await connect({
       nodeId,

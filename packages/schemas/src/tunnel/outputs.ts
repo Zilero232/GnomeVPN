@@ -60,5 +60,6 @@ export const downloadedConfigSchema = z.object({
 });
 
 export const configStatusSchema = z.object({
-  onlineIds: z.array(z.string().min(1))
+  onlineIds: z.array(z.string().min(1)),
+  revokedIds: z.array(z.string().min(1)).default([])
 });
