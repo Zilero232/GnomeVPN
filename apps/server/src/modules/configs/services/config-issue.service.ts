@@ -64,7 +64,7 @@ export class ConfigIssueService {
 
     return {
       onlineIds: usable.filter((row) => online.has(row.id)).map((row) => row.id),
-      revokedIds: rows.filter((row) => row.state !== 'active').map((row) => row.id)
+      brokenIds: rows.filter((row) => row.state !== 'active').map((row) => row.id)
     };
   }
 

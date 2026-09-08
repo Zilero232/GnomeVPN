@@ -42,7 +42,7 @@ beforeEach(() => {
     { ...CONFIG, id: 'b', name: 'Phone' }
   ]);
 
-  listConfigStatus.mockResolvedValue({ onlineIds: [], revokedIds: [] });
+  listConfigStatus.mockResolvedValue({ onlineIds: [], brokenIds: [] });
 });
 
 afterEach(() => {
@@ -55,11 +55,11 @@ describe('useConfigs', () => {
 
     await waitFor(() => expect(seen.configs).toHaveLength(2));
 
-    expect(seen.configs[0]).toMatchObject({ id: 'a', isOnline: false, isRevoked: false });
+    expect(seen.configs[0]).toMatchObject({ id: 'a', isOnline: false, isBroken: false });
   });
 
   it('marks a config the node reports as connected', async () => {
-    listConfigStatus.mockResolvedValue({ onlineIds: ['a'], revokedIds: [] });
+    listConfigStatus.mockResolvedValue({ onlineIds: ['a'], brokenIds: [] });
 
     renderProbe();
 
@@ -68,34 +68,34 @@ describe('useConfigs', () => {
     expect(seen.configs[1]?.isOnline).toBe(false);
   });
 
-  it('marks a revoked config, so the user knows to issue a new one', async () => {
-    listConfigStatus.mockResolvedValue({ onlineIds: [], revokedIds: ['b'] });
+  it('marks a config the node no longer serves, so the user knows to issue a new one', async () => {
+    listConfigStatus.mockResolvedValue({ onlineIds: [], brokenIds: ['b'] });
 
     renderProbe();
 
-    await waitFor(() => expect(seen.configs[1]?.isRevoked).toBe(true));
+    await waitFor(() => expect(seen.configs[1]?.isBroken).toBe(true));
 
-    expect(seen.configs[0]?.isRevoked).toBe(false);
+    expect(seen.configs[0]?.isBroken).toBe(false);
   });
 
-  it('never reports a revoked config as online', async () => {
-    listConfigStatus.mockResolvedValue({ onlineIds: [], revokedIds: ['a', 'b'] });
+  it('never reports a broken config as online', async () => {
+    listConfigStatus.mockResolvedValue({ onlineIds: [], brokenIds: ['a', 'b'] });
 
     renderProbe();
 
-    await waitFor(() => expect(seen.configs.every((config) => config.isRevoked)).toBe(true));
+    await waitFor(() => expect(seen.configs.every((config) => config.isBroken)).toBe(true));
 
     expect(seen.configs.some((config) => config.isOnline)).toBe(false);
   });
 
-  it('treats a status response with no revoked list as nothing revoked', async () => {
+  it('treats a status response with no broken list as nothing broken', async () => {
     listConfigStatus.mockResolvedValue({ onlineIds: ['a'] });
 
     renderProbe();
 
     await waitFor(() => expect(seen.configs[0]?.isOnline).toBe(true));
 
-    expect(seen.configs.some((config) => config.isRevoked)).toBe(false);
+    expect(seen.configs.some((config) => config.isBroken)).toBe(false);
   });
 
   it('shows the configs before their status has arrived', async () => {
@@ -105,7 +105,7 @@ describe('useConfigs', () => {
 
     await waitFor(() => expect(seen.configs).toHaveLength(2));
 
-    expect(seen.configs.every((config) => !config.isOnline && !config.isRevoked)).toBe(true);
+    expect(seen.configs.every((config) => !config.isOnline && !config.isBroken)).toBe(true);
   });
 
   it('asks for no status at all when the user has no configs', async () => {
@@ -125,6 +125,6 @@ describe('useConfigs', () => {
 
     await waitFor(() => expect(seen.configs).toHaveLength(2));
 
-    expect(seen.configs.every((config) => !config.isRevoked)).toBe(true);
+    expect(seen.configs.every((config) => !config.isBroken)).toBe(true);
   });
 });

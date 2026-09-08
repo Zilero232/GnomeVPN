@@ -42,8 +42,9 @@
 .head {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
 }
 
 .name {
