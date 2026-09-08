@@ -257,17 +257,14 @@ tunnel is dead — which is exactly how a broken tunnel looked healthy: status
 `connected`, counters rising, nothing loading. `TunnelTraffic` reads the same
 per-interface counters the engine watches.
 
-**The battery-optimization exemption is back, and this time it is user-granted.**
-It was removed once on the reasoning that a foreground `VpnService` is exempt
-enough and the keepalive is the real fix. It is not: users still reported the
-tunnel dying 15-30 minutes after the screen went off, which is Doze freezing the
-`:tunnel` process and tearing down its UDP sockets. `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`
-is in `PERMISSIONS` again — and, critically, **not** in `dropStalePermissions`,
-which silently deleted it on the same run and made the insert look like a no-op.
-`BatteryExemptionBanner` opens the system screen rather than the direct dialog
-Play Store objects to, and re-checks on window focus because leaving for Settings
-is the only signal that comes back. Aggressive vendors (MIUI/EMUI/OneUI) may
-still need the app in their own autostart list, which cannot be set from code.
+A battery-optimization exemption (`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`) has
+been **tried and removed twice**. A foreground `VpnService` is already exempt
+enough that established VPNs never request it, the permission trips an extra
+Play Store review, and shipping it a second time made the app measurably worse
+rather than better. `dropStalePermissions` deletes it on purpose — do not put it
+back without evidence from `adb logcat` that Doze is what kills the tunnel.
+Aggressive vendors (MIUI/EMUI/OneUI) may still need the app in their own
+autostart list, which cannot be set from code.
 
 **Windows toasts ignore the `icon` field.** The icon comes from
 `Software\Classes\AppUserModelId\<identifier>\IconUri` in the registry, written

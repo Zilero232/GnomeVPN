@@ -1,4 +1,4 @@
-import type { DownloadedConfig } from '@gnomevpn/schemas';
+import type { ConfigStatus, DownloadedConfig } from '@gnomevpn/schemas';
 
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
@@ -53,15 +53,19 @@ export class ConfigIssueService {
     }));
   }
 
-  async onlineIds(userId: string): Promise<string[]> {
+  async status(userId: string): Promise<ConfigStatus> {
     const rows = await this.prisma.peer.findMany({
       where: { userId, kind: 'config' },
-      select: { id: true, nodeId: true, protocol: true, userId: true, kind: true, name: true }
+      select: { id: true, nodeId: true, protocol: true, userId: true, kind: true, name: true, state: true }
     });
 
-    const online = await this.peers.onlinePeerIds(rows, { assumeOnlineWhenNodeSilent: false });
+    const usable = rows.filter((row) => row.state === 'active');
+    const online = await this.peers.onlinePeerIds(usable, { assumeOnlineWhenNodeSilent: false });
 
-    return rows.filter((row) => online.has(row.id)).map((row) => row.id);
+    return {
+      onlineIds: usable.filter((row) => online.has(row.id)).map((row) => row.id),
+      revokedIds: rows.filter((row) => row.state !== 'active').map((row) => row.id)
+    };
   }
 
   async issue({ userId, nodeId, name, protocol }: IssueConfigInput): Promise<ConfigFile> {

@@ -22,8 +22,13 @@ export const useConfigs = () => {
   });
 
   const online = new Set(status?.onlineIds ?? []);
+  const revoked = new Set(status?.revokedIds ?? []);
 
-  const configs: ConfigWithStatus[] = (data ?? []).map((config) => ({ ...config, isOnline: online.has(config.id) }));
+  const configs: ConfigWithStatus[] = (data ?? []).map((config) => ({
+    ...config,
+    isOnline: online.has(config.id),
+    isRevoked: revoked.has(config.id)
+  }));
 
   return { configs, isLoading };
 };

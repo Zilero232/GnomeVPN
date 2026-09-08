@@ -17,3 +17,8 @@
   background-color: var(--color-border-bright);
   color: var(--color-text-muted);
 }
+
+.danger {
+  background-color: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: var(--color-danger);
+}

@@ -26,7 +26,7 @@ export class ConfigsController {
   @Get('status')
   @ZodResponse({ type: ConfigStatusDto })
   async status(@CurrentUserId() userId: string) {
-    return { onlineIds: await this.configIssue.onlineIds(userId) };
+    return this.configIssue.status(userId);
   }
 
   @Post()

@@ -304,7 +304,7 @@
     "copy": "Copy link",
     "copied": "Link copied",
     "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand",
-    "revoked": "Config deleted"
+    "revoked": "No longer works — issue a new one"
   },
   "desktopOnly": {
     "title": "Connect from the app",
@@ -474,12 +474,6 @@
     "description": "Android asks for it once. Without it the tunnel cannot be created and connecting will fail.",
     "allow": "Grant access",
     "requesting": "Waiting…"
-  },
-  "batteryExemption": {
-    "title": "Battery optimisation is on",
-    "description": "Android puts the tunnel to sleep with the screen off, and the connection drops after a while. Allow unrestricted battery use to keep it alive.",
-    "allow": "Open settings",
-    "requesting": "Opening"
   },
   "splitTunneling": {
     "open": "Split tunneling",

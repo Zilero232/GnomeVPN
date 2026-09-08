@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
 
 export type BadgeProps = ComponentProps<'span'> & {
-  tone?: 'accent' | 'muted';
+  tone?: 'accent' | 'danger' | 'muted';
 };
