@@ -8,6 +8,7 @@ export type NodePickerProps = {
   isLoading: boolean;
   isError: boolean;
   isLocked: boolean;
+  isMeasuring?: boolean;
   latency?: LatencyByNode;
   onSelect: (nodeId: string) => void;
 };

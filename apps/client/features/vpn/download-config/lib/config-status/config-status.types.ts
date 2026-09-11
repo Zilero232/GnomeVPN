@@ -1,6 +1,6 @@
 import type { DownloadedConfig } from '@gnomevpn/schemas';
 
 export type ConfigWithStatus = DownloadedConfig & {
-  isOnline: boolean;
   isBroken: boolean;
+  isOnline: boolean;
 };

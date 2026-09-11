@@ -3,20 +3,19 @@
 import { Check, FolderPlus, Plus, Search, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { isEmpty, sortBy } from 'remeda';
+import { isEmpty } from 'remeda';
 
 import { IconButton, Input } from '@/shared/ui';
 
+import type { AppSource } from '../../../../model/hooks';
 import type { AppSectionProps } from './AppSection.types';
 
-import { matchesQuery, withPickedApps } from '../../../../lib';
+import { visibleApps } from '../../../../lib';
 import { useSplitTunnelingContext } from '../../../../model/context';
 import { useAppSource } from '../../../../model/hooks';
 import { SplitModeToggle } from '../SplitModeToggle';
 
 import s from './AppSection.module.scss';
-
-type AppSource = 'installed' | 'running';
 
 export const AppSection = ({ isOpen, onPick }: AppSectionProps) => {
   const { draft, setAppsMode, toggleApp } = useSplitTunnelingContext();
@@ -28,15 +27,7 @@ export const AppSection = ({ isOpen, onPick }: AppSectionProps) => {
 
   const { apps, isLoading } = useAppSource({ source, isOpen });
 
-  const listed = withPickedApps({ apps, picked: draft.apps });
-
-  const needle = query.trim().toLowerCase();
-  const matched = needle ? listed.filter((app) => matchesQuery({ name: app.name, needle })) : listed;
-  const visible = sortBy(
-    matched,
-    (app) => (draft.apps.includes(app.path) ? 0 : 1),
-    (app) => (needle && app.name.toLowerCase().includes(needle) ? 0 : 1)
-  );
+  const visible = visibleApps({ apps, picked: draft.apps, query });
 
   return (
     <div className={s.section}>

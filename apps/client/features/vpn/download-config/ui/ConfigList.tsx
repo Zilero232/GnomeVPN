@@ -3,7 +3,7 @@
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { groupByProp, isEmpty, prop, sortBy } from 'remeda';
+import { isEmpty } from 'remeda';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
@@ -11,7 +11,8 @@ import { Stack, Text } from '@/shared/ui';
 
 import type { ConfigListProps } from './ConfigList.types';
 
-import { CONFIG_FILTER_ALL, CONFIG_FILTER_ONLINE, FILTER_MIN_CONFIGS } from '../config';
+import { CONFIG_FILTER_ALL, FILTER_MIN_CONFIGS } from '../config';
+import { configCountries, visibleConfigs } from '../lib';
 import { useConfigs, useRevokeConfig } from '../model/hooks';
 import { AddConfigForm, ConfigFilter, ConfigRow } from './components';
 
@@ -30,22 +31,8 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const onlineCount = configs.filter((config) => config.isOnline).length;
   const hasFilter = configs.length >= FILTER_MIN_CONFIGS;
 
-  const countries = sortBy(
-    Object.entries(groupByProp(configs, 'country')).map(([name, matching]) => ({
-      name,
-      code: matching[0]?.countryCode ?? '',
-      count: matching.length
-    })),
-    prop('name')
-  );
-
-  const visible = configs.filter((config) => {
-    if (!hasFilter || filter === CONFIG_FILTER_ALL) {
-      return true;
-    }
-
-    return filter === CONFIG_FILTER_ONLINE ? config.isOnline : config.country === filter;
-  });
+  const countries = configCountries(configs);
+  const visible = visibleConfigs({ configs, filter, hasFilter });
 
   if (isLoadingNodes || isLoadingConfigs || isEmpty(nodes)) {
     return (

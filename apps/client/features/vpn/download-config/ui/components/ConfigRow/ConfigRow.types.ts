@@ -1,4 +1,4 @@
-import type { ConfigWithStatus } from '../../../model/hooks';
+import type { ConfigWithStatus } from '../../../lib';
 
 export type ConfigRowProps = {
   config: ConfigWithStatus;

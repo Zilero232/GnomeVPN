@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { listConfigs, listConfigStatus } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 
-import type { ConfigWithStatus } from './use-configs.types';
+import type { ConfigWithStatus } from '../../../lib';
 
 import { CONFIG_STATUS_REFRESH_MS } from './use-configs.constants';
 

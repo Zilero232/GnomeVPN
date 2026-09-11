@@ -29,12 +29,12 @@ export const AppView = () => {
 
   const { status, activeNodeId, traffic, connectedAt, reconnect } = useVpnConnectionContext();
 
-  const selection = useNodeSelection({ nodes, activeNodeId });
-  const { protocol, select: selectProtocol } = useProtocolSelection();
-
   const isOnline = status === 'connected';
 
-  const { latency } = useNodeLatency({ isEnabled: hasAccess && status !== 'connected' });
+  const { latency, isMeasuring } = useNodeLatency({ isEnabled: hasAccess && !isOnline });
+
+  const selection = useNodeSelection({ nodes, activeNodeId, latency, isMeasuring });
+  const { protocol, select: selectProtocol } = useProtocolSelection();
 
   const { toggle } = useConnectToggle({
     hasAccess,
@@ -78,6 +78,7 @@ export const AppView = () => {
           isError={isError}
           isLoading={isLoading}
           isLocked={status !== 'disconnected'}
+          isMeasuring={isMeasuring}
           latency={latency}
           nodes={nodes}
           onSelect={selection.select}

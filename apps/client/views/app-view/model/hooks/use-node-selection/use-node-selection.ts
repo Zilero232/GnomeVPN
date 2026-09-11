@@ -4,18 +4,23 @@ import { useState } from 'react';
 
 import type { UseNodeSelectionInput } from './use-node-selection.types';
 
-export const useNodeSelection = ({ nodes, activeNodeId }: UseNodeSelectionInput) => {
+import { firstReachableNode, resolveReachability } from '../../../lib';
+
+export const useNodeSelection = ({ nodes, activeNodeId, latency, isMeasuring }: UseNodeSelectionInput) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  const firstReachableId = nodes.find((node) => node.status !== 'offline')?.id ?? null;
-  const nodeId = activeNodeId ?? selectedNodeId ?? firstReachableId;
+  const fallbackId = firstReachableNode({ nodes, latency, isMeasuring })?.id ?? null;
+  const nodeId = activeNodeId ?? selectedNodeId ?? fallbackId;
   const node = nodes.find((candidate) => candidate.id === nodeId);
+
+  const reachability = resolveReachability({ node, latency, isMeasuring });
 
   return {
     nodeId,
     node,
     country: node?.country ?? '',
-    isReachable: node?.status !== undefined && node.status !== 'offline',
+    reachability,
+    isReachable: reachability !== 'unreachable',
     select: setSelectedNodeId
   };
 };
