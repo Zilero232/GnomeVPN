@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use gnomevpn_ipc::probe_latency;
+use gnomevpn_ipc::{probe_latency, ProbeInput};
 use serde::{Deserialize, Serialize};
 
 const ATTEMPTS: usize = 2;
@@ -25,7 +25,13 @@ async fn measure(target: &ProbeTarget) -> Option<Duration> {
     let mut best: Option<Duration> = None;
 
     for _ in 0..ATTEMPTS {
-        if let Ok(rtt) = probe_latency(&target.host, target.port, &target.server_name).await {
+        if let Ok(rtt) = probe_latency(ProbeInput {
+            host: &target.host,
+            port: target.port,
+            server_name: &target.server_name,
+        })
+        .await
+        {
             best = Some(best.map_or(rtt, |current: Duration| current.min(rtt)));
         }
     }

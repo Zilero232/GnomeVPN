@@ -118,7 +118,15 @@ fn bind_for(remote: &SocketAddr) -> SocketAddr {
     }
 }
 
-pub async fn probe_latency(host: &str, port: u16, server_name: &str) -> Result<Duration, LatencyError> {
+pub struct ProbeInput<'a> {
+    pub host: &'a str,
+    pub port: u16,
+    pub server_name: &'a str,
+}
+
+pub async fn probe_latency(input: ProbeInput<'_>) -> Result<Duration, LatencyError> {
+    let ProbeInput { host, port, server_name } = input;
+
     let remote = resolve(host, port)?;
 
     let mut endpoint = Endpoint::client(bind_for(&remote)).map_err(|error| LatencyError::Probe(error.to_string()))?;
@@ -150,4 +158,60 @@ pub async fn probe_latency(host: &str, port: u16, server_name: &str) -> Result<D
     let _ = tokio::time::timeout(DRAIN_TIMEOUT, endpoint.wait_idle()).await;
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn resolves_an_ipv4_literal_without_touching_dns() {
+        let address = resolve("203.0.113.10", 443).expect("literal resolves");
+
+        assert_eq!(address, SocketAddr::new(IpAddr::V4(Ipv4Addr::new(203, 0, 113, 10)), 443));
+    }
+
+    #[test]
+    fn resolves_an_ipv6_literal_to_an_ipv6_socket() {
+        let address = resolve("::1", 8443).expect("literal resolves");
+
+        assert!(address.is_ipv6());
+        assert_eq!(address.port(), 8443);
+    }
+
+    #[test]
+    fn carries_the_port_into_the_resolved_address() {
+        assert_eq!(resolve("198.51.100.7", 1).expect("literal resolves").port(), 1);
+        assert_eq!(resolve("198.51.100.7", 65535).expect("literal resolves").port(), 65535);
+    }
+
+    #[test]
+    fn reports_the_host_it_could_not_resolve() {
+        let error = resolve("not a host name at all", 443).expect_err("cannot resolve");
+
+        assert!(matches!(error, LatencyError::Resolve(host) if host == "not a host name at all"));
+    }
+
+    #[test]
+    fn binds_ipv4_for_an_ipv4_remote() {
+        let remote = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(203, 0, 113, 10)), 443);
+
+        assert_eq!(bind_for(&remote), SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+    }
+
+    #[test]
+    fn binds_ipv6_for_an_ipv6_remote() {
+        let remote = SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 443);
+
+        assert_eq!(bind_for(&remote), SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 0));
+    }
+
+    #[test]
+    fn always_binds_an_ephemeral_port() {
+        let v4 = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(203, 0, 113, 10)), 443);
+        let v6 = SocketAddr::new(IpAddr::V6(Ipv6Addr::LOCALHOST), 443);
+
+        assert_eq!(bind_for(&v4).port(), 0);
+        assert_eq!(bind_for(&v6).port(), 0);
+    }
 }

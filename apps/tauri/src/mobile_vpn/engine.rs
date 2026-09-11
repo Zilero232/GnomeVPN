@@ -3,7 +3,9 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::Mutex;
 
-use gnomevpn_ipc::{build_hysteria_config, SocksCredentials, StallDetector, TunnelConfig, TunnelProtocol};
+use gnomevpn_ipc::{
+    build_hysteria_config, HysteriaConfigInput, SocksCredentials, StallDetector, TunnelConfig, TunnelProtocol, TUNNEL_ADDRESS, TUNNEL_MTU,
+};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::process::{Child, Command};
 use tokio::time::{interval, timeout, Duration};
@@ -12,11 +14,10 @@ use tun2proxy::{ArgDns, ArgProxy, Args, CancellationToken, ProxyType, UserKey};
 use super::wireguard;
 use super::{counters, MobileVpnError};
 
-const MTU: u16 = 1360;
 const BINARY_NAME: &str = "libhysteria.so";
 const CONFIG_NAME: &str = "hysteria-config.yaml";
 const LOG_NAME: &str = "hysteria.log";
-const TUN_ADDRESS: &str = "10.8.0.2";
+
 const READY_TIMEOUT: Duration = Duration::from_secs(15);
 const READY_INTERVAL: Duration = Duration::from_millis(200);
 const LIVENESS_INTERVAL: Duration = Duration::from_secs(2);
@@ -90,7 +91,7 @@ fn binary_path(native_lib_dir: &Path) -> Result<PathBuf, MobileVpnError> {
 pub fn assigned_ip(config: &TunnelConfig) -> String {
     match (config.protocol, config.wireguard.as_ref()) {
         (TunnelProtocol::Wireguard, Some(wireguard)) => wireguard::assigned_ip(wireguard),
-        _ => TUN_ADDRESS.to_string(),
+        _ => TUNNEL_ADDRESS.to_string(),
     }
 }
 
@@ -140,7 +141,14 @@ pub async fn spawn_hysteria(native_lib_dir: &Path, data_dir: &Path, config: &Tun
 
     let config_path = dir.join(CONFIG_NAME);
 
-    tokio::fs::write(&config_path, build_hysteria_config(config, socks, &credentials))
+    let rendered = build_hysteria_config(HysteriaConfigInput {
+        config,
+        socks,
+        credentials: &credentials,
+    })
+    .map_err(|error| MobileVpnError::Hysteria(format!("cannot build the hysteria config: {error}")))?;
+
+    tokio::fs::write(&config_path, rendered)
         .await
         .map_err(|error| MobileVpnError::Hysteria(format!("cannot write the hysteria config: {error}")))?;
 
@@ -217,7 +225,7 @@ pub fn proxy_args(socks: SocketAddr, credentials: &SocksCredentials, dns: &[Stri
 pub async fn run_tun2proxy(mut args: Args, fd: i32, cancellation: CancellationToken) -> Result<(), MobileVpnError> {
     args.tun_fd(Some(fd)).close_fd_on_drop(false);
 
-    tun2proxy::general_run_async(args, MTU, false, cancellation)
+    tun2proxy::general_run_async(args, TUNNEL_MTU, false, cancellation)
         .await
         .map(|_| ())
         .map_err(|error| MobileVpnError::Tunnel(error.to_string()))
@@ -301,34 +309,36 @@ async fn watch_hysteria(hysteria: &mut Hysteria, credentials: &SocksCredentials,
     }
 }
 
-async fn run_attempt<F>(
-    native_lib_dir: &Path,
-    data_dir: &Path,
-    config: &TunnelConfig,
-    fd: i32,
-    cancellation: CancellationToken,
-    on_phase: &mut F,
-) -> Result<(), MobileVpnError>
+pub struct Attempt<'a> {
+    pub cancellation: CancellationToken,
+    pub config: &'a TunnelConfig,
+    pub data_dir: &'a Path,
+    pub fd: i32,
+    pub native_lib_dir: &'a Path,
+}
+
+async fn run_attempt<F>(attempt: Attempt<'_>, on_phase: &mut F) -> Result<(), MobileVpnError>
 where
     F: FnMut(Phase) + Send,
 {
-    match config.protocol {
-        TunnelProtocol::Hysteria2 => run_hysteria_attempt(native_lib_dir, data_dir, config, fd, cancellation, on_phase).await,
-        TunnelProtocol::Wireguard => wireguard::run_wireguard(config, fd, cancellation, on_phase).await,
+    match attempt.config.protocol {
+        TunnelProtocol::Hysteria2 => run_hysteria_attempt(attempt, on_phase).await,
+        TunnelProtocol::Wireguard => wireguard::run_wireguard(attempt, on_phase).await,
     }
 }
 
-async fn run_hysteria_attempt<F>(
-    native_lib_dir: &Path,
-    data_dir: &Path,
-    config: &TunnelConfig,
-    fd: i32,
-    cancellation: CancellationToken,
-    on_phase: &mut F,
-) -> Result<(), MobileVpnError>
+async fn run_hysteria_attempt<F>(attempt: Attempt<'_>, on_phase: &mut F) -> Result<(), MobileVpnError>
 where
     F: FnMut(Phase) + Send,
 {
+    let Attempt {
+        native_lib_dir,
+        data_dir,
+        config,
+        fd,
+        cancellation,
+    } = attempt;
+
     let (mut hysteria, credentials) = spawn_hysteria(native_lib_dir, data_dir, config).await?;
 
     log::info!("hysteria is up, socks={}", hysteria.socks_addr());
@@ -391,7 +401,17 @@ where
         arm_attempt(&attempt);
         on_phase(Phase::Connecting);
 
-        let outcome = run_attempt(native_lib_dir, data_dir, config, fd, attempt, &mut on_phase).await;
+        let outcome = run_attempt(
+            Attempt {
+                native_lib_dir,
+                data_dir,
+                config,
+                fd,
+                cancellation: attempt,
+            },
+            &mut on_phase,
+        )
+        .await;
 
         disarm_attempt();
 

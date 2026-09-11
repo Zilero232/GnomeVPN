@@ -9,9 +9,8 @@ use gnomevpn_ipc::{TunnelConfig, WireguardConfig};
 use tokio::net::{lookup_host, UdpSocket};
 use tokio::sync::Mutex;
 use tokio::time::{interval, Duration};
-use tun2proxy::CancellationToken;
 
-use super::engine::Phase;
+use super::engine::{Attempt, Phase};
 use super::MobileVpnError;
 
 const KEEPALIVE_SECS: u16 = 25;
@@ -257,10 +256,14 @@ fn open_device(fd: i32) -> Result<AsyncTun, MobileVpnError> {
     Ok(AsyncTun { device })
 }
 
-pub async fn run_wireguard<F>(config: &TunnelConfig, fd: i32, cancellation: CancellationToken, on_phase: &mut F) -> Result<(), MobileVpnError>
+pub async fn run_wireguard<F>(attempt: Attempt<'_>, on_phase: &mut F) -> Result<(), MobileVpnError>
 where
     F: FnMut(Phase) + Send,
 {
+    let Attempt {
+        config, fd, cancellation, ..
+    } = attempt;
+
     let wireguard = config
         .wireguard
         .as_ref()

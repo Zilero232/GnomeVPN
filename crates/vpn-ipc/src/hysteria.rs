@@ -81,7 +81,15 @@ struct HysteriaClientConfig {
     resolver: Option<HysteriaResolver>,
 }
 
-pub fn build_hysteria_config(config: &TunnelConfig, socks: SocketAddr, credentials: &SocksCredentials) -> String {
+pub struct HysteriaConfigInput<'a> {
+    pub config: &'a TunnelConfig,
+    pub credentials: &'a SocksCredentials,
+    pub socks: SocketAddr,
+}
+
+pub fn build_hysteria_config(input: HysteriaConfigInput<'_>) -> Result<String, serde_yml::Error> {
+    let HysteriaConfigInput { config, socks, credentials } = input;
+
     let resolver = config.dns.iter().find(|entry| !entry.is_empty()).map(|entry| HysteriaResolver {
         kind: "udp".to_string(),
         udp: HysteriaResolverUdp { addr: format!("{entry}:53") },
@@ -112,7 +120,7 @@ pub fn build_hysteria_config(config: &TunnelConfig, socks: SocketAddr, credentia
         resolver,
     };
 
-    serde_yml::to_string(&client).unwrap_or_default()
+    serde_yml::to_string(&client)
 }
 
 #[cfg(test)]
@@ -149,7 +157,12 @@ mod tests {
     }
 
     fn build(config: &TunnelConfig) -> Value {
-        let rendered = build_hysteria_config(config, socks(), &credentials());
+        let rendered = build_hysteria_config(HysteriaConfigInput {
+            config,
+            socks: socks(),
+            credentials: &credentials(),
+        })
+        .expect("hysteria config serializes");
 
         serde_yml::from_str(&rendered).expect("valid yaml")
     }

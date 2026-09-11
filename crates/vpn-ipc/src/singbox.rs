@@ -1,14 +1,12 @@
 use serde::Serialize;
 
+use crate::tunnel_adapter::{tunnel_address_cidr, TUNNEL_MTU, TUNNEL_NAME};
 use crate::types::{SplitConfig, SplitMode, TunnelConfig, TunnelProtocol};
-
-const TUNNEL_NAME: &str = "gnomevpn0";
 
 fn tunnel_name() -> Option<String> {
     (!cfg!(target_os = "macos")).then(|| TUNNEL_NAME.to_string())
 }
-const TUNNEL_ADDRESS: &str = "10.8.0.2/24";
-const MTU: u32 = 1360;
+
 const TUN_STACK: &str = "system";
 const UDP_TIMEOUT: &str = "5m";
 const PROXY_TAG: &str = "proxy";
@@ -428,7 +426,7 @@ fn wireguard_endpoint(config: &TunnelConfig) -> Option<Endpoint> {
         kind: "wireguard".to_string(),
         tag: PROXY_TAG.to_string(),
         system: false,
-        mtu: wireguard.mtu.unwrap_or(MTU),
+        mtu: wireguard.mtu.unwrap_or(u32::from(TUNNEL_MTU)),
         address: vec![wireguard.address.clone()],
         private_key: wireguard.private_key.clone(),
         peers: vec![WireguardPeer {
@@ -447,7 +445,7 @@ fn wireguard_endpoint(config: &TunnelConfig) -> Option<Endpoint> {
     })
 }
 
-pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
+pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> Result<String, serde_json::Error> {
     let SingboxConfigInput { config, split, cache_path } = input;
 
     let direct = Outbound::Simple {
@@ -470,8 +468,8 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
             kind: "tun".to_string(),
             tag: "tun-in".to_string(),
             interface_name: tunnel_name(),
-            address: vec![TUNNEL_ADDRESS.to_string()],
-            mtu: MTU,
+            address: vec![tunnel_address_cidr()],
+            mtu: u32::from(TUNNEL_MTU),
             auto_route: true,
             strict_route: cfg!(not(target_os = "macos")),
             route_exclude_address: LOCAL_NETWORKS.iter().map(|net| net.to_string()).collect(),
@@ -489,7 +487,7 @@ pub fn build_singbox_config(input: SingboxConfigInput<'_>) -> String {
         },
     };
 
-    serde_json::to_string_pretty(&singbox).unwrap_or_default()
+    serde_json::to_string_pretty(&singbox)
 }
 
 #[cfg(test)]
@@ -538,7 +536,8 @@ mod tests {
             config,
             split,
             cache_path: "/tmp/cache.db",
-        });
+        })
+        .expect("singbox config serializes");
 
         serde_json::from_str(&rendered).expect("valid json")
     }

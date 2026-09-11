@@ -25,7 +25,9 @@ impl Singbox {
         self.request_shutdown().await;
 
         let _ = self.child.kill().await;
-        let _ = tokio::fs::remove_file(&self.config_path).await;
+        if let Err(error) = tokio::fs::remove_file(&self.config_path).await {
+            log::warn!("could not remove the sing-box config holding the tunnel password: {error}");
+        }
     }
 
     #[cfg(unix)]
@@ -151,16 +153,16 @@ pub async fn spawn(input: SpawnInput<'_>) -> Result<Singbox, TunnelError> {
 
     reap_orphans().await;
 
-    tokio::fs::write(
-        &config_path,
-        build_singbox_config(SingboxConfigInput {
-            config,
-            split,
-            cache_path: &dir.join(CACHE_NAME).to_string_lossy(),
-        }),
-    )
-    .await
-    .map_err(|error| TunnelError::Singbox(format!("cannot write the sing-box config: {error}")))?;
+    let rendered = build_singbox_config(SingboxConfigInput {
+        config,
+        split,
+        cache_path: &dir.join(CACHE_NAME).to_string_lossy(),
+    })
+    .map_err(|error| TunnelError::Singbox(format!("cannot build the sing-box config: {error}")))?;
+
+    tokio::fs::write(&config_path, rendered)
+        .await
+        .map_err(|error| TunnelError::Singbox(format!("cannot write the sing-box config: {error}")))?;
 
     log::info!(
         "wrote sing-box config to {}; sing-box log goes to {}",

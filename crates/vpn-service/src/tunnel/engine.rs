@@ -4,21 +4,15 @@ use std::sync::Arc;
 use tokio::sync::oneshot;
 use tokio::time::{interval, timeout, Duration};
 
-use gnomevpn_ipc::{SplitConfig, TunnelConfig, TunnelEvent};
+use gnomevpn_ipc::{SplitConfig, StallDetector, Traffic, TunnelConfig, TunnelEvent, TUNNEL_ADDRESS};
 
-use super::adapter::{self, Traffic};
+use super::adapter;
 use super::singbox::{self, Singbox, SpawnInput};
 use super::TunnelError;
-
-const TUNNEL_NAME: &str = "gnomevpn0";
-const TUNNEL_ADDRESS: Ipv4Addr = Ipv4Addr::new(10, 8, 0, 2);
 
 const READY_TIMEOUT: Duration = Duration::from_secs(25);
 const READY_INTERVAL: Duration = Duration::from_millis(400);
 const WATCH_INTERVAL: Duration = Duration::from_secs(1);
-
-const STALL_TIMEOUT: Duration = Duration::from_secs(60);
-const STALL_MIN_BYTES: u64 = 32 * 1024;
 
 #[cfg(target_os = "windows")]
 const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
@@ -30,50 +24,11 @@ const PROBE_TARGETS: [std::net::SocketAddr; 2] = [
 ];
 
 async fn tunnel_is_up() -> bool {
-    tokio::task::spawn_blocking(|| adapter::is_up(TUNNEL_NAME, TUNNEL_ADDRESS))
-        .await
-        .unwrap_or(false)
+    tokio::task::spawn_blocking(adapter::is_up).await.unwrap_or(false)
 }
 
 async fn traffic() -> Traffic {
-    tokio::task::spawn_blocking(|| adapter::traffic(TUNNEL_NAME, TUNNEL_ADDRESS))
-        .await
-        .unwrap_or_default()
-}
-
-#[derive(Default)]
-struct StallDetector {
-    last_seen: Option<(u64, u64)>,
-    deaf_for: Duration,
-    asked: u64,
-}
-
-impl StallDetector {
-    fn observe(&mut self, current: &Traffic) -> Option<String> {
-        let (rx, tx) = self.last_seen.replace((current.rx, current.tx))?;
-
-        if current.rx > rx {
-            self.deaf_for = Duration::ZERO;
-            self.asked = 0;
-
-            return None;
-        }
-
-        let sent = current.tx.saturating_sub(tx);
-
-        if sent == 0 {
-            return None;
-        }
-
-        self.asked = self.asked.saturating_add(sent);
-        self.deaf_for += WATCH_INTERVAL;
-
-        if self.deaf_for < STALL_TIMEOUT || self.asked < STALL_MIN_BYTES {
-            return None;
-        }
-
-        Some(format!("sent {} bytes over {}s with no reply", self.asked, self.deaf_for.as_secs()))
-    }
+    tokio::task::spawn_blocking(adapter::traffic).await.unwrap_or_default()
 }
 
 #[cfg(target_os = "windows")]
@@ -203,7 +158,7 @@ pub async fn run_tunnel(
                     tx: traffic.tx,
                 });
 
-                if let Some(reason) = detector.observe(&traffic) {
+                if let Some(reason) = detector.observe(traffic) {
                     log::error!("tunnel stalled: {reason}");
 
                     break Err(TunnelError::Stalled(reason));

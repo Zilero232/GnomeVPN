@@ -1,14 +1,9 @@
-use std::net::Ipv4Addr;
-
+use gnomevpn_ipc::{Traffic, TUNNEL_ADDRESS, TUNNEL_NAME};
 use netdev::Interface;
 
-#[derive(Default)]
-pub struct Traffic {
-    pub rx: u64,
-    pub tx: u64,
-}
+fn find() -> Option<Interface> {
+    let (name, address) = (TUNNEL_NAME, TUNNEL_ADDRESS);
 
-fn find(name: &str, address: Ipv4Addr) -> Option<Interface> {
     let interfaces = netdev::get_interfaces();
 
     interfaces
@@ -18,12 +13,12 @@ fn find(name: &str, address: Ipv4Addr) -> Option<Interface> {
         .cloned()
 }
 
-pub fn is_up(name: &str, address: Ipv4Addr) -> bool {
-    find(name, address).is_some_and(|interface| interface.is_up())
+pub fn is_up() -> bool {
+    find().is_some_and(|interface| interface.is_up())
 }
 
-pub fn traffic(name: &str, address: Ipv4Addr) -> Traffic {
-    find(name, address)
+pub fn traffic() -> Traffic {
+    find()
         .and_then(|interface| interface.stats)
         .map(|stats| Traffic {
             rx: stats.rx_bytes,
