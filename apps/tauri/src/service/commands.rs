@@ -26,6 +26,13 @@ impl serde::Serialize for ServiceError {
 }
 
 #[cfg(target_os = "windows")]
+fn powershell_quoted(binary: &Path) -> String {
+    let escaped = binary.display().to_string().replace('\'', "''");
+
+    format!("'{escaped}'")
+}
+
+#[cfg(target_os = "windows")]
 fn elevate(binary: &Path) -> Command {
     let mut command = Command::new("powershell");
 
@@ -34,8 +41,8 @@ fn elevate(binary: &Path) -> Command {
         "-NonInteractive",
         "-Command",
         &format!(
-            "$p = Start-Process -FilePath '{}' -ArgumentList 'install' -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
-            binary.display()
+            "$p = Start-Process -FilePath {} -ArgumentList 'install' -Verb RunAs -Wait -PassThru; exit $p.ExitCode",
+            powershell_quoted(binary)
         ),
     ]);
 

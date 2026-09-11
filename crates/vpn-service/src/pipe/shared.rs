@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use tokio::runtime::Handle;
 use tokio::sync::broadcast::Receiver;
 
-use super::session::{handle, Action};
+use super::session::{handle, Action, Session};
 use crate::tunnel::supervisor::Supervisor;
 
 const ORPHAN_GRACE: std::time::Duration = std::time::Duration::from_secs(5);
@@ -42,12 +42,14 @@ pub fn serve_requests<R: Read, W: Write>(
     supervisor: &Arc<Supervisor>,
     runtime: &Handle,
 ) -> io::Result<()> {
+    let mut session = Session::default();
+
     loop {
         let Ok(request) = read_frame::<_, Request>(&mut reader) else {
             return Ok(());
         };
 
-        match handle(request, supervisor) {
+        match handle(request, &mut session, supervisor) {
             Action::Reply(response) => reply(writer, &response)?,
             Action::Reject(response) => {
                 let _ = reply(writer, &response);

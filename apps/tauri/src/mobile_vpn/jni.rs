@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::{Mutex, Once};
 
-use gnomevpn_ipc::TunnelConfig;
+use gnomevpn_ipc::{validate_tunnel_config, TunnelConfig};
 use jni::objects::{JClass, JString};
 use jni::sys::{jboolean, jint, jlong};
 use jni::JNIEnv;
@@ -76,6 +76,18 @@ pub extern "system" fn Java_ru_gnomevpn_app_TunnelEngine_nativeStart(
             return 0;
         }
     };
+
+    if let Err(error) = validate_tunnel_config(&config) {
+        log::error!("nativeStart: rejected config: {error}");
+
+        return 0;
+    }
+
+    if fd < 0 {
+        log::error!("nativeStart: invalid tun descriptor {fd}");
+
+        return 0;
+    }
 
     let runtime = match Runtime::new() {
         Ok(runtime) => runtime,

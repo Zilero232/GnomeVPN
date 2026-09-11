@@ -11,7 +11,20 @@ pub enum Action {
     Reject(Response),
 }
 
-pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
+#[derive(Default)]
+pub struct Session {
+    is_handshaken: bool,
+}
+
+pub fn handle(request: Request, session: &mut Session, supervisor: &Arc<Supervisor>) -> Action {
+    if !session.is_handshaken && !matches!(request, Request::Hello { .. }) {
+        log::warn!("request before the handshake, dropping the connection");
+
+        return Action::Reject(Response::Error {
+            message: "handshake required: send Hello first".to_string(),
+        });
+    }
+
     match request {
         Request::Hello { protocol_version } => {
             if protocol_version != PROTOCOL_VERSION {
@@ -19,6 +32,8 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
                     message: format!("protocol mismatch: client {protocol_version}, service {PROTOCOL_VERSION}"),
                 });
             }
+
+            session.is_handshaken = true;
 
             Action::Reply(Response::Hello {
                 protocol_version: PROTOCOL_VERSION,
@@ -71,5 +86,80 @@ pub fn handle(request: Request, supervisor: &Arc<Supervisor>) -> Action {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn supervisor() -> Arc<Supervisor> {
+        Arc::new(Supervisor::new())
+    }
+
+    fn hello() -> Request {
+        Request::Hello {
+            protocol_version: PROTOCOL_VERSION,
+        }
+    }
+
+    #[test]
+    fn rejects_a_request_that_arrives_before_the_handshake() {
+        let mut session = Session::default();
+
+        assert!(matches!(handle(Request::Status, &mut session, &supervisor()), Action::Reject(_)));
+    }
+
+    #[test]
+    fn rejects_disconnect_before_the_handshake() {
+        let mut session = Session::default();
+
+        assert!(matches!(handle(Request::Disconnect, &mut session, &supervisor()), Action::Reject(_)));
+    }
+
+    #[test]
+    fn accepts_a_request_once_the_handshake_completed() {
+        let mut session = Session::default();
+        let supervisor = supervisor();
+
+        assert!(matches!(
+            handle(hello(), &mut session, &supervisor),
+            Action::Reply(Response::Hello { .. })
+        ));
+        assert!(matches!(
+            handle(Request::Status, &mut session, &supervisor),
+            Action::Reply(Response::Status { .. })
+        ));
+    }
+
+    #[test]
+    fn rejects_a_handshake_carrying_another_protocol_version() {
+        let mut session = Session::default();
+
+        let action = handle(
+            Request::Hello {
+                protocol_version: PROTOCOL_VERSION + 1,
+            },
+            &mut session,
+            &supervisor(),
+        );
+
+        assert!(matches!(action, Action::Reject(_)));
+    }
+
+    #[test]
+    fn leaves_the_session_unhandshaken_after_a_version_mismatch() {
+        let mut session = Session::default();
+        let supervisor = supervisor();
+
+        handle(
+            Request::Hello {
+                protocol_version: PROTOCOL_VERSION + 1,
+            },
+            &mut session,
+            &supervisor,
+        );
+
+        assert!(matches!(handle(Request::Status, &mut session, &supervisor), Action::Reject(_)));
     }
 }
