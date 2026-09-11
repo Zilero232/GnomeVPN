@@ -29,8 +29,6 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
   const fieldError = useFieldError();
   const issue = useIssueConfig();
 
-  const reachableNodes = nodes.filter((node) => node.status !== 'offline');
-
   const {
     control,
     formState: { errors },
@@ -40,13 +38,14 @@ export const AddConfigForm = ({ nodes, configs, isFull, isDisabled }: AddConfigF
     resolver: zodResolver(issueConfigSchema),
     defaultValues: {
       name: '',
-      nodeId: reachableNodes[0]?.id ?? '',
+      nodeId: nodes.find((node) => node.status !== 'offline')?.id ?? '',
       protocol: DEFAULT_PROTOCOL
     }
   });
 
   const [nodeId, protocol] = watch(['nodeId', 'protocol']);
 
+  const reachableNodes = nodes.filter((node) => node.status !== 'offline');
   const selectedNode = nodes.find((node) => node.id === nodeId);
   const isNodeOffline = isEmpty(reachableNodes) || selectedNode?.status === 'offline';
 

@@ -45,23 +45,6 @@ export const useVpnConnection = () => {
   const nodeIdRef = useRef<string | null>(null);
   const protocolRef = useRef<TunnelProtocol>(DEFAULT_PROTOCOL);
 
-  const teardown = async () => {
-    watchdog.clear();
-
-    const deviceId = await getDeviceId();
-
-    await settleAll({
-      label: 'tunnel cleanup',
-      tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()]
-    });
-
-    if (!(await waitForDisconnected({ readStatus: vpnStatus }))) {
-      logger.warn('the tunnel did not report disconnected before the teardown finished');
-    }
-
-    tunnel.reset();
-  };
-
   const events = useTunnelEvents({
     isCurrent: (generation) => generation === generationRef.current,
     onConnected: () => {
@@ -95,6 +78,23 @@ export const useVpnConnection = () => {
     onTraffic: tunnel.setTraffic,
     onLost: tunnel.reset
   });
+
+  const teardown = async () => {
+    watchdog.clear();
+
+    const deviceId = await getDeviceId();
+
+    await settleAll({
+      label: 'tunnel cleanup',
+      tasks: [disconnectTunnel({ deviceId }), vpnDisconnect()]
+    });
+
+    if (!(await waitForDisconnected({ readStatus: vpnStatus }))) {
+      logger.warn('the tunnel did not report disconnected before the teardown finished');
+    }
+
+    tunnel.reset();
+  };
 
   const connect = async ({ nodeId, protocol, country = '', isAutomatic = false }: ConnectInput) => {
     const generation = ++generationRef.current;

@@ -16,8 +16,7 @@ import s from './DeviceNameField.module.scss';
 export const DeviceNameField = ({ value, takenNames, isDisabled, onChange }: DeviceNameFieldProps) => {
   const t = useTranslations('configs');
 
-  const presetNames = DEVICE_PRESETS.map((preset) => t(`devices.${preset.id}`));
-  const [isCustom, setIsCustom] = useState(() => Boolean(value) && !presetNames.includes(value));
+  const [isCustom, setIsCustom] = useState(() => Boolean(value) && !DEVICE_PRESETS.some((preset) => t(`devices.${preset.id}`) === value));
 
   const options = [
     ...DEVICE_PRESETS.map((preset) => {

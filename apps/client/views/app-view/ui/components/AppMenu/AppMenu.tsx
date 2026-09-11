@@ -34,6 +34,8 @@ export const AppMenu = () => {
   const { autoStart, autoConnect, autoReconnect, toggleAutoStart, toggleAutoConnect, toggleAutoReconnect } = useStartupSettings();
 
   const [isOpen, setIsOpen] = useState(false);
+  const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
+  const signOut = useSignOut();
 
   const toggles = [
     { key: 'closeToTray', isOn: closeToTray, onToggle: setCloseToTray },
@@ -41,10 +43,6 @@ export const AppMenu = () => {
     { key: 'autoConnect', isOn: autoConnect, onToggle: toggleAutoConnect },
     { key: 'autoReconnect', isOn: autoReconnect, onToggle: toggleAutoReconnect }
   ] as const;
-
-  const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
-
-  const signOut = useSignOut();
 
   return (
     <div ref={ref} className={s.root}>
