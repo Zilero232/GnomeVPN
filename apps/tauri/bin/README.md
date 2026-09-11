@@ -1,118 +1,118 @@
-# Нативные зависимости
+# Native dependencies
 
-В git попадает только `wintun.dll` (см. ниже) — остальное качается скриптами.
+Only `wintun.dll` (see below) makes it into git — everything else is downloaded by scripts.
 
-`sing-box` качается скриптом под текущую платформу:
+`sing-box` is downloaded by a script for the current platform:
 
 ```bash
-bun --filter @gnomevpn/tauri singbox          # если файла ещё нет
-bun --filter @gnomevpn/tauri singbox --force  # перекачать
+bun --filter @gnomevpn/tauri singbox          # if the file is not there yet
+bun --filter @gnomevpn/tauri singbox --force  # re-download
 ```
 
-Скрипт вызывается из `predev` и `prebuild`, так что обычно руками его запускать
-не нужно. Версия зафиксирована в `scripts/fetch-singbox.mjs` — она же должна
-стоять ниже в этом файле.
+The script is called from `predev` and `prebuild`, so normally there is no need to run it by hand.
+The version is pinned in `scripts/fetch-singbox.mjs` — the same one must be written below in this
+file.
 
-`wintun.dll` — единственный, который **лежит в репозитории**: у wintun.net нет
-релиз-фида, URL может исчезнуть, а лицензия прямо разрешает распространять DLL
-вместе с ПО (пункт 3(d)). Качать в CI её не нужно.
+`wintun.dll` is the only one that **lives in the repository**: wintun.net has no release feed, the
+URL may disappear, and the license explicitly allows distributing the DLL together with the
+software (clause 3(d)). There is no need to download it in CI.
 
 ## wintun.dll
 
-Драйвер виртуального сетевого адаптера для Windows от авторов WireGuard.
-Без него `tun-rs` не может создать TUN-интерфейс и `vpn_connect` падает
-с `tun device error: LoadLibraryExW failed`.
+The virtual network adapter driver for Windows from the authors of WireGuard.
+Without it `tun-rs` cannot create a TUN interface and `vpn_connect` fails
+with `tun device error: LoadLibraryExW failed`.
 
-- **Версия:** 0.14.1, сборка amd64 (x64)
-- **Источник:** <https://www.wintun.net/builds/wintun-0.14.1.zip>
-- **Лицензия:** см. `wintun-LICENSE.txt` — проприетарная «Prebuilt Binaries
-  License» от WireGuard LLC, не GPL. Пункт 3(d) разрешает распространять DLL
-  вместе с ПО, которое использует её только через публичный API (наш случай).
-  Модифицировать DLL и удалять из неё копирайты нельзя.
+- **Version:** 0.14.1, amd64 (x64) build
+- **Source:** <https://www.wintun.net/builds/wintun-0.14.1.zip>
+- **License:** see `wintun-LICENSE.txt` — a proprietary "Prebuilt Binaries
+  License" from WireGuard LLC, not GPL. Clause 3(d) allows distributing the DLL
+  together with software that uses it only through the public API (our case).
+  Modifying the DLL and removing the copyrights from it is not allowed.
 
-Linux и macOS в этом файле не нуждаются — TUN там встроен в ядро
-(`/dev/net/tun` и `utun` соответственно).
+Linux and macOS do not need this file — TUN is built into the kernel there
+(`/dev/net/tun` and `utun` respectively).
 
-### Как обновить wintun
+### How to update wintun
 
-sha256 текущей DLL: `e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce`
+sha256 of the current DLL: `e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce`
 
-1. Скачать архив с <https://www.wintun.net>
-2. Взять `wintun/bin/amd64/wintun.dll` и `wintun/LICENSE.txt`, закоммитить DLL
-3. Положить сюда, обновив версию в этом файле
+1. Download the archive from <https://www.wintun.net>
+2. Take `wintun/bin/amd64/wintun.dll` and `wintun/LICENSE.txt`, commit the DLL
+3. Put it here, updating the version in this file
 
-### Куда попадает при сборке
+### Where it ends up during the build
 
-`tauri.windows.conf.json` → `bundle.resources` кладёт DLL в корень
-установки, рядом с `GnomeVPN.exe` и `gnomevpn-service.exe`. Соседство
-со службой обязательно: TUN-адаптер создаёт именно она, а `tun-rs`
-грузит DLL через `LoadLibraryExW` из каталога своего процесса.
+`tauri.windows.conf.json` → `bundle.resources` puts the DLL into the installation
+root, next to `GnomeVPN.exe` and `gnomevpn-service.exe`. Sitting next to the
+service is mandatory: it is the one that creates the TUN adapter, and `tun-rs`
+loads the DLL through `LoadLibraryExW` from its own process directory.
 
-Конфиг именно платформенный — в базовом `tauri.conf.json` эти ресурсы
-ломают сборку под Linux и macOS.
+The config is platform-specific on purpose — in the base `tauri.conf.json` these
+resources break the Linux and macOS builds.
 
-Для `cargo run` / `tauri dev` файл должен лежать в `target/debug/`
-(копируется скриптом `scripts/sync-bin.mjs` через `predev`).
+For `cargo run` / `tauri dev` the file must be in `target/debug/`
+(copied by the `scripts/sync-bin.mjs` script via `predev`).
 
-### Права администратора
+### Administrator rights
 
-Создание TUN-адаптера требует прав администратора даже при наличии DLL.
-Запускайте `bun run tauri:dev` из терминала, открытого от имени администратора.
-Устранение UAC на каждый Connect — задача Этапа 4 (привилегированный хелпер).
+Creating a TUN adapter requires administrator rights even when the DLL is present.
+Run `bun run tauri:dev` from a terminal opened as administrator.
+Removing the UAC prompt on every Connect is a Stage 4 task (a privileged helper).
 
-## hysteria — только Android
+## hysteria — Android only
 
-Десктоп hysteria не использует: там всё делает sing-box. На Android `VpnService`
-выдаёт готовый дескриптор, поэтому туннель поднимает `hysteria` под `tun2proxy`,
-и бинарник живёт как `libhysteria.so` в `android/libs/<abi>/`.
+The desktop does not use hysteria: sing-box does everything there. On Android `VpnService`
+hands out a ready descriptor, so the tunnel is brought up by `hysteria` under `tun2proxy`,
+and the binary lives as `libhysteria.so` in `android/libs/<abi>/`.
 
-- **Версия:** 2.12.1 — под три ABI качает `scripts/fetch-hysteria.mjs`
-- **Источник:** <https://github.com/apernet/hysteria/releases>
-- **Лицензия:** MIT
+- **Version:** 2.12.1 — `scripts/fetch-hysteria.mjs` downloads it for three ABIs
+- **Source:** <https://github.com/apernet/hysteria/releases>
+- **License:** MIT
 
-Имя `libhysteria.so`, а не `hysteria`, потому что Android исполняет файлы только
-из каталога нативных библиотек — всё остальное помечено non-exec.
+The name is `libhysteria.so` rather than `hysteria` because Android executes files only from the
+native library directory — everything else is marked non-exec.
 
 ## singbox/sing-box[.exe]
 
-Ядро туннеля на всех десктопах: держит Hysteria2-соединение, владеет
-TUN-адаптером (wintun на Windows, `utunN` на macOS, `/dev/net/tun` на Linux)
-и **сам решает по каждому соединению**, отправить его в туннель или напрямую.
-Это и есть раздельное туннелирование по приложениям.
+The tunnel core on every desktop: it holds the Hysteria2 connection, owns the
+TUN adapter (wintun on Windows, `utunN` on macOS, `/dev/net/tun` on Linux)
+and **decides for each connection itself** whether to send it into the tunnel or directly.
+This is exactly the per-application split tunneling.
 
-- **Версия:** 1.13.18 — под текущую платформу качает
-  `scripts/fetch-singbox.mjs`
-- **Источник:** <https://github.com/SagerNet/sing-box/releases>
-- **Лицензия:** GPL-3.0, см. `singbox-LICENSE.txt`. Запускается отдельным
-  процессом и общается через файл конфигурации — раскрывать код GnomeVPN
-  не требуется, копилефт на отдельный исполняемый файл не распространяется.
+- **Version:** 1.13.18 — `scripts/fetch-singbox.mjs` downloads it for the
+  current platform
+- **Source:** <https://github.com/SagerNet/sing-box/releases>
+- **License:** GPL-3.0, see `singbox-LICENSE.txt`. It is run as a separate
+  process and communicates through a config file — disclosing the GnomeVPN code
+  is not required, the copyleft does not extend to a separate executable file.
 
-### Почему sing-box, а не собственная реализация
+### Why sing-box and not our own implementation
 
-Разделить трафик по процессам средствами Windows нельзя без драйвера уровня
-ядра: перенаправить соединение умеет только `FWPM_LAYER_ALE_BIND_REDIRECT`,
-а он требует подписанного драйвера и EV-сертификата.
+Splitting traffic by process using the means of Windows is impossible without a kernel-level
+driver: only `FWPM_LAYER_ALE_BIND_REDIRECT` can redirect a connection,
+and it requires a signed driver and an EV certificate.
 
-sing-box обходит это иначе — не перенаправляет, а **забирает весь трафик в TUN**
-и открывает исходящие соединения сам. Правило `process_name` в маршрутизации
-решает, пойдёт соединение в Hysteria2-outbound или в `direct`. Для системы это
-обычное приложение, никаких драйверов сверх wintun.
+sing-box gets around this differently — it does not redirect, it **pulls all the traffic into the
+TUN** and opens the outgoing connections itself. The `process_name` rule in the routing decides
+whether a connection goes to the Hysteria2 outbound or to `direct`. To the system it is an
+ordinary application, no drivers beyond wintun.
 
-Тот же движок поддерживает правила по домену и по подсети, поэтому вся схема
-маршрутизации живёт в одном конфиге.
+The same engine supports rules by domain and by subnet, so the whole routing scheme lives in one
+config.
 
-### Как обновить sing-box
+### How to update sing-box
 
-1. Скачать `sing-box-<версия>-windows-amd64.zip` из релизов SagerNet/sing-box
-2. Взять `sing-box.exe` и `LICENSE` (переименовать в `singbox-LICENSE.txt`)
-3. Положить сюда, обновив версию в этом файле
+1. Download `sing-box-<version>-windows-amd64.zip` from the SagerNet/sing-box releases
+2. Take `sing-box.exe` and `LICENSE` (rename it to `singbox-LICENSE.txt`)
+3. Put it here, updating the version in this file
 
-Сборка должна содержать теги `with_quic` (Hysteria2) и `with_gvisor` (TUN) —
-проверяется командой `sing-box.exe version`.
+The build must contain the `with_quic` (Hysteria2) and `with_gvisor` (TUN) tags —
+this is checked with the `sing-box.exe version` command.
 
-## Структура папок
+## Folder structure
 
-Бинарники разложены по подпапкам источника (`hysteria/`, `wintun/`,
-`service/`), но при сборке и dev-запуске кладутся **плоско** рядом со службой —
-она ищет их в каталоге своего процесса. `service/gnomevpn-service.exe`
-собирается скриптом `scripts/build-service.mjs`.
+The binaries are laid out in subfolders by source (`hysteria/`, `wintun/`,
+`service/`), but during a build and a dev run they are placed **flat** next to the service —
+it looks for them in its own process directory. `service/gnomevpn-service.exe`
+is built by the `scripts/build-service.mjs` script.

@@ -38,6 +38,39 @@ Every `callRust` needs a `fallback`: the same bundle renders where no Rust exist
 `RustCommands` in `shared/lib/ipc/ipc.types.ts` mirrors the `invoke_handler` list
 in `apps/tauri/src/lib.rs` — change both together or it fails at runtime.
 
+## A component body reads top to bottom
+
+Hooks first, then the values derived from them, then the handlers that act on
+those values, then the JSX. Every hook sits above the first `const` that is not
+one, so the dependency order is the reading order and nothing is declared after
+something that already used it.
+
+```tsx
+const t = useTranslations('app');
+const { nodes } = useNodes();
+const { status, connect } = useVpnConnectionContext();
+
+const isOnline = status === 'connected';
+const target = nodes.find((node) => node.id === selectedId);
+
+const onToggle = async () => { ... };
+
+return ( ... );
+```
+
+React already forbids a conditional hook; this keeps them visually grouped too,
+so a hook added later cannot drift below a branch by accident.
+
+Two shapes legitimately sit between hooks and stay where they are:
+
+- **A ref sync** — `onEventRef.current = onEvent;` between the `useRef` that
+  holds it and the `useEffect` that reads it. It has to run on every render,
+  before the effect, which is the whole point of the pattern.
+- **A value a later hook consumes** — when the expression is only an argument,
+  inline it into the hook call. When inlining it would be unreadable, leave the
+  `const` where it is: the rule orders declarations, it does not ask you to
+  hide a dependency.
+
 ## Settings and shared feature state
 
 Read a `Setting` through `useSetting` from `@/shared/lib`, never with a hand-rolled

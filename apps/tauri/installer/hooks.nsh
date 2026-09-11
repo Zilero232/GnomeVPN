@@ -41,8 +41,8 @@
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
-  ; install идемпотентен: при обновлении переписывает конфигурацию существующей
-  ; службы, при первой установке создаёт новую.
+  ; install is idempotent: an upgrade rewrites the existing service's
+  ; configuration, a first install creates it.
   nsExec::ExecToLog '"$INSTDIR\gnomevpn-service.exe" install'
   Pop $0
 

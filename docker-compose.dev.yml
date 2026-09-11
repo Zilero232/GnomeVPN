@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: gnomevpn
       POSTGRES_DB: gnomevpn
     ports:
-      # 5433 на хосте: 5432 занят нативной службой Windows postgresql-x64-18.
+      # 5433 on the host: a native Windows postgresql-x64-18 service holds 5432.
       - '5433:5432'
     volumes:
       - gnomevpn-postgres-data:/var/lib/postgresql/data

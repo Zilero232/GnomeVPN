@@ -940,6 +940,69 @@ return <NodePicker />;
 
 ---
 
+## 13.5. A component body reads top to bottom
+
+Inside a component the order is fixed: **hooks, then derived values, then
+handlers, then the JSX.**
+
+```tsx
+export const AppView = () => {
+  // 1. hooks — every one of them, nothing else between
+  const t = useTranslations('app');
+  const router = useRouter();
+  const { nodes } = useNodes();
+  const { status, connect } = useVpnConnectionContext();
+
+  // 2. values derived from what the hooks returned
+  const isOnline = status === 'connected';
+  const target = nodes.find((node) => node.id === selectedId);
+
+  // 3. handlers that act on those values
+  const onToggle = async () => {
+    await connect({ nodeId: target.id });
+  };
+
+  // 4. the markup
+  return <main>...</main>;
+};
+```
+
+A hook that sits below a plain `const` is the shape that later drifts below a
+branch, which React forbids outright. Keeping them in one block makes that
+impossible to do by accident, and it means the file reads in dependency order:
+nothing is used before the line that produced it.
+
+**Two exceptions, both deliberate.**
+
+A **ref sync** stays between its `useRef` and the `useEffect` that reads it:
+
+```tsx
+const onTrafficRef = useRef(onTraffic);
+
+onTrafficRef.current = onTraffic;   // must run every render, before the effect
+
+useEffect(() => { ... }, [status]);
+```
+
+Moving that assignment below the effect breaks it — the effect would read a
+stale callback. It is not a derived value, it is part of the ref pattern.
+
+A **value a later hook consumes** should be inlined into the hook call:
+
+```tsx
+// no — the derived value splits the hook block
+const isOnline = status === 'connected';
+const { latency } = useNodeLatency({ isEnabled: !isOnline });
+
+// yes
+const { latency } = useNodeLatency({ isEnabled: status !== 'connected' });
+```
+
+Where inlining would genuinely hurt readability — a multi-line filter, a
+`useMemo` argument built from several steps — leave the `const` above the hook.
+The rule orders declarations; it does not ask you to bury a dependency to
+satisfy a layout.
+
 ## 14. Shared schemas — `@gnomevpn/schemas`
 
 Zod schemas and the types shared between client and server live in
