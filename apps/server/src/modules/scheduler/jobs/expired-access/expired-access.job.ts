@@ -3,11 +3,13 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
 import { map, pipe, unique } from 'remeda';
 
+import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
+
 import { PrismaService } from '../../../../core';
 import { ConfigAccessService } from '../../../configs';
 import { SessionAccessService } from '../../../sessions';
 import { CONFIG_GRACE_HOURS } from '../../config';
-import { lapsedBefore } from '../../lib';
+import { activeSince, lapsedBefore } from '../../lib';
 
 @Injectable()
 export class ExpiredAccessJob {
@@ -19,49 +21,56 @@ export class ExpiredAccessJob {
     private readonly configs: ConfigAccessService
   ) {}
 
-  private async revokeExpiredSessions(): Promise<string[]> {
+  private async ownersOf({ kind, user, state }: OwnersOfInput): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
-      where: { kind: 'session', user: lapsedBefore(new Date()) },
+      where: { kind, user, ...(state ? { state } : {}) },
       select: { userId: true }
     });
 
-    const expired = pipe(
+    return pipe(
       peers,
       map((peer) => peer.userId),
       unique()
     );
-
-    await Promise.allSettled(expired.map((userId) => this.sessions.disconnectAll(userId)));
-
-    return expired;
   }
 
-  private async revokeExpiredConfigs(): Promise<string[]> {
-    const configs = await this.prisma.peer.findMany({
-      where: {
-        kind: 'config',
-        user: lapsedBefore(subHours(new Date(), CONFIG_GRACE_HOURS))
-      },
-      select: { userId: true }
-    });
+  private async sweep({ kind, user, state, act }: SweepInput): Promise<string[]> {
+    const owners = await this.ownersOf({ kind, user, state });
 
-    const expired = pipe(
-      configs,
-      map((config) => config.userId),
-      unique()
-    );
+    await Promise.allSettled(owners.map((userId) => act(userId)));
 
-    await Promise.allSettled(expired.map((userId) => this.configs.setEnabledAll({ userId, enabled: false })));
-
-    return expired;
+    return owners;
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)
   async run(): Promise<void> {
-    const [sessions, configs] = await Promise.all([this.revokeExpiredSessions(), this.revokeExpiredConfigs()]);
+    const now = new Date();
+
+    const [sessions, configs, restored] = await Promise.all([
+      this.sweep({
+        kind: 'session',
+        user: lapsedBefore(now),
+        act: (userId) => this.sessions.disconnectAll(userId)
+      }),
+      this.sweep({
+        kind: 'config',
+        user: lapsedBefore(subHours(now, CONFIG_GRACE_HOURS)),
+        act: (userId) => this.configs.setEnabledAll({ userId, enabled: false })
+      }),
+      this.sweep({
+        kind: 'config',
+        user: activeSince(now),
+        state: 'disabled',
+        act: (userId) => this.configs.setEnabledAll({ userId, enabled: true })
+      })
+    ]);
 
     if (sessions.length > 0 || configs.length > 0) {
       this.logger.log(`Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`);
+    }
+
+    if (restored.length > 0) {
+      this.logger.log(`Restored access for ${restored.length} config owner(s)`);
     }
   }
 }

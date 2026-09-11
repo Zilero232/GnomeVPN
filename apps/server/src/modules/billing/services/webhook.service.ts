@@ -2,6 +2,7 @@ import type { WebhookEvent } from '@gnomevpn/schemas';
 
 import { Injectable, Logger } from '@nestjs/common';
 
+import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { ConfigAccessService } from '../../configs';
@@ -72,7 +73,7 @@ export class WebhookService {
       return;
     }
 
-    const activated = await withSerializableRetry(() =>
+    const settled = await withSerializableRetry(() =>
       this.prisma.$transaction(
         async (tx) => {
           const claimed = await tx.payment.updateMany({
@@ -89,7 +90,7 @@ export class WebhookService {
           if (row.kind === 'extraDevices') {
             await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
 
-            return false;
+            return true;
           }
 
           await this.shared.activate(
@@ -107,9 +108,13 @@ export class WebhookService {
       )
     );
 
-    if (activated) {
-      await this.configs.setEnabledAll({ userId: row.userId, enabled: true });
+    if (!settled) {
+      return;
     }
+
+    await this.configs.setEnabledAll({ userId: row.userId, enabled: true }).catch((error: unknown) => {
+      this.logger.error(`paid access for ${row.userId} was not re-enabled, the sweep will retry: ${describeError(error)}`);
+    });
   }
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {
