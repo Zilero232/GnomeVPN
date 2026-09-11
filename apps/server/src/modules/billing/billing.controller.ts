@@ -19,7 +19,7 @@ export class BillingController {
   @Post('checkout')
   @ZodResponse({ type: CheckoutResultDto })
   createCheckout(@Body() body: CreateCheckoutDto, @CurrentUserId() userId: string) {
-    return this.checkout.createCheckout(userId, body.planId, body.client);
+    return this.checkout.createCheckout({ userId, planId: body.planId, client: body.client });
   }
 
   @Post('extra-devices')
@@ -43,7 +43,7 @@ export class BillingController {
   @Post('bind-card')
   @ZodResponse({ type: BindCardResultDto })
   bindCard(@Body() body: BindCardDto, @CurrentUserId() userId: string) {
-    return this.card.bindCard(userId, body.client);
+    return this.card.bindCard({ userId, client: body.client });
   }
 
   @Post('unbind-card')

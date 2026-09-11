@@ -1,7 +1,9 @@
-import type { BindCardResult, CheckoutClient } from '@gnomevpn/schemas';
+import type { BindCardResult } from '@gnomevpn/schemas';
 
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+
+import type { BindCardServiceInput } from '../billing.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { PrismaService } from '../../../core';
@@ -16,7 +18,7 @@ export class CardService {
     private readonly shared: BillingSharedService
   ) {}
 
-  async bindCard(userId: string, client: CheckoutClient): Promise<BindCardResult> {
+  async bindCard({ userId, client }: BindCardServiceInput): Promise<BindCardResult> {
     if (!this.shared.isRecurringEnabled()) {
       throw new AppBadRequestException('RECURRING_UNAVAILABLE', 'Recurring payments are not enabled for this shop');
     }

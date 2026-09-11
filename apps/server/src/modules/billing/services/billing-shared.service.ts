@@ -3,7 +3,14 @@ import type { CheckoutClient } from '@gnomevpn/schemas';
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 
-import type { ActivateInput, AttachMethodInput, AutoRenewInput, GrantExtraDevicesInput, PrismaExecutor } from '../billing.types';
+import type {
+  ActivateInput,
+  AttachMethodInput,
+  AutoRenewInput,
+  GrantExtraDevicesInput,
+  PrismaExecutor,
+  SetAutoRenewServiceInput
+} from '../billing.types';
 
 import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
 import { AppConfigService } from '../../../config/config.module';
@@ -26,7 +33,7 @@ export class BillingSharedService {
     return client === 'desktop' ? this.config.get('YOOKASSA_RETURN_URL_DESKTOP') : this.config.get('YOOKASSA_RETURN_URL');
   }
 
-  async setAutoRenew(userId: string, isEnabled: boolean): Promise<void> {
+  async setAutoRenew({ userId, isEnabled }: SetAutoRenewServiceInput): Promise<void> {
     await this.prisma.subscription.update({
       where: { userId },
       data: { cancelAtPeriodEnd: !isEnabled }

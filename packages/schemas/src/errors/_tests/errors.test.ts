@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { apiErrorSchema } from '../outputs';
+import { apiErrorSchema } from '../errors.schemas';
 
 describe('apiErrorSchema', () => {
   it('keeps a known error code', () => {

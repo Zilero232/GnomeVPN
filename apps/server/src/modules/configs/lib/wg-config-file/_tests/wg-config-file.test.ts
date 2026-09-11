@@ -2,6 +2,7 @@ import type { TunnelConfig } from '@gnomevpn/schemas';
 
 import { describe, expect, it } from 'vitest';
 
+import { AppServiceUnavailableException } from '../../../../../common/exceptions';
 import { renderWireguardConfigFile } from '../wg-config-file';
 
 const baseConfig: TunnelConfig = {
@@ -24,9 +25,16 @@ const baseConfig: TunnelConfig = {
 
 describe('renderWireguardConfigFile', () => {
   it('throws when the config carries no wireguard settings', () => {
-    expect(() => renderWireguardConfigFile({ config: { ...baseConfig, wireguard: undefined } })).toThrow(
-      'renderWireguardConfigFile called without wireguard settings'
-    );
+    expect(() => renderWireguardConfigFile({ config: { ...baseConfig, wireguard: undefined } })).toThrow(AppServiceUnavailableException);
+  });
+
+  it('reports the missing settings under a code the client can match', () => {
+    try {
+      renderWireguardConfigFile({ config: { ...baseConfig, wireguard: undefined } });
+      expect.unreachable('renderWireguardConfigFile should have thrown');
+    } catch (error) {
+      expect((error as AppServiceUnavailableException).getResponse()).toMatchObject({ code: 'NODE_UNAVAILABLE' });
+    }
   });
 
   it('renders the interface and peer blocks separated by a blank line', () => {

@@ -12,7 +12,7 @@ export class AutoRenewService {
   ) {}
 
   async cancelAutoRenew(userId: string): Promise<void> {
-    await this.shared.setAutoRenew(userId, false);
+    await this.shared.setAutoRenew({ userId, isEnabled: false });
   }
 
   async resumeAutoRenew(userId: string): Promise<void> {
@@ -25,6 +25,6 @@ export class AutoRenewService {
       throw new AppBadRequestException('PAYMENT_METHOD_MISSING', 'No saved payment method');
     }
 
-    await this.shared.setAutoRenew(userId, true);
+    await this.shared.setAutoRenew({ userId, isEnabled: true });
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { apiErrorCodeSchema } from './codes';
+import { apiErrorCodeSchema } from './errors.constants';
 
 export const apiErrorSchema = z.object({
   error: z.string(),

@@ -1,10 +1,10 @@
-import type { CheckoutClient, CheckoutResult, PlanId } from '@gnomevpn/schemas';
+import type { CheckoutResult } from '@gnomevpn/schemas';
 
 import { extraDevicesPriceRub, findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 
-import type { BuyExtraDevicesServiceInput, RecordPaymentInput } from '../billing.types';
+import type { BuyExtraDevicesServiceInput, CreateCheckoutServiceInput, RecordPaymentInput } from '../billing.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
 import { isPeriodActive } from '../../../common/lib';
@@ -21,7 +21,7 @@ export class CheckoutService {
     private readonly shared: BillingSharedService
   ) {}
 
-  async createCheckout(userId: string, planId: PlanId, client: CheckoutClient): Promise<CheckoutResult> {
+  async createCheckout({ userId, planId, client }: CreateCheckoutServiceInput): Promise<CheckoutResult> {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },

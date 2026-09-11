@@ -1,12 +1,13 @@
 import type { RenderWireguardConfigInput } from './wg-config-file.types';
 
+import { AppServiceUnavailableException } from '../../../../common/exceptions';
 import { WG_CONFIG_KEEPALIVE } from '../../config';
 
 export const renderWireguardConfigFile = ({ config }: RenderWireguardConfigInput): string => {
   const wg = config.wireguard;
 
   if (!wg) {
-    throw new Error('renderWireguardConfigFile called without wireguard settings');
+    throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'renderWireguardConfigFile called without wireguard settings');
   }
 
   const interfaceLines = [

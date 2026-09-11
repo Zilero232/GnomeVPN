@@ -43,3 +43,19 @@ export type BuyExtraDevicesServiceInput = {
   quantity: number;
   client: CheckoutClient;
 };
+
+export type CreateCheckoutServiceInput = {
+  userId: string;
+  planId: PlanId;
+  client: CheckoutClient;
+};
+
+export type SetAutoRenewServiceInput = {
+  userId: string;
+  isEnabled: boolean;
+};
+
+export type BindCardServiceInput = {
+  userId: string;
+  client: CheckoutClient;
+};

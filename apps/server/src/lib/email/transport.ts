@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 
 import type { SendEmailParams } from './email.types';
 
+import { AppServiceUnavailableException } from '../../common/exceptions';
 import { validateEnv } from '../../config/env.schema';
 import { SMTP_TIMEOUTS } from './email.constants';
 
@@ -20,7 +21,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promise<void> => {
   if (!isConfigured) {
-    throw new Error('Email is not configured: set SMTP_HOST, SMTP_USER and EMAIL_FROM');
+    throw new AppServiceUnavailableException('EMAIL_UNAVAILABLE', 'Email is not configured: set SMTP_HOST, SMTP_USER and EMAIL_FROM');
   }
 
   const recipient = env.NODE_ENV !== 'production' && env.DEV_EMAIL_OVERRIDE ? env.DEV_EMAIL_OVERRIDE : to;
@@ -32,6 +33,6 @@ export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promis
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown error';
 
-    throw new Error(`Failed to send email: ${message}`);
+    throw new AppServiceUnavailableException('EMAIL_UNAVAILABLE', `Failed to send email: ${message}`);
   }
 };

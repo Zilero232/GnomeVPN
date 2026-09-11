@@ -13,7 +13,7 @@ import type {
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { PEER_PREFIX, peerClientName, peerClientNames } from '../../../peers';
+import { PEER_PREFIX, peerClientNames } from '../../../peers';
 import { BOOT_GRACE_MS, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
 
 @Injectable()
@@ -24,16 +24,6 @@ export class ReconcilePeersJob {
   private readonly failures = new Map<string, number>();
 
   constructor(private readonly prisma: PrismaService) {}
-
-  private emailOf(peer: PeerIdentity) {
-    return peerClientName({
-      userId: peer.userId,
-      kind: peer.kind,
-      name: peer.name,
-      nodeId: peer.nodeId,
-      protocol: peer.protocol
-    });
-  }
 
   private namesOf(peer: PeerIdentity): string[] {
     return peerClientNames(peer);
@@ -71,7 +61,7 @@ export class ReconcilePeersJob {
   private async removeRevoked({ xray, peers, nodeClients }: RemoveRevokedInput): Promise<boolean> {
     const gone = peers.filter((peer) => peer.state === 'revoked');
 
-    let removed = false;
+    const doomed: string[] = [];
 
     for (const peer of gone) {
       const claimed = await this.prisma.peer.deleteMany({
@@ -82,17 +72,12 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      for (const email of this.namesOf(peer)) {
-        if (!nodeClients.has(email)) {
-          continue;
-        }
-
-        await xray.deleteClient(email);
-        removed = true;
-      }
+      doomed.push(...this.namesOf(peer).filter((email) => nodeClients.has(email)));
     }
 
-    return removed;
+    await Promise.all(doomed.map((email) => xray.deleteClient(email)));
+
+    return !isEmpty(doomed);
   }
 
   private async syncEnabled({ xray, peers, nodeClients }: SyncEnabledInput): Promise<boolean> {
@@ -141,7 +126,7 @@ export class ReconcilePeersJob {
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
 
-    let collected = false;
+    const doomed: string[] = [];
 
     for (const email of nodeClients.keys()) {
       if (known.has(email) || !this.isServerOwned(email)) {
@@ -154,9 +139,12 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      await xray.deleteClient(email);
-      collected = true;
+      doomed.push(email);
     }
+
+    await Promise.all(doomed.map((email) => xray.deleteClient(email)));
+
+    const collected = !isEmpty(doomed);
 
     this.suspects.set(nodeId, seenNow);
 
