@@ -34,17 +34,18 @@
       "packages/*"
     ],
     "catalog": {
-      "@types/bun": "^1.4.0",
+      "@types/bun": "^1.4.2",
       "@types/pg": "^8.23.1",
-      "@types/react": "^19.2.18",
-      "better-auth": "^1.7.2",
+      "@types/react": "^19.3.0",
+      "better-auth": "^1.7.4",
       "date-fns": "^4.4.0",
       "p-retry": "^8.0.1",
       "pg": "^8.23.0",
-      "react": "^19.2.8",
-      "remeda": "^2.45.0",
+      "react": "^19.3.0",
+      "react-dom": "^19.3.0",
+      "remeda": "^2.48.0",
       "typescript": "~6.0.3",
-      "zod": "^4.5.4"
+      "zod": "^4.6.2"
     }
   },
   "scripts": {
@@ -89,31 +90,31 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.2.2",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@siberiacancode/eslint": "^2.18.1",
     "@siberiacancode/prettier": "^1.9.0",
     "@siberiacancode/stylelint": "^1.2.0",
     "@siberiacancode/tsconfig": "^1.2.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.6",
+    "@testing-library/user-event": "^14.6.7",
     "@types/bun": "catalog:",
     "@types/pg": "catalog:",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.0",
     "babel-plugin-react-compiler": "^1.0.0",
-    "eslint": "^10.9.1",
+    "eslint": "^10.10.0",
     "fkill-cli": "^9.0.0",
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
-    "lint-staged": "^17.4.1",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.9.6",
     "stylelint": "17.14.1",
     "stylelint-config-idiomatic-order": "^10.0.0",
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-order": "^8.1.1",
     "typescript": "catalog:",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.0"
   },
   "lint-staged": {
     "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
