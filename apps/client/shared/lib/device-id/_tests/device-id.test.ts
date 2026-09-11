@@ -1,26 +1,21 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const setting = { get: vi.fn(), set: vi.fn() };
 
 vi.mock('../../app-settings', () => ({ deviceIdSetting: setting }));
 
 const freshGetDeviceId = async () => {
-  vi.resetModules();
-
   const module = await import('../device-id');
 
   return module.getDeviceId;
 };
 
 beforeEach(() => {
+  vi.resetModules();
   window.localStorage.clear();
 
   setting.get.mockReset().mockResolvedValue(null);
   setting.set.mockReset().mockResolvedValue(undefined);
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
 });
 
 describe('getDeviceId', () => {

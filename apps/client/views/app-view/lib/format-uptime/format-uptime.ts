@@ -1,9 +1,15 @@
-import { intervalToDuration } from 'date-fns';
+const pad = (value: number) => String(value).padStart(2, '0');
 
-const pad = (value = 0) => String(value).padStart(2, '0');
+const SECOND_MS = 1000;
+const MINUTE_MS = 60 * SECOND_MS;
+const HOUR_MS = 60 * MINUTE_MS;
 
 export const formatUptime = (from: Date): string => {
-  const { days, hours, minutes, seconds } = intervalToDuration({ start: from, end: new Date() });
+  const elapsed = Math.max(0, Date.now() - from.getTime());
 
-  return `${pad((days ?? 0) * 24 + (hours ?? 0))}:${pad(minutes)}:${pad(seconds)}`;
+  const hours = Math.floor(elapsed / HOUR_MS);
+  const minutes = Math.floor((elapsed % HOUR_MS) / MINUTE_MS);
+  const seconds = Math.floor((elapsed % MINUTE_MS) / SECOND_MS);
+
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 };
