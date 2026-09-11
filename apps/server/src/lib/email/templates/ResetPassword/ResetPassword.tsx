@@ -6,9 +6,9 @@ import { BaseEmail } from '../BaseEmail';
 import { emailStyles } from '../email-styles';
 
 export const ResetPassword = ({ url }: ResetPasswordProps) => (
-  <BaseEmail action={{ url, label: 'Задать новый пароль' }} heading='Сброс пароля' preview='Ссылка для сброса пароля GnomeVPN'>
-    <Text style={emailStyles.text}>Мы получили запрос на смену пароля. Ссылка действует ограниченное время.</Text>
+  <BaseEmail action={{ url, label: 'Set a new password' }} heading='Password reset' preview='Your GnomeVPN password reset link'>
+    <Text style={emailStyles.text}>We received a request to change your password. This link is valid for a limited time.</Text>
 
-    <Text style={emailStyles.text}>Если запрос отправляли не вы, проигнорируйте письмо — пароль не изменится.</Text>
+    <Text style={emailStyles.text}>If you did not ask for this, ignore the email — your password stays as it is.</Text>
   </BaseEmail>
 );

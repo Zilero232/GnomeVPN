@@ -5,7 +5,7 @@ import type { BaseEmailProps } from './BaseEmail.types';
 import { emailStyles } from '../email-styles';
 
 export const BaseEmail = ({ preview, heading, action, children }: BaseEmailProps) => (
-  <Html lang='ru'>
+  <Html lang='en'>
     <Head />
     <Preview>{preview}</Preview>
 
@@ -28,7 +28,7 @@ export const BaseEmail = ({ preview, heading, action, children }: BaseEmailProps
               <Hr style={emailStyles.hr} />
 
               <Text style={emailStyles.footnote}>
-                Если кнопка не работает, скопируйте ссылку в браузер:{' '}
+                If the button does not work, paste this link into your browser:{' '}
                 <Link href={action.url} style={emailStyles.link}>
                   {action.url}
                 </Link>

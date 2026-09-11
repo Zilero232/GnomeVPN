@@ -6,11 +6,11 @@ import { BaseEmail } from '../BaseEmail';
 import { emailStyles } from '../email-styles';
 
 export const ChangeEmail = ({ url, newEmail }: ChangeEmailProps) => (
-  <BaseEmail action={{ url, label: 'Подтвердить смену' }} heading='Смена почты' preview='Подтвердите смену почты в GnomeVPN'>
+  <BaseEmail action={{ url, label: 'Confirm the change' }} heading='Email change' preview='Confirm your new GnomeVPN email address'>
     <Text style={emailStyles.text}>
-      Вы запросили смену адреса на <strong>{newEmail}</strong>. Подтвердите её, чтобы вход выполнялся по новому адресу.
+      You asked to change your address to <strong>{newEmail}</strong>. Confirm it to sign in with the new one from now on.
     </Text>
 
-    <Text style={emailStyles.text}>Если это были не вы, просто проигнорируйте письмо — адрес останется прежним.</Text>
+    <Text style={emailStyles.text}>If this was not you, ignore the email — your address stays as it is.</Text>
   </BaseEmail>
 );

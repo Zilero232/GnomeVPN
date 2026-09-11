@@ -29,7 +29,7 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        subject: 'Сброс пароля GnomeVPN',
+        subject: 'GnomeVPN password reset',
         react: createElement(ResetPassword, { url })
       });
     }
@@ -41,7 +41,7 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       sendEmail({
         to: user.email,
-        subject: 'Подтвердите почту GnomeVPN',
+        subject: 'Confirm your GnomeVPN email',
         react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') })
       }).catch((error) => {
         logger.error(`verification email to ${user.email} failed`, error);
@@ -54,7 +54,7 @@ export const auth = betterAuth({
       sendChangeEmailConfirmation: async ({ user, url, newEmail }) => {
         await sendEmail({
           to: user.email,
-          subject: 'Подтвердите смену почты GnomeVPN',
+          subject: 'Confirm your new GnomeVPN email',
           react: createElement(ChangeEmail, {
             newEmail,
             url: withClientCallback(url, '/account')
