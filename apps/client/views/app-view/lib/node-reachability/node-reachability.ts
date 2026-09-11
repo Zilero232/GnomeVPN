@@ -7,9 +7,7 @@ export const resolveReachability = ({ node, latency, isMeasuring }: ResolveReach
     return 'unreachable';
   }
 
-  const rttMs = latency[node.id];
-
-  if (isNonNullish(rttMs)) {
+  if (isNonNullish(latency[node.id])) {
     return 'reachable';
   }
 
@@ -19,8 +17,13 @@ export const resolveReachability = ({ node, latency, isMeasuring }: ResolveReach
     return 'unreachable';
   }
 
-  return isMeasuring ? 'probing' : 'reachable';
+  return 'probing';
 };
 
-export const firstReachableNode = ({ nodes, latency, isMeasuring }: FirstReachableInput) =>
-  nodes.find((node) => resolveReachability({ node, latency, isMeasuring }) !== 'unreachable');
+export const isConnectable = (reachability: NodeReachability): boolean => reachability === 'reachable';
+
+export const firstReachableNode = ({ nodes, latency, isMeasuring }: FirstReachableInput) => {
+  const probed = nodes.find((node) => resolveReachability({ node, latency, isMeasuring }) === 'reachable');
+
+  return probed ?? nodes.find((node) => resolveReachability({ node, latency, isMeasuring }) === 'probing');
+};

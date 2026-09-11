@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { usePlatform } from '@/entities/app/platform';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
@@ -15,6 +16,7 @@ import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Text } from '@/shared/ui';
 
+import { unavailableHintKey } from '../lib';
 import { useNodeSelection } from '../model/hooks';
 import { AppMenu, NodePicker, ProtocolSwitch, TunnelStats } from './components';
 
@@ -28,19 +30,24 @@ export const AppView = () => {
   const { hasAccess } = useSubscriptionStatus();
 
   const { status, activeNodeId, traffic, connectedAt, reconnect } = useVpnConnectionContext();
-
-  const isOnline = status === 'connected';
-
-  const { latency, isMeasuring } = useNodeLatency({ isEnabled: hasAccess && !isOnline });
-
+  const { latency, isMeasuring, remeasure } = useNodeLatency({ isEnabled: hasAccess && status !== 'connected' });
   const selection = useNodeSelection({ nodes, activeNodeId, latency, isMeasuring });
   const { protocol, select: selectProtocol } = useProtocolSelection();
 
   const { toggle } = useConnectToggle({
     hasAccess,
-    resolveTarget: () => (selection.nodeId && selection.isReachable ? { nodeId: selection.nodeId, protocol, country: selection.country } : null),
-    onDenied: () => router.push(ROUTES.account)
+    resolveTarget: () => (selection.nodeId && selection.isConnectable ? { nodeId: selection.nodeId, protocol, country: selection.country } : null),
+    onDenied: () => router.push(ROUTES.account),
+    onUnavailable: async () => {
+      toast.error(t(unavailableHintKey(selection.reachability)));
+
+      if (selection.reachability === 'unreachable') {
+        await remeasure();
+      }
+    }
   });
+
+  const isOnline = status === 'connected';
 
   return (
     <main className={s.root}>
@@ -65,11 +72,7 @@ export const AppView = () => {
       </header>
 
       <div className={s.body}>
-        <ConnectButton
-          disabled={hasAccess && (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))}
-          status={status}
-          onToggle={toggle}
-        />
+        <ConnectButton disabled={hasAccess && status === 'disconnected' && !selection.isConnectable} status={status} onToggle={toggle} />
 
         {!hasAccess && <Text tone='muted'>{t('gateHint')}</Text>}
 

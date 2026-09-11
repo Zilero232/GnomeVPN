@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import type { UseNodeSelectionInput } from './use-node-selection.types';
 
-import { firstReachableNode, resolveReachability } from '../../../lib';
+import { firstReachableNode, isConnectable, resolveReachability } from '../../../lib';
 
 export const useNodeSelection = ({ nodes, activeNodeId, latency, isMeasuring }: UseNodeSelectionInput) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export const useNodeSelection = ({ nodes, activeNodeId, latency, isMeasuring }: 
     node,
     country: node?.country ?? '',
     reachability,
-    isReachable: reachability !== 'unreachable',
+    isConnectable: isConnectable(reachability),
     select: setSelectedNodeId
   };
 };

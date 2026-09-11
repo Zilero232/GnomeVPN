@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { measureNodeLatency } from '@/entities/vpn/node';
 import {
   autoConnectSetting,
   hideAppWindow,
@@ -16,6 +17,8 @@ import {
 } from '@/shared/lib';
 
 import type { UseAutoConnectParams } from './use-auto-connect.types';
+
+import { autoConnectTarget } from '../../../lib';
 
 export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect }: UseAutoConnectParams) => {
   const hasAttemptedRef = useRef(false);
@@ -56,11 +59,13 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
         return;
       }
 
-      const lastNodeId = await lastNodeIdSetting.get();
-      const target = nodes.find((node) => node.id === lastNodeId && node.status !== 'offline') ?? nodes.find((node) => node.status !== 'offline');
+      const [lastNodeId, latency] = await Promise.all([lastNodeIdSetting.get(), measureNodeLatency()]);
+
+      const target = autoConnectTarget({ nodes, latency, lastNodeId });
 
       if (!target) {
-        logger.warn('autoconnect: no reachable node available');
+        logger.warn('autoconnect: no node answered a probe, leaving the tunnel down');
+        hasAttemptedRef.current = false;
 
         return;
       }

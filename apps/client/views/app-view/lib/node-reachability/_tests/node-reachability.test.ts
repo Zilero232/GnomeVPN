@@ -2,7 +2,7 @@ import type { Node } from '@gnomevpn/schemas';
 
 import { describe, expect, it } from 'vitest';
 
-import { firstReachableNode, resolveReachability } from '../node-reachability';
+import { firstReachableNode, isConnectable, resolveReachability } from '../node-reachability';
 
 const node = (id: string, status: Node['status'] = 'online'): Node =>
   ({ id, status, country: 'Finland', countryCode: 'fi', city: 'Helsinki' }) as Node;
@@ -32,8 +32,8 @@ describe('resolveReachability', () => {
     expect(resolveReachability({ node: node('a'), latency: { a: null }, isMeasuring: true })).toBe('probing');
   });
 
-  it('trusts the server when no probe ran at all', () => {
-    expect(resolveReachability({ node: node('a'), latency: {}, isMeasuring: false })).toBe('reachable');
+  it('stays probing when no probe has run yet, rather than trusting the server', () => {
+    expect(resolveReachability({ node: node('a'), latency: {}, isMeasuring: false })).toBe('probing');
   });
 
   it('judges each node by its own probe', () => {
@@ -41,6 +41,20 @@ describe('resolveReachability', () => {
 
     expect(resolveReachability({ node: node('a'), latency, isMeasuring: false })).toBe('reachable');
     expect(resolveReachability({ node: node('b'), latency, isMeasuring: false })).toBe('unreachable');
+  });
+});
+
+describe('isConnectable', () => {
+  it('allows only a node with a measured round trip', () => {
+    expect(isConnectable('reachable')).toBe(true);
+  });
+
+  it('refuses a node that is still being probed', () => {
+    expect(isConnectable('probing')).toBe(false);
+  });
+
+  it('refuses a node that failed its probe', () => {
+    expect(isConnectable('unreachable')).toBe(false);
   });
 });
 
@@ -61,6 +75,12 @@ describe('firstReachableNode', () => {
     const nodes = [node('a')];
 
     expect(firstReachableNode({ nodes, latency: {}, isMeasuring: true })?.id).toBe('a');
+  });
+
+  it('prefers a measured node over one still being probed', () => {
+    const nodes = [node('a'), node('b')];
+
+    expect(firstReachableNode({ nodes, latency: { b: 42 }, isMeasuring: true })?.id).toBe('b');
   });
 
   it('returns nothing when every node failed its probe', () => {

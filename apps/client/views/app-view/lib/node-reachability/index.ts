@@ -1,2 +1,2 @@
-export { firstReachableNode, resolveReachability } from './node-reachability';
+export { firstReachableNode, isConnectable, resolveReachability } from './node-reachability';
 export type { NodeReachability } from './node-reachability.types';

@@ -5,9 +5,9 @@ import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
-import { useNodes } from '@/entities/vpn/node';
+import { measureNodeLatency, useNodes } from '@/entities/vpn/node';
 import { useCloseOnWindowEvent, useTraySetup } from '@/features/app/system-tray';
-import { useConnectToggle, useVpnConnectionContext } from '@/features/vpn/connect';
+import { autoConnectTarget, useConnectToggle, useVpnConnectionContext } from '@/features/vpn/connect';
 import { ROUTES } from '@/shared/constants';
 import { lastNodeIdSetting, protocolSetting, showMainWindow } from '@/shared/lib';
 
@@ -17,17 +17,12 @@ export const TrayProvider = ({ children }: { children: ReactNode }) => {
   const { nodes } = useNodes();
   const { hasAccess } = useSubscriptionStatus();
   const { status, activeNodeId, disconnect } = useVpnConnectionContext();
-
-  const active = nodes.find((node) => node.id === activeNodeId);
-  const fallback = nodes.find((node) => node.status !== 'offline');
-  const target = active ?? fallback;
-
   const { toggle } = useConnectToggle({
     hasAccess,
     resolveTarget: async () => {
-      const lastNodeId = await lastNodeIdSetting.get();
-      const preferred = nodes.find((node) => node.id === lastNodeId && node.status !== 'offline');
-      const node = active ?? preferred ?? fallback;
+      const [lastNodeId, latency] = await Promise.all([lastNodeIdSetting.get(), measureNodeLatency()]);
+
+      const node = autoConnectTarget({ nodes, latency, lastNodeId: activeNodeId ?? lastNodeId });
 
       if (!node) {
         return null;
@@ -42,6 +37,8 @@ export const TrayProvider = ({ children }: { children: ReactNode }) => {
     },
     onUnavailable: showMainWindow
   });
+
+  const target = nodes.find((node) => node.id === activeNodeId) ?? nodes.find((node) => node.status !== 'offline');
 
   const releaseOnQuit = async () => {
     await disconnect({ isAutomatic: true });

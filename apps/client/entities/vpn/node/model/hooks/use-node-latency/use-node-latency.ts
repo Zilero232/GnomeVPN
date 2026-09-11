@@ -7,38 +7,32 @@ import type { LatencyByNode } from '@/shared/lib';
 
 import { usePlatform } from '@/entities/app/platform';
 import { useCurrentUser } from '@/entities/auth/user';
-import { listNodeEndpoints } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
-import { probeNodeLatency } from '@/shared/lib';
 
-import type { UseNodeLatencyInput } from './use-node-latency.types';
+import type { UseNodeLatency, UseNodeLatencyInput } from './use-node-latency.types';
 
-const REFRESH_MS = 120_000;
+import { LATENCY_REFRESH_MS, LATENCY_STALE_MS } from '../../../config';
+import { measureNodeLatency } from '../../../lib';
 
-const measure = async () => {
-  const targets = await listNodeEndpoints();
-
-  return probeNodeLatency({ targets });
-};
-
-export const useNodeLatency = ({ isEnabled = true }: UseNodeLatencyInput = {}) => {
+export const useNodeLatency = ({ isEnabled = true }: UseNodeLatencyInput = {}): UseNodeLatency => {
   const { isAuthenticated } = useCurrentUser();
   const { isNativeApp } = usePlatform();
 
   const lastMeasured = useRef<LatencyByNode>({});
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: QUERY_KEYS.nodeLatency(),
-    queryFn: measure,
+    queryFn: measureNodeLatency,
     enabled: isAuthenticated && isEnabled && isNativeApp,
-    refetchInterval: REFRESH_MS,
-    refetchOnWindowFocus: false,
-    staleTime: REFRESH_MS
+    refetchInterval: LATENCY_REFRESH_MS,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    staleTime: LATENCY_STALE_MS
   });
 
   if (data) {
     lastMeasured.current = data;
   }
 
-  return { latency: data ?? lastMeasured.current, isMeasuring: isFetching };
+  return { latency: data ?? lastMeasured.current, isMeasuring: isFetching, remeasure: refetch };
 };

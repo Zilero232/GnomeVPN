@@ -1,3 +1,4 @@
+export { autoConnectTarget } from './lib';
 export { useVpnConnectionContext, VpnConnectionProvider } from './model/context';
 export { useProtocolSelection } from './model/hooks';
 export type { VpnConnectionStatus, VpnTraffic } from './model/hooks';

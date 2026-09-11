@@ -21,8 +21,6 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
   const speed = useSpeed(traffic);
   const [uptime, setUptime] = useState('00:00:00');
 
-  const isPending = !connectedAt;
-
   useEffect(() => {
     if (!connectedAt || !isVisible) {
       setUptime('00:00:00');
@@ -36,6 +34,8 @@ export const TunnelStats = ({ traffic, connectedAt, isVisible }: TunnelStatsProp
 
     return () => clearInterval(timer);
   }, [connectedAt, isVisible]);
+
+  const isPending = !connectedAt;
 
   return (
     <div aria-hidden={!isVisible} className={clsx(s.root, !isVisible && s.hidden)}>
