@@ -2,37 +2,46 @@
 
 import { useEffect, useState } from 'react';
 
-import { autoConnectSetting, autoReconnectSetting, isAutoStartEnabled, isTauriDesktop, logger, setAutoStart as persistAutoStart } from '@/shared/lib';
+import { usePlatform } from '@/entities/app/platform';
+import { autoConnectSetting, autoReconnectSetting, isAutoStartEnabled, logger, setAutoStart as persistAutoStart, useSetting } from '@/shared/lib';
 
 import type { UseStartupSettings } from './use-startup-settings.types';
 
 export const useStartupSettings = (): UseStartupSettings => {
+  const { isDesktopApp: isDesktop, isReady } = usePlatform();
+
+  const autoConnect = useSetting({ setting: autoConnectSetting, initial: true, isEnabled: isReady && isDesktop });
+  const autoReconnect = useSetting({ setting: autoReconnectSetting, initial: true, isEnabled: isReady && isDesktop });
+
   const [autoStart, setAutoStartState] = useState(false);
-  const [autoConnect, setAutoConnectState] = useState(false);
-  const [autoReconnect, setAutoReconnectState] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAutoStart, setIsLoadingAutoStart] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      if (!isTauriDesktop()) {
-        setIsLoading(false);
+    if (!isReady) {
+      return;
+    }
 
-        return;
-      }
+    if (!isDesktop) {
+      setIsLoadingAutoStart(false);
 
-      const [start, connect, reconnect] = await Promise.all([isAutoStartEnabled(), autoConnectSetting.get(), autoReconnectSetting.get()]);
+      return;
+    }
 
-      setAutoStartState(start);
-      setAutoConnectState(connect);
-      setAutoReconnectState(reconnect);
-      setIsLoading(false);
-    };
+    isAutoStartEnabled()
+      .then(setAutoStartState)
+      .catch((error: unknown) => {
+        logger.warn(`autostart state read failed: ${String(error)}`);
+      })
+      .finally(() => setIsLoadingAutoStart(false));
+  }, [isDesktop, isReady]);
 
-    load().catch((error: unknown) => {
-      logger.warn(`startup settings load failed: ${String(error)}`);
-      setIsLoading(false);
-    });
-  }, []);
+  const toggleAutoConnect = async (value: boolean) => {
+    autoConnect.write(value);
+  };
+
+  const toggleAutoReconnect = async (value: boolean) => {
+    autoReconnect.write(value);
+  };
 
   const toggleAutoStart = async (value: boolean) => {
     setAutoStartState(value);
@@ -41,21 +50,11 @@ export const useStartupSettings = (): UseStartupSettings => {
     setAutoStartState(await isAutoStartEnabled());
   };
 
-  const toggleAutoConnect = async (value: boolean) => {
-    setAutoConnectState(value);
-    await autoConnectSetting.set(value);
-  };
-
-  const toggleAutoReconnect = async (value: boolean) => {
-    setAutoReconnectState(value);
-    await autoReconnectSetting.set(value);
-  };
-
   return {
     autoStart,
-    autoConnect,
-    autoReconnect,
-    isLoading,
+    autoConnect: autoConnect.value,
+    autoReconnect: autoReconnect.value,
+    isLoading: isLoadingAutoStart || autoConnect.isLoading || autoReconnect.isLoading,
     toggleAutoStart,
     toggleAutoConnect,
     toggleAutoReconnect

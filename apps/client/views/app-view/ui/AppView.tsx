@@ -9,7 +9,7 @@ import { useNodeLatency, useNodes } from '@/entities/vpn/node';
 import { MobileUpdateBanner, UpdateGate } from '@/features/app/check-update';
 import { ServiceRepairBanner } from '@/features/app/service-repair';
 import { VpnPermissionBanner } from '@/features/app/vpn-permission';
-import { ConnectButton, useProtocolSelection, useVpnConnectionContext } from '@/features/vpn/connect';
+import { ConnectButton, useConnectToggle, useProtocolSelection, useVpnConnectionContext } from '@/features/vpn/connect';
 import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
 import { env } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
@@ -27,7 +27,7 @@ export const AppView = () => {
   const { isDesktopApp } = usePlatform();
   const { hasAccess } = useSubscriptionStatus();
 
-  const { status, activeNodeId, traffic, connectedAt, connect, disconnect, reconnect } = useVpnConnectionContext();
+  const { status, activeNodeId, traffic, connectedAt, reconnect } = useVpnConnectionContext();
 
   const selection = useNodeSelection({ nodes, activeNodeId });
   const { protocol, select: selectProtocol } = useProtocolSelection();
@@ -36,25 +36,11 @@ export const AppView = () => {
 
   const { latency } = useNodeLatency({ isEnabled: hasAccess && status !== 'connected' });
 
-  const onToggle = async () => {
-    if (status === 'connected') {
-      await disconnect();
-
-      return;
-    }
-
-    if (!hasAccess) {
-      router.push(ROUTES.account);
-
-      return;
-    }
-
-    if (!selection.nodeId || !selection.isReachable) {
-      return;
-    }
-
-    await connect({ nodeId: selection.nodeId, protocol, country: selection.country });
-  };
+  const { toggle } = useConnectToggle({
+    hasAccess,
+    resolveTarget: () => (selection.nodeId && selection.isReachable ? { nodeId: selection.nodeId, protocol, country: selection.country } : null),
+    onDenied: () => router.push(ROUTES.account)
+  });
 
   return (
     <main className={s.root}>
@@ -82,7 +68,7 @@ export const AppView = () => {
         <ConnectButton
           disabled={hasAccess && (!selection.nodeId || (!selection.isReachable && status === 'disconnected'))}
           status={status}
-          onToggle={onToggle}
+          onToggle={toggle}
         />
 
         {!hasAccess && <Text tone='muted'>{t('gateHint')}</Text>}

@@ -7,12 +7,12 @@ import { isDeepEqual } from 'remeda';
 
 import { emptySplitConfig, logger, splitSetting } from '@/shared/lib';
 
-import type { UseSplitTunnelingInput } from './use-split-tunneling.types';
+import type { UseSplitTunneling, UseSplitTunnelingInput } from './use-split-tunneling.types';
 
 const toggleIn = ({ list, value }: { list: string[]; value: string }) =>
   list.includes(value) ? list.filter((entry) => entry !== value) : [...list, value];
 
-export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}) => {
+export const useSplitTunneling = ({ isOpen = false, onApplied }: UseSplitTunnelingInput = {}): UseSplitTunneling => {
   const [applied, setApplied] = useState<SplitConfig>(emptySplitConfig);
   const [draft, setDraft] = useState<SplitConfig>(emptySplitConfig);
   const [isApplying, setIsApplying] = useState(false);

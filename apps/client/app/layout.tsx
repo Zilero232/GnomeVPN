@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { clsx } from 'clsx';
 
 import { fontMono, fontSans, SITE } from '@/shared/config';
-import { getTauriMobileHmrShim } from '@/shared/lib/tauri-mobile-hmr-shim';
+import { getTauriMobileHmrShim } from '@/shared/lib';
 import { defaultMetadata, defaultViewport, SiteJsonLd } from '@/shared/seo';
 
 import { AppProviders } from './providers/AppProviders';

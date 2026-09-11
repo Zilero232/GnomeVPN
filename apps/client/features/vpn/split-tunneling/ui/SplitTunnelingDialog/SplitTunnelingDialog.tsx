@@ -9,13 +9,14 @@ import { Badge, Button, Dialog, DialogContent, DialogDescription, DialogHeader, 
 
 import type { SplitTunnelingDialogProps } from './SplitTunnelingDialog.types';
 
+import { useSplitTunnelingContext } from '../../model/context';
 import { AddressSection, AppSection } from './components';
 
 import s from './SplitTunnelingDialog.module.scss';
 
-export const SplitTunnelingDialog = ({ isConnected, isOpen, splitTunneling, onOpenChange }: SplitTunnelingDialogProps) => {
+export const SplitTunnelingDialog = ({ isConnected, isOpen, onOpenChange }: SplitTunnelingDialogProps) => {
   const t = useTranslations('splitTunneling');
-  const { draft, isApplying, isDirty, setAppsMode, setIpsMode, toggleApp, addIp, removeIp, clear, apply } = splitTunneling;
+  const { draft, isApplying, isDirty, toggleApp, clear, apply } = useSplitTunnelingContext();
 
   const appsTotal = draft.apps.length;
   const ipsTotal = draft.ips.length;
@@ -61,7 +62,7 @@ export const SplitTunnelingDialog = ({ isConnected, isOpen, splitTunneling, onOp
                   {appsTotal > 0 && <Badge tone='accent'>{appsTotal}</Badge>}
                 </span>
               ),
-              content: <AppSection draft={draft} isOpen={isOpen} setAppsMode={setAppsMode} toggleApp={toggleApp} onPick={pick} />
+              content: <AppSection isOpen={isOpen} onPick={pick} />
             },
             {
               value: 'addresses',
@@ -71,7 +72,7 @@ export const SplitTunnelingDialog = ({ isConnected, isOpen, splitTunneling, onOp
                   {ipsTotal > 0 && <Badge tone='accent'>{ipsTotal}</Badge>}
                 </span>
               ),
-              content: <AddressSection addIp={addIp} draft={draft} removeIp={removeIp} setIpsMode={setIpsMode} />
+              content: <AddressSection />
             }
           ]}
         />

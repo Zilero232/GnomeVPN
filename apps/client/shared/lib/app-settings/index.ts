@@ -10,3 +10,4 @@ export {
   splitSetting
 } from './settings';
 export type { Setting } from './store';
+export { useSetting } from './use-setting';

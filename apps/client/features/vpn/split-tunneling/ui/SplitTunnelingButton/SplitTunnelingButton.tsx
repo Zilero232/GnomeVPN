@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import type { SplitTunnelingButtonProps } from './SplitTunnelingButton.types';
 
+import { SplitTunnelingProvider } from '../../model/context';
 import { useSplitTunneling } from '../../model/hooks';
 import { SplitTunnelingDialog } from '../SplitTunnelingDialog';
 
@@ -51,7 +52,11 @@ export const SplitTunnelingButton = ({ isConnected, hasActiveNode, onReconnect }
         {count > 0 && <span className={s.badge}>{count > 9 ? '9+' : count}</span>}
       </button>
 
-      {hasOpened && <SplitTunnelingDialog isConnected={isConnected} isOpen={isOpen} splitTunneling={splitTunneling} onOpenChange={close} />}
+      {hasOpened && (
+        <SplitTunnelingProvider value={splitTunneling}>
+          <SplitTunnelingDialog isConnected={isConnected} isOpen={isOpen} onOpenChange={close} />
+        </SplitTunnelingProvider>
+      )}
     </>
   );
 };

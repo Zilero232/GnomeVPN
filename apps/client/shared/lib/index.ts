@@ -8,7 +8,8 @@ export {
   manuallyDisconnectedSetting,
   protocolSetting,
   setAutoStart,
-  splitSetting
+  splitSetting,
+  useSetting
 } from './app-settings';
 export { clientKind } from './client-kind';
 export { getDeviceId } from './device-id';
@@ -23,6 +24,7 @@ export { resolveBundledResource } from './resource-path';
 export { saveFile } from './save-file';
 export { repairVpnService } from './service-control';
 export { settleAll } from './settle';
+export { getTauriMobileHmrShim } from './tauri-mobile-hmr-shim';
 export { isTauriDesktop, isTauriMobile } from './tauri-platform';
 export { clearTokenFromVault, readTokenFromVault, saveTokenToVault } from './vault';
 

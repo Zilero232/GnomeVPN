@@ -18,7 +18,7 @@ import { AVATAR_SIZE_SM } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
 import { Avatar, Switch, Text } from '@/shared/ui';
 
-import { MENU_ITEM_MOTION, MENU_MOTION } from './AppMenu.motion';
+import { MENU_ITEM_MOTION, MENU_MOTION } from '../../../config';
 import { MenuItem } from './components';
 
 import s from './AppMenu.module.scss';
@@ -34,6 +34,13 @@ export const AppMenu = () => {
   const { autoStart, autoConnect, autoReconnect, toggleAutoStart, toggleAutoConnect, toggleAutoReconnect } = useStartupSettings();
 
   const [isOpen, setIsOpen] = useState(false);
+
+  const toggles = [
+    { key: 'closeToTray', isOn: closeToTray, onToggle: setCloseToTray },
+    { key: 'autoStart', isOn: autoStart, onToggle: toggleAutoStart },
+    { key: 'autoConnect', isOn: autoConnect, onToggle: toggleAutoConnect },
+    { key: 'autoReconnect', isOn: autoReconnect, onToggle: toggleAutoReconnect }
+  ] as const;
 
   const ref = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
@@ -85,33 +92,9 @@ export const AppMenu = () => {
 
                 <div className={s.divider} />
 
-                <MenuItem
-                  isPressed={closeToTray}
-                  label={tray('closeToTray')}
-                  trailing={<Switch isChecked={closeToTray} />}
-                  onClick={() => setCloseToTray(!closeToTray)}
-                />
-
-                <MenuItem
-                  isPressed={autoStart}
-                  label={tray('autoStart')}
-                  trailing={<Switch isChecked={autoStart} />}
-                  onClick={() => toggleAutoStart(!autoStart)}
-                />
-
-                <MenuItem
-                  isPressed={autoConnect}
-                  label={tray('autoConnect')}
-                  trailing={<Switch isChecked={autoConnect} />}
-                  onClick={() => toggleAutoConnect(!autoConnect)}
-                />
-
-                <MenuItem
-                  isPressed={autoReconnect}
-                  label={tray('autoReconnect')}
-                  trailing={<Switch isChecked={autoReconnect} />}
-                  onClick={() => toggleAutoReconnect(!autoReconnect)}
-                />
+                {toggles.map(({ key, isOn, onToggle }) => (
+                  <MenuItem key={key} isPressed={isOn} label={tray(key)} trailing={<Switch isChecked={isOn} />} onClick={() => onToggle(!isOn)} />
+                ))}
               </>
             )}
 

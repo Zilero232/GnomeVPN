@@ -1,6 +1,6 @@
 'use client';
 
-import { planDiscountPercent, PLANS } from '@gnomevpn/schemas';
+import { planDiscountPercent, planMonthlyRub, PLANS } from '@gnomevpn/schemas';
 import { clsx } from 'clsx';
 import { Check } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -45,7 +45,7 @@ export const PricingCard = () => {
               </div>
 
               <Text size='xs' tone='muted'>
-                {t('perMonth', { price: Math.round(plan.priceRub / plan.months) })}
+                {t('perMonth', { price: planMonthlyRub(plan.id) })}
               </Text>
             </Stack>
           );

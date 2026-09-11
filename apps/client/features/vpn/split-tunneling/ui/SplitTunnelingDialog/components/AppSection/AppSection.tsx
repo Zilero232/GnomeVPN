@@ -10,6 +10,7 @@ import { IconButton, Input } from '@/shared/ui';
 import type { AppSectionProps } from './AppSection.types';
 
 import { matchesQuery, withPickedApps } from '../../../../lib';
+import { useSplitTunnelingContext } from '../../../../model/context';
 import { useAppSource } from '../../../../model/hooks';
 import { SplitModeToggle } from '../SplitModeToggle';
 
@@ -17,7 +18,9 @@ import s from './AppSection.module.scss';
 
 type AppSource = 'installed' | 'running';
 
-export const AppSection = ({ isOpen, draft, setAppsMode, toggleApp, onPick }: AppSectionProps) => {
+export const AppSection = ({ isOpen, onPick }: AppSectionProps) => {
+  const { draft, setAppsMode, toggleApp } = useSplitTunnelingContext();
+
   const t = useTranslations('splitTunneling');
 
   const [source, setSource] = useState<AppSource>('installed');

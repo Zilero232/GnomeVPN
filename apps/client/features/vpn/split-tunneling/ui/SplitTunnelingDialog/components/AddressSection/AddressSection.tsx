@@ -7,13 +7,14 @@ import { isEmpty } from 'remeda';
 
 import { Button, IconButton, Input } from '@/shared/ui';
 
-import type { AddressSectionProps } from './AddressSection.types';
-
+import { useSplitTunnelingContext } from '../../../../model/context';
 import { SplitModeToggle } from '../SplitModeToggle';
 
 import s from './AddressSection.module.scss';
 
-export const AddressSection = ({ draft, setIpsMode, addIp, removeIp }: AddressSectionProps) => {
+export const AddressSection = () => {
+  const { draft, setIpsMode, addIp, removeIp } = useSplitTunnelingContext();
+
   const t = useTranslations('splitTunneling');
 
   const [ipValue, setIpValue] = useState('');

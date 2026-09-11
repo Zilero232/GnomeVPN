@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 
 import type { MenuItemProps } from './MenuItem.types';
 
-import { MENU_ITEM_MOTION } from '../../AppMenu.motion';
+import { MENU_ITEM_MOTION } from '../../../../../config';
 
 import s from './MenuItem.module.scss';
 

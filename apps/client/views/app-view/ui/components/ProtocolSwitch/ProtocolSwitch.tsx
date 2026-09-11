@@ -13,7 +13,7 @@ import type { ProtocolControlProps } from '@/entities/vpn/protocol';
 
 import { PROTOCOLS } from '@/entities/vpn/protocol';
 
-import { MENU_ITEM_MOTION, MENU_MOTION } from './ProtocolSwitch.motion';
+import { MENU_ITEM_MOTION, MENU_MOTION } from '../../../config';
 
 import s from './ProtocolSwitch.module.scss';
 
