@@ -2,8 +2,8 @@
 #
 # GnomeVPN web client — static Next.js export served by Caddy.
 #
-# The build context MUST be the monorepo root, because the client depends on the
-# `@gnomevpn/schemas` and `@gnomevpn/server` (type-only) workspace packages.
+# The build context MUST be the monorepo root: the client depends on the
+# `@gnomevpn/schemas` workspace package.
 # Build from the repo root with:
 #   docker build -f apps/client/Dockerfile -t gnomevpn-web .
 #
@@ -39,20 +39,9 @@ RUN for attempt in 1 2 3; do \
     done
 
 COPY packages/schemas ./packages/schemas
-COPY apps/server ./apps/server
 COPY apps/client ./apps/client
 
-# The client imports types from apps/server, which reference the generated Prisma
-# client. It must exist before the Next.js typecheck runs.
-RUN cd apps/server && DIRECT_URL="postgresql://placeholder" DATABASE_URL="postgresql://placeholder" bunx prisma generate
-
-
-# Bun 1.3.14 segfaults tearing down the worker pool after `next build` has
-# already written the export — its own crash report prints the finished route
-# table and an Elapsed line first, and calls it a bug in Bun. Downgrading is not
-# an option: 1.3.1 cannot load the napi modules next.config pulls in. The export
-# on disk is the real success criterion, so the step is judged by its output.
-RUN bun --filter @gnomevpn/client build || true; test -f apps/client/out/index.html
+RUN bun --filter @gnomevpn/client build && test -f apps/client/out/index.html
 
 FROM caddy:2-alpine AS runner
 

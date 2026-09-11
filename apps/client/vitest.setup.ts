@@ -7,7 +7,7 @@ import '@testing-library/jest-dom/vitest';
 
 declare module 'vitest' {
   // eslint-disable-next-line ts/consistent-type-definitions -- declaration merging onto vitest's Matchers needs an interface
-  interface Matchers<T = any> extends TestingLibraryMatchers<any, T> {}
+  interface Matchers<R extends Promise<void> | void = Promise<void> | void, T = unknown> extends TestingLibraryMatchers<T, R> {}
 }
 
 afterEach(() => {
