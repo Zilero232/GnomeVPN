@@ -2,7 +2,7 @@
 
 import type { PlanId } from '@gnomevpn/schemas';
 
-import { DEFAULT_PLAN_ID, findPlan, planDiscountPercent, PLANS } from '@gnomevpn/schemas';
+import { DEFAULT_PLAN_ID, findPlan, planDiscountPercent, planMonthlyRub, PLANS } from '@gnomevpn/schemas';
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -38,7 +38,7 @@ export const PlanPicker = ({ className }: PlanPickerProps) => {
                 </span>
 
                 <Text size='xs' tone='muted'>
-                  {t('perMonth', { price: Math.round(option.priceRub / option.months) })}
+                  {t('perMonth', { price: planMonthlyRub(option.id) })}
                 </Text>
               </Stack>
 

@@ -30,6 +30,7 @@
     "EXTRA_DEVICES_LIMIT": "You already have the maximum number of devices."
   },
   "common": {
+    "close": "Close",
     "brand": "GnomeVPN",
     "loading": "Loading…",
     "showPassword": "Show password",

@@ -1,3 +1,3 @@
-export { subscriptionStatusSchema } from './outputs';
+export { subscriptionStatusSchema } from './subscription.schemas';
 
-export type { SubscriptionStatus } from './types';
+export type { SubscriptionStatus } from './subscription.types';

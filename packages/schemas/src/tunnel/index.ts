@@ -1,27 +1,14 @@
-export { connectInputSchema, disconnectInputSchema, issueConfigSchema, revokeConfigSchema } from './inputs';
+export { configStatusSchema, downloadedConfigSchema, issueConfigSchema, revokeConfigSchema } from './configs';
+export type { ConfigStatus, DownloadedConfig, IssueConfigRequest, RevokeConfigRequest } from './configs';
+export { SPLIT_MODE, splitConfigSchema, splitModeSchema } from './split';
+export type { SplitConfig, SplitMode } from './split';
 export {
-  configStatusSchema,
+  connectInputSchema,
   DEFAULT_TUNNEL_PROTOCOL,
-  downloadedConfigSchema,
-  SPLIT_MODE,
-  splitConfigSchema,
-  splitModeSchema,
+  disconnectInputSchema,
   TUNNEL_PROTOCOL,
   tunnelConfigSchema,
   tunnelProtocolSchema,
   wireguardConfigSchema
-} from './outputs';
-
-export type {
-  ConfigStatus,
-  ConnectRequest,
-  DisconnectRequest,
-  DownloadedConfig,
-  IssueConfigRequest,
-  RevokeConfigRequest,
-  SplitConfig,
-  SplitMode,
-  TunnelConfig,
-  TunnelProtocol,
-  WireguardConfig
-} from './types';
+} from './tunnel';
+export type { ConnectRequest, DisconnectRequest, TunnelConfig, TunnelProtocol, WireguardConfig } from './tunnel';

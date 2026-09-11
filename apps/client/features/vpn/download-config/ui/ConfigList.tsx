@@ -3,7 +3,7 @@
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { groupByProp, isEmpty } from 'remeda';
+import { groupByProp, isEmpty, prop, sortBy } from 'remeda';
 
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useNodes } from '@/entities/vpn/node';
@@ -30,9 +30,14 @@ export const ConfigList = ({ className }: ConfigListProps) => {
   const onlineCount = configs.filter((config) => config.isOnline).length;
   const hasFilter = configs.length >= FILTER_MIN_CONFIGS;
 
-  const countries = Object.entries(groupByProp(configs, 'country'))
-    .map(([name, matching]) => ({ name, code: matching[0]?.countryCode ?? '', count: matching.length }))
-    .sort((left, right) => (left.name < right.name ? -1 : 1));
+  const countries = sortBy(
+    Object.entries(groupByProp(configs, 'country')).map(([name, matching]) => ({
+      name,
+      code: matching[0]?.countryCode ?? '',
+      count: matching.length
+    })),
+    prop('name')
+  );
 
   const visible = configs.filter((config) => {
     if (!hasFilter || filter === CONFIG_FILTER_ALL) {

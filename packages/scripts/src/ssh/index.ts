@@ -1,3 +1,3 @@
-export { SshClient } from './ssh-client';
+export { SshClient } from './ssh';
 
-export type { SshConnectOptions, SshExecResult } from './ssh-client.types';
+export type { SshConnectOptions, SshExecResult } from './ssh.types';

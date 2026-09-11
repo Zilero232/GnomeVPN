@@ -5,24 +5,29 @@ import type { ComponentProps } from 'react';
 import { Dialog as BaseDialog } from '@base-ui/react/dialog';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import s from './Dialog.module.scss';
 
 export const Dialog = BaseDialog.Root;
 
-export const DialogContent = ({ className, children, ...props }: ComponentProps<typeof BaseDialog.Popup>) => (
-  <BaseDialog.Portal>
-    <BaseDialog.Backdrop className={s.overlay} />
+export const DialogContent = ({ className, children, ...props }: ComponentProps<typeof BaseDialog.Popup>) => {
+  const t = useTranslations('common');
 
-    <BaseDialog.Popup className={clsx(s.content, className)} {...props}>
-      {children}
+  return (
+    <BaseDialog.Portal>
+      <BaseDialog.Backdrop className={s.overlay} />
 
-      <BaseDialog.Close aria-label='Close' className={s.close}>
-        <X size={15} />
-      </BaseDialog.Close>
-    </BaseDialog.Popup>
-  </BaseDialog.Portal>
-);
+      <BaseDialog.Popup className={clsx(s.content, className)} {...props}>
+        {children}
+
+        <BaseDialog.Close aria-label={t('close')} className={s.close}>
+          <X size={15} />
+        </BaseDialog.Close>
+      </BaseDialog.Popup>
+    </BaseDialog.Portal>
+  );
+};
 
 export const DialogHeader = ({ className, ...props }: ComponentProps<'div'>) => <div className={clsx(s.header, className)} {...props} />;
 

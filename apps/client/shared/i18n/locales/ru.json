@@ -30,6 +30,7 @@
     "EXTRA_DEVICES_LIMIT": "Достигнут максимум устройств."
   },
   "common": {
+    "close": "Закрыть",
     "brand": "GnomeVPN",
     "loading": "Загрузка…",
     "showPassword": "Показать пароль",

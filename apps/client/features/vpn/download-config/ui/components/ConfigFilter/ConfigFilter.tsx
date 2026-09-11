@@ -1,5 +1,6 @@
 'use client';
 
+import { clsx } from 'clsx';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
@@ -21,7 +22,7 @@ export const ConfigFilter = ({ value, countries, total, onlineCount, isDisabled,
   ];
 
   return (
-    <div aria-label={t('filterLabel')} className={[s.root, className].filter(Boolean).join(' ')} role='group'>
+    <div aria-label={t('filterLabel')} className={clsx(s.root, className)} role='group'>
       {chips.map((chip) => {
         const isActive = chip.id === value;
 

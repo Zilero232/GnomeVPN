@@ -6,7 +6,7 @@ export {
   signInSchema,
   signUpSchema,
   updateNameSchema
-} from './inputs';
+} from './auth.schemas';
 
 export type {
   ChangeEmailValues,
@@ -16,4 +16,4 @@ export type {
   SignInValues,
   SignUpValues,
   UpdateNameValues
-} from './types';
+} from './auth.types';
