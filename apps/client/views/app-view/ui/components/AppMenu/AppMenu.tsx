@@ -98,22 +98,22 @@ export const AppMenu = () => {
                   trailing={<Switch isChecked={autoStart} />}
                   onClick={() => toggleAutoStart(!autoStart)}
                 />
+
+                <MenuItem
+                  isPressed={autoConnect}
+                  label={tray('autoConnect')}
+                  trailing={<Switch isChecked={autoConnect} />}
+                  onClick={() => toggleAutoConnect(!autoConnect)}
+                />
+
+                <MenuItem
+                  isPressed={autoReconnect}
+                  label={tray('autoReconnect')}
+                  trailing={<Switch isChecked={autoReconnect} />}
+                  onClick={() => toggleAutoReconnect(!autoReconnect)}
+                />
               </>
             )}
-
-            <MenuItem
-              isPressed={autoConnect}
-              label={tray('autoConnect')}
-              trailing={<Switch isChecked={autoConnect} />}
-              onClick={() => toggleAutoConnect(!autoConnect)}
-            />
-
-            <MenuItem
-              isPressed={autoReconnect}
-              label={tray('autoReconnect')}
-              trailing={<Switch isChecked={autoReconnect} />}
-              onClick={() => toggleAutoReconnect(!autoReconnect)}
-            />
 
             <motion.div className={s.section} variants={MENU_ITEM_MOTION}>
               <span className={s.sectionLabel}>{tray('language')}</span>

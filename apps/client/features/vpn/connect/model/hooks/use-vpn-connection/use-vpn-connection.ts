@@ -12,6 +12,7 @@ import { apiErrorCode, connectTunnel, disconnectTunnel } from '@/shared/api';
 import {
   autoReconnectSetting,
   getDeviceId,
+  isTauriMobile,
   logger,
   manuallyDisconnectedSetting,
   settleAll,
@@ -126,7 +127,7 @@ export const useVpnConnection = () => {
 
       await vpnConnect({
         config,
-        autoReconnect,
+        autoReconnect: !isTauriMobile() && autoReconnect,
         split,
         onEvent: (event) => {
           events.handleEvent({ generation, event }).catch((error: unknown) => {

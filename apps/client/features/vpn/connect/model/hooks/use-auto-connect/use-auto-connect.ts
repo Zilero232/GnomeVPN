@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import {
   autoConnectSetting,
   hideAppWindow,
+  isTauriMobile,
   isVpnServiceAvailable,
   lastNodeIdSetting,
   logger,
@@ -44,7 +45,7 @@ export const useAutoConnect = ({ nodes, hasAccess, isConnected, isReady, connect
 
       const isFromTile = fromTileRef.current;
 
-      if (!isFromTile && (!isEnabled || wasDisconnectedByUser)) {
+      if (!isFromTile && (isTauriMobile() || !isEnabled || wasDisconnectedByUser)) {
         return;
       }
 

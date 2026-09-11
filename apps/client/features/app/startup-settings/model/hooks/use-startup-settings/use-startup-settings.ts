@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { autoConnectSetting, autoReconnectSetting, isAutoStartEnabled, logger, setAutoStart as persistAutoStart } from '@/shared/lib';
+import { autoConnectSetting, autoReconnectSetting, isAutoStartEnabled, isTauriDesktop, logger, setAutoStart as persistAutoStart } from '@/shared/lib';
 
 import type { UseStartupSettings } from './use-startup-settings.types';
 
@@ -14,6 +14,12 @@ export const useStartupSettings = (): UseStartupSettings => {
 
   useEffect(() => {
     const load = async () => {
+      if (!isTauriDesktop()) {
+        setIsLoading(false);
+
+        return;
+      }
+
       const [start, connect, reconnect] = await Promise.all([isAutoStartEnabled(), autoConnectSetting.get(), autoReconnectSetting.get()]);
 
       setAutoStartState(start);
