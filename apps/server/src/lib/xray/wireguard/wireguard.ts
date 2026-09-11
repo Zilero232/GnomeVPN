@@ -4,7 +4,13 @@ import { isEmpty } from 'remeda';
 
 import type { Inbounds } from '../inbounds';
 import type { PanelClient } from '../panel-client';
-import type { AddWireguardPeerInput, NewWireguardClientInput, WireguardClient, WireguardInboundInput } from './wireguard.types';
+import type {
+  AddWireguardPeerInput,
+  NewWireguardClientInput,
+  WireguardClient,
+  WireguardInboundInput,
+  XrayWireguardSettings
+} from './wireguard.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { serializeByKey } from '../serialize';
@@ -47,7 +53,13 @@ export class WireguardPeers {
           return;
         }
 
-        const { peers: _legacyPeers, ...existing } = parseWireguardSettings(current);
+        const parsed = readSettings<XrayWireguardSettings>(current);
+
+        if (parsed === null) {
+          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite a wireguard inbound whose settings could not be read');
+        }
+
+        const { peers: _legacyPeers, ...existing } = parsed;
         const { clients: _fresh, ...incoming } = inbound.settings;
 
         if (existing.secretKey === incoming.secretKey) {
@@ -91,6 +103,23 @@ export class WireguardPeers {
       protocol: 'wireguard',
       settings: { ...current, clients },
       remark: WG_INBOUND_REMARK
+    });
+  }
+
+  async remove(email: string): Promise<void> {
+    return serializeByKey({
+      key: this.nodeKey,
+      task: async () => {
+        const clients = await this.list();
+        const kept = clients.filter((client) => client.email !== email);
+
+        if (kept.length === clients.length) {
+          return;
+        }
+
+        await this.write(kept);
+        await this.panel.restartCore();
+      }
     });
   }
 

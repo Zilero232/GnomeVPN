@@ -26,3 +26,8 @@ export const PEER_REF_SELECT = {
   protocol: true,
   nodeCredential: true
 } as const;
+
+export const NODE_ACCESS_SELECT = {
+  apiUrl: true,
+  apiTokenEnvVar: true
+} as const;

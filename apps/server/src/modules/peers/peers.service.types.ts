@@ -1,4 +1,5 @@
 import type { PeerKind, Prisma, TunnelProtocol } from '../../../generated';
+import type { XrayClient } from '../../lib/xray';
 
 export type PeerNode = {
   apiUrl: string;
@@ -55,6 +56,7 @@ export type CreateWireguardClientInput = {
 export type DiscardPeerInput = {
   node: PeerNode;
   email: string;
+  protocol: TunnelProtocol;
 };
 
 export type FindPeersInput = {
@@ -72,4 +74,9 @@ export type SetPeerEnabledInput = {
 export type PeerWgData = {
   wgAssignedIp: string | null;
   wgPrivateKey: string | null;
+};
+
+export type ForEachNodeInput<TPeer> = {
+  peers: TPeer[];
+  run: (input: { client: XrayClient; peers: TPeer[] }) => Promise<void>;
 };

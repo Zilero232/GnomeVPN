@@ -94,6 +94,10 @@ export class XrayClient {
     return this.wireguard.add(input);
   }
 
+  async deleteWireguardPeer(email: string): Promise<void> {
+    return this.wireguard.remove(email);
+  }
+
   async clientEnabledByEmail(): Promise<Map<string, boolean>> {
     const [hysteria, wireguard] = await Promise.all([this.hysteria.list(), this.wireguard.list()]);
 

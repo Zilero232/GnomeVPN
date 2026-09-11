@@ -8,6 +8,7 @@ import type {
   CreateWireguardClientInput,
   DiscardPeerInput,
   FindPeersInput,
+  ForEachNodeInput,
   IssueAndPersistInput,
   IssuePeerInput,
   OnlinePeerRef,
@@ -18,7 +19,7 @@ import type {
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService } from '../../../core';
-import { PEER_REF_SELECT, WG } from '../config';
+import { NODE_ACCESS_SELECT, PEER_REF_SELECT, WG } from '../config';
 import { generateWireguardKeys, nextWireguardIp, peerClientName } from '../lib';
 import { peerClientNames } from '../peers.helpers';
 
@@ -38,7 +39,7 @@ export class PeersService {
     try {
       await persist(created);
     } catch (error) {
-      await this.discard({ node: input.node, email: created.email });
+      await this.discard({ node: input.node, email: created.email, protocol: input.protocol });
 
       throw error;
     }
@@ -107,24 +108,32 @@ export class PeersService {
     }
   }
 
-  async onlinePeerIds(peers: OnlinePeerRef[], { assumeOnlineWhenNodeSilent = true } = {}): Promise<Set<string>> {
+  private async forEachNode<TPeer extends { nodeId: string }>({ peers, run }: ForEachNodeInput<TPeer>): Promise<void> {
     const byNode = groupBy(peers, (peer) => peer.nodeId);
-    const online = new Set<string>();
 
     await Promise.all(
       Object.entries(byNode).map(async ([nodeId, nodePeers]) => {
         const node = await this.prisma.node.findUnique({
           where: { id: nodeId },
-          select: { apiUrl: true, apiTokenEnvVar: true }
+          select: NODE_ACCESS_SELECT
         });
 
         if (!node) {
           return;
         }
 
-        const emails = await xrayClientForNode(node)
-          .onlineEmails()
-          .catch(() => null);
+        await run({ client: xrayClientForNode(node), peers: nodePeers });
+      })
+    );
+  }
+
+  async onlinePeerIds(peers: OnlinePeerRef[], { assumeOnlineWhenNodeSilent = true } = {}): Promise<Set<string>> {
+    const online = new Set<string>();
+
+    await this.forEachNode<OnlinePeerRef>({
+      peers,
+      run: async ({ client, peers: nodePeers }) => {
+        const emails = await client.onlineEmails().catch(() => null);
 
         for (const peer of nodePeers) {
           const isUnknown = emails === null || peer.protocol === TUNNEL_PROTOCOL.wireguard;
@@ -134,8 +143,8 @@ export class PeersService {
             online.add(peer.id);
           }
         }
-      })
-    );
+      }
+    });
 
     return online;
   }
@@ -145,24 +154,20 @@ export class PeersService {
   }
 
   private async deleteFromNodes(peers: PeerRef[]): Promise<void> {
-    const byNode = groupBy(peers, (peer) => peer.nodeId);
-
-    await Promise.all(
-      Object.entries(byNode).map(async ([nodeId, nodePeers]) => {
-        const node = await this.prisma.node.findUnique({
-          where: { id: nodeId },
-          select: { apiUrl: true, apiTokenEnvVar: true }
-        });
-
-        if (!node) {
-          return;
-        }
-
-        const client = xrayClientForNode(node);
-
-        await Promise.all(nodePeers.flatMap((peer) => peerClientNames(peer).map((email) => client.deleteClient(email).catch(() => undefined))));
-      })
-    );
+    await this.forEachNode<PeerRef>({
+      peers,
+      run: async ({ client, peers: nodePeers }) => {
+        await Promise.all(
+          nodePeers.flatMap((peer) =>
+            peerClientNames(peer).map((email) =>
+              client.deleteClient(email).catch((error: unknown) => {
+                this.logger.warn(`could not delete ${email} on its node: ${describeError(error)}`);
+              })
+            )
+          )
+        );
+      }
+    });
   }
 
   async releaseDetached(peers: PeerRef[]): Promise<void> {
@@ -186,9 +191,13 @@ export class PeersService {
     });
   }
 
-  async discard({ node, email }: DiscardPeerInput): Promise<void> {
-    await xrayClientForNode(node)
-      .deleteClient(email)
-      .catch(() => undefined);
+  async discard({ node, email, protocol }: DiscardPeerInput): Promise<void> {
+    const client = xrayClientForNode(node);
+
+    const removal = protocol === TUNNEL_PROTOCOL.wireguard ? client.deleteWireguardPeer(email) : client.deleteClient(email);
+
+    await removal.catch((error: unknown) => {
+      this.logger.warn(`could not discard ${email} on ${node.apiUrl}: ${describeError(error)}`);
+    });
   }
 }
