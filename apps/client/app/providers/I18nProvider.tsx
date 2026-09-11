@@ -13,13 +13,13 @@ const timeZone = typeof Intl !== 'undefined' ? new Intl.DateTimeFormat().resolve
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
   const { locale, isReady } = useLocale();
 
-  const activeLocale = isReady ? locale : DEFAULT_LOCALE;
-
   useEffect(() => {
     if (isReady) {
       document.documentElement.lang = locale;
     }
   }, [locale, isReady]);
+
+  const activeLocale = isReady ? locale : DEFAULT_LOCALE;
 
   return (
     <NextIntlClientProvider locale={activeLocale} messages={messages[activeLocale]} timeZone={timeZone}>

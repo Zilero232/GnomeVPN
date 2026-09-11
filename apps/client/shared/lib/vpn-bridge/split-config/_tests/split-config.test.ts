@@ -1,7 +1,7 @@
 import { SPLIT_MODE } from '@gnomevpn/schemas';
 import { describe, expect, it, vi } from 'vitest';
 
-import { emptySplitConfig, normalizeSplitConfig } from '../vpn-bridge';
+import { emptySplitConfig, normalizeSplitConfig } from '../split-config';
 
 vi.mock('@tauri-apps/api/core', () => ({
   Channel: class {
