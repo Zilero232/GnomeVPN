@@ -24,7 +24,7 @@ describe('resolveLimits', () => {
   });
 
   it('reports the price and the ceiling alongside the limits', () => {
-    expect(resolveLimits(1)).toMatchObject({ pricePerDeviceRub: 50, maxExtraDevices: 8 });
+    expect(resolveLimits(1)).toMatchObject({ pricePerDeviceRub: 100, maxExtraDevices: 8 });
   });
 });
 
@@ -34,7 +34,7 @@ describe('extraDevicesPriceRub', () => {
   });
 
   it('charges the per-device price for every device', () => {
-    expect(extraDevicesPriceRub(1)).toBe(50);
-    expect(extraDevicesPriceRub(4)).toBe(200);
+    expect(extraDevicesPriceRub(1)).toBe(100);
+    expect(extraDevicesPriceRub(4)).toBe(400);
   });
 });

@@ -9,9 +9,9 @@ export const planSchema = z.object({
 });
 
 export const PLANS = [
-  { id: 'monthly', months: 1, priceRub: 100 },
-  { id: 'halfYearly', months: 6, priceRub: 500 },
-  { id: 'yearly', months: 12, priceRub: 900 }
+  { id: 'monthly', months: 1, priceRub: 200 },
+  { id: 'halfYearly', months: 6, priceRub: 990 },
+  { id: 'yearly', months: 12, priceRub: 1690 }
 ] as const satisfies readonly z.infer<typeof planSchema>[];
 
 export const DEFAULT_PLAN_ID = 'monthly' as const;

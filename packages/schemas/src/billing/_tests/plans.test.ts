@@ -4,15 +4,15 @@ import { findPlan, LOWEST_MONTHLY_RUB, planDiscountPercent } from '../plans';
 
 describe('findPlan', () => {
   it('returns the monthly plan', () => {
-    expect(findPlan('monthly')).toEqual({ id: 'monthly', months: 1, priceRub: 100 });
+    expect(findPlan('monthly')).toEqual({ id: 'monthly', months: 1, priceRub: 200 });
   });
 
   it('returns the half-yearly plan', () => {
-    expect(findPlan('halfYearly')).toEqual({ id: 'halfYearly', months: 6, priceRub: 500 });
+    expect(findPlan('halfYearly')).toEqual({ id: 'halfYearly', months: 6, priceRub: 990 });
   });
 
   it('returns the yearly plan', () => {
-    expect(findPlan('yearly')).toEqual({ id: 'yearly', months: 12, priceRub: 900 });
+    expect(findPlan('yearly')).toEqual({ id: 'yearly', months: 12, priceRub: 1690 });
   });
 
   it('throws on an id that matches no plan', () => {
@@ -26,16 +26,16 @@ describe('planDiscountPercent', () => {
   });
 
   it('rounds the half-yearly discount off the full monthly price', () => {
-    expect(planDiscountPercent('halfYearly')).toBe(17);
+    expect(planDiscountPercent('halfYearly')).toBe(18);
   });
 
   it('rounds the yearly discount off the full monthly price', () => {
-    expect(planDiscountPercent('yearly')).toBe(25);
+    expect(planDiscountPercent('yearly')).toBe(30);
   });
 });
 
 describe('LOWEST_MONTHLY_RUB', () => {
   it('is the cheapest per-month price across the plans', () => {
-    expect(LOWEST_MONTHLY_RUB).toBe(75);
+    expect(LOWEST_MONTHLY_RUB).toBe(141);
   });
 });
