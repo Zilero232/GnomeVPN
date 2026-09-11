@@ -105,6 +105,12 @@ value proves nothing.
 bare `bun test` is Bun's own runner and fails the suite. Only the `checks` job in
 `release.yml` runs any of this in CI, so locally is the first check and the last.
 
+`cargo clippy` only compiles the host's platform, and the service branches on
+`cfg` for its transport, its installer and its Windows-only probe. An import that
+one branch uses is dead on the others, and `-D warnings` rejects it there — a
+Windows host cannot see what Linux CI will. Check a second target before pushing
+Rust that touches a `cfg` block; the Android one serves.
+
 `verify` does not compile `apps/tauri/src/mobile_vpn/` — it is `#[cfg(mobile)]`.
 Touching it, or `crates/vpn-ipc` beneath it, needs a manual
 `cargo clippy -p gnomevpn --target aarch64-linux-android`; the NDK environment is

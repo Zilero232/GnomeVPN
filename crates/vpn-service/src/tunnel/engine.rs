@@ -1,4 +1,3 @@
-use std::net::Ipv4Addr;
 use std::sync::Arc;
 
 use tokio::sync::oneshot;
@@ -19,8 +18,8 @@ const PROBE_TIMEOUT: Duration = Duration::from_secs(3);
 
 #[cfg(target_os = "windows")]
 const PROBE_TARGETS: [std::net::SocketAddr; 2] = [
-    std::net::SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1)), 443),
-    std::net::SocketAddr::new(std::net::IpAddr::V4(Ipv4Addr::new(8, 8, 8, 8)), 443),
+    std::net::SocketAddr::new(std::net::IpAddr::V4(std::net::Ipv4Addr::new(1, 1, 1, 1)), 443),
+    std::net::SocketAddr::new(std::net::IpAddr::V4(std::net::Ipv4Addr::new(8, 8, 8, 8)), 443),
 ];
 
 async fn tunnel_is_up() -> bool {

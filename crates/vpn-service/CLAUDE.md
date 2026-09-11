@@ -226,6 +226,22 @@ cargo clippy -p gnomevpn-service --all-targets
 cargo fmt --all --check
 ```
 
+**Clippy only sees the host's platform.** The transport, the installer and the
+Windows-only probe targets each sit behind a `cfg`, so an import used by one of
+them is dead on the others and `-D warnings` rejects it — on the platform you are
+not building. A Windows host misses what Linux CI catches, and the reverse.
+
+Checking a second platform locally costs one command, and any non-Windows target
+answers the question:
+
+```bash
+cargo clippy -p gnomevpn-service --target aarch64-linux-android --all-targets -- -D warnings
+```
+
+The Android NDK environment it needs is in [apps/tauri/CLAUDE.md](../../apps/tauri/CLAUDE.md).
+Prefer a full path (`std::net::Ipv4Addr::new(...)`) over an import inside a
+`cfg`-gated block — the neighbouring constants already do.
+
 Behaviour under LocalSystem cannot be tested from a normal shell — install the
 service and read `C:\ProgramData\GnomeVPN\service.log`. sing-box writes its own
 log next to it as `singbox.log`, and `sing-box.exe check -c <config>` validates
