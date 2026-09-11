@@ -113,6 +113,8 @@ Renewal also needs a card on file (`savedCardId`). Without one the job has nothi
 
 Webhooks are the only thing that activates a subscription; the browser returning to `YOOKASSA_RETURN_URL` proves nothing. `handleWebhook` never trusts the request body either — it re-reads the payment or payment method from the API, because a webhook is just JSON somebody posted. It answers `200` even when it does nothing: any other status makes YooKassa retry for a day.
 
+**Re-enabling the configs happens outside the claiming transaction, so it must be recoverable.** `settlePayment` claims the payment row and grants the subscription atomically, then calls `setEnabledAll` — a separate write that can fail, or never run at all if the process dies right after the commit. That used to leave a paying user with every config `disabled` and nothing in the system able to turn them back on: `expired-access` only ever revoked. The sweep now runs a third pass over `disabled` config peers whose owner has a live period (`activeSince`) and re-enables them, so the post-commit call is an optimisation and the job is the guarantee. Do not make `setEnabledAll` the only path back.
+
 ## Three modules, one xray client
 
 `peers` owns everything that talks to the node's panel — creating a client,
@@ -140,6 +142,20 @@ It was one 300-line class holding both protocols, and that is how a restart bug
 hid in it: WireGuard needs the core restarted after a rewrite, Hysteria2 needs it
 after a client changes, and with both paths interleaved the second was easy to
 miss. Splitting by protocol makes each rule visible where it applies.
+
+**Deleting a peer is protocol-specific, and so is rolling one back.** The two
+protocols live in different inbounds, so `deleteClient` (Hysteria2) cannot remove
+a WireGuard peer and vice versa — `discard` takes the protocol and picks
+`deleteWireguardPeer` or `deleteClient` accordingly. It used to always call the
+Hysteria2 path, so a failed `persist` on a WireGuard config left the peer on the
+node with its IP claimed and no database row pointing at it; only `collectOrphans`
+would eventually notice, two passes later.
+
+**Every write path parses settings strictly.** `readSettings` returns `null` on
+malformed JSON and the caller refuses to rewrite; `parseJson` returns `{}` and is
+for reads only. Mixing them up is what once erased a node's clients: a tolerant
+parse produced an empty settings object, which was then written back over the
+real one. `ensureInbound` and `write` both use the strict parser now.
 
 ## Session slots
 
@@ -200,6 +216,8 @@ a stuck disconnect is visible immediately.
 ## Cron jobs
 
 `modules/scheduler` runs four: node health, peer garbage collection, expired access, recurring charges.
+
+`expired-access` sweeps in both directions — it revokes sessions and configs whose subscription lapsed (`lapsedBefore`), and restores configs left `disabled` while the subscription is live (`activeSince`). The two predicates are complements and are tested as such; a gap between them either strands a paying user or keeps serving an expired one. Configs get `CONFIG_GRACE_HOURS` before revocation, sessions do not.
 
 Use a raw cron string when the interval has no `CronExpression` constant. Inventing one that doesn't exist crashes the server at boot, and only at boot — nothing catches it earlier.
 

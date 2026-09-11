@@ -56,6 +56,14 @@ Every `callRust` needs a `fallback` — the same bundle renders in a browser and
 
 Settings that autoconnect reads live in `plugin-store`, not `localStorage` — autoconnect runs before the webview has one.
 
+**Read a setting through `useSetting`, not by hand.** `shared/lib/app-settings` exposes one hook over the `Setting<TRead, TWrite>` primitive: it loads in an effect, subscribes to store changes, writes back, and swallows a rejected read into a log line instead of an unhandled rejection. Three hooks used to do this separately and only one of them subscribed, so a value changed from the tray or a second window reached the menu in one place and not the others.
+
+Its `initial` must match the setting's `fallback`. A mismatch paints the wrong state until the effect resolves, and where the effect returns early — `isEnabled: false` in the browser — it never corrects at all.
+
+**A feature's state belongs in a context once more than two components read it.** `split-tunneling` and `connect` both expose one: `useSplitTunnelingContext` and `useVpnConnectionContext`. The alternative is a `ReturnType<typeof useX>` prop threaded through four components, which is what `SplitTunnelingDialog` used to take — a type that leaks the hook's whole shape into every signature below it.
+
+**One toggle, one policy.** `useConnectToggle` holds the connect/disconnect decision — disconnect if connected, send to billing without access, bail if no target — and both the window button and the tray item call it. They were two copies that had already drifted: one required a reachable node, the other did not.
+
 ## Breakpoints come from the scale
 
 `shared/styles/_breakpoints.scss` holds seven steps — `xs` 420, `sm` 520, `md` 560,

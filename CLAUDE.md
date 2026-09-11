@@ -86,8 +86,15 @@ This is why the app never raises an elevation prompt on launch, and why every
 request reaching the service is validated: any local process can open that
 socket, and the service can rewrite the system's routes. The pipe is guarded by
 an SDDL on Windows and by a peer-uid check (`SO_PEERCRED` / `getpeereid`, via
-`UnixStream::peer_cred`) on Unix — the two are the same defence, spelled in each
-platform's own vocabulary.
+`UnixStream::peer_cred`) on Unix. They are not equally tight: the SDDL grants
+read/write to interactive users and blocks low-integrity processes, while the
+Unix check accepts root and every uid at or above the platform's first human uid.
+On a shared machine that is every logged-in account, not just the one running the
+app — closing that gap needs a `gnomevpn` group the installer creates and the
+socket is chowned to, which nothing does today.
+
+Every request is validated regardless, and the handshake gate in `pipe/session.rs`
+drops any connection that sends something before `Hello`.
 
 **Never move privileged work back into the GUI crate.** It would bring the
 elevation prompt back to every launch.
@@ -164,6 +171,13 @@ Bumping a shared version means editing the catalog, not the packages. Adding a
 new shared dependency means adding it to the catalog **and** pointing each
 consumer at `catalog:`.
 
+**A package that must move in lockstep with a catalogued one belongs in the
+catalog too, even with a single consumer.** `react` was catalogued and `react-dom`
+was not, so bumping `react` to 19.3 left `react-dom` on 19.2 and put two copies of
+React in the tree — every component test died on `Cannot read properties of null
+(reading 'useState')`, because hooks resolved against a different React than the
+renderer used.
+
 The Rust side works the same way: `[workspace.dependencies]` in the root
 `Cargo.toml` owns the version of anything two crates share (`serde`, `tokio`,
 `thiserror`, …), and each crate writes `serde.workspace = true`. Per-crate
@@ -183,7 +197,10 @@ Before writing a helper by hand, check whether an installed library already cove
 7. Retries with backoff → **`p-retry`** (TypeScript), **`backon`** (Rust)
 8. Named pipes → **`interprocess`** (Rust). No hand-rolled `unsafe`.
 
-The repo has no `unsafe` blocks. Keep it that way.
+The only `unsafe` in the repo is the tun2proxy traffic callback in
+`apps/tauri/src/mobile_vpn/counters.rs` — an `extern "C"` fn and the null-checked
+`as_ref` on the pointer it is handed. Nothing else needs it, and nothing else
+should grow it: a new `unsafe` block outside an FFI signature is a review stop.
 
 ## Style
 
@@ -257,9 +274,16 @@ Vitest is wired as projects: `packages/schemas`, `packages/scripts`,
 `apps/server`, `apps/client` and `apps/tauri` each own a `vitest.config.ts`, and
 the root one lists them. The `tauri` project covers the build scripts under
 `apps/tauri/scripts/`, where the Android manifest patcher lives. A test lives in a `_tests/` folder next to what it tests. The Rust
-tests are `#[cfg(test)]` modules inside `crates/vpn-ipc` — the protocol
-validation, the framing and the two config builders, which is where the pure
-logic is.
+tests are `#[cfg(test)]` modules: `crates/vpn-ipc` carries most of them — the
+protocol validation, the framing, the stall detector, the latency resolver and
+the two config builders — and `crates/vpn-service` covers the handshake gate in
+`pipe/session.rs`, which decides what an unauthenticated caller may ask for.
+
+**`apps/tauri/src/mobile_vpn/` is `#[cfg(mobile)]` and nothing in `verify`
+compiles it.** Changing that directory, or `vpn-ipc` underneath it, needs a
+manual `cargo clippy -p gnomevpn --target aarch64-linux-android`; the NDK
+environment it wants is written out in
+[apps/tauri/CLAUDE.md](apps/tauri/CLAUDE.md).
 
 **Nothing in CI checks an ordinary commit.** There is no workflow watching master
 or pull requests — the only automated run is the `checks` job in `release.yml`,
@@ -281,3 +305,8 @@ the command stops at that step — the TypeScript half having already passed.
 - **The panel reports traffic counters, not handshakes.** A peer counts as alive only when its byte count _grows_; treating "has traffic" as "active now" means stale peers are never collected.
 - **Tauri plugins need an entry in `capabilities/`** or the call fails silently in the webview. Desktop-only and mobile-only permissions live in separate files — listing `updater` or `autostart` in the shared one breaks the Android build.
 - **`env(safe-area-inset-*)` is empty in the Android webview.** The values come from `tauri-plugin-safe-area-insets-css`, which `MobileInsets` writes into `--safe-area-inset-*`; the CSS variables fall back to `env()` for the browser.
+- **`unwrap_or_default()` on a serialisation result hides the failure and invents a valid-looking input.** An empty sing-box config is a file that starts fine and fails 25 seconds later as a timeout, five times over, with the real error nowhere. Config builders return `Result`.
+- **A state a job can only enter is a state nothing can leave.** `expired-access` disabled configs and only the payment webhook re-enabled them, so a webhook that failed after its transaction committed stranded a paying user permanently. Any revocation needs a matching restore in the same sweep.
+- **Copying a fixed bug is easier than it sounds.** The tick-counting stall detector was fixed in `vpn-ipc` and left intact in a private copy inside the privileged service. Shared logic belongs in the shared crate; a second copy is a second bug waiting.
+- **A count of hours is not a calendar duration.** `intervalToDuration` splits an interval into months **and** days, so `days * 24 + hours` silently dropped a whole month: a 31-day tunnel rendered as `72:00:00`. Compute elapsed time from the millisecond difference.
+- **The two Rust config builders are reached by different callers and only one is compiled by `verify`.** Android is `#[cfg(mobile)]`; a change to `vpn-ipc` that breaks it passes every local check.

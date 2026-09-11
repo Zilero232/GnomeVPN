@@ -86,9 +86,27 @@ modules at the bottom of the file they cover; Playwright specs live in `e2e/`.
 Only pure logic is covered — anything needing a database, a node over SSH or a
 live tunnel is verified by running it.
 
+**Assert the relationship, not the business value.** A test that spells out a
+price, a discount or a piece of copy breaks every time somebody changes it for a
+commercial reason, and catches nothing when the logic breaks. Import the constant
+and compute against it, or assert the property: a longer plan never costs more
+per month, the cheapest per-month price undercuts every plan, the discount equals
+what the table recomputes. The billing suites did the former and had to be edited
+by hand on every repricing.
+
+A test whose two sides both come from the code under test cannot fail. Comparing
+a component's default render to the same component rendered with the default
+value proves nothing.
+
 ## Verify before claiming anything works
 
 `bun run verify` — typecheck, ESLint, Prettier, Stylelint, `cargo fmt --check`,
 `cargo clippy -D warnings`. `bun run test` and `bun run test:rust` are separate;
 bare `bun test` is Bun's own runner and fails the suite. Only the `checks` job in
 `release.yml` runs any of this in CI, so locally is the first check and the last.
+
+`verify` does not compile `apps/tauri/src/mobile_vpn/` — it is `#[cfg(mobile)]`.
+Touching it, or `crates/vpn-ipc` beneath it, needs a manual
+`cargo clippy -p gnomevpn --target aarch64-linux-android`; the NDK environment is
+in [apps/tauri/CLAUDE.md](../../apps/tauri/CLAUDE.md). Nor does it catch SSR
+breakage — only `bun --filter @gnomevpn/client build` does.

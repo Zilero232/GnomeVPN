@@ -38,6 +38,19 @@ Every `callRust` needs a `fallback`: the same bundle renders where no Rust exist
 `RustCommands` in `shared/lib/ipc/ipc.types.ts` mirrors the `invoke_handler` list
 in `apps/tauri/src/lib.rs` — change both together or it fails at runtime.
 
+## Settings and shared feature state
+
+Read a `Setting` through `useSetting` from `@/shared/lib`, never with a hand-rolled
+effect: it loads, subscribes to store changes, writes back and logs a failed read
+instead of leaving an unhandled rejection. Its `initial` must equal the setting's
+`fallback`, or the UI paints the wrong value until the effect lands — and where
+the effect returns early it never corrects.
+
+Once more than two components read a feature's hook, put it behind a context
+(`useVpnConnectionContext`, `useSplitTunnelingContext`). Threading
+`ReturnType<typeof useX>` down as a prop leaks the hook's whole shape into every
+signature below it.
+
 ## i18n
 
 Everything user-visible goes through i18n, in **both** `en.json` and `ru.json`,

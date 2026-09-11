@@ -17,7 +17,8 @@ src/
 ├── pipe/
 │   ├── server.rs    # Windows: named pipe, SDDL, event pump
 │   ├── uds.rs       # Unix: socket, peer-uid check, event pump
-│   └── session.rs   # request handling, decoupled from transport
+│   ├── shared.rs    # request loop and event pump, shared by both transports
+│   └── session.rs   # request handling and the handshake gate, no transport
 └── tunnel/
     ├── engine.rs    # spawns sing-box, waits for the adapter, emits events
     ├── singbox.rs   # config file, process, logs
@@ -168,12 +169,13 @@ stays in `vpn-ipc` for that reason.
 
 **Any local process can open the pipe.** The service spawns a process that rewrites the system's routes. Without validation, malware would ask it to route all traffic through its own server, and it would comply.
 
-Two defences, both load-bearing:
+Three defences, all load-bearing:
 
-1. **`PIPE_SDDL`** in `pipe/server.rs` — interactive users get read/write only, never `GA` (which includes the right to rewrite the ACL). Everyone and anonymous get nothing. Low-integrity processes are blocked.
-2. **`validate_tunnel_config`** in [`../vpn-ipc`](../vpn-ipc/) — a literal server address must be public (never loopback or LAN), and `validate_split_apps` rejects paths that are not absolute executables.
+1. **`PIPE_SDDL`** in `pipe/server.rs` — interactive users get read/write only, never `GA` (which includes the right to rewrite the ACL). Everyone and anonymous get nothing. Low-integrity processes are blocked. The Unix side is weaker: `authorized` in `pipe/uds.rs` takes root and any uid at or above the first human uid, so on a shared machine every logged-in account qualifies. Tightening it needs a `gnomevpn` group the installer creates and the socket is chowned to.
+2. **The handshake gate** in `pipe/session.rs` — a connection that sends anything before `Hello` is answered with an error and dropped, so the `PROTOCOL_VERSION` check cannot be skipped by simply not sending `Hello`.
+3. **`validate_tunnel_config`** in [`../vpn-ipc`](../vpn-ipc/) — a literal server address must be public (never loopback or LAN), and `validate_split_apps` rejects paths that are not absolute executables. Android calls it too, in `mobile_vpn/jni.rs`, before the config reaches the engine.
 
-Changing either one changes what a hostile local process can do. Treat them as such.
+Changing any of them changes what a hostile local process can do. Treat them as such.
 
 There is no Authenticode signature check yet — the project has no certificate. When one is bought, the client's signature should be verified on connect.
 
@@ -187,6 +189,27 @@ engine wraps them in `spawn_blocking`.
 
 The engine keeps polling `try_wait()` on the child: if `sing-box.exe` dies, the
 tunnel must fail rather than sit there with an adapter pointing into nothing.
+
+Alongside that it runs `StallDetector` from [`vpn-ipc`](../vpn-ipc/) — the same
+one the Android engine uses. It measures against `Instant`, never by counting
+watch ticks: a private copy here did the latter, and on a laptop that sleeps the
+60-second threshold took far longer than 60 seconds of wall clock to reach.
+
+`adapter.rs` takes no arguments any more. The interface name and address are
+`TUNNEL_NAME`/`TUNNEL_ADDRESS` in `vpn-ipc`, which is also where the sing-box
+config gets them, so the adapter the service looks for and the one sing-box
+creates cannot drift apart.
+
+## A config that cannot be built is an error, not an empty file
+
+`build_singbox_config` returns `Result`. It used to end in `unwrap_or_default()`,
+so a serialisation failure produced `""`, which `spawn` wrote to disk and started
+sing-box on. The failure then surfaced 25 seconds later as "tunnel did not come
+up in time" and was retried five times by `backon`, with nothing anywhere naming
+the real cause. The same applied to `build_hysteria_config` on Android.
+
+`Singbox::stop` also logs a failed `remove_file` instead of discarding it: that
+file holds the tunnel password, and the deletion is the defence in depth.
 
 ## The binary is locked while running
 

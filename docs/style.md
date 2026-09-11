@@ -945,19 +945,36 @@ return <NodePicker />;
 Zod schemas and the types shared between client and server live in
 `packages/schemas`:
 
+Each domain is a folder, and a domain wide enough to hold several concerns
+splits again — one folder per concern, never one file holding schemas,
+constants and functions together:
+
 ```
 packages/schemas/src/
-  auth/
-    inputs.ts    ← signInSchema, signUpSchema, changeEmailSchema
-    types.ts     ← SignInValues, SignUpValues, ChangeEmailValues
+  auth/                       ← one concern, files by role
+    auth.schemas.ts           ← signInSchema, signUpSchema, changeEmailSchema
+    auth.types.ts             ← SignInValues, SignUpValues, ChangeEmailValues
     index.ts
+    _tests/auth.test.ts
+  billing/                    ← several concerns, one folder each
+    plans/
+      plans.constants.ts      ← PLANS, DEFAULT_PLAN_ID, LOWEST_MONTHLY_RUB
+      plans.schemas.ts        ← planIdSchema, planSchema
+      plans.types.ts          ← Plan, PlanId
+      plans.ts                ← findPlan, planMonthlyRub, planDiscountPercent
+      index.ts
+      _tests/plans.test.ts
+    addons/, checkout/, webhook/
+    index.ts                  ← re-exports every concern
   tunnel/
-    inputs.ts    ← issueConfigSchema
-    outputs.ts   ← tunnelConfigSchema
-    types.ts
-    index.ts
-  billing/, nodes/, subscription/, errors/, release/
+    tunnel/, split/, configs/
+  nodes/, subscription/, errors/, release/
 ```
+
+The suffix says what the file holds, so a reader never opens one to find out:
+`.schemas.ts` for zod, `.constants.ts` for data, `.types.ts` for inferred types,
+`<name>.ts` for functions. A domain barrel re-exports its concerns; the root
+barrel re-exports the domains.
 
 The package exposes a single root entry point — import from `@gnomevpn/schemas`,
 not from a subpath:

@@ -61,6 +61,31 @@ overlay no longer carries. `libxray.so` survived the move to hysteria that way
 and kept shipping inside the APK while the tunnel looked for a name that was
 not there.
 
+## The Android config is validated at the JNI boundary
+
+`nativeStart` in `mobile_vpn/jni.rs` deserialises a `TunnelConfig` out of a
+`MODE_MULTI_PROCESS` SharedPreferences blob that `VpnPlugin.kt` wrote. Anything
+able to write those preferences chooses the exit node, so the JNI entry point
+runs `validate_tunnel_config` — the same check the desktop service applies before
+a `Connect` reaches the supervisor — and refuses a negative descriptor. It used
+to deserialise straight into the engine.
+
+## Auto-connect and auto-reconnect are desktop-only
+
+Both settings still exist and both still drive the engine, but the client short
+-circuits them on mobile (`isTauriMobile()` in `use-auto-connect` and
+`use-vpn-connection`), and the two toggles live inside the `isDesktopApp` block
+of `AppMenu`. Stored values are untouched, so a desktop install keeps whatever
+the user chose.
+
+The quick-settings tile is deliberately exempt: `takeTileConnectRequest()` is
+read **before** the auto-connect guard, so tapping the tile still opens the
+tunnel. Moving that read below the guard turns the tile into a dead button.
+
+With auto-reconnect off, a dropped attempt is final — `run_tunnel` returns the
+error instead of backing off — so a Wi-Fi/LTE handover or a Doze wake leaves the
+user disconnected until they tap connect. That is the trade the setting makes.
+
 ## No privileged work here
 
 Creating the wintun adapter, editing routes and setting DNS all need administrator rights. They belong to the service, which spawns `sing-box.exe` to do them. This crate opens a pipe and asks.
@@ -125,7 +150,7 @@ out**: without `keepAlivePeriod` the client's default idle timeout (~30s) closes
 the connection the moment Doze batches the radio and no packets flow, and
 `watch_hysteria` only checked whether the _process_ exited — a live process with a
 dead connection never triggered a reconnect. `build_hysteria_config` sets
-`quic.keepAlivePeriod: 10s` (plus an explicit `maxIdleTimeout: 30s`); the 10s
+`quic.keepAlivePeriod: 5s` (plus an explicit `maxIdleTimeout: 120s`); the 5s
 heartbeat keeps the session alive across Doze's maintenance windows. This is the
 same reason WireGuard/OpenVPN clients survive Doze — they keepalive by default.
 
@@ -138,6 +163,13 @@ traffic-status callback rather than reading from the kernel.
 That distinction matters: the counters describe **tun2proxy**, not the
 interface. If tun2proxy stops pumping, both numbers freeze together, and a
 detector that only compares them sees a quiet tunnel rather than a dead one.
+
+`StallDetector` lives in [`vpn-ipc`](../../crates/vpn-ipc/) and both platforms
+use that one. The privileged desktop service carried its own copy for a while,
+and the copy had the bug this file documents as fixed: it accumulated
+`WATCH_INTERVAL` per tick instead of measuring against a clock, so on a laptop
+that sleeps or a throttled service the 60-second threshold took far longer than
+60 seconds to reach — or never arrived. Measure elapsed time, never count ticks.
 
 **Nothing wakes the tunnel up on its own, which is why the wake-up path is
 explicit.** A QUIC session that died while the screen was off leaves no trace to
@@ -165,11 +197,14 @@ went through, which is why it looked like "the VPN stopped working" on mobile da
 while Wi-Fi at 1500 had room to spare. 1360 leaves ~30 bytes of margin under the
 IPv6-bearer ceiling.
 
-`MTU` is declared in **four** places and they must agree:
-`mobile_vpn/engine.rs` (tun2proxy), `GnomeVpnService.kt`
-(`VpnService.Builder`), `vpn-ipc/src/singbox.rs` (the desktop TUN — a laptop
-tethered to a phone has the same ceiling) and `peers.config.ts` (`WG.mtu`, where
-WireGuard's own 60-byte overhead put 1420 at 1480, over the same limit).
+`TUNNEL_MTU` in `vpn-ipc/src/tunnel_adapter.rs` owns the number for all of Rust —
+tun2proxy on Android and the desktop sing-box TUN both read it, along with
+`TUNNEL_NAME` and `TUNNEL_ADDRESS`, which were themselves spelled out in three
+places and had to match for the service to find its own adapter.
+
+Two declarations sit outside Rust and still have to agree by hand:
+`GnomeVpnService.kt` (`VpnService.Builder`) and `peers.config.ts` (`WG.mtu`,
+where WireGuard's own 60-byte overhead put 1420 at 1480, over the same limit).
 
 For scale, `wireguard-android` defaults its own MTU to **1280**, the IPv6 minimum,
 so 1360 is still the more optimistic of the two.
@@ -380,3 +415,21 @@ bun run tauri:dev
 ```
 
 `cargo clippy` on this crate needs a built frontend (`frontendDist` points at `../client/out`), which is why CI checks only the service and the protocol.
+
+**`src/mobile_vpn/` is `#[cfg(mobile)]`, so neither `bun run verify` nor a plain
+`cargo clippy` compiles a line of it.** Touching that directory — or `vpn-ipc`,
+which it shares with the desktop — means checking the Android target by hand:
+
+```bash
+NDKBIN="$LOCALAPPDATA/Android/Sdk/ndk/<version>/toolchains/llvm/prebuilt/windows-x86_64/bin"
+export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"
+export NDK_HOME="$LOCALAPPDATA/Android/Sdk/ndk/<version>"
+export PATH="$NDKBIN:$PATH"
+export CC_aarch64_linux_android="$NDKBIN/aarch64-linux-android24-clang.cmd"
+export AR_aarch64_linux_android="$NDKBIN/llvm-ar.exe"
+export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDKBIN/aarch64-linux-android24-clang.cmd"
+cargo clippy -p gnomevpn --target aarch64-linux-android -- -D warnings
+```
+
+The NDK ships no bare `clang.exe`, only versioned wrappers, which is why `ring`'s
+build script needs `CC_*` pointed at one explicitly.
