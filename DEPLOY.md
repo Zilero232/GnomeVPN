@@ -267,7 +267,24 @@ docker compose pull && docker compose up -d   # manual update
 docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
 ```
 
-Port 5432 is not exposed. To connect with a client, use an SSH tunnel:
+Port 5432 is published, so a client such as TablePlus connects straight to
+`<IP>:5432` with the `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` values
+from the VPS `.env`, SSL disabled.
+
+**That port is open to the internet and UFW does not close it** — Docker writes
+its rules into the FORWARD chain, ahead of UFW, so `ufw deny 5432` has no effect.
+The password is the only thing in front of a database holding payer records and
+every peer's tunnel credential, so it has to be long and random.
+
+To narrow it to one address, add a rule to `DOCKER-USER`, the one chain Docker
+leaves alone:
+
+```bash
+iptables -I DOCKER-USER -p tcp --dport 5432 ! -s <your-IP> -j DROP
+```
+
+Or close it again by binding to loopback in `docker-compose.yml`
+(`'127.0.0.1:5432:5432'`) and tunnelling in:
 
 ```bash
 ssh -L 5432:localhost:5432 user@<IP>
