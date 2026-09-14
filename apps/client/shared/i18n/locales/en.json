@@ -166,6 +166,14 @@
       "confirmPassword": "Repeat password"
     },
     "errors": {
+      "emailTaken": "This email is already registered — sign in instead",
+      "invalidCredentials": "Wrong email or password",
+      "invalidEmail": "This email address is not valid",
+      "emailNotVerified": "Confirm your email first — check your inbox",
+      "passwordTooShort": "Password is too short",
+      "passwordTooLong": "Password is too long",
+      "userNotFound": "No account found for this email",
+      "sessionExpired": "Your session expired — sign in again",
       "signInFailed": "Could not sign in",
       "signUpFailed": "Could not sign up",
       "resetLinkFailed": "Could not send the email",

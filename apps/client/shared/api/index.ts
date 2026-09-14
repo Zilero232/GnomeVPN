@@ -1,4 +1,5 @@
 export { authClient, clearToken, getAuthToken, restoreTokenFromVault, saveAuthToken } from './auth/auth-client';
+export { AuthError } from './auth/auth-error';
 export { resetSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';

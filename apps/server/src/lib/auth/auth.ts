@@ -4,6 +4,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { bearer } from 'better-auth/plugins';
 import { createElement } from 'react';
 
+import { describeError } from '../../common/lib';
 import { allowedOrigins } from '../../config/cors';
 import { validateEnv } from '../../config/env.schema';
 import { basePrisma } from '../../core';
@@ -39,12 +40,12 @@ export const auth = betterAuth({
     sendOnSignIn: false,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      sendEmail({
+      void sendEmail({
         to: user.email,
         subject: 'Confirm your GnomeVPN email',
         react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') })
-      }).catch((error) => {
-        logger.error(`verification email to ${user.email} failed`, error);
+      }).catch((error: unknown) => {
+        logger.error(`verification email to ${user.email} failed: ${describeError(error)}`);
       });
     }
   },
