@@ -2,12 +2,11 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { BillingModule } from '../billing';
-import { ConfigsModule } from '../configs';
-import { SessionsModule } from '../sessions';
+import { SubscriptionLinkModule } from '../subscription-link';
 import { ExpiredAccessJob, NodeHealthJob, ReconcilePeersJob, RecurringChargeJob } from './jobs';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), BillingModule, SessionsModule, ConfigsModule],
+  imports: [ScheduleModule.forRoot(), BillingModule, SubscriptionLinkModule],
   providers: [ExpiredAccessJob, NodeHealthJob, ReconcilePeersJob, RecurringChargeJob]
 })
 export class SchedulerModule {}

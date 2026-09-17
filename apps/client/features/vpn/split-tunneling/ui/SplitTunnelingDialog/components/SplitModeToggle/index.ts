@@ -1,1 +1,0 @@
-export { SplitModeToggle } from './SplitModeToggle';

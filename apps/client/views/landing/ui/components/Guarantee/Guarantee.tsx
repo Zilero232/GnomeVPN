@@ -3,10 +3,10 @@
 import { ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 import { ROUTES } from '@/shared/constants';
-import { Button, Text } from '@/shared/ui';
+import { Link } from '@/shared/i18n/navigation';
+import { Button, Text } from '@/ui-kit';
 
 import { ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
 

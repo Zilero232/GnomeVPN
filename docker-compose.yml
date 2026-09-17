@@ -1,7 +1,9 @@
 # GnomeVPN production stack.
 #
-#   web       — static Next.js client + Caddy (serves the site, proxies the API
-#               subdomain, terminates HTTPS); the only public-facing container
+#   caddy     — TLS termination and reverse proxy; the only public-facing
+#               container. Proxies the site to web and the API subdomain to
+#               server.
+#   web       — Next.js client, rendered per request on its own Node server
 #   server    — NestJS API on Bun
 #   postgres  — self-hosted database
 #
@@ -19,22 +21,46 @@
 # Stop:                  docker compose down
 
 services:
-  web:
-    image: ghcr.io/zilero232/gnomevpn-web:latest
-    container_name: gnomevpn-web
+  caddy:
+    image: caddy:2-alpine
+    container_name: gnomevpn-caddy
     restart: always
     depends_on:
+      - web
       - server
     ports:
       # 80 is required for the Let's Encrypt HTTP challenge; 443 serves HTTPS.
       - '80:80'
       - '443:443'
     volumes:
+      # Copied here by CI on every deploy, next to docker-compose.yml.
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Persists issued TLS certificates across restarts.
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - gnomevpn
+
+  web:
+    image: ghcr.io/zilero232/gnomevpn-web:latest
+    container_name: gnomevpn-web
+    restart: always
+    depends_on:
+      - server
+    expose:
+      - '3000'
+    networks:
+      - gnomevpn
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   postgres:
     image: postgres:17-alpine

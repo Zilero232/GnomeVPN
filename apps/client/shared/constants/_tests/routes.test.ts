@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isGuestOnlyRoute, isKnownRoute, isPublicRoute, isWebOnlyRoute, ROUTES } from '../routes';
+import { indexedRoutes, isGuestOnlyRoute, isIndexedRoute, isKnownRoute, isPublicRoute, ROUTES } from '../routes';
 
 describe('isKnownRoute', () => {
   it('accepts every declared route', () => {
@@ -8,7 +8,7 @@ describe('isKnownRoute', () => {
   });
 
   it('rejects anything undeclared', () => {
-    expect(isKnownRoute('/pricing')).toBe(false);
+    expect(isKnownRoute('/blog')).toBe(false);
     expect(isKnownRoute('')).toBe(false);
   });
 
@@ -17,7 +17,6 @@ describe('isKnownRoute', () => {
   });
 
   it('matches exactly, so a trailing slash is not a known route', () => {
-    expect(isKnownRoute('/app/')).toBe(false);
     expect(isKnownRoute('/account/')).toBe(false);
   });
 });
@@ -32,7 +31,6 @@ describe('isPublicRoute', () => {
 
   it('rejects the routes behind a session', () => {
     expect(isPublicRoute(ROUTES.account)).toBe(false);
-    expect(isPublicRoute(ROUTES.app)).toBe(false);
   });
 
   it('matches exactly, so a subpath of a public route is not public', () => {
@@ -54,15 +52,21 @@ describe('isGuestOnlyRoute', () => {
   });
 });
 
-describe('isWebOnlyRoute', () => {
-  it('accepts only the landing route', () => {
-    expect(isWebOnlyRoute(ROUTES.landing)).toBe(true);
-    expect(isWebOnlyRoute(ROUTES.privacy)).toBe(false);
-    expect(isWebOnlyRoute(ROUTES.app)).toBe(false);
+describe('indexedRoutes', () => {
+  it('only lists routes anyone can open, so the sitemap never advertises a login wall', () => {
+    expect(indexedRoutes().every(isPublicRoute)).toBe(true);
   });
 
-  it('matches exactly, so any other path is not web-only', () => {
-    expect(isWebOnlyRoute('')).toBe(false);
-    expect(isWebOnlyRoute('//')).toBe(false);
+  it('never lists a route behind the session', () => {
+    expect(indexedRoutes()).not.toContain(ROUTES.account);
+    expect(indexedRoutes()).not.toContain(ROUTES.auth);
+  });
+
+  it('leaves out the guest-only route, which has nothing to index', () => {
+    expect(indexedRoutes()).not.toContain(ROUTES.auth);
+  });
+
+  it('agrees with isIndexedRoute', () => {
+    expect(indexedRoutes().every(isIndexedRoute)).toBe(true);
   });
 });

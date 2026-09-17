@@ -4,8 +4,6 @@ import { validateEnv } from './env.schema';
 
 const env = validateEnv(process.env);
 
-const TAURI_ORIGINS = ['tauri://localhost', 'http://tauri.localhost', 'https://tauri.localhost', 'http://localhost', 'https://localhost'];
-
 const originOf = (url: string): string | null => {
   try {
     return new URL(url).origin;
@@ -22,4 +20,4 @@ const webOrigins = pipe(
 
 const clientOrigin = originOf(env.CLIENT_URL);
 
-export const allowedOrigins = unique([...webOrigins, ...(clientOrigin ? [clientOrigin] : []), ...TAURI_ORIGINS]);
+export const allowedOrigins = unique([...webOrigins, ...(clientOrigin ? [clientOrigin] : [])]);

@@ -1,3 +1,3 @@
 export { QUERY_KEYS } from './query-keys';
-export { DOWNLOAD_HASH, isGuestOnlyRoute, isKnownRoute, isPublicRoute, isWebOnlyRoute, ROUTES } from './routes';
+export { indexedRoutes, isGuestOnlyRoute, isIndexedRoute, isKnownRoute, isPublicRoute, ROUTES } from './routes';
 export { STORAGE_KEYS } from './storage-keys';

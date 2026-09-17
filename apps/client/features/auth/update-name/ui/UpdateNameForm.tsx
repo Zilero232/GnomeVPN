@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 import { useErrorMessage, useFieldError } from '@/entities/app/locale';
 import { useCurrentUser, useUpdateName } from '@/entities/auth/user';
-import { FormField, Input, SubmitButton } from '@/shared/ui';
+import { FormField, Input, SubmitButton } from '@/ui-kit';
 
 import s from './UpdateNameForm.module.scss';
 

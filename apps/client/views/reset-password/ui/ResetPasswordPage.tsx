@@ -1,12 +1,13 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { ResetPasswordForm } from '@/features/auth/reset-password';
 import { ROUTES } from '@/shared/constants';
-import { BrandMark, Text } from '@/shared/ui';
+import { useRouter } from '@/shared/i18n/navigation';
+import { BrandMark, Text } from '@/ui-kit';
 
 import s from './ResetPasswordPage.module.scss';
 

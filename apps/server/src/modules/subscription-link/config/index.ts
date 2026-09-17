@@ -1,0 +1,7 @@
+export {
+  INCY_DEEP_LINK_NAME,
+  NODE_FEED_SELECT,
+  SUBSCRIPTION_CONTENT_TYPE,
+  SUBSCRIPTION_PATH,
+  SUBSCRIPTION_PEER_NAME
+} from './subscription-link.config';

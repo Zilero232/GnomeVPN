@@ -1,14 +1,10 @@
-export { authClient, clearToken, getAuthToken, restoreTokenFromVault, saveAuthToken } from './auth/auth-client';
+export { authClient, clearToken, getAuthToken, saveAuthToken } from './auth/auth-client';
 export { AuthError } from './auth/auth-error';
 export { resetSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
-export { issueConfig, listConfigs, listConfigStatus, readConfigText, revokeConfig } from './configs';
-export type { ConfigDownload } from './configs';
 export { api, ApiError, apiErrorCode, toApiError } from './http';
-export { listNodeEndpoints, listNodes } from './nodes';
+export { listPlatforms } from './platforms';
 export { queryClient } from './query-client';
-export { getLatestRelease } from './release';
 export { getSubscriptionStatus } from './subscription';
-
-export { connectTunnel, disconnectTunnel } from './tunnel';
+export { getSubscriptionLink, rotateSubscriptionLink } from './subscription-link';

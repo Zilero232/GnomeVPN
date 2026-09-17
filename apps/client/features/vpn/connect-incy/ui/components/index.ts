@@ -1,0 +1,1 @@
+export { IncyQrDialog } from './IncyQrDialog';

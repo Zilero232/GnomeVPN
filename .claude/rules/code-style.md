@@ -10,9 +10,8 @@ paths:
 
 ## No comments
 
-The code is expected to read on its own. `crates/` and `apps/client` have zero
-comments and stay that way; the reasoning belongs in CLAUDE.md or the commit
-message. Build scripts under `scripts/` and YAML in `.github/` are the exception —
+The code is expected to read on its own. `apps/client` has zero comments and
+stays that way; the reasoning belongs in CLAUDE.md or the commit message. Build scripts under `scripts/` and YAML in `.github/` are the exception —
 they already carry comments.
 
 ## Two or more parameters → one object
@@ -54,7 +53,8 @@ return url.toString();
 
 Before writing a helper, check whether an installed library covers it:
 `@siberiacancode/reactuse` (React hooks), `remeda` (arrays/objects), `ts-pattern`
-(typed branching), `date-fns`, `pretty-bytes`, `motion` (animation), `p-retry`.
+(typed branching), `date-fns`, `motion` (animation), `p-retry`,
+`@base-ui/react` (unstyled primitives), `pino` (server logs).
 
 Only libraries **already declared** in a `package.json` count. A transitive
 dependency used directly is a phantom dependency — it passes locally through
@@ -81,8 +81,7 @@ barrel is three levels of indirection for one statement.
 ## Tests sit next to what they test
 
 A Vitest suite lives in a `_tests/` folder beside the source, named after it:
-`shared/lib/vpn-bridge/_tests/vpn-bridge.test.ts`. Rust tests are `#[cfg(test)]`
-modules at the bottom of the file they cover; Playwright specs live in `e2e/`.
+`shared/i18n/_tests/locale-path.test.ts`. Playwright specs live in `e2e/`.
 Only pure logic is covered — anything needing a database, a node over SSH or a
 live tunnel is verified by running it.
 
@@ -100,19 +99,10 @@ value proves nothing.
 
 ## Verify before claiming anything works
 
-`bun run verify` — typecheck, ESLint, Prettier, Stylelint, `cargo fmt --check`,
-`cargo clippy -D warnings`. `bun run test` and `bun run test:rust` are separate;
-bare `bun test` is Bun's own runner and fails the suite. Only the `checks` job in
-`release.yml` runs any of this in CI, so locally is the first check and the last.
+`bun run verify` — typecheck, ESLint, Prettier, Stylelint. `bun run test` is
+separate; bare `bun test` is Bun's own runner and fails the suite. `checks.yml`
+runs both on every push and pull request.
 
-`cargo clippy` only compiles the host's platform, and the service branches on
-`cfg` for its transport, its installer and its Windows-only probe. An import that
-one branch uses is dead on the others, and `-D warnings` rejects it there — a
-Windows host cannot see what Linux CI will. Check a second target before pushing
-Rust that touches a `cfg` block; the Android one serves.
-
-`verify` does not compile `apps/tauri/src/mobile_vpn/` — it is `#[cfg(mobile)]`.
-Touching it, or `crates/vpn-ipc` beneath it, needs a manual
-`cargo clippy -p gnomevpn --target aarch64-linux-android`; the NDK environment is
-in [apps/tauri/CLAUDE.md](../../apps/tauri/CLAUDE.md). Nor does it catch SSR
-breakage — only `bun --filter @gnomevpn/client build` does.
+Neither catches SSR breakage. `bun --filter @gnomevpn/client build` is the only
+check that does — it is where a page that typechecks but throws during prerender
+fails, and where a missing translation key surfaces as `MISSING_MESSAGE`.

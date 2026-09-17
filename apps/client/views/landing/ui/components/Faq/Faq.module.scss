@@ -28,3 +28,21 @@
   font-size: 14px;
   line-height: 1.65;
 }
+
+.more {
+  display: flex;
+  justify-content: center;
+  padding: 18px 26px;
+  background-color: var(--color-surface);
+}
+
+.moreLink {
+  color: var(--color-accent);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

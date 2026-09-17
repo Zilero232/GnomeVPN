@@ -2,66 +2,33 @@
 
 ## What runs where
 
-| Component              | Where          | How it updates                |
-| ---------------------- | -------------- | ----------------------------- |
-| Landing page + account | VPS, Caddy     | CI: `deploy.yml`              |
-| API                    | VPS, Docker    | CI: `deploy.yml`              |
-| Database               | VPS, Docker    | same place                    |
-| Desktop + Android      | on the user    | CI: `release.yml` on a v* tag |
-| VPN nodes              | separate VPSes | `bun run provision:nodes`     |
+| Component     | Where          | How it updates            |
+| ------------- | -------------- | ------------------------- |
+| Site, Next.js | VPS, Docker    | CI: `deploy.yml`          |
+| API           | VPS, Docker    | CI: `deploy.yml`          |
+| Caddy (TLS)   | VPS, Docker    | CI: `deploy.yml`          |
+| Database      | VPS, Docker    | same place                |
+| VPN client    | on the user    | INCY, from their store    |
+| VPN nodes     | separate VPSes | `bun run provision:nodes` |
 
 Everything but node provisioning is built in GitHub Actions. Images are pushed
 to ghcr.io; **the VPS builds nothing** — it only pulls ready-made images.
 
 ---
 
-## Release
-
-A tag runs `release.yml`:
-
-```bash
-npm version patch        # or edit version in package.json
-git push --follow-tags
-```
-
-CI takes it from there: three runners (Windows, macOS, Linux) build the desktop
-via `tauri-action`, a separate job does Android, and the last one publishes the
-release. Cross-compilation is no good here: Tauri does not support it, and macOS
-cannot be built off a Mac at all — hence the runner matrix.
-
-`tauri-action` merges `latest.json` across all platforms itself, so auto-update
-gets one entry per OS.
-
-### One-time secret setup
+## Secrets
 
 Settings → Secrets and variables → Actions:
 
 | Secret                                    | What it is                                                    |
 | ----------------------------------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`                     | API address, baked into the build                             |
-| `TAURI_SIGNING_PRIVATE_KEY`               | contents of `~/.tauri/gnomevpn.key`                           |
-| `ANDROID_KEY_ALIAS`                       | alias of the APK signing key                                  |
-| `ANDROID_KEY_PASSWORD`                    | keystore and key password                                     |
-| `ANDROID_KEY_BASE64`                      | the keystore itself, in base64                                |
+| `NEXT_PUBLIC_API_URL`                     | API address, baked into the browser bundle at build time      |
 | `DEPLOY_SSH_HOST` / `_USER` / `_PASSWORD` | control VPS                                                   |
+| `DEPLOY_SSH_KEY`                          | private key, preferred over the password                      |
 | `DEPLOY_PATH`                             | directory holding docker-compose.yml, usually `/opt/gnomevpn` |
 
-The update signing key is created once:
-
-```bash
-bun run --filter @gnomevpn/tauri signer:generate   # writes ~/.tauri/gnomevpn.key
-```
-
-The Android keystore is also a one-time, local step:
-
-```bash
-keytool -genkeypair -v -keystore gnomevpn.keystore -alias gnomevpn \
-  -keyalg RSA -keysize 2048 -validity 10000
-base64 -i gnomevpn.keystore | pbcopy                # → ANDROID_KEY_BASE64
-```
-
-**Keep the keystore outside the repository.** Lose it and there is nothing left
-to update already-installed APKs with, and Play Store will not accept a new key.
+There are no signing keys any more: nothing in this repository ships a binary to
+a user. The VPN client is INCY, installed from the user's own app store.
 
 ## Deploying web + API
 
@@ -127,9 +94,8 @@ DIRECT_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 BETTER_AUTH_SECRET=<32+ random characters>
 API_URL=https://api.gnomevpn.ru
 
-CORS_ORIGINS=https://gnomevpn.ru,tauri://localhost,http://tauri.localhost
+CORS_ORIGINS=https://gnomevpn.ru
 
-GITHUB_TOKEN=<PAT with Contents: Read — without it desktop updates do not work>
 
 YOOKASSA_SHOP_ID=<from the YooKassa dashboard>
 YOOKASSA_SECRET_KEY=<from the same place>
@@ -177,47 +143,20 @@ Passwords are generated like this:
 openssl rand -base64 32
 ```
 
-**`CORS_ORIGINS` must include `tauri://localhost`** — otherwise the desktop app will not be able to reach the API.
+**`CORS_ORIGINS` is the site's origin and nothing else.** The browser is the only caller; anything extra widens the surface for no gain.
 
 ---
 
-## 4. Release keys
+## 4. Credentials that stay local
 
-Release and deploy both go through Actions, so almost everything lives in the
-repository secrets. Only provisioning stays local:
+Deploys go through Actions, so almost everything lives in the repository
+secrets. Only provisioning stays on a workstation:
 
 - **SSH to the nodes** — `PROVISION_SSH_*` in the root `.env` (see section 3).
-- **Desktop signing key** — `~/.tauri/gnomevpn.key` (see below).
-- **Android keystore** — created once with `keytool`, lives in the repository secrets.
+- **`.env.nodes`** — one `XRAY_KEY_<CC>` / `XRAY_PANEL_<CC>` pair per node,
+  written by `bun run provision:nodes` and shipped to the VPS over SSH.
 
-### The update signing key
-
-It is what makes the app accept updates only from us. Generated once:
-
-```bash
-bun --filter @gnomevpn/tauri signer:generate
-```
-
-This creates two files in `~/.tauri/` — outside the repository, so the key
-physically cannot end up in git.
-
-Then:
-
-1. `~/.tauri/gnomevpn.key.pub` → the `plugins.updater.pubkey` field in
-   `tauri.windows.conf.json`, `tauri.macos.conf.json` and `tauri.linux.conf.json`
-2. In the same files, `"active": false` → `true`
-
-CI takes the private key from the `TAURI_SIGNING_PRIVATE_KEY` secret. If the key
-is encrypted, add a second secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` and wire
-it into `release.yml`.
-
-Signing a file by hand (usually unnecessary — CI does it itself):
-
-```bash
-bun --filter @gnomevpn/tauri signer:sign -- <path-to-file>
-```
-
-**The private key cannot be recovered.** Lose it and you will have to ship a new version with a new key, and auto-update will stop working for users on the old one: they will see an update, but the signature will not match. Keep a copy outside the repository.
+There are no signing keys: the project ships no binaries.
 
 ---
 

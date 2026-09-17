@@ -15,14 +15,13 @@ import type {
 } from './provision-host.types';
 
 import { generateAuth } from '../../../apps/server/src/lib/xray';
-import { WG } from '../../../apps/server/src/modules/peers/config';
 import { upsertEnvGroup } from '../env-file';
 import { buildHysteriaInbound, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
 import { nodeKeyName, panelPasswordName, panelPathName, resolveNodeCredentials } from '../node-credentials';
-import { configurePanel, ensureCert, ensureDocker, ensureWireguardKeys, openTunnelPort, shipStack } from '../remote-setup';
+import { buildRealityInbound } from '../reality-inbound';
+import { configurePanel, ensureCert, ensureDocker, ensureRealityKeys, openTunnelPort, readCertFingerprint, shipStack } from '../remote-setup';
 import { upsertNode } from '../upsert-node';
-import { buildWireguardInbound } from '../wireguard-inbound';
-import { ensureInbound, ensureWireguardInbound, isPanelReachable } from '../xray-panel';
+import { ensureInbound, ensureVlessInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
 
 const panelUrl = ({ host, panelPath }: PanelUrlInput) => `http://${host}:${PANEL_PORT}/${panelPath}`;
@@ -65,18 +64,15 @@ const installInbounds = async ({ ssh, panel, auth }: InstallInboundsInput): Prom
     inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST })
   });
 
-  const keys = await ensureWireguardKeys(ssh);
+  const certFingerprint = await readCertFingerprint(ssh);
+  const reality = await ensureRealityKeys(ssh);
 
-  await ensureWireguardInbound({
+  await ensureVlessInbound({
     ...panel,
-    inbound: buildWireguardInbound({
-      secretKey: keys.privateKey,
-      listenPort: WG.listenPort,
-      mtu: WG.mtu
-    })
+    inbound: buildRealityInbound({ privateKey: reality.privateKey, shortId: reality.shortId })
   });
 
-  return { wgPublicKey: keys.publicKey, wgWasGenerated: keys.wasGenerated };
+  return { certFingerprint, realityPublicKey: reality.publicKey, realityShortId: reality.shortId, realityWasGenerated: reality.wasGenerated };
 };
 
 const rememberNodeSecrets = async ({ serverEnvPath, countryCode, apiToken, panelPassword, panelPath }: RememberNodeSecretsInput) =>
@@ -97,7 +93,9 @@ const registerNode = async ({
   password,
   panelPath,
   auth,
-  wgPublicKey
+  certFingerprint,
+  realityPublicKey,
+  realityShortId
 }: RegisterNodeInput): Promise<boolean> => {
   await rememberNodeSecrets({
     serverEnvPath,
@@ -117,7 +115,9 @@ const registerNode = async ({
       port: LISTEN_PORT,
       serverName: MASQUERADE_HOST,
       hysteriaAuth: auth,
-      wgPublicKey,
+      certFingerprint,
+      realityPublicKey,
+      realityShortId,
       apiUrl: panel.baseUrl,
       apiTokenEnvVar: nodeKeyName(config.countryCode)
     }
@@ -147,7 +147,7 @@ export const provisionHost = async ({ config, prisma, serverEnvPath, xrayCompose
     await prepareHost({ ssh, xrayComposeContent });
 
     const panel = await startPanel({ ssh, host: config.host, password, panelPath });
-    const { wgPublicKey, wgWasGenerated } = await installInbounds({ ssh, panel, auth });
+    const { certFingerprint, realityPublicKey, realityShortId, realityWasGenerated } = await installInbounds({ ssh, panel, auth });
 
     const wasExisting = await registerNode({
       config,
@@ -157,15 +157,17 @@ export const provisionHost = async ({ config, prisma, serverEnvPath, xrayCompose
       password,
       panelPath,
       auth,
-      wgPublicKey
+      certFingerprint,
+      realityPublicKey,
+      realityShortId
     });
 
-    const lostWireguardKeys = wasExisting && wgWasGenerated;
+    const lostRealityKeys = wasExisting && realityWasGenerated;
 
     return {
       ...outcome,
       status: wasExisting ? 'updated' : 'provisioned',
-      ...(lostWireguardKeys && { lostWireguardKeys })
+      ...(lostRealityKeys && { lostRealityKeys })
     };
   } catch (error) {
     return {

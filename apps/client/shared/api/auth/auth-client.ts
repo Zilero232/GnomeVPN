@@ -2,25 +2,9 @@ import { createAuthClient } from 'better-auth/react';
 
 import { env } from '@/shared/config';
 import { STORAGE_KEYS } from '@/shared/constants';
-import { clearTokenFromVault, isServer, logger, readTokenFromVault, saveTokenToVault } from '@/shared/lib';
+import { isServer } from '@/shared/lib';
 
 const STORAGE_KEY = STORAGE_KEYS.authToken;
-
-const persistToVault = async (token: string) => {
-  try {
-    await saveTokenToVault(token);
-  } catch (error) {
-    logger.warn(`cannot persist token to vault: ${String(error)}`);
-  }
-};
-
-const dropFromVault = async () => {
-  try {
-    await clearTokenFromVault();
-  } catch (error) {
-    logger.warn(`cannot clear token from vault: ${String(error)}`);
-  }
-};
 
 export const getAuthToken = () => {
   if (isServer()) {
@@ -36,7 +20,6 @@ export const saveAuthToken = (token: string | null) => {
   }
 
   window.localStorage.setItem(STORAGE_KEY, token);
-  void persistToVault(token);
 };
 
 export const clearToken = () => {
@@ -45,31 +28,6 @@ export const clearToken = () => {
   }
 
   window.localStorage.removeItem(STORAGE_KEY);
-  void dropFromVault();
-};
-
-export const restoreTokenFromVault = async (): Promise<boolean> => {
-  if (isServer()) {
-    return false;
-  }
-
-  if (window.localStorage.getItem(STORAGE_KEY)) {
-    return true;
-  }
-
-  try {
-    const token = await readTokenFromVault();
-
-    if (!token) {
-      return false;
-    }
-
-    window.localStorage.setItem(STORAGE_KEY, token);
-
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 export const authClient = createAuthClient({

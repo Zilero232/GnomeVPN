@@ -37,93 +37,62 @@
     "hidePassword": "Hide password"
   },
   "landing": {
-    "eyebrow": "No traffic logging",
+    "eyebrow": "No traffic logs",
     "titleLine1": "A connection",
-    "titleLine2": "that is",
+    "titleLine2": "that stays",
     "titleAccent": "yours",
-    "lead": "GnomeVPN brings up a tunnel to a node in another country in one tap. The connection is indistinguishable from ordinary HTTPS. No logs, no ads, no traffic caps.",
-    "cta": "Start for {price} ₽",
+    "lead": "GnomeVPN builds a tunnel to a node in another country. From the outside it looks like ordinary HTTPS. No logs, no ads, no traffic caps.",
+    "cta": "Start at {price} ₽",
     "ctaSecondary": "How it works",
     "account": "Account",
     "metrics": {
       "protocol": "protocol",
       "price": "per month",
-      "cipher": "encryption"
+      "devices": "devices"
     },
     "how": {
       "title": "How it works",
       "step1Title": "Subscribe",
-      "step1Body": "Card payment via YooKassa. From {price} ₽ per month, cancel in one click, no hidden charges.",
-      "step2Title": "Pick a country",
-      "step2Body": "Every node is a separate server. Switch on the fly, no manual reconnect.",
-      "step3Title": "Connect",
-      "step3Body": "Through our app for Windows, macOS, Linux and Android in one tap. Or download a config and open it in any Hysteria2 client."
-    },
-    "pricing": {
-      "title": "Pricing",
-      "amount": "{price} ₽",
-      "period": "/ month",
-      "perMonth": "{price} ₽ per month",
-      "save": "−{percent}%",
-      "plans": {
-        "monthly": "1 month",
-        "halfYearly": "6 months",
-        "yearly": "12 months"
-      },
-      "cta": "Subscribe",
-      "feature1": "Every country, no extra fees",
-      "feature2": "Unlimited traffic",
-      "feature3": "Cancel auto-renewal in one click",
-      "feature4": "No connection logs"
+      "step1Body": "Pay by card through YooKassa. From {price} ₽ a month, cancel in one click, no hidden charges.",
+      "step2Title": "Install INCY",
+      "step2Body": "A free app from your own store: iPhone, Android, Windows, Linux, TV. We neither build it nor charge for it.",
+      "step3Title": "Paste the link",
+      "step3Body": "One link from your account and the app fills up with every server in two flavours: the fast UDP one and a TCP fallback. The list keeps itself up to date."
     },
     "faq": {
       "title": "Questions",
-      "q1": "Do you keep logs?",
-      "a1": "No. The server only knows that you have an active subscription and which node you picked. Browsing history is never collected or stored.",
-      "q2": "What happens when I cancel?",
-      "a2": "Access stays until the end of the paid period — you get exactly what you paid for. No further charges will be made.",
-      "q3": "Which devices are supported?",
-      "a3": "Our app covers Windows, macOS, Linux and Android. On iOS it works through a config from your account — open it in any Hysteria2 client such as Hiddify, Streisand or NekoBox.",
-      "q4": "Why so cheap?",
-      "a4": "We do not pay for influencer ads and we do not rent an office. The price covers servers and payment processing."
+      "more": "All questions"
     },
     "nav": {
-      "ariaLabel": "Landing sections",
+      "ariaLabel": "Page sections",
       "how": "How it works",
       "pricing": "Pricing",
       "faq": "Questions",
-      "download": "Download",
       "features": "Features"
     },
-    "footer": {
-      "copy": "© {year} {name}",
-      "privacy": "Privacy Policy",
-      "support": "Support"
-    },
     "features": {
-      "title": "What is inside",
-      "splitTitle": "Split tunneling",
-      "splitBody": "Pick the applications that go through the VPN. Everything else takes the direct route — no speed lost, no traffic wasted on the node.",
+      "title": "What you get",
+      "protocolTitle": "Two protocols",
+      "protocolBody": "Hysteria2 over QUIC leads, because it holds up better on mobile networks. Where UDP is blocked outright the list also carries a TCP fallback — one tap away.",
       "devicesTitle": "Two devices",
-      "devicesBody": "Desktop and phone at once on a single subscription. Connect on one and the other sees it immediately.",
-      "autostartTitle": "Autostart",
-      "autostartBody": "The app launches with the system and raises the tunnel on its own. Nothing to press.",
-      "lanTitle": "LAN keeps working",
-      "lanBody": "Printers, NAS and the router stay reachable while the tunnel is up — local subnets are routed around the VPN.",
+      "devicesBody": "Phone and computer at the same time on one subscription. Need more? Add them in your account.",
+      "platformsTitle": "Every platform",
+      "platformsBody": "iPhone, Android, Windows, Linux, Android TV and Apple TV. The same link works on all of them.",
+      "locationsTitle": "Several countries",
+      "locationsBody": "Switch country in one tap at no extra cost. New nodes appear in the app on their own.",
       "noLogsTitle": "No logs",
-      "noLogsBody": "The server knows your subscription is active and which node you picked. Browsing history is never collected.",
-      "updatesTitle": "Signed updates",
-      "updatesBody": "The app updates itself and verifies the signature on the client, so a build cannot be swapped in transit."
+      "noLogsBody": "The server sees only how many bytes moved — enough to tell whether a node is alive. It is not tied to what you were doing.",
+      "openFormatTitle": "The link stays yours",
+      "openFormatBody": "The subscription format is standard: paste it into Hiddify, Streisand or v2rayNG. You are locked into neither the app nor us."
     },
     "platforms": {
       "title": "Where it runs",
-      "native": "Native app",
-      "config": "Via config",
-      "windowsBody": "A full client with split tunneling and autostart. Never asks for administrator rights.",
-      "macosBody": "A native app running the same tunnel. It asks for permission once, when the service is installed.",
-      "linuxBody": "deb, rpm and AppImage. The service installs through systemd and sing-box runs the tunnel.",
-      "androidBody": "Available on Google Play. The tunnel survives being swiped away and keeps running in the background.",
-      "iosBody": "Grab the config from your account and open it in Streisand, Hiddify or any Hysteria2 client."
+      "iosBody": "INCY from the App Store. The same subscription works on Mac and Apple TV.",
+      "androidBody": "INCY from Google Play, or the APK from the releases page where Play is unavailable.",
+      "windowsBody": "An .exe installer. It only asks for admin rights while installing.",
+      "macosBody": "The Apple Silicon build. There is a separate installer for Intel.",
+      "linuxBody": "deb and rpm packages, plus an archive for installing by hand.",
+      "tvBody": "The subscription is added by scanning a QR code from your phone — no typing with a remote."
     },
     "locations": {
       "title": "Where the servers are",
@@ -135,19 +104,23 @@
     "comparison": {
       "title": "Why not a free VPN",
       "free": "Free ones",
-      "speedLabel": "Real bandwidth",
-      "speedHint": "The node is not shared with thousands of people at once",
-      "adsLabel": "No ads, no trackers",
-      "adsHint": "A free service has to make its money somewhere",
-      "blockingLabel": "Works under blocking",
-      "blockingHint": "Hysteria2 looks like ordinary HTTPS traffic on the wire",
+      "speedLabel": "Line speed",
+      "speedHint": "A node is not shared with thousands of people at once",
+      "adsLabel": "No ads or trackers",
+      "adsHint": "Free services have to earn from something",
+      "blockingLabel": "Works where VPNs are blocked",
+      "blockingHint": "Hysteria2 hides as ordinary HTTPS traffic",
       "limitsLabel": "No traffic cap",
-      "limitsHint": "No gigabyte limits and no slowdown in the evening"
+      "limitsHint": "No gigabyte limits and no evening slowdown"
     },
     "guarantee": {
       "title": "Cancel in one click",
-      "body": "Turn off renewal whenever you like — your access stays until the end of the period you paid for. No calls, no emails to support.",
+      "body": "Turn renewal off whenever you like — access stays until the end of the paid period. No phone calls, no emails to support.",
       "cta": "Try it"
+    },
+    "meta": {
+      "title": "GnomeVPN",
+      "description": "A Hysteria2 VPN: a fast QUIC tunnel, servers in several countries, one link for every device."
     }
   },
   "auth": {
@@ -194,6 +167,12 @@
       "USER_NOT_FOUND": "We could not find an account for that link.",
       "INVALID_USER": "That link belongs to a different account. Sign in as that account and open it again.",
       "UNKNOWN": "We could not confirm your email. Request a new link."
+    },
+    "meta": {
+      "title": "Sign in",
+      "description": "Sign in to GnomeVPN or create an account to subscribe and connect.",
+      "resetTitle": "New password",
+      "resetDescription": "Set a new password for your GnomeVPN account."
     }
   },
   "account": {
@@ -252,74 +231,42 @@
     },
     "tabs": {
       "subscription": "Subscription"
+    },
+    "meta": {
+      "title": "Account",
+      "description": "Subscription status, payments and auto-renewal."
     }
   },
-  "configs": {
-    "title": "Configs",
-    "hint": "The link opens in a compatible client. Up to {limit} devices, revoked when the subscription ends.",
-    "lockedHint": "Configs come with a subscription — start one above and the files unlock.",
-    "loading": "Loading…",
-    "empty": "No countries available",
-    "nameLabel": "Device",
-    "countryLabel": "Country",
-    "nodeOffline": "This country is temporarily unavailable",
-    "nodeOfflineHint": "This country is not responding right now — pick another one",
-    "protocolLabel": "Connection type",
-    "protocol": {
-      "hysteria2": "Hysteria2",
-      "wireguard": "WireGuard",
-      "hysteria2Tag": "Recommended",
-      "traitBlocking": "Bypasses blocking",
-      "traitSpeed": "Speed",
-      "hysteria2Desc": "Fast and hard to block. Best on restricted networks. Desktop — Hiddify or NekoBox, phone — Hiddify or Streisand.",
-      "wireguardDesc": "Works everywhere UDP is allowed. A good fallback. Desktop — WireSock, phone — AmneziaVPN.",
-      "wireguardSingleDevice": "One config — one device",
-      "wireguardSingleDeviceHint": "A second device on the same config keeps losing connection. Create a separate config for each device."
-    },
-    "namePlaceholder": "Phone",
-    "devicePlaceholder": "Pick a device",
-    "deviceCustom": "Custom name",
-    "devicePresets": "Back to the list",
-    "deviceTaken": "This config already exists for this country",
-    "devices": {
-      "phone": "Phone",
-      "laptop": "Laptop",
-      "tablet": "Tablet",
-      "desktop": "Desktop",
-      "router": "Router",
+  "incy": {
+    "title": "Connect with INCY",
+    "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
+    "copyDeepLink": "Copy INCY link",
+    "showQr": "QR code",
+    "deepLinkCopied": "Link copied",
+    "qrTitle": "Open with your camera",
+    "qrHint": "Point your phone camera at the code, or scan it from INCY on a TV.",
+    "qrNote": "The code carries your subscription link — keep it to yourself.",
+    "rotate": "Rotate link",
+    "rotateHint": "If the link reached the wrong hands, rotate it. The old one stops working immediately.",
+    "rotated": "Link rotated",
+    "rotatedHint": "Add the new link again in every app.",
+    "platforms": {
+      "ios": "iPhone and Mac",
+      "android": "Android",
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
       "tv": "TV"
     },
-    "limitReached": "You have reached the {limit} device limit — remove one to add another.",
-    "download": "Download",
-    "create": "Create",
-    "created": "Config created",
-    "createdHint": "Download, share or scan it below",
-    "redownload": "Download again",
-    "share": "Share",
-    "qr": "QR code",
-    "qrTitle": "Scan to import",
-    "qrHint": "Scan with your VPN client — Hiddify or Streisand for Hysteria2, WireGuard or AmneziaVPN for WireGuard.",
-    "revoke": "Remove",
-    "downloaded": "{fileName} saved to your downloads",
-    "savedHint": "Check your downloads and open it in your client",
-    "issued": "Your configs",
-    "filterLabel": "Filter configs",
-    "filterAll": "All",
-    "filterOnline": "Connected",
-    "filterEmpty": "No configs match this filter",
-    "paused": "Paused",
-    "connected": "Connected",
-    "expiredNotice": "Your subscription has ended — these configs are paused. Renew it to turn them back on.",
-    "copy": "Copy link",
-    "copied": "Link copied",
-    "copiedHint": "Paste it into v2rayNG, Hiddify or Streisand",
-    "broken": "Not working"
-  },
-  "desktopOnly": {
-    "title": "Connect from the app",
-    "body": "The VPN tunnel runs on your device, so the connection can only be managed from the desktop app. Your account and payments stay available in the browser.",
-    "download": "Download the app",
-    "account": "Open account"
+    "downloads": {
+      "ios": "App Store",
+      "android": "Google Play",
+      "windows": ".exe installer",
+      "macos": "Apple Silicon .dmg",
+      "linux": ".deb package",
+      "tv": "Android TV and Apple TV"
+    },
+    "setupLink": "How to install the app →"
   },
   "tray": {
     "tooltip": "GnomeVPN",
@@ -335,36 +282,6 @@
     "autoReconnect": "Reconnect automatically",
     "language": "Language"
   },
-  "notifications": {
-    "connectedTitle": "Connected",
-    "connectedBody": "Traffic now goes through {country}",
-    "disconnectedTitle": "Disconnected",
-    "disconnectedBody": "Tunnel closed, traffic goes directly",
-    "errorTitle": "Connection dropped",
-    "connectFailed": "Could not connect"
-  },
-  "window": {
-    "minimize": "Minimize",
-    "close": "Close"
-  },
-  "update": {
-    "check": "Check for updates",
-    "checking": "Checking…",
-    "upToDate": "You are up to date",
-    "failed": "Could not check for updates",
-    "availableTitle": "Update available",
-    "availableDescription": "Version {version} is ready to install.",
-    "mobileTitle": "Version {version} is out",
-    "mobileBody": "Android updates are installed by hand — open the site and download the new APK.",
-    "mobileAction": "Open the download page",
-    "currentVersion": "Currently on {version}",
-    "install": "Update",
-    "installing": "Installing…",
-    "downloading": "Downloading…",
-    "later": "Later",
-    "restartNote": "The app will restart once the update is installed.",
-    "installFailed": "Could not install the update"
-  },
   "notFound": {
     "code": "404",
     "title": "Route not found",
@@ -379,62 +296,6 @@
     "retry": "Try again",
     "home": "Go home",
     "details": "Error details"
-  },
-  "app": {
-    "nodesLoading": "Loading countries…",
-    "nodesError": "Could not load the country list",
-    "nodesEmpty": "No countries available",
-    "gateHint": "Tap to subscribe",
-    "connect": "Connect",
-    "connecting": "Linking…",
-    "disconnect": "Disconnect",
-    "statusOnline": "Connected",
-    "statusOffline": "Disconnected",
-    "nodeOnline": "Healthy",
-    "nodeDegraded": "Unstable",
-    "nodeOffline": "Unavailable",
-    "nodeOfflineHint": "This node is not responding — pick another country",
-    "connectHintProbing": "Checking this node…",
-    "connectHintUnreachable": "Node not reachable — pick another country",
-    "connectHintNoNode": "No node available",
-    "nodeProbing": "Checking…",
-    "nodeUnreachable": "No answer",
-    "nodeUnreachableHint": "This node does not answer from your network — pick another country",
-    "nodeLatency": "{value} ms",
-    "nodeLatencyStale": "Measured before connecting",
-    "nodeActive": "Currently selected",
-    "nodeGradeFast": "Fast connection",
-    "nodeGradeFair": "Moderate connection",
-    "nodeGradeSlow": "Slow connection",
-    "nodeLabel": "Country",
-    "nodePlaceholder": "Pick a country",
-    "openAccount": "Account",
-    "signOut": "Sign out",
-    "menu": "App menu",
-    "uptime": "Uptime",
-    "received": "Download",
-    "sent": "Upload",
-    "receivedTotal": "Total in",
-    "sentTotal": "Total out",
-    "privacy": "Privacy Policy"
-  },
-  "downloadApp": {
-    "title": "Download GnomeVPN",
-    "description": "The app for Windows, macOS, Linux and Android. Sign in and connect.",
-    "platforms": {
-      "windows": "Windows",
-      "macos": "macOS",
-      "linux": "Linux",
-      "android": "Android"
-    },
-    "notAvailable": "Not available",
-    "loadFailed": "Could not load the release.",
-    "openReleases": "Open releases",
-    "version": "Version {version}",
-    "groups": {
-      "desktop": "Desktop",
-      "mobile": "Mobile"
-    }
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -475,49 +336,253 @@
     "contact": {
       "title": "Contact us",
       "body": "For questions about personal data and this policy, write to the address below."
+    },
+    "meta": {
+      "title": "Privacy Policy",
+      "description": "How GnomeVPN handles your data: no connection logs, minimal collection."
     }
   },
-  "service": {
-    "title": "VPN service is not running",
-    "description": "Connections will not work without it. Start it — administrator rights are required.",
-    "repair": "Start service",
-    "repairing": "Starting…",
-    "repairFailed": "Could not start the service"
+  "nav": {
+    "ariaLabel": "Main navigation",
+    "pricing": "Pricing",
+    "setup": "Setup",
+    "faq": "FAQ",
+    "about": "About",
+    "account": "Account"
   },
-  "vpnPermission": {
-    "title": "VPN access is required",
-    "description": "Android asks for it once. Without it the tunnel cannot be created and connecting will fail.",
-    "allow": "Grant access",
-    "requesting": "Waiting…"
+  "footer": {
+    "copy": "© {year} {name}",
+    "pricing": "Pricing",
+    "setup": "Setup",
+    "faq": "FAQ",
+    "about": "About",
+    "privacy": "Privacy",
+    "support": "Support"
   },
-  "splitTunneling": {
-    "open": "Split tunneling",
-    "title": "Split tunneling",
-    "description": "Route selected apps and addresses through the VPN, or make them bypass it.",
-    "modeAllowed": "Through VPN",
-    "modeDisallowed": "Bypass VPN",
-    "modeAllowedHint": "Only the items below use the VPN. Everything else stays direct.",
-    "modeDisallowedHint": "The items below stay direct. Everything else uses the VPN.",
-    "sourceInstalled": "Installed",
-    "sourceRunning": "Running",
-    "addManually": "Add manually…",
-    "searchPlaceholder": "Search applications",
-    "loading": "Reading applications…",
-    "empty": "Nothing found",
-    "ipPlaceholder": "e.g. 10.0.0.0/24 or 1.1.1.1",
-    "addIp": "Add",
-    "removeIp": "Remove address",
-    "clear": "Reset",
-    "clearSearch": "Clear search",
-    "apply": "Apply",
-    "applying": "Applying…",
-    "reconnectWarning": "The tunnel will reconnect to apply the new rules.",
-    "applyFailed": "Could not apply the rules",
-    "modeLabel": "App traffic mode",
-    "addressModeLabel": "Address traffic mode",
-    "tabApps": "Applications",
-    "tabAddresses": "Addresses",
-    "modeLeadApps": "Selected apps go",
-    "modeLeadAddresses": "Selected addresses go"
+  "pricing": {
+    "meta": {
+      "title": "Pricing",
+      "description": "What GnomeVPN costs: monthly, six months, a year. Servers in several countries, two devices, no logs."
+    },
+    "title": "Pricing",
+    "intro": "One plan, every server. The longer the term, the cheaper the month. Pay by card and turn auto-renewal off whenever you like.",
+    "includedTitle": "Included in every plan",
+    "included": {
+      "servers": "Every server in every country",
+      "devices": "Two devices at once",
+      "protocol": "Hysteria2 over QUIC",
+      "noLogs": "No connection logs",
+      "support": "Email support",
+      "platforms": "iPhone, Android, Windows, Linux, TV"
+    },
+    "faqTitle": "Questions about billing"
+  },
+  "faq": {
+    "meta": {
+      "title": "FAQ",
+      "description": "What INCY is, how to connect, what to do when it fails, how to pay and get a refund."
+    },
+    "title": "Frequently asked questions",
+    "intro": "The short answers to what people ask most. If yours is missing, email us.",
+    "groups": {
+      "start": "Getting started",
+      "usage": "Everyday use",
+      "trouble": "When something breaks",
+      "billing": "Billing and subscription"
+    },
+    "questions": {
+      "whatIsIncy": {
+        "q": "What is INCY, and why that app?",
+        "a": "INCY is a free client app that GnomeVPN runs through. It has no servers of its own: you paste a link from your account and the app fills up with our servers, your remaining traffic and your renewal date. We picked it because it exists on every platform, including iPhone and TVs, and has been debugged for years."
+      },
+      "whyNotOwnApp": {
+        "q": "Why don't you ship your own app?",
+        "a": "The honest answer: an app for five platforms means years of maintenance and a constant fight with app stores. INCY has already done that work. We put our effort into servers and speed instead of rewriting what already works. The subscription link stays yours — it works in other compatible clients too."
+      },
+      "howToConnect": {
+        "q": "How do I connect?",
+        "a": "Three steps: install INCY from your store, copy the link from the App tab in your account, paste it into INCY. From there the app pulls the server list and keeps it up to date on its own."
+      },
+      "whichProtocol": {
+        "q": "There are two servers per country — which one do I pick?",
+        "a": "Take the one without a tag: that is Hysteria2, faster and steadier on mobile. The entry marked \"TCP\" is for networks that block UDP — usually office Wi-Fi, hotels and some corporate networks. If the main one will not connect, switch to it."
+      },
+      "howManyDevices": {
+        "q": "How many devices can I use?",
+        "a": "Two at once by default. There is one link per account — paste it on your phone, your laptop and your TV, but two connections run at a time. If you need more, buy extra devices in your account."
+      },
+      "whichCountries": {
+        "q": "Which countries do you have servers in?",
+        "a": "The list shows up in the app as soon as you add the link, and refreshes itself whenever we add a node. Switching country is one tap and costs nothing extra."
+      },
+      "speed": {
+        "q": "How fast is it?",
+        "a": "We set no speed or traffic limits. Real speed depends on your own connection and how far the server is — the nearest one usually gives you close to your full line speed."
+      },
+      "torrents": {
+        "q": "Can I use torrents?",
+        "a": "The tunnel passes them technically. Bear in mind that what you download stays your responsibility, and on some servers the hosting provider may send us a complaint — then we will ask you to switch location."
+      },
+      "streaming": {
+        "q": "Do streaming services work?",
+        "a": "Usually yes, but we cannot promise it: streaming platforms block server addresses constantly. If one service refuses to open, try another country — that often fixes it."
+      },
+      "notConnecting": {
+        "q": "The app will not connect. What now?",
+        "a": "In order: check the subscription is active (INCY shows it), pull down to refresh the server list, try a different country. Still stuck? Rotate the link in your account and paste the new one. If that fails too, email us with a screenshot."
+      },
+      "slowSpeed": {
+        "q": "It used to be fast and now it is slow",
+        "a": "Usually it is the server — try a neighbouring country. If every country is slow, test your speed without the VPN; sometimes it is the line itself. If it is fast without us and slow with us, write in and we will look at the node."
+      },
+      "linkLeaked": {
+        "q": "My link reached the wrong hands",
+        "a": "Open your account, go to the App tab and press Rotate link. The old one stops working immediately. Then paste the new link again on each of your devices."
+      },
+      "changePhone": {
+        "q": "I got a new phone — how do I move it over?",
+        "a": "Nothing to move. Install INCY on the new device and paste the same link from your account. If you are done with the old device, just delete the app there."
+      },
+      "howToPay": {
+        "q": "How do I pay?",
+        "a": "By card on the site, through YooKassa. Access starts the moment the payment goes through, and the app picks up the new expiry date."
+      },
+      "refund": {
+        "q": "Can I get a refund?",
+        "a": "Yes. If the service is not for you, email us within 14 days of paying and we will refund the unused period without an interrogation."
+      },
+      "autoRenew": {
+        "q": "How do I turn off auto-renewal?",
+        "a": "In your account, in the subscription block, with the Auto-renewal switch. Access stays until the end of the period you paid for; after that nothing is charged."
+      },
+      "trial": {
+        "q": "Is there a free trial?",
+        "a": "There is no separate trial, but there is a 14-day refund — much the same thing, except you get full access from the start."
+      }
+    },
+    "stillStuck": "Still stuck? Email us — we answer within a day."
+  },
+  "setup": {
+    "meta": {
+      "title": "How to connect",
+      "description": "Step-by-step setup of GnomeVPN on iPhone, Android, Windows, Linux and TV through the INCY app."
+    },
+    "title": "How to connect",
+    "intro": "GnomeVPN runs through INCY, a free app you install once. After that a single link from your account does the rest.",
+    "downloadTitle": "1. Install INCY",
+    "stepsTitle": "2. Add your subscription",
+    "steps": {
+      "install": {
+        "title": "Install the app"
+      },
+      "copyLink": {
+        "title": "Copy your link"
+      },
+      "import": {
+        "title": "Add it to INCY"
+      },
+      "connect": {
+        "title": "Connect"
+      }
+    },
+    "platforms": {
+      "ios": {
+        "name": "iPhone and Mac",
+        "install": "Open the App Store and install INCY. The app is free and needs no account of its own.",
+        "copyLink": "Open your account on this site, go to the App tab and press Copy INCY link.",
+        "import": "Open INCY, tap + and choose import from clipboard. The app recognises the link and adds the subscription itself.",
+        "connect": "Pick a country from the list and press connect. The first time, iOS asks permission to add a VPN configuration — allow it."
+      },
+      "android": {
+        "name": "Android",
+        "install": "Install INCY from Google Play. If Play is unavailable, the INCY releases page has an APK.",
+        "copyLink": "Open your account on this site, go to the App tab and press Copy INCY link.",
+        "import": "In INCY tap + and import from the clipboard. Easier still: tap the link on the site — it opens the app and adds the subscription for you.",
+        "connect": "Pick a country and connect. Android asks permission to set up a VPN connection — confirm it."
+      },
+      "desktop": {
+        "name": "Windows, macOS and Linux",
+        "install": "Download the installer above: exe for Windows, dmg for Mac, deb or rpm for Linux.",
+        "copyLink": "Open your account in a browser, go to the App tab and copy the link.",
+        "import": "Start INCY, press + and paste the link. Add it as a subscription rather than a single server, so the server list keeps updating itself.",
+        "connect": "Pick a country and connect. On Windows you will be asked to approve an elevation prompt — it is needed to create the network adapter."
+      },
+      "tv": {
+        "name": "TV",
+        "install": "On Android TV install INCY from Google Play; on Apple TV from the App Store.",
+        "copyLink": "Typing the link on a TV remote is no fun: open your account on your phone and show the QR code on the App tab.",
+        "import": "In INCY on the TV choose to add a subscription and scan the QR code from your phone screen.",
+        "connect": "Pick a country and connect. From then on the tunnel comes up by itself when the TV turns on."
+      }
+    }
+  },
+  "about": {
+    "meta": {
+      "title": "About",
+      "description": "Why GnomeVPN runs on Hysteria2 and QUIC, how the infrastructure works and what we do not store."
+    },
+    "title": "About the service",
+    "intro": "Short and without the marketing: how this works inside and why we made these choices.",
+    "facts": {
+      "protocol": {
+        "label": "Protocol",
+        "value": "Hysteria2 + VLESS"
+      },
+      "transport": {
+        "label": "Transport",
+        "value": "QUIC/UDP and TCP"
+      },
+      "clientApp": {
+        "label": "App",
+        "value": "INCY"
+      },
+      "logs": {
+        "label": "Logs",
+        "value": "Not kept"
+      }
+    },
+    "sections": {
+      "problem": {
+        "title": "The problem we set out to solve",
+        "body": "Classic TCP-based VPN protocols stopped working reliably in Russia. Carrier equipment learned to recognise the characteristic start of a connection and cut it a few minutes into real traffic. Changing port or server helps only briefly."
+      },
+      "protocol": {
+        "title": "Why Hysteria2",
+        "body": "Hysteria2 runs over QUIC, which means UDP, and from the outside it looks like an ordinary HTTP/3 website. UDP traffic is inspected differently from TCP, and in practice such a tunnel survives noticeably longer. QUIC also handles packet loss better, so speed holds up on mobile networks."
+      },
+      "noLogs": {
+        "title": "What we do not store",
+        "body": "We keep no record of your connections: which sites you opened, which address you connected from, or when. Servers see how many bytes moved — that is how we tell whether a node is alive, and it is not tied to what you were doing."
+      },
+      "infrastructure": {
+        "title": "Infrastructure",
+        "body": "Nodes are rented from several providers in different countries, each set up automatically from the same script. When a node stops answering it drops out of the list in the app on its own, with nothing for you to do."
+      },
+      "client": {
+        "title": "About the app",
+        "body": "The client is INCY — a free third-party app that we do not develop. That is the honest arrangement: rather than spend years chasing someone else's feature set on five platforms, we hand you a standard subscription link. It works in other compatible clients too — you are not locked in."
+      },
+      "honesty": {
+        "title": "What we do not promise",
+        "body": "We do not promise it will work everywhere forever: blocking changes, and sometimes nodes have to change with it. We do not promise anonymity — a VPN hides traffic from your ISP, it does not make you invisible. If the service is not for you, we refund within 14 days."
+      }
+    }
+  },
+  "plans": {
+    "title": "Pricing",
+    "amount": "{price} ₽",
+    "period": "/ month",
+    "perMonth": "{price} ₽ per month",
+    "save": "−{percent}%",
+    "plans": {
+      "monthly": "1 month",
+      "halfYearly": "6 months",
+      "yearly": "12 months"
+    },
+    "cta": "Subscribe",
+    "feature1": "Every country, no extra fees",
+    "feature2": "Unlimited traffic",
+    "feature3": "Cancel auto-renewal in one click",
+    "feature4": "No connection logs"
   }
 }

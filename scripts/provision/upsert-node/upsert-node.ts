@@ -15,7 +15,9 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
         port: input.port,
         serverName: input.serverName,
         hysteriaAuth: input.hysteriaAuth,
-        wgPublicKey: input.wgPublicKey,
+        certFingerprint: input.certFingerprint,
+        realityPublicKey: input.realityPublicKey,
+        realityShortId: input.realityShortId,
         apiUrl: input.apiUrl,
         apiTokenEnvVar: input.apiTokenEnvVar,
         isAvailable: true
@@ -34,7 +36,9 @@ export const upsertNode = async ({ prisma, input }: UpsertNodeArgs): Promise<Ups
       port: input.port,
       serverName: input.serverName,
       hysteriaAuth: input.hysteriaAuth,
-      wgPublicKey: input.wgPublicKey,
+      certFingerprint: input.certFingerprint,
+      realityPublicKey: input.realityPublicKey,
+      realityShortId: input.realityShortId,
       apiUrl: input.apiUrl,
       apiTokenEnvVar: input.apiTokenEnvVar,
       isAvailable: true

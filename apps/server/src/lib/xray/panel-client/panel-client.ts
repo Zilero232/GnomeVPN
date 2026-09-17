@@ -2,6 +2,7 @@ import { isEmpty } from 'remeda';
 
 import type {
   AddClientInput,
+  AddVlessClientInput,
   PanelClientInput,
   PanelInbound,
   PanelOnlines,
@@ -11,6 +12,7 @@ import type {
 } from './panel-client.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
+import { VLESS_FLOW } from '../vless/vless.constants';
 import { NO_LIMIT, PANEL_ROUTES } from './panel-client.constants';
 
 const collectOnlineEmails = (payload: PanelOnlines): Set<string> | null => {
@@ -105,6 +107,26 @@ export class PanelClient {
       client: {
         email,
         auth,
+        enable: true,
+        limitIp: NO_LIMIT,
+        totalGB: NO_LIMIT,
+        expiryTime: NO_LIMIT,
+        tgId: NO_LIMIT,
+        reset: NO_LIMIT
+      }
+    });
+  }
+
+  // The full field set is mandatory. Writing only {email, id} leaves the panel
+  // storing the client while the running core serialises `clients: null`, and
+  // every connection then fails auth with a 404.
+  async addVlessClient({ inboundId, email, id }: AddVlessClientInput): Promise<void> {
+    await this.post(PANEL_ROUTES.addClient, {
+      inboundIds: [inboundId],
+      client: {
+        email,
+        id,
+        flow: VLESS_FLOW,
         enable: true,
         limitIp: NO_LIMIT,
         totalGB: NO_LIMIT,

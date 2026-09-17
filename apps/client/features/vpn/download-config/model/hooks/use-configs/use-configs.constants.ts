@@ -1,1 +1,0 @@
-export const CONFIG_STATUS_REFRESH_MS = 30_000;

@@ -5,7 +5,7 @@ import { MonitorSmartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { Button } from '@/shared/ui';
+import { Button } from '@/ui-kit';
 
 import type { ExtraDevicesControlProps, SlotState } from './ExtraDevicesControl.types';
 

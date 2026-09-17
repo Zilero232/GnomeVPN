@@ -21,7 +21,7 @@ export class CheckoutService {
     private readonly shared: BillingSharedService
   ) {}
 
-  async createCheckout({ userId, planId, client }: CreateCheckoutServiceInput): Promise<CheckoutResult> {
+  async createCheckout({ userId, planId }: CreateCheckoutServiceInput): Promise<CheckoutResult> {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
@@ -35,7 +35,7 @@ export class CheckoutService {
     const payment = await this.yookassa.createPayment({
       amountRub: plan.priceRub,
       description: describePlan(plan),
-      returnUrl: this.shared.returnUrlFor(client),
+      returnUrl: this.shared.returnUrl(),
       idempotenceKey: randomUUID(),
       savePaymentMethod: this.shared.isRecurringEnabled()
     });
@@ -54,7 +54,7 @@ export class CheckoutService {
     return { confirmationUrl: payment.confirmationUrl };
   }
 
-  async buyExtraDevices({ userId, quantity, client }: BuyExtraDevicesServiceInput): Promise<CheckoutResult> {
+  async buyExtraDevices({ userId, quantity }: BuyExtraDevicesServiceInput): Promise<CheckoutResult> {
     const [subscription, pending] = await Promise.all([
       this.prisma.subscription.findUnique({
         where: { userId },
@@ -79,7 +79,7 @@ export class CheckoutService {
     const payment = await this.yookassa.createPayment({
       amountRub: extraDevicesPriceRub(quantity),
       description: describeExtraDevices(quantity),
-      returnUrl: this.shared.returnUrlFor(client),
+      returnUrl: this.shared.returnUrl(),
       idempotenceKey: randomUUID(),
       savePaymentMethod: false
     });

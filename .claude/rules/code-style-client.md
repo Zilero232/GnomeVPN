@@ -14,29 +14,35 @@ business domain. Imports go downward only:
 
 ## Public API
 
-Import the slice (`@/features/vpn/connect`), never the domain group
-(`@/features/vpn`) and never past the barrel. `shared/ui` has one root barrel —
-`@/shared/ui`; primitives live in `atoms/`, `molecules/`, `organisms/`.
+Import the slice (`@/features/vpn/connect-incy`), never the domain group
+(`@/features/vpn`) and never past the barrel. The design system has one root
+barrel — `@/ui-kit`; primitives live in `atoms/`, `molecules/`, `organisms/`.
 
 `model/` barrels live in subfolders (`model/hooks/index.ts`), never a slice-level
 `model/index.ts`.
 
-## Three runtimes, one bundle
+## Server and browser are both real
 
-The landing page is prerendered, the account area runs in a browser, `/app` runs
-inside Tauri. A component can hit all three.
+Every page is rendered on the server first. A component that touches `window`
+during render breaks the prerender, not just a test.
 
-- **Never call a Tauri API at module scope or during render.** `isTauri()` touches
-  `window` and throws on the server. Guard with `isBrowser()`/`isServer()` from
-  `@/shared/lib`, never a raw `typeof window` check, or call it inside `useEffect`.
-- **Never return `null` while loading in a provider that wraps the landing page** —
+- **Guard browser APIs with `isBrowser()`/`isServer()` from `@/shared/lib`**,
+  never a raw `typeof window` check, or read them inside `useEffect`.
+- **Never return `null` while loading in a provider that wraps a public page** —
   it ships an empty `<body>` to crawlers.
-- **A `useState` initialiser that reads the platform is a hydration mismatch.**
+- **A `useState` initialiser that reads browser state is a hydration mismatch.**
   Read it in an effect instead.
+- **Server-only modules stay out of shared barrels.** `shared/lib/server-logger`
+  is pino and must never reach the browser bundle; `shared/i18n/navigation` is
+  client React and must never reach `sitemap.ts`. Both are separate slices for
+  that reason.
 
-Every `callRust` needs a `fallback`: the same bundle renders where no Rust exists.
-`RustCommands` in `shared/lib/ipc/ipc.types.ts` mirrors the `invoke_handler` list
-in `apps/tauri/src/lib.rs` — change both together or it fails at runtime.
+## Locales live in the URL
+
+Import `Link`, `useRouter` and `usePathname` from `@/shared/i18n/navigation`,
+never from `next/*` — a raw `next/link` drops the user back to the default
+locale. Server code reads the locale with `rootParams.locale()` from
+`next/root-params`.
 
 ## A component body reads top to bottom
 
@@ -46,14 +52,13 @@ one, so the dependency order is the reading order and nothing is declared after
 something that already used it.
 
 ```tsx
-const t = useTranslations('app');
-const { nodes } = useNodes();
-const { status, connect } = useVpnConnectionContext();
+const t = useTranslations('incy');
+const { data: link, isLoading } = useSubscriptionLink();
+const rotate = useRotateLink();
 
-const isOnline = status === 'connected';
-const target = nodes.find((node) => node.id === selectedId);
+const [isQrOpen, setIsQrOpen] = useState(false);
 
-const onToggle = async () => { ... };
+const onCopy = async (value: string) => { ... };
 
 return ( ... );
 ```
@@ -71,18 +76,11 @@ Two shapes legitimately sit between hooks and stay where they are:
   `const` where it is: the rule orders declarations, it does not ask you to
   hide a dependency.
 
-## Settings and shared feature state
+## Shared feature state
 
-Read a `Setting` through `useSetting` from `@/shared/lib`, never with a hand-rolled
-effect: it loads, subscribes to store changes, writes back and logs a failed read
-instead of leaving an unhandled rejection. Its `initial` must equal the setting's
-`fallback`, or the UI paints the wrong value until the effect lands — and where
-the effect returns early it never corrects.
-
-Once more than two components read a feature's hook, put it behind a context
-(`useVpnConnectionContext`, `useSplitTunnelingContext`). Threading
-`ReturnType<typeof useX>` down as a prop leaks the hook's whole shape into every
-signature below it.
+Once more than two components read a feature's hook, put it behind a context.
+Threading `ReturnType<typeof useX>` down as a prop leaks the hook's whole shape
+into every signature below it.
 
 ## i18n
 
@@ -101,9 +99,10 @@ a layout away from every viewport in between. `wide` exists for exactly that.
 
 ## Animation
 
-`motion` is already a dependency and is the way to animate. Presets go in a
-sibling `<Component>.motion.ts`, matching `ProtocolSwitch.motion.ts`. Do not
-hand-roll a CSS `transition` for something motion is already driving.
+`motion` is already a dependency and is the way to animate. Presets shared by
+several components live in `shared/lib/motion`; one-off presets go in a sibling
+`<Component>.motion.ts`. Do not hand-roll a CSS `transition` for something
+motion is already driving.
 
 **Never put `backdrop-filter` under an opaque background.** It composites and
 blurs a layer nobody can see through, and a panel that also animates `scale`

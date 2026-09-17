@@ -20,7 +20,6 @@ export const envSchema = z.object({
   YOOKASSA_SHOP_ID: z.string().default(''),
   YOOKASSA_SECRET_KEY: z.string().default(''),
   YOOKASSA_RETURN_URL: z.url().default('http://localhost:3000/account'),
-  YOOKASSA_RETURN_URL_DESKTOP: z.string().default('gnomevpn://account'),
   YOOKASSA_RECURRING: boolean('false'),
 
   SMTP_HOST: z.string().default(''),
@@ -32,8 +31,7 @@ export const envSchema = z.object({
   DEV_EMAIL_OVERRIDE: z.email().optional(),
 
   CLIENT_URL: z.url().default('http://localhost:3000'),
-
-  GITHUB_TOKEN: z.string().default('')
+  SUPPORT_URL: z.string().default('')
 });
 
 export type Env = z.infer<typeof envSchema>;

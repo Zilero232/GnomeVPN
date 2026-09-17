@@ -4,8 +4,5 @@ export { Features } from './Features';
 export { Guarantee } from './Guarantee';
 export { Hero } from './Hero';
 export { HowItWorks } from './HowItWorks';
-export { LandingFooter } from './LandingFooter';
-export { LandingHeader } from './LandingHeader';
 export { Locations } from './Locations';
 export { Platforms } from './Platforms';
-export { PricingCard } from './PricingCard';

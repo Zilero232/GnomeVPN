@@ -1,1 +1,0 @@
-export { getLatestRelease } from './release';

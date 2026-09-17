@@ -4,7 +4,7 @@ import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { Text } from '@/shared/ui';
+import { Text } from '@/ui-kit';
 
 import { HOW_IT_WORKS_STEPS } from '../../../config';
 import { REVEAL_VIEWPORT, SECTION_MOTION, STEP_MOTION } from '../../LandingPage.motion';

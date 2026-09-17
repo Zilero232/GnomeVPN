@@ -1,11 +1,12 @@
 import type { TunnelConfig } from '@gnomevpn/schemas';
 
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
+import { match } from 'ts-pattern';
 
 import type { BuildConfigInput } from './build-config.types';
 
 import { AppServiceUnavailableException } from '../../../../common/exceptions';
-import { TUNNEL, WG } from '../../config';
+import { REALITY, TUNNEL } from '../../config';
 
 const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig => ({
   protocol: TUNNEL_PROTOCOL.hysteria2,
@@ -14,32 +15,34 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
   auth,
   serverName: node.serverName,
   insecure: TUNNEL.insecure,
+  certFingerprint: node.certFingerprint ?? '',
   dns: [...TUNNEL.dns]
 });
 
-const buildWireguardConfig = ({ node, wgPrivateKey, wgAssignedIp }: BuildConfigInput): TunnelConfig => {
-  if (!node.wgPublicKey || !wgPrivateKey || !wgAssignedIp) {
-    throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no wireguard endpoint');
+const buildVlessConfig = ({ node, auth }: BuildConfigInput): TunnelConfig => {
+  if (!node.realityPublicKey || !node.realityShortId) {
+    throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no reality endpoint');
   }
 
   return {
-    protocol: TUNNEL_PROTOCOL.wireguard,
+    protocol: TUNNEL_PROTOCOL.vless,
     server: node.host,
-    port: WG.listenPort,
-    auth: '',
-    serverName: '',
+    port: REALITY.listenPort,
+    auth,
+    serverName: node.serverName,
     insecure: false,
+    certFingerprint: '',
     dns: [...TUNNEL.dns],
-    wireguard: {
-      privateKey: wgPrivateKey,
-      address: `${wgAssignedIp}/${WG.addressPrefix}`,
-      peerPublicKey: node.wgPublicKey,
-      allowedIps: [...WG.allowedIps],
-      reserved: [],
-      mtu: WG.mtu
+    reality: {
+      publicKey: node.realityPublicKey,
+      shortId: node.realityShortId,
+      fingerprint: REALITY.fingerprint,
+      flow: REALITY.flow
     }
   };
 };
 
 export const buildTunnelConfig = (input: BuildConfigInput): TunnelConfig =>
-  input.protocol === TUNNEL_PROTOCOL.wireguard ? buildWireguardConfig(input) : buildHysteria2Config(input);
+  match(input.protocol)
+    .with(TUNNEL_PROTOCOL.vless, () => buildVlessConfig(input))
+    .otherwise(() => buildHysteria2Config(input));

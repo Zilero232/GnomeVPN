@@ -1,7 +1,20 @@
+@use '@/shared/styles/mixins' as *;
+
 .grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+  // Six cards. `auto-fit` fits four on a wide screen and leaves the second row
+  // half empty; three by three reads as one block.
+  grid-template-columns: repeat(3, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
@@ -13,31 +26,15 @@
     border-color 0.25s ease,
     background-color 0.25s ease;
 
-  &[data-native='true'] {
-    border-color: color-mix(in srgb, var(--color-accent) 32%, transparent);
-  }
-
   &:hover {
     background-color: var(--color-surface-raised);
   }
 }
 
-.badge {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
+.icon {
+  display: block;
   margin-bottom: 14px;
-  background-color: var(--color-bg-deep);
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-
-  .card[data-native='true'] & {
-    background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
-    color: var(--color-accent);
-  }
+  color: var(--color-accent);
 }
 
 .name {

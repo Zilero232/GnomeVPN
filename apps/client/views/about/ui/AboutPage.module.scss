@@ -1,0 +1,92 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  display: flex;
+  max-width: 760px;
+  flex-direction: column;
+  padding: 64px 20px 80px;
+  margin: 0 auto;
+  gap: 36px;
+
+  @include below(md) {
+    padding: 40px 16px 56px;
+    gap: 26px;
+  }
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  @include below(md) {
+    font-size: 26px;
+  }
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.facts {
+  display: grid;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin: 0;
+  background-color: var(--color-surface);
+  gap: 16px;
+
+  // Four facts. `auto-fit` fits three and drops the fourth onto a line of its
+  // own; an explicit count keeps them on one row and halves cleanly below.
+  grid-template-columns: repeat(4, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(xs) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.factLabel {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.factValue {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heading {
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.body {
+  font-size: 15px;
+  line-height: 1.7;
+}

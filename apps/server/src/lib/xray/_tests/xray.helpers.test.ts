@@ -9,7 +9,6 @@ import {
   parseSettings,
   parseSniffing,
   parseStreamSettings,
-  parseWireguardSettings,
   readClients,
   readSettings,
   stripCidrMask
@@ -106,26 +105,6 @@ describe('parseSniffing', () => {
   });
 });
 
-describe('parseWireguardSettings', () => {
-  it('parses a json string', () => {
-    expect(parseWireguardSettings(inbound({ settings: '{"secretKey":"key","mtu":1360}' }))).toEqual({ mtu: 1360, secretKey: 'key' });
-  });
-
-  it('passes an already parsed object through', () => {
-    const settings = { mtu: 1360, secretKey: 'key' };
-
-    expect(parseWireguardSettings(inbound({ settings }))).toBe(settings);
-  });
-
-  it('returns an empty object for undefined settings', () => {
-    expect(parseWireguardSettings(inbound({ settings: undefined as unknown as string }))).toEqual({});
-  });
-
-  it('returns an empty object for malformed json', () => {
-    expect(parseWireguardSettings(inbound({ settings: '{"secretKey":' }))).toEqual({});
-  });
-});
-
 describe('currentClients', () => {
   it('returns the clients array', () => {
     expect(currentClients(inbound({ settings: '{"clients":[{"email":"a"},{"email":"b"}]}' }))).toEqual([{ email: 'a' }, { email: 'b' }]);
@@ -200,10 +179,10 @@ describe('readSettings', () => {
     expect(readSettings(inbound({ settings }))).toBe(settings);
   });
 
-  it('refuses to guess at malformed settings, where parseWireguardSettings would answer an empty object', () => {
-    const broken = inbound({ settings: '{"secretKey":' });
+  it('refuses to guess at malformed settings, where parseSettings would answer an empty object', () => {
+    const broken = inbound({ settings: '{"clients":' });
 
-    expect(parseWireguardSettings(broken)).toEqual({});
+    expect(parseSettings(broken)).toEqual({});
     expect(readSettings(broken)).toBeNull();
   });
 

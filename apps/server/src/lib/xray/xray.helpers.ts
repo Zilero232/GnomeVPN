@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 
 import type { XrayInbound, XrayInboundSettings } from './inbounds';
-import type { XrayWireguardSettings } from './wireguard';
 
 import { AUTH_BYTES } from './xray.constants';
 
@@ -26,8 +25,6 @@ export const parseSettings = (inbound: XrayInbound): XrayInboundSettings => pars
 export const parseStreamSettings = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.streamSettings);
 
 export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.sniffing);
-
-export const parseWireguardSettings = (inbound: XrayInbound): XrayWireguardSettings => parseJson<XrayWireguardSettings>(inbound.settings);
 
 export const currentClients = (inbound: XrayInbound): unknown[] => parseSettings(inbound).clients ?? [];
 

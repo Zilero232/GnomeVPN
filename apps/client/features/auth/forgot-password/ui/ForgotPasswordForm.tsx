@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useFieldError } from '@/entities/app/locale';
-import { FormField, Input, SubmitButton, Text } from '@/shared/ui';
+import { FormField, Input, SubmitButton, Text } from '@/ui-kit';
 
 import type { ForgotPasswordValues } from '../model/hooks';
 import type { ForgotPasswordFormProps } from './ForgotPasswordForm.types';

@@ -1,7 +1,9 @@
 name: deploy
 
 # Images to ghcr, then a pull on the VPS. The VPS holds no clone of the
-# repository, so docker-compose.yml is copied on every deploy.
+# repository, so docker-compose.yml and the Caddyfile are copied on every
+# deploy — Caddy reads the latter through a bind mount rather than from an
+# image layer.
 #
 # Why it is shaped this way: ../../CLAUDE.md, "What the workflows assume".
 #
@@ -93,6 +95,8 @@ jobs:
         with:
           persist-credentials: false
 
+      # Both land flat next to each other: the compose file bind-mounts
+      # ./Caddyfile, so a nested infra/caddy/ path would mount a directory.
       - name: Copy docker-compose.yml
         uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
         with:
@@ -102,6 +106,18 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
           source: docker-compose.yml
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Copy the Caddyfile
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || 22 }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          password: ${{ secrets.DEPLOY_SSH_PASSWORD }}
+          source: infra/caddy/Caddyfile
+          strip_components: 2
           target: ${{ secrets.DEPLOY_PATH }}
 
       - name: Pull, restart, migrate
@@ -127,16 +143,18 @@ jobs:
             docker compose up -d
             docker image prune -f
 
-            for attempt in $(seq 1 30); do
-              state=$(docker inspect -f '{{.State.Health.Status}}' gnomevpn-server 2>/dev/null || echo missing)
+            for container in gnomevpn-server gnomevpn-web; do
+              for attempt in $(seq 1 30); do
+                state=$(docker inspect -f '{{.State.Health.Status}}' "$container" 2>/dev/null || echo missing)
 
-              [ "$state" = healthy ] && break
+                [ "$state" = healthy ] && break
 
-              if [ "$attempt" = 30 ]; then
-                echo "server never became healthy (last state: $state)" >&2
-                docker compose logs --tail 50 server >&2
-                exit 1
-              fi
+                if [ "$attempt" = 30 ]; then
+                  echo "$container never became healthy (last state: $state)" >&2
+                  docker compose logs --tail 50 >&2
+                  exit 1
+                fi
 
-              sleep 5
+                sleep 5
+              done
             done

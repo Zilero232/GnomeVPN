@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 
 import { useLocale } from '@/entities/app/locale';
 import { LOCALE_LABELS, LOCALES } from '@/shared/i18n';
-import { Segmented } from '@/shared/ui';
+import { Segmented } from '@/ui-kit';
 
 export const LocaleSwitcher = () => {
   const t = useTranslations('tray');

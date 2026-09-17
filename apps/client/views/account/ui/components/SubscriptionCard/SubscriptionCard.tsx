@@ -2,11 +2,14 @@
 
 import { differenceInCalendarDays } from 'date-fns';
 import { CalendarClock } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useFormatter, useTranslations } from 'next-intl';
+import { clamp, isNonNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
-import { Text } from '@/shared/ui';
+import { IncyCard } from '@/features/vpn/connect-incy';
+import { DATE_FORMAT } from '@/shared/i18n';
+import { Text } from '@/ui-kit';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
 
@@ -14,18 +17,11 @@ import s from './SubscriptionCard.module.scss';
 
 export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardProps) => {
   const t = useTranslations('account');
-  const locale = useLocale();
-
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+  const format = useFormatter();
 
   const isActive = subscription?.status === 'active';
   const periodEnd = subscription?.currentPeriodEnd;
-  const daysLeft = periodEnd ? Math.max(0, differenceInCalendarDays(new Date(periodEnd), new Date())) : null;
+  const daysLeft = periodEnd ? clamp(differenceInCalendarDays(new Date(periodEnd), new Date()), { min: 0 }) : null;
 
   return match({ isLoading, isActive })
     .with({ isLoading: true }, () => <Text tone='muted'>{t('loading')}</Text>)
@@ -38,7 +34,7 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
               {t('active')}
             </Text>
 
-            {daysLeft !== null && (
+            {isNonNullish(daysLeft) && (
               <p className={s.countdown}>
                 <span className={s.countdownValue}>{daysLeft}</span>
                 <span className={s.countdownUnit}>{t('daysLeft', { count: daysLeft })}</span>
@@ -60,10 +56,14 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
                   <CalendarClock size={13} />
                   {t('untilLabel')}
                 </dt>
-                <dd className={s.value}>{formatDate(periodEnd)}</dd>
+                <dd className={s.value}>{format.dateTime(new Date(periodEnd), DATE_FORMAT)}</dd>
               </div>
             )}
           </dl>
+        </div>
+
+        <div className={s.connect}>
+          <IncyCard />
         </div>
 
         {subscription && (

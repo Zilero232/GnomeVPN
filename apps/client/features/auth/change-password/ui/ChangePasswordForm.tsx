@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 import { useErrorMessage, useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { useChangePassword } from '@/entities/auth/user';
-import { FormField, PasswordInput, SubmitButton } from '@/shared/ui';
+import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import s from './ChangePasswordForm.module.scss';
 

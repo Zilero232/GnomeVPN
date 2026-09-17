@@ -8,7 +8,7 @@ import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { ForgotPasswordForm } from '@/features/auth/forgot-password';
 import { SignInForm } from '@/features/auth/sign-in';
 import { SignUpForm } from '@/features/auth/sign-up';
-import { BrandMark, Text } from '@/shared/ui';
+import { BrandMark, Text } from '@/ui-kit';
 
 import type { AuthMode } from './AuthPage.types';
 

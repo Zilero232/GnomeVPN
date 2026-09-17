@@ -1,9 +1,2 @@
-export {
-  bindCardResultSchema,
-  bindCardSchema,
-  buyExtraDevicesSchema,
-  checkoutClientSchema,
-  checkoutResultSchema,
-  createCheckoutSchema
-} from './checkout.schemas';
-export type { BindCardInput, BindCardResult, BuyExtraDevicesInput, CheckoutClient, CheckoutResult, CreateCheckoutInput } from './checkout.types';
+export { bindCardResultSchema, buyExtraDevicesSchema, checkoutResultSchema, createCheckoutSchema } from './checkout.schemas';
+export type { BindCardResult, BuyExtraDevicesInput, CheckoutResult, CreateCheckoutInput } from './checkout.types';

@@ -6,23 +6,12 @@ node_modules/
 out/
 dist/
 generated/
-target/
-apps/tauri/gen/
-
-# Vendored native binaries — fetched per platform, never committed
-apps/tauri/bin/singbox/sing-box
-apps/tauri/bin/singbox/sing-box.exe
-apps/tauri/bin/hysteria/hysteria
-apps/tauri/bin/hysteria/hysteria.exe
-apps/tauri/bin/service/
-apps/tauri/android/libs/
 
 # Secrets and local config
 .env
 .env.local
 .env.nodes
 nodes.json
-apps/tauri/*.keystore
 
 # Agent tooling — rules and the reviewer are the repo's own, everything else is local
 .agents/

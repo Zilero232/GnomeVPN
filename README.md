@@ -5,15 +5,15 @@
 <h1 align="center">GnomeVPN</h1>
 
 <p align="center">
-  <strong>A tunnel in one tap — no logs, no ads, no config files.</strong><br/>
-  Next.js client · Tauri desktop & Android · NestJS API · Self-hosted nodes
+  <strong>A tunnel in one link — no logs, no ads, no config files.</strong><br/>
+  Next.js site · NestJS API · Self-hosted Hysteria2 nodes · INCY as the client
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/runtime-Bun-fbf0df?style=for-the-badge&logo=bun&logoColor=000" alt="Bun" />
   <img src="https://img.shields.io/badge/protocol-Hysteria2-35f0a0?style=for-the-badge&logoColor=fff" alt="Hysteria2" />
-  <img src="https://img.shields.io/badge/desktop-Tauri%202-24c8db?style=for-the-badge&logo=tauri&logoColor=fff" alt="Tauri" />
-  <img src="https://img.shields.io/badge/mobile-Android-3ddc84?style=for-the-badge&logo=android&logoColor=fff" alt="Android" />
+  <img src="https://img.shields.io/badge/web-Next.js%2016-000?style=for-the-badge&logo=nextdotjs&logoColor=fff" alt="Next.js" />
+  <img src="https://img.shields.io/badge/api-NestJS-e0234e?style=for-the-badge&logo=nestjs&logoColor=fff" alt="NestJS" />
 </p>
 
 <br/>
@@ -24,266 +24,143 @@ Most VPN protocols announce themselves. WireGuard's handshake is a fixed-size UD
 packet; OpenVPN has a recognisable header. Where traffic is inspected, that is
 enough to drop the connection.
 
-GnomeVPN runs on **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3 site.
-The choice was measured, not assumed: this repository first shipped VLESS +
+GnomeVPN leads with **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3
+site. The choice was measured, not assumed: this repository first shipped VLESS +
 XTLS-Reality, and Russian DPI equipment fingerprinted the REALITY handshake over
 _any_ TCP port, killing sessions within minutes of real traffic. Plain WireGuard
 on UDP/51820 passed on the same network. UDP is policed differently, so the
 tunnel moved.
 
-<table>
-<tr>
-<td width="33%" valign="top">
+QUIC is still UDP, though, and some networks drop UDP wholesale — office Wi-Fi,
+hotels, a few carriers. So every node also serves **VLESS + Reality** on TCP/443,
+and the subscription lists both. The two share the port because one is UDP and
+the other TCP.
 
-**No UAC prompts**
+## One link, every platform
 
-A LocalSystem service owns the privileged work. The window you see runs without
-administrator rights and never triggers a prompt.
+There is no GnomeVPN app to install. The client is
+**[INCY](https://incy.cc/)** — a free third-party app that exists on iOS,
+Android, Windows, Linux, Android TV and Apple TV.
 
-</td>
-<td width="33%" valign="top">
+You copy one URL from your account and paste it into INCY. The app fetches the
+server list, the traffic counters and the renewal date from that URL, and keeps
+them up to date on its own.
 
-**Per-app split tunneling**
+This repository used to carry a Tauri desktop shell, a privileged Rust service
+for three operating systems and an Android tunnel — roughly 2,500 files of
+platform-specific code. All of it was deleted in favour of a subscription
+endpoint that fits in one NestJS module.
 
-Pick the applications that go through the VPN. Everything else takes the direct
-route — no kernel driver, no certificate.
+**What that bought.** iOS and TV support, which never existed and could not have
+been shipped cheaply. Years of somebody else's bug reports on five platforms.
 
-</td>
-<td width="33%" valign="top">
+**What it cost.** The app is not ours and carries someone else's name in the
+store. The site says so plainly rather than hiding it.
 
-**Yours to host**
+The subscription URL is a standard format, so it also works in Hiddify, v2rayNG,
+Streisand and others. That is deliberate — a user who dislikes INCY is not stuck
+with it.
 
-Docker Compose, Caddy, PostgreSQL, and one command that provisions a new country
-over SSH.
-
-</td>
-</tr>
-</table>
-
-<br/>
-
-## Features
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-**Hysteria2 tunnel** — QUIC on 443/UDP, masqueraded as HTTP/3
-
-**Split tunneling** — per-application rules, Windows
-
-**Auto-reconnect** — exponential backoff after a dropped link
-
-**LAN stays reachable** — printers and NAS keep working
-
-</td>
-<td width="50%" valign="top">
-
-**Two devices, one subscription** — phone and desktop at once
-
-**Live device sync** — connect on one, the other updates instantly over SSE
-
-**Node health** — unreachable countries are greyed out, not offered
-
-**Signed updates** — proxied through the API, verified on the client
-
-</td>
-</tr>
-</table>
-
-<br/>
-
-## How the tunnel is built
-
-Two platforms, two shapes — because the operating systems disagree about who may
-own a network interface.
-
-**Windows.** Creating an adapter and editing routes needs administrator rights,
-so that work lives in a service. The service spawns `sing-box`, which owns the
-adapter, the routing table and the Hysteria2 connection:
+## How a connection happens
 
 ```text
-┌──────────────┐   named pipe    ┌─────────────────────┐
-│ GnomeVPN.exe │ ──────────────► │ GnomeVPNService     │
-│ (no rights)  │ ◄────────────── │ (LocalSystem)       │
-│ UI, tray     │     events      │ spawns sing-box.exe │
-└──────────────┘                 └──────────┬──────────┘
-                                            │ Hysteria2 · 443/UDP
-                                            ▼
-                                   ┌────────────────┐
-                                   │ VPN node (VPS) │
-                                   │ 3x-ui panel    │
-                                   └────────────────┘
+  Browser                     API                          Node
+     │                         │                             │
+     │  GET /subscription-link │                             │
+     ├────────────────────────►│                             │
+     │  url + incy:// deeplink │                             │
+     │◄────────────────────────┤                             │
+     │                         │                             │
+  INCY app                     │                             │
+     │  GET /sub/<token>       │                             │
+     ├────────────────────────►│  a peer per node, per       │
+     │                         │  protocol                   │
+     │                         ├────────────────────────────►│
+     │  base64 list of         │                             │
+     │  hy2:// and vless://    │                             │
+     │  + subscription headers │                             │
+     │◄────────────────────────┤                             │
+     │                                                       │
+     │      QUIC/UDP 443, or TCP/443 where UDP is blocked    │
+     ├──────────────────────────────────────────────────────►│
 ```
 
-Any local process can open that pipe, and the service can rewrite the system
-routing table — so every request crossing it is validated before it is acted on.
+The token in the URL is the credential — INCY cannot log in, so 32 random bytes
+are all the authentication there is. Rotating it in the account kills every copy
+of the old link at once.
 
-**Android.** `VpnService` hands the app a TUN descriptor once the user consents,
-so there is nothing to elevate: the tunnel runs inside the app process, with
-`hysteria` under `tun2proxy`.
-
-### Split tunneling, and why it took a rewrite
-
-Routing by _destination_ is ordinary work — a route table does it. Routing by
-_process_ is not: Windows will not let user space redirect a connection based on
-who opened it. That needs a callout driver at `FWPM_LAYER_ALE_BIND_REDIRECT`,
-which needs an EV certificate.
-
-Four user-space approaches were built and tested against a live tunnel — WFP
-`Block`/`Permit` filters, dropping packets on the TUN, rewriting the interface
-index, NAT on the physical adapter. All four broke connectivity, each for its own
-reason.
-
-sing-box solves it by never redirecting at all: it pulls every packet into the
-TUN and opens the outgoing connection itself, so the choice between `proxy` and
-`direct` is a plain userspace decision made per connection.
-
-```jsonc
-"route": {
-  "rules": [
-    { "process_path": ["…/chrome.exe"], "outbound": "proxy" }
-  ],
-  "final": "direct"
-}
-```
-
-<br/>
-
-## Stack
-
-| Layer        | Choice                                         |
-| ------------ | ---------------------------------------------- |
-| Web client   | Next.js 16, React 19, Feature-Sliced Design    |
-| Desktop      | Tauri 2, Rust, wintun                          |
-| Mobile       | Tauri 2 on Android, `VpnService` + `tun2proxy` |
-| Tunnel core  | sing-box (Windows), hysteria (Android)         |
-| API          | NestJS on Bun, Prisma 7, better-auth           |
-| Realtime     | Server-Sent Events                             |
-| Database     | PostgreSQL                                     |
-| Shared types | Zod schemas in `packages/schemas`              |
-| Payments     | YooKassa                                       |
-| Delivery     | Docker, Caddy, GitHub Actions                  |
-
-<br/>
-
-## Layout
+## Architecture
 
 ```text
 apps/
-├── client/          # Next.js — landing, account area, app UI
-├── server/          # NestJS API — modules/, lib/, core/, common/
-└── tauri/           # Desktop shell + Android tunnel
-crates/
-├── vpn-ipc/         # Wire protocol and tunnel configs
-└── vpn-service/     # Privileged Windows service
-packages/schemas/    # Zod schemas (@gnomevpn/schemas)
-infra/
-├── caddy/           # TLS, reverse proxy
-└── provision/       # VPN node setup over SSH
+├── client/          # Next.js 16, server-rendered, FSD layers + ui-kit
+└── server/          # NestJS on Bun, Prisma, Postgres, better-auth
+packages/
+├── schemas/         # Zod schemas shared by both
+└── scripts/         # reporter, ssh, shell — used by provisioning
+scripts/provision/   # node setup over SSH
+infra/caddy/         # TLS termination and reverse proxy
 ```
 
-Each app carries its own `CLAUDE.md` with the conventions that bite — layer
-rules for the client, module shape for the server, the security boundary for the
-service.
+| Layer      | Stack                                           |
+| ---------- | ----------------------------------------------- |
+| Web        | Next.js 16, React 19, next-intl, TanStack Query |
+| API        | NestJS 11 on Bun, Prisma 7, Postgres 17         |
+| Auth       | better-auth, bearer tokens                      |
+| Payments   | YooKassa, recurring by saved card               |
+| Tunnel     | Hysteria2 via the 3x-ui panel                   |
+| Client app | INCY (third party)                              |
+| Delivery   | Caddy, Docker Compose, ghcr.io                  |
 
-<br/>
+The site is localised into Russian and English, with the locale in the URL
+(`/faq`, `/en/faq`) and server-rendered metadata for both.
 
-## Getting started
-
-**Requirements** — Bun 1.3+, Rust stable, Docker, PostgreSQL.
+## Running it locally
 
 ```bash
 bun install
-cp .env.example .env
-bun run dev:infra    # database, waits until it is healthy
-bun --filter @gnomevpn/server db:push
-
-bun run dev          # client + API
-bun run tauri:dev    # desktop app
-bun run android:dev  # android, needs a device or emulator
+cp .env.example .env          # fill in DATABASE_URL and BETTER_AUTH_SECRET
+bun run dev:infra             # Postgres in Docker
+bun --filter @gnomevpn/server db:deploy
+bun run dev                   # API on :4000, site on :3000
 ```
 
-One `.env` covers the whole monorepo. `db:push` refuses rather than dropping
-data when the local database disagrees with the schema — reset the dev volume if
-that happens:
+| Command                               | What it does                             |
+| ------------------------------------- | ---------------------------------------- |
+| `bun run dev`                         | API and site together                    |
+| `bun run verify`                      | typecheck, ESLint, Prettier, Stylelint   |
+| `bun run fix`                         | every autofixer, same order              |
+| `bun run test`                        | Vitest across every workspace            |
+| `bun run test:e2e`                    | Playwright against the public routes     |
+| `bun --filter @gnomevpn/client build` | the only check that catches SSR breakage |
+| `bun run provision:nodes`             | set up VPN nodes over SSH                |
 
-```bash
-bun run dev:infra:down && docker volume rm gnomevpn_gnomevpn-postgres-data
-```
-
-The desktop app needs `wintun.dll` and `sing-box.exe` next to the service — both
-are fetched by hand, see [apps/tauri/bin/README.md](apps/tauri/bin/README.md).
-
-<br/>
-
-## VPN nodes
-
-Adding a country is one command. It installs Docker, brings up the 3x-ui panel
-with a Hysteria2 inbound, generates a self-signed certificate, opens 443/UDP and
-registers the node:
-
-```bash
-bun run provision:nodes
-```
-
-The node list lives in `nodes.json` at the repo root — gitignored, since it holds
-root SSH passwords. Copy `nodes.example.json` to start. Provisioning runs by hand
-from a machine that can reach the nodes; it is not part of CI.
-
-Verify a new node by running a real client against it, never by "the panel
-returned 200" — a Hysteria2 client written without its full field set is stored
-by the panel but dropped from the running core, and every connection then fails
-auth with a 404.
-
-<br/>
+`bun run test`, never bare `bun test` — the latter is Bun's own runner and fails
+the whole suite on the first Vitest-specific API it meets.
 
 ## Deployment
 
-Push to `master` runs the checks, then builds images and ships them to the VPS.
-Bumping the version in `package.json` cuts a desktop release.
+Two GitHub Actions, no local build steps:
 
-Full walkthrough — domain, secrets, `.env`, first launch — in
-**[DEPLOY.md](DEPLOY.md)**.
+- **`checks.yml`** runs on every push and pull request: typecheck, lint, tests,
+  then a client build.
+- **`deploy.yml`** is manual. It pushes the web and server images to ghcr.io,
+  copies `docker-compose.yml` and the Caddyfile to the VPS, runs migrations
+  **before** bringing the new containers up, and waits on both healthchecks.
 
-<br/>
+Adding a VPN node stays a local command: it talks to the machine over SSH with
+credentials that never enter CI, and it is a decision a human makes, not a commit.
 
-## Scripts
-
-| Command                   | What it does                       |
-| ------------------------- | ---------------------------------- |
-| `bun run dev`             | client + API in watch mode         |
-| `bun run dev:infra`       | database only, waits until healthy |
-| `bun run tauri:dev`       | desktop app                        |
-| `bun run android:dev`     | Android app                        |
-| `bun run verify`          | every check below, in one command  |
-| `bun run fix`             | every autofixer, in one command    |
-| `bun run typecheck`       | types across all packages          |
-| `bun lint`                | ESLint                             |
-| `bun run format`          | Prettier                           |
-| `bun run lint:css`        | Stylelint                          |
-| `bun run lint:rust`       | clippy across the Rust workspace   |
-| `bun run tauri:build`     | installers                         |
-| `bun run android:build`   | APK / AAB                          |
-| `bun run provision:nodes` | set up VPN nodes                   |
-
-Rust is checked with `cargo clippy --workspace` and `cargo fmt --all --check`.
-
-Releases and deploys are GitHub Actions, not local commands: `release.yml` on a
-`v*` tag runs the checks above and then builds and publishes every platform,
-`deploy.yml` ships the web and API images when someone runs it. Nothing watches
-master, so `bun run verify` before a commit is the only check that happens.
-
-<br/>
+See [DEPLOY.md](DEPLOY.md) for the VPS side.
 
 ## Status
 
-Working: tunnel on Windows and Android, split tunneling, subscriptions, device
-sync, node health, autostart, auto-updates.
+Working: the subscription feed, billing with recurring payments, device limits,
+node provisioning, the localised site.
 
-**Windows and Android only.** macOS and Linux would each need their own
-privileged helper — the tunnel is not portable, the UI already is.
+Not done: per-app routing (INCY has it on Android; we do not drive it from the
+subscription yet), a Telegram bot, referral codes.
 
-Not there yet: split tunneling on Android (the platform exposes
-`addAllowedApplication`, it is simply not wired up), IPv6 inside the tunnel,
-multi-hop.
+## License
+
+See [LICENSE](LICENSE).

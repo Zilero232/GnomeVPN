@@ -1,10 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 import { ROUTES } from '@/shared/constants';
-import { Button, StatusScreen } from '@/shared/ui';
+import { Link } from '@/shared/i18n/navigation';
+import { Button, StatusScreen } from '@/ui-kit';
 
 export const NotFoundView = () => {
   const t = useTranslations('notFound');

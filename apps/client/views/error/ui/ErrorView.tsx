@@ -6,7 +6,7 @@ import type { Locale } from '@/shared/i18n';
 
 import { ROUTES, STORAGE_KEYS } from '@/shared/constants';
 import { DEFAULT_LOCALE, messages, resolveLocale } from '@/shared/i18n';
-import { Button, StatusScreen } from '@/shared/ui';
+import { Button, StatusScreen } from '@/ui-kit';
 
 import type { ErrorViewProps } from './ErrorView.types';
 

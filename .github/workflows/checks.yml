@@ -1,0 +1,67 @@
+name: checks
+
+# Typecheck, lint and tests. The web client is delivered by `deploy.yml`, and
+# the VPN client itself is INCY — a third-party app the user installs from their
+# platform's store — so there are no bundles to build or sign here.
+#
+# Why it is shaped this way: ../../CLAUDE.md, "What the workflows assume".
+#
+# A `v*` tag additionally asserts that the tag matches the root package.json
+# version, so a release is never cut from a tag that names a different version.
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DATABASE_URL: postgresql://placeholder
+  DIRECT_URL: postgresql://placeholder
+
+permissions: {}
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Check the tag matches the version
+        if: github.ref_type == 'tag'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          root=$(node -p "require('./package.json').version")
+
+          if [ "$REF_NAME" != "v$root" ]; then
+            echo "tag $REF_NAME does not match root package.json version $root" >&2
+            exit 1
+          fi
+
+          echo "releasing v$root"
+
+      - uses: ./.github/actions/setup
+
+      - run: bun run verify
+
+      - run: bun run test
+
+      # The only check that catches a page which typechecks but throws during
+      # prerender.
+      - env:
+          NEXT_PUBLIC_API_URL: https://api.invalid
+        run: bun --filter @gnomevpn/client build

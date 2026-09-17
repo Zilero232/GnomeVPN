@@ -1,1 +1,0 @@
-export { ConfigQrDialog } from './ConfigQrDialog';

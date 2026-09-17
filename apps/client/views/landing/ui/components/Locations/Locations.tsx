@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { CountryFlag, Text } from '@/shared/ui';
+import { CountryFlag, Text } from '@/ui-kit';
 
 import { LOCATIONS } from '../../../config';
 import { CARD_HOVER, ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';

@@ -1,5 +1,6 @@
 export const TUNNEL_PROTOCOL = {
   hysteria2: 'hysteria2',
+  vless: 'vless',
   wireguard: 'wireguard'
 } as const;
 

@@ -7,7 +7,7 @@ import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { Badge, SelectableCard, Stack, Text } from '@/shared/ui';
+import { Badge, SelectableCard, Stack, Text } from '@/ui-kit';
 
 import type { PlanPickerProps } from './PlanPicker.types';
 

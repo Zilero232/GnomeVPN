@@ -1,18 +1,29 @@
 export const ROUTES = {
   landing: '/',
+  pricing: '/pricing',
+  faq: '/faq',
+  setup: '/setup',
+  about: '/about',
   auth: '/auth',
   resetPassword: '/reset-password',
   privacy: '/privacy',
-  account: '/account',
-  app: '/app'
+  account: '/account'
 } as const;
 
-export const DOWNLOAD_HASH = '#download';
-
 const KNOWN_ROUTES: string[] = Object.values(ROUTES);
-const PUBLIC_ROUTES: string[] = [ROUTES.landing, ROUTES.auth, ROUTES.resetPassword, ROUTES.privacy];
+const PUBLIC_ROUTES: string[] = [
+  ROUTES.landing,
+  ROUTES.pricing,
+  ROUTES.faq,
+  ROUTES.setup,
+  ROUTES.about,
+  ROUTES.auth,
+  ROUTES.resetPassword,
+  ROUTES.privacy
+];
+
 const GUEST_ONLY_ROUTES: string[] = [ROUTES.auth];
-const WEB_ONLY_ROUTES: string[] = [ROUTES.landing];
+const INDEXED_ROUTES: string[] = [ROUTES.landing, ROUTES.pricing, ROUTES.faq, ROUTES.setup, ROUTES.about, ROUTES.privacy];
 
 export const isKnownRoute = (pathname: string): boolean => KNOWN_ROUTES.includes(pathname);
 
@@ -20,4 +31,6 @@ export const isPublicRoute = (pathname: string): boolean => PUBLIC_ROUTES.includ
 
 export const isGuestOnlyRoute = (pathname: string): boolean => GUEST_ONLY_ROUTES.includes(pathname);
 
-export const isWebOnlyRoute = (pathname: string): boolean => WEB_ONLY_ROUTES.includes(pathname);
+export const isIndexedRoute = (pathname: string): boolean => INDEXED_ROUTES.includes(pathname);
+
+export const indexedRoutes = (): string[] => [...INDEXED_ROUTES];

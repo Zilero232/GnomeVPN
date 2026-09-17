@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
-import { FormField, Input, PasswordInput, SubmitButton } from '@/shared/ui';
+import { FormField, Input, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import type { SignInValues } from '../model/use-sign-in';
 import type { SignInFormProps } from './SignInForm.types';

@@ -1,7 +1,7 @@
 # GnomeVPN — Caddy config (runs on the VPS).
 #
 # Two site blocks share this VPS:
-#   gnomevpn.ru      — static web client (landing + account area)
+#   gnomevpn.ru      — Next.js web client (landing + account area)
 #   api.gnomevpn.ru  — NestJS API server
 #
 # The web client and the API live on different origins, so the server's CORS
@@ -42,22 +42,18 @@ api.gnomevpn.ru {
 }
 
 gnomevpn.ru {
-	root * /srv/www
-
 	encode gzip zstd
 
-	# Static export: every unknown path falls back to the matching .html file,
-	# then to 404.html — Next.js `output: 'export'` produces both.
-	try_files {path} {path}.html {path}/index.html /404.html
-	file_server
+	# The client renders on its own Node server rather than being served off
+	# disk, so every request is proxied to it. It is not published to the host:
+	# it is reachable only inside the compose network, by service name.
+	reverse_proxy web:3000
 
 	# Hashed assets never change under the same name, so they can be cached
-	# indefinitely; HTML must always be revalidated to pick up a new deploy.
+	# indefinitely. Everything else is rendered per request and carries whatever
+	# Cache-Control Next.js sets for it.
 	@immutable path /_next/static/*
 	header @immutable Cache-Control "public, max-age=31536000, immutable"
-
-	@html path *.html /
-	header @html Cache-Control "no-cache"
 
 	header {
 		X-Content-Type-Options nosniff

@@ -8,14 +8,13 @@ export const PEER_PREFIX = {
   config: 'cfg-'
 } as const;
 
-export const WG = {
-  listenPort: 51820,
-  mtu: 1360,
-  allowedIps: ['0.0.0.0/0'],
-  subnet: '10.9.0.0/24',
-  addressPrefix: 24,
-  serverHostOffset: 1
+export const REALITY = {
+  listenPort: 443,
+  fingerprint: 'chrome',
+  flow: 'xtls-rprx-vision'
 } as const;
+
+export const REALITY_SHORT_ID_BYTES = 8;
 
 export const PEER_REF_SELECT = {
   id: true,

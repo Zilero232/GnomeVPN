@@ -16,8 +16,9 @@ export type WaitForPanelInput = {
   panelPath: string;
 };
 
-export type EnsuredWireguardKeys = {
+export type EnsuredRealityKeys = {
   privateKey: string;
   publicKey: string;
+  shortId: string;
   wasGenerated: boolean;
 };

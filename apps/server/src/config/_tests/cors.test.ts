@@ -69,15 +69,13 @@ describe('allowedOrigins', () => {
     expect(origins).toContain('https://admin.gnomevpn.ru');
   });
 
-  it('keeps the tauri origins so the desktop and mobile apps still reach the api', async () => {
+  it('allows nothing beyond the configured origins, now that the web client is the only caller', async () => {
     const origins = await loadOrigins({
       CORS_ORIGINS: 'https://gnomevpn.ru',
       CLIENT_URL: 'https://gnomevpn.ru'
     });
 
-    expect(origins).toContain('tauri://localhost');
-    expect(origins).toContain('http://tauri.localhost');
-    expect(origins).toContain('https://tauri.localhost');
+    expect(origins).toEqual(['https://gnomevpn.ru']);
   });
 
   it('drops an empty entry rather than trusting a blank origin', async () => {

@@ -3,7 +3,7 @@
 import { DEFAULT_PLAN_ID, findPlan } from '@gnomevpn/schemas';
 import { useTranslations } from 'next-intl';
 
-import { SubmitButton } from '@/shared/ui';
+import { SubmitButton } from '@/ui-kit';
 
 import type { CheckoutButtonProps } from './CheckoutButton.types';
 
