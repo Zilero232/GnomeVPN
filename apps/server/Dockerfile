@@ -19,10 +19,11 @@ COPY package.json bun.lock ./
 COPY apps/server/package.json ./apps/server/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
+
 # --frozen-lockfile validates the workspace topology against the lockfile, so
 # every member listed there must have its manifest present — even unused ones.
 COPY apps/client/package.json ./apps/client/package.json
-COPY apps/tauri/package.json ./apps/tauri/package.json
+
 # `bun install` would trigger the server's postinstall (prisma generate) before
 # the schema is copied, so lifecycle scripts are disabled and generate runs later.
 # A retry loop that wipes the download cache between attempts survives transient
