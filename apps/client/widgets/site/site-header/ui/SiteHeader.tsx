@@ -5,11 +5,10 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 import { LocaleSwitcher } from '@/features/app/switch-locale';
-import { ROUTES } from '@/shared/constants';
+import { ROUTES, SITE_NAV } from '@/shared/constants';
 import { Link, usePathname } from '@/shared/i18n/navigation';
 import { BrandMark, Button } from '@/ui-kit';
 
-import { SITE_NAV } from '../config';
 import { SiteNavMenu } from './components';
 
 import s from './SiteHeader.module.scss';

@@ -1,9 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { isNullish } from 'remeda';
 
 import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput } from './hysteria';
 import type { CreateVlessClientResult } from './vless';
-import type { IssueClientInput, IssueVlessClientInput, XrayClientOptions } from './xray.types';
+import type { IssueClientInput, IssueVlessClientInput, RewriteInboundInput, XrayClientOptions } from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { HysteriaClients } from './hysteria';
@@ -46,7 +47,19 @@ export class XrayClient {
   }
 
   async createInbound(inbound: Record<string, unknown>): Promise<void> {
-    await this.inbounds.create(inbound);
+    await this.inbounds.create({ inbound });
+  }
+
+  private async rewriteInbound({ current, inbound, remark }: RewriteInboundInput): Promise<void> {
+    const clients = readClients(current);
+
+    if (isNullish(clients)) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite an inbound whose clients could not be read');
+    }
+
+    const settings = { ...(inbound.settings as object), clients };
+
+    await this.panel.updateInbound({ id: current.id, payload: inboundPayload({ ...inbound, settings }, remark) });
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
@@ -54,15 +67,8 @@ export class XrayClient {
       key: this.nodeKey,
       task: async () => {
         const current = await this.inbounds.get();
-        const clients = readClients(current);
 
-        if (clients === null) {
-          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite an inbound whose clients could not be read');
-        }
-
-        const settings = { ...(inbound.settings as object), clients };
-
-        await this.panel.updateInbound(current.id, inboundPayload({ ...inbound, settings }));
+        await this.rewriteInbound({ current, inbound });
       }
     });
   }
@@ -73,21 +79,13 @@ export class XrayClient {
       task: async () => {
         const current = await this.inbounds.find(VLESS_INBOUND_REMARK);
 
-        if (!current) {
-          await this.inbounds.create(inbound, VLESS_INBOUND_REMARK);
+        if (isNullish(current)) {
+          await this.inbounds.create({ inbound, remark: VLESS_INBOUND_REMARK });
 
           return;
         }
 
-        const clients = readClients(current);
-
-        if (clients === null) {
-          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite a reality inbound whose clients could not be read');
-        }
-
-        const settings = { ...(inbound.settings as object), clients };
-
-        await this.panel.updateInbound(current.id, inboundPayload({ ...inbound, settings }, VLESS_INBOUND_REMARK));
+        await this.rewriteInbound({ current, inbound, remark: VLESS_INBOUND_REMARK });
       }
     });
   }

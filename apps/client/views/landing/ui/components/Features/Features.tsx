@@ -7,8 +7,7 @@ import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { FEATURE_CARDS } from '../../../config';
-import { ICON_HOVER, ITEM_MOTION } from '../../LandingPage.motion';
-import { FEATURE_ICONS } from './Features.config';
+import { ITEM_MOTION } from '../../LandingPage.motion';
 
 import s from './Features.module.scss';
 
@@ -17,24 +16,20 @@ export const Features = () => {
 
   return (
     <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
-      {FEATURE_CARDS.map((card) => {
-        const Icon = FEATURE_ICONS[card];
+      {FEATURE_CARDS.map((card, index) => (
+        <motion.article key={card} className={s.card} variants={ITEM_MOTION}>
+          <span aria-hidden className={s.index}>
+            {String(index + 1).padStart(2, '0')}
+          </span>
 
-        return (
-          <motion.article key={card} className={s.card} initial='rest' variants={ITEM_MOTION} whileHover='hover'>
-            <motion.span className={s.icon} variants={ICON_HOVER}>
-              <Icon size={17} strokeWidth={1.8} />
-            </motion.span>
-
-            <Text as='h3' className={s.title}>
-              {t(`${card}Title`)}
-            </Text>
-            <Text as='p' className={s.body}>
-              {t(`${card}Body`)}
-            </Text>
-          </motion.article>
-        );
-      })}
+          <Text as='h3' className={s.title}>
+            {t(`${card}Title`)}
+          </Text>
+          <Text as='p' className={s.body}>
+            {t(`${card}Body`)}
+          </Text>
+        </motion.article>
+      ))}
     </motion.div>
   );
 };

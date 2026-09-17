@@ -17,8 +17,6 @@ const sitemap = (): MetadataRoute.Sitemap =>
   indexedRoutes().flatMap((path) =>
     LOCALES.map((locale) => ({
       url: absoluteUrl(localePath({ path, locale })),
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
       priority: PRIORITIES[path] ?? 0.5,
       alternates: {
         languages: Object.fromEntries(LOCALES.map((alternate) => [alternate, absoluteUrl(localePath({ path, locale: alternate }))]))

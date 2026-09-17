@@ -6,6 +6,6 @@ export { JsonLd } from './JsonLd';
 export type { JsonLdProps } from './JsonLd';
 export { PageJsonLd } from './PageJsonLd';
 export type { PageJsonLdProps } from './PageJsonLd';
-export { siteJsonLd } from './site-json-ld';
-
+export { ProductJsonLd } from './ProductJsonLd';
+export { productJsonLd, siteJsonLd } from './site-json-ld';
 export { SiteJsonLd } from './SiteJsonLd';

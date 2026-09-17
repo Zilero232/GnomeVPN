@@ -1,6 +1,6 @@
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { groupBy, isEmpty } from 'remeda';
+import { groupBy, isEmpty, isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
 import type { Prisma } from '../../../../generated';
@@ -12,7 +12,6 @@ import type {
   ForEachNodeInput,
   IssueAndPersistInput,
   IssuePeerInput,
-  OnlinePeerRef,
   PeerRef,
   SetPeerEnabledInput
 } from '../peers.service.types';
@@ -76,34 +75,13 @@ export class PeersService {
           select: NODE_ACCESS_SELECT
         });
 
-        if (!node) {
+        if (isNullish(node)) {
           return;
         }
 
         await run({ client: xrayClientForNode(node), peers: nodePeers });
       })
     );
-  }
-
-  async onlinePeerIds(peers: OnlinePeerRef[], { assumeOnlineWhenNodeSilent = true } = {}): Promise<Set<string>> {
-    const online = new Set<string>();
-
-    await this.forEachNode<OnlinePeerRef>({
-      peers,
-      run: async ({ client, peers: nodePeers }) => {
-        const emails = await client.onlineEmails().catch(() => null);
-
-        for (const peer of nodePeers) {
-          const isOnline = emails === null ? assumeOnlineWhenNodeSilent : emails.has(peerClientName(peer));
-
-          if (isOnline) {
-            online.add(peer.id);
-          }
-        }
-      }
-    });
-
-    return online;
   }
 
   async revoke(where: Prisma.PeerWhereInput): Promise<void> {

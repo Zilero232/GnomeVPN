@@ -1,45 +1,42 @@
 @use '@/shared/styles/mixins' as *;
 
-.grid {
+.list {
   display: grid;
-  gap: 12px;
-
-  // Six cards. `auto-fit` fits four on a wide screen and leaves the second row
-  // half empty; three by three reads as one block.
-  grid-template-columns: repeat(3, 1fr);
-
-  @include below(xl) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @include below(sm) {
-    grid-template-columns: 1fr;
-  }
+  gap: 0;
 }
 
-.card {
-  padding: 22px 20px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  transition:
-    border-color 0.25s ease,
-    background-color 0.25s ease;
+.row {
+  display: grid;
+  align-items: baseline;
+  padding: 18px 4px;
+  border-bottom: 1px solid var(--color-border);
+  column-gap: 20px;
+  grid-template-columns: 24px minmax(120px, 190px) 1fr;
+  transition: border-color 0.25s ease;
+
+  &:first-child {
+    border-top: 1px solid var(--color-border);
+  }
 
   &:hover {
-    background-color: var(--color-surface-raised);
+    border-bottom-color: var(--color-border-bright);
+  }
+
+  @include below(md) {
+    padding: 16px 2px;
+    grid-template-columns: 22px 1fr;
+    row-gap: 4px;
   }
 }
 
 .icon {
-  display: block;
-  margin-bottom: 14px;
+  align-self: center;
   color: var(--color-accent);
 }
 
 .name {
-  margin: 0 0 6px;
-  font-size: 16px;
+  margin: 0;
+  font-size: 15px;
   font-weight: 700;
 }
 
@@ -48,4 +45,8 @@
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.55;
+
+  @include below(md) {
+    grid-column: 2;
+  }
 }

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { isNullish, isString } from 'remeda';
 
 import type { XrayInbound, XrayInboundSettings } from './inbounds';
 
@@ -6,26 +7,8 @@ import { AUTH_BYTES } from './xray.constants';
 
 export const generateAuth = (): string => randomBytes(AUTH_BYTES).toString('hex');
 
-const parseJson = <T>(value: string | Record<string, unknown> | undefined): T => {
-  if (typeof value !== 'string') {
-    return (value ?? {}) as T;
-  }
-
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return {} as T;
-  }
-};
-
-export const parseSettings = (inbound: XrayInbound): XrayInboundSettings => parseJson<XrayInboundSettings>(inbound.settings);
-
-export const parseStreamSettings = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.streamSettings);
-
-export const parseSniffing = (inbound: XrayInbound): Record<string, unknown> => parseJson<Record<string, unknown>>(inbound.sniffing);
-
 export const readSettings = <T>(inbound: XrayInbound): T | null => {
-  if (typeof inbound.settings !== 'string') {
+  if (!isString(inbound.settings)) {
     return (inbound.settings as T | undefined) ?? null;
   }
 
@@ -37,8 +20,8 @@ export const readSettings = <T>(inbound: XrayInbound): T | null => {
 };
 
 export const readClients = (inbound: XrayInbound): unknown[] | null => {
-  if (typeof inbound.settings !== 'string') {
-    return inbound.settings?.clients === undefined ? null : (inbound.settings.clients as unknown[]);
+  if (!isString(inbound.settings)) {
+    return isNullish(inbound.settings?.clients) ? null : (inbound.settings.clients as unknown[]);
   }
 
   try {

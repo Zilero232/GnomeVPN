@@ -3,9 +3,8 @@
 .wrapper {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
+
+  @include surface-card;
 }
 
 .head,

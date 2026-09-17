@@ -1,12 +1,11 @@
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { isEmpty, isNonNullish } from 'remeda';
+import { filter, isEmpty, isNonNullish, isNullish, pipe, unique } from 'remeda';
 
 import type {
   CollectOrphansInput,
   NoteFailureInput,
-  PeerIdentity,
   ReconcileNode,
   RemoveRevokedInput,
   RestoreMissingInput,
@@ -27,10 +26,6 @@ export class ReconcilePeersJob {
   private readonly failures = new Map<string, number>();
 
   constructor(private readonly prisma: PrismaService) {}
-
-  private namesOf(peer: PeerIdentity): string[] {
-    return peerClientNames(peer);
-  }
 
   private async reconcileNode(node: ReconcileNode): Promise<void> {
     const xray = xrayClientForNode(node);
@@ -77,7 +72,7 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      doomed.push(...this.namesOf(peer).filter((email) => nodeClients.has(email)));
+      doomed.push(...peerClientNames(peer).filter((email) => nodeClients.has(email)));
     }
 
     await Promise.all(doomed.map((email) => xray.deleteClient(email)));
@@ -86,7 +81,7 @@ export class ReconcilePeersJob {
   }
 
   private async restoreMissing({ xray, node, peers, nodeClients }: RestoreMissingInput): Promise<boolean> {
-    const missing = peers.filter((peer) => peer.state !== 'revoked' && !this.namesOf(peer).some((email) => nodeClients.has(email)));
+    const missing = peers.filter((peer) => peer.state !== 'revoked' && !peerClientNames(peer).some((email) => nodeClients.has(email)));
 
     if (isEmpty(missing)) {
       return false;
@@ -131,7 +126,7 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      const email = this.namesOf(peer).find((candidate) => nodeClients.has(candidate));
+      const email = peerClientNames(peer).find((candidate) => nodeClients.has(candidate));
 
       if (!email) {
         continue;
@@ -159,7 +154,7 @@ export class ReconcilePeersJob {
     }
 
     const owners = new Map(emails.map((email) => [email, ownerIdOf(email)]));
-    const named = [...new Set([...owners.values()].filter(isNonNullish))];
+    const named = pipe([...owners.values()], filter(isNonNullish), unique());
 
     const alive = await this.prisma.user.findMany({
       where: { id: { in: named } },
@@ -180,13 +175,13 @@ export class ReconcilePeersJob {
   }
 
   private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<boolean> {
-    if (online === null) {
+    if (isNullish(online)) {
       this.suspects.delete(nodeId);
 
       return false;
     }
 
-    const known = new Set(peers.flatMap((peer) => this.namesOf(peer)));
+    const known = new Set(peers.flatMap((peer) => peerClientNames(peer)));
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
 

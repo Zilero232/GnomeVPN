@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 
 import type { PresentLinkInput, UpsertLinkInput } from '../subscription-link.service.types';
 
-import { AppConfigService } from '../../../config/config.module';
+import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { INCY_DEEP_LINK_NAME, SUBSCRIPTION_PATH } from '../config';
 import { generateSubscriptionToken } from '../lib';

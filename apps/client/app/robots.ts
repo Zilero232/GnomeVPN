@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 import { SITE } from '@/shared/config';
-import { indexedRoutes, ROUTES } from '@/shared/constants';
+import { ROUTES } from '@/shared/constants';
 import { localePath, LOCALES } from '@/shared/i18n';
 
 const PRIVATE_ROUTES = [ROUTES.account, ROUTES.auth, ROUTES.resetPassword];
@@ -11,7 +11,7 @@ const forEveryLocale = (paths: string[]) => paths.flatMap((path) => LOCALES.map(
 const robots = (): MetadataRoute.Robots => ({
   rules: {
     userAgent: '*',
-    allow: forEveryLocale(indexedRoutes()),
+    allow: '/',
     disallow: forEveryLocale(PRIVATE_ROUTES)
   },
   sitemap: new URL('/sitemap.xml', SITE.url).toString(),

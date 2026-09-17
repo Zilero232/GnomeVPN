@@ -14,3 +14,13 @@ export type BuildConfigInput = {
   protocol: TunnelProtocol;
   auth: string;
 };
+
+export type RealityNode = {
+  realityPublicKey: string | null;
+  realityShortId: string | null;
+};
+
+export type ResolvedRealityNode<T extends RealityNode> = T & {
+  realityPublicKey: string;
+  realityShortId: string;
+};

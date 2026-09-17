@@ -2,30 +2,21 @@ import { isEmpty } from 'remeda';
 
 import type {
   AddClientInput,
+  AddPanelClientInput,
   AddVlessClientInput,
   PanelClientInput,
   PanelInbound,
   PanelOnlines,
   PanelResponse,
   PanelServerStatus,
-  SetClientsEnabledInput
+  SetClientsEnabledInput,
+  UpdateInboundInput
 } from './panel-client.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { VLESS_FLOW } from '../vless/vless.constants';
-import { NO_LIMIT, PANEL_ROUTES } from './panel-client.constants';
-
-const collectOnlineEmails = (payload: PanelOnlines): Set<string> | null => {
-  if (!payload) {
-    return null;
-  }
-
-  if (Array.isArray(payload)) {
-    return new Set(payload);
-  }
-
-  return new Set(Object.values(payload).flat());
-};
+import { CLIENT_DEFAULTS, PANEL_ROUTES } from './panel-client.constants';
+import { collectOnlineEmails } from './panel-client.helpers';
 
 export class PanelClient {
   private readonly baseUrl: string;
@@ -79,7 +70,7 @@ export class PanelClient {
     await this.post(PANEL_ROUTES.addInbound, payload);
   }
 
-  async updateInbound(id: number, payload: unknown): Promise<void> {
+  async updateInbound({ id, payload }: UpdateInboundInput): Promise<void> {
     await this.post(PANEL_ROUTES.updateInbound(id), payload);
   }
 
@@ -101,37 +92,19 @@ export class PanelClient {
     return result.deleted ?? 0;
   }
 
-  async addClient({ inboundId, email, auth }: AddClientInput): Promise<void> {
+  private async addPanelClient({ inboundId, client }: AddPanelClientInput): Promise<void> {
     await this.post(PANEL_ROUTES.addClient, {
       inboundIds: [inboundId],
-      client: {
-        email,
-        auth,
-        enable: true,
-        limitIp: NO_LIMIT,
-        totalGB: NO_LIMIT,
-        expiryTime: NO_LIMIT,
-        tgId: NO_LIMIT,
-        reset: NO_LIMIT
-      }
+      client: { ...client, ...CLIENT_DEFAULTS }
     });
   }
 
+  async addClient({ inboundId, email, auth }: AddClientInput): Promise<void> {
+    await this.addPanelClient({ inboundId, client: { email, auth } });
+  }
+
   async addVlessClient({ inboundId, email, id }: AddVlessClientInput): Promise<void> {
-    await this.post(PANEL_ROUTES.addClient, {
-      inboundIds: [inboundId],
-      client: {
-        email,
-        id,
-        flow: VLESS_FLOW,
-        enable: true,
-        limitIp: NO_LIMIT,
-        totalGB: NO_LIMIT,
-        expiryTime: NO_LIMIT,
-        tgId: NO_LIMIT,
-        reset: NO_LIMIT
-      }
-    });
+    await this.addPanelClient({ inboundId, client: { email, id, flow: VLESS_FLOW } });
   }
 
   async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {

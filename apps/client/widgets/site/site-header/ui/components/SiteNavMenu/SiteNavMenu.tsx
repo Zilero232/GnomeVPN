@@ -4,11 +4,9 @@ import { Menu } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { ROUTES } from '@/shared/constants';
+import { ROUTES, SITE_NAV } from '@/shared/constants';
 import { Link, usePathname } from '@/shared/i18n/navigation';
 import { Button, Dialog, DialogContent, DialogTitle } from '@/ui-kit';
-
-import { SITE_NAV } from '../../../config';
 
 import s from './SiteNavMenu.module.scss';
 

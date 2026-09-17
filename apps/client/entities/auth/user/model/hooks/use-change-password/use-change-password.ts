@@ -16,7 +16,7 @@ export const useChangePassword = () =>
       });
 
       if (error) {
-        throw new Error(error.message ?? 'Failed to change password');
+        throw new Error(error.message);
       }
     }
   });

@@ -45,3 +45,13 @@ export type AddClientInput = {
   email: string;
   auth: string;
 };
+
+export type AddPanelClientInput = {
+  inboundId: number;
+  client: Record<string, unknown>;
+};
+
+export type UpdateInboundInput = {
+  id: number;
+  payload: unknown;
+};

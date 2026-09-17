@@ -1,4 +1,4 @@
-import type { AppConfigService } from '../../config/config.module';
+import type { AppConfigService } from '../../config';
 
 import { YooKassaClient } from './yookassa';
 

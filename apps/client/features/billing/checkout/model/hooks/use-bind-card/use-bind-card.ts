@@ -4,7 +4,7 @@ import { useToastError } from '@/entities/app/locale';
 import { useInvalidateSubscription } from '@/entities/billing/subscription';
 import { bindCard } from '@/shared/api';
 
-import { redirectToConfirmation } from '../../lib';
+import { redirectToConfirmation } from '../../checkout.helpers';
 
 export const useBindCard = () => {
   const invalidateSubscription = useInvalidateSubscription();

@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { isNonNullish } from 'remeda';
 
 import { isPeriodActive, resolveStatus } from '../../../common/lib';
-import { AppConfigService } from '../../../config/config.module';
+import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 
 @Injectable()

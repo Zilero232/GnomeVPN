@@ -8,9 +8,9 @@ import { toast } from 'sonner';
 import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/ui-kit';
 
-import type { SignUpValues } from '../model/use-sign-up';
+import type { SignUpValues } from '../model/hooks';
 
-import { signUpSchema, useSignUp } from '../model/use-sign-up';
+import { signUpSchema, useSignUp } from '../model/hooks';
 
 import s from './SignUpForm.module.scss';
 

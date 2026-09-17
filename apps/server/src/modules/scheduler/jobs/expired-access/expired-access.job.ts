@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
-import { map, pipe, unique } from 'remeda';
+import { isEmpty, map, pipe, unique } from 'remeda';
 
 import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 
@@ -63,11 +63,11 @@ export class ExpiredAccessJob {
       })
     ]);
 
-    if (revoked.length > 0) {
+    if (!isEmpty(revoked)) {
       this.logger.log(`Revoked access for ${revoked.length} subscriber(s)`);
     }
 
-    if (restored.length > 0) {
+    if (!isEmpty(restored)) {
       this.logger.log(`Restored access for ${restored.length} subscriber(s)`);
     }
   }

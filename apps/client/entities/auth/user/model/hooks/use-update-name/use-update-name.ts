@@ -12,7 +12,7 @@ export const useUpdateName = () =>
       const { error } = await authClient.updateUser({ name });
 
       if (error) {
-        throw new Error(error.message ?? 'Failed to update name');
+        throw new Error(error.message);
       }
     }
   });

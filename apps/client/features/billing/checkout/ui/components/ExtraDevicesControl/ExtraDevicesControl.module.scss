@@ -53,13 +53,8 @@
 }
 
 .icon {
-  display: flex;
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
+  @include icon-tile;
+
   background-color: color-mix(in srgb, var(--color-accent) 14%, transparent);
   color: var(--color-accent);
 }

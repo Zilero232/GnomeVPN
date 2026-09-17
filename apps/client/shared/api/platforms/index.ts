@@ -1,1 +1,0 @@
-export { listPlatforms } from './platforms';

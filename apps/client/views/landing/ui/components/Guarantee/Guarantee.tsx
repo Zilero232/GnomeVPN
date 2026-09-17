@@ -23,7 +23,7 @@ export const Guarantee = () => {
       </motion.span>
 
       <motion.div className={s.body} variants={ITEM_MOTION}>
-        <Text as='h3' className={s.title}>
+        <Text as='h2' className={s.title}>
           {t('title')}
         </Text>
         <Text as='p' className={s.text}>

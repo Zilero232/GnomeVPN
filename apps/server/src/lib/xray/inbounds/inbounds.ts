@@ -1,21 +1,11 @@
+import { isNullish } from 'remeda';
+
 import type { PanelClient } from '../panel-client';
-import type { XrayInbound, XrayInboundPayload } from './inbounds.types';
+import type { CreateInboundInput, XrayInbound } from './inbounds.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { INBOUND_REMARK } from './inbounds.constants';
-
-const stringify = (value: unknown) => (value === undefined ? '' : JSON.stringify(value));
-
-export const inboundPayload = (inbound: Record<string, unknown>, remark: string = INBOUND_REMARK): XrayInboundPayload => ({
-  ...inbound,
-  remark,
-  enable: true,
-  port: inbound.port as number,
-  protocol: inbound.protocol as string,
-  settings: JSON.stringify(inbound.settings),
-  streamSettings: stringify(inbound.streamSettings),
-  sniffing: stringify(inbound.sniffing)
-});
+import { inboundPayload } from './inbounds.helpers';
 
 export class Inbounds {
   constructor(private readonly panel: PanelClient) {}
@@ -29,14 +19,14 @@ export class Inbounds {
   async get(remark: string = INBOUND_REMARK): Promise<XrayInbound> {
     const inbound = await this.find(remark);
 
-    if (!inbound) {
+    if (isNullish(inbound)) {
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `no inbound remarked ${remark}`);
     }
 
     return inbound;
   }
 
-  async create(inbound: Record<string, unknown>, remark: string = INBOUND_REMARK): Promise<void> {
+  async create({ inbound, remark = INBOUND_REMARK }: CreateInboundInput): Promise<void> {
     await this.panel.addInbound(inboundPayload(inbound, remark));
   }
 }

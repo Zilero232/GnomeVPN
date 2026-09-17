@@ -16,24 +16,16 @@
   background-color: var(--color-bg-deep);
   gap: 4px;
   overflow-x: auto;
-  scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  @include hide-scrollbar;
 }
 
 .tab {
-  position: relative;
+  @include tab-button;
+
   flex: 1 0 auto;
   padding: 0;
-  border: none;
   border-radius: var(--radius-sm);
-  background: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-family: var(--font-sans);
-  transition: color 0.18s ease;
 
   &:hover:not([data-active='true']) {
     color: var(--color-text);

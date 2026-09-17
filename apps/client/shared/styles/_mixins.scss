@@ -1,5 +1,6 @@
 @forward '@/shared/styles/animations';
 @forward '@/shared/styles/breakpoints';
+@use '@/shared/styles/breakpoints' as *;
 
 @mixin stack($gap: 16px) {
   display: flex;
@@ -17,6 +18,92 @@
   box-sizing: border-box;
 
   @include safe-padding($top, $right, $bottom, $left);
+}
+
+@mixin marketing-page($max-width, $gap: 36px, $gap-narrow: 26px) {
+  display: flex;
+  max-width: $max-width;
+  flex-direction: column;
+  padding: 64px 20px 80px;
+  margin: 0 auto;
+  gap: $gap;
+
+  @include below(md) {
+    padding: 40px 16px 56px;
+    gap: $gap-narrow;
+  }
+}
+
+@mixin marketing-title {
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  @include below(md) {
+    font-size: 26px;
+  }
+}
+
+@mixin tab-button {
+  position: relative;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color 0.18s ease;
+}
+
+@mixin text-button($font-size: 13px) {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: $font-size;
+  transition: color 0.16s ease;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent-dim);
+    outline-offset: 3px;
+  }
+}
+
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin hairline-cards {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-border);
+  gap: 1px;
+}
+
+@mixin icon-tile($size: 30px) {
+  display: flex;
+  width: $size;
+  height: $size;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
 }
 
 @mixin surface-card {

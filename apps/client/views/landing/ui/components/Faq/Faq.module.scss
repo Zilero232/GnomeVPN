@@ -1,11 +1,11 @@
+@use '@/shared/styles/mixins' as *;
+
 .list {
   display: flex;
-  overflow: hidden;
+
+  @include hairline-cards;
+
   flex-direction: column;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-border);
-  gap: 1px;
 }
 
 .item {

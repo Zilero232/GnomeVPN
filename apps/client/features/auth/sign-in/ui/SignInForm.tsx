@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/ui-kit';
 
-import type { SignInValues } from '../model/use-sign-in';
+import type { SignInValues } from '../model/hooks';
 import type { SignInFormProps } from './SignInForm.types';
 
-import { signInSchema, useSignIn } from '../model/use-sign-in';
+import { signInSchema, useSignIn } from '../model/hooks';
 
 import s from './SignInForm.module.scss';
 

@@ -1,13 +1,16 @@
-import { DEFAULT_LOCALE } from '@/shared/i18n';
+import { getTranslations } from 'next-intl/server';
+import * as rootParams from 'next/root-params';
+
+import { resolveLocale } from '@/shared/i18n';
 import { createPageMetadata } from '@/shared/seo';
 import { NotFoundView } from '@/views/not-found';
 
-export const metadata = createPageMetadata({
-  title: '404',
-  description: 'Страница не найдена. Page not found.',
-  path: '/404',
-  locale: DEFAULT_LOCALE
-});
+export const generateMetadata = async () => {
+  const locale = resolveLocale(await rootParams.locale());
+  const t = await getTranslations({ locale, namespace: 'notFound' });
+
+  return createPageMetadata({ title: t('code'), description: t('body'), locale });
+};
 
 const NotFound = () => <NotFoundView />;
 

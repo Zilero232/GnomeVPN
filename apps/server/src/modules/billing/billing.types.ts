@@ -13,6 +13,7 @@ export type ActivateInput = {
   userId: string;
   planId: PlanId;
   method: PaymentMethodRef | null;
+  db?: PrismaExecutor;
 };
 
 export type AttachMethodInput = {
@@ -36,6 +37,7 @@ export type RecordPaymentInput = {
 export type GrantExtraDevicesInput = {
   userId: string;
   quantity: number;
+  db?: PrismaExecutor;
 };
 
 export type BuyExtraDevicesServiceInput = {
