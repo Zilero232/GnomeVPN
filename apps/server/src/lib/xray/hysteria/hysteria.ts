@@ -2,8 +2,9 @@ import type { Inbounds } from '../inbounds';
 import type { PanelClient } from '../panel-client';
 import type { CreateClientInput, CreateClientResult, HysteriaClient, SetClientsEnabledInput } from './hysteria.types';
 
+import { AppServiceUnavailableException } from '../../../common/exceptions';
 import { serializeByKey } from '../serialize';
-import { parseSettings } from '../xray.helpers';
+import { readSettings } from '../xray.helpers';
 
 export class HysteriaClients {
   constructor(
@@ -15,10 +16,16 @@ export class HysteriaClients {
   async list(): Promise<HysteriaClient[]> {
     const inbound = await this.inbounds.get();
 
-    return (parseSettings(inbound).clients ?? []).filter((client): client is HysteriaClient => Boolean(client?.auth && client?.email));
+    const settings = readSettings<{ clients?: HysteriaClient[] }>(inbound);
+
+    if (settings === null) {
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to read an inbound whose settings could not be parsed');
+    }
+
+    return (settings.clients ?? []).filter((client): client is HysteriaClient => Boolean(client?.auth && client?.email));
   }
 
-  async create({ email, auth }: CreateClientInput): Promise<CreateClientResult> {
+  async create({ email, auth, deferRestart }: CreateClientInput): Promise<CreateClientResult> {
     return serializeByKey({
       key: this.nodeKey,
       task: async () => {
@@ -27,7 +34,10 @@ export class HysteriaClients {
 
         if (existing) {
           await this.panel.setClientsEnabled({ emails: [email], enabled: true });
-          await this.panel.restartCore();
+
+          if (!deferRestart) {
+            await this.panel.restartCore();
+          }
 
           return { nodeCredential: existing.auth, email };
         }
@@ -35,7 +45,10 @@ export class HysteriaClients {
         const inbound = await this.inbounds.get();
 
         await this.panel.addClient({ inboundId: inbound.id, email, auth });
-        await this.panel.restartCore();
+
+        if (!deferRestart) {
+          await this.panel.restartCore();
+        }
 
         return { nodeCredential: auth, email };
       }

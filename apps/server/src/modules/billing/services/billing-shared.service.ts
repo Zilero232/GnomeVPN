@@ -1,5 +1,3 @@
-import type {} from '@gnomevpn/schemas';
-
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 

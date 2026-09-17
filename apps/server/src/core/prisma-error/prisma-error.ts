@@ -1,4 +1,5 @@
-export type PrismaRequestError = Error & { code: string };
+import { Prisma } from '../../../generated';
 
-export const isPrismaRequestError = (error: unknown): error is PrismaRequestError =>
-  error instanceof Error && 'code' in error && typeof error.code === 'string';
+export type PrismaRequestError = Prisma.PrismaClientKnownRequestError;
+
+export const isPrismaRequestError = (error: unknown): error is PrismaRequestError => error instanceof Prisma.PrismaClientKnownRequestError;

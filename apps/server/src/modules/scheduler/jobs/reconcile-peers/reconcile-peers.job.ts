@@ -100,8 +100,8 @@ export class ReconcilePeersJob {
 
       try {
         await (peer.protocol === TUNNEL_PROTOCOL.vless
-          ? xray.createVlessClient(email, peer.nodeCredential)
-          : xray.createClient(email, peer.nodeCredential));
+          ? xray.createVlessClient({ email, id: peer.nodeCredential, deferRestart: true })
+          : xray.createClient({ email, auth: peer.nodeCredential, deferRestart: true }));
 
         nodeClients.set(email, true);
         restored += 1;

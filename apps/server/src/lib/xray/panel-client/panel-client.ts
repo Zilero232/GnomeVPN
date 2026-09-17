@@ -117,9 +117,6 @@ export class PanelClient {
     });
   }
 
-  // The full field set is mandatory. Writing only {email, id} leaves the panel
-  // storing the client while the running core serialises `clients: null`, and
-  // every connection then fails auth with a 404.
   async addVlessClient({ inboundId, email, id }: AddVlessClientInput): Promise<void> {
     await this.post(PANEL_ROUTES.addClient, {
       inboundIds: [inboundId],

@@ -52,8 +52,8 @@ export class PeersService {
     const client = xrayClientForNode(node);
 
     const create = match(protocol)
-      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient(email))
-      .otherwise(() => () => client.createClient(email));
+      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient({ email }))
+      .otherwise(() => () => client.createClient({ email }));
 
     try {
       const created = await create();

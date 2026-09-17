@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput } from './hysteria';
 import type { CreateVlessClientResult } from './vless';
-import type { XrayClientOptions } from './xray.types';
+import type { IssueClientInput, IssueVlessClientInput, XrayClientOptions } from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { HysteriaClients } from './hysteria';
@@ -67,9 +67,6 @@ export class XrayClient {
     });
   }
 
-  // Same contract as updateInbound: a re-provision must never drop the clients
-  // already on the node, so an inbound whose client list cannot be read is left
-  // alone rather than rewritten from the template.
   async ensureVlessInbound(inbound: Record<string, unknown>): Promise<void> {
     return serializeByKey({
       key: this.nodeKey,
@@ -95,12 +92,12 @@ export class XrayClient {
     });
   }
 
-  async createClient(email: string, auth?: string): Promise<CreateClientResult> {
-    return this.hysteria.create({ email, auth: auth ?? generateAuth() });
+  async createClient({ email, auth, deferRestart }: IssueClientInput): Promise<CreateClientResult> {
+    return this.hysteria.create({ email, auth: auth ?? generateAuth(), deferRestart });
   }
 
-  async createVlessClient(email: string, id?: string): Promise<CreateVlessClientResult> {
-    return this.vless.create({ email, id: id ?? randomUUID() });
+  async createVlessClient({ email, id, deferRestart }: IssueVlessClientInput): Promise<CreateVlessClientResult> {
+    return this.vless.create({ email, id: id ?? randomUUID(), deferRestart });
   }
 
   async deleteClient(email: string): Promise<void> {

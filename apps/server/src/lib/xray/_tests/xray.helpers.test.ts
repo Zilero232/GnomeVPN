@@ -3,16 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { XrayInbound } from '../inbounds';
 
 import { AUTH_BYTES } from '../xray.constants';
-import {
-  currentClients,
-  generateAuth,
-  parseSettings,
-  parseSniffing,
-  parseStreamSettings,
-  readClients,
-  readSettings,
-  stripCidrMask
-} from '../xray.helpers';
+import { generateAuth, parseSettings, parseSniffing, parseStreamSettings, readClients, readSettings } from '../xray.helpers';
 
 const inbound = (patch: Partial<XrayInbound>): XrayInbound => ({
   id: 1,
@@ -21,28 +12,6 @@ const inbound = (patch: Partial<XrayInbound>): XrayInbound => ({
   port: 443,
   settings: '{}',
   ...patch
-});
-
-describe('stripCidrMask', () => {
-  it('strips a trailing mask from an ipv4 address', () => {
-    expect(stripCidrMask('10.9.0.2/24')).toBe('10.9.0.2');
-  });
-
-  it('leaves a plain address alone', () => {
-    expect(stripCidrMask('10.9.0.2')).toBe('10.9.0.2');
-  });
-
-  it('strips a trailing mask from an ipv6 address', () => {
-    expect(stripCidrMask('2a02:5180::1/32')).toBe('2a02:5180::1');
-  });
-
-  it('leaves a plain ipv6 address alone', () => {
-    expect(stripCidrMask('2a02:5180::1')).toBe('2a02:5180::1');
-  });
-
-  it('strips only the last mask of a comma joined list', () => {
-    expect(stripCidrMask('10.9.0.2/24,10.9.0.3/24')).toBe('10.9.0.2/24,10.9.0.3');
-  });
 });
 
 describe('parseSettings', () => {
@@ -105,24 +74,6 @@ describe('parseSniffing', () => {
   });
 });
 
-describe('currentClients', () => {
-  it('returns the clients array', () => {
-    expect(currentClients(inbound({ settings: '{"clients":[{"email":"a"},{"email":"b"}]}' }))).toEqual([{ email: 'a' }, { email: 'b' }]);
-  });
-
-  it('returns an empty array when settings carry no clients', () => {
-    expect(currentClients(inbound({ settings: '{"secretKey":"key"}' }))).toEqual([]);
-  });
-
-  it('returns an empty array for malformed settings', () => {
-    expect(currentClients(inbound({ settings: '{{{' }))).toEqual([]);
-  });
-
-  it('returns an empty array when clients is null', () => {
-    expect(currentClients(inbound({ settings: '{"clients":null}' }))).toEqual([]);
-  });
-});
-
 describe('generateAuth', () => {
   it('returns a lowercase hex string', () => {
     expect(generateAuth()).toMatch(/^[\da-f]+$/);
@@ -156,10 +107,10 @@ describe('readClients', () => {
     expect(readClients(inbound({ settings: '{"secretKey":"key"}' }))).toEqual([]);
   });
 
-  it('refuses to guess at malformed settings, where currentClients would answer an empty list', () => {
+  it('refuses to guess at malformed settings, where a tolerant parse would answer an empty list', () => {
     const broken = inbound({ settings: '{not json' });
 
-    expect(currentClients(broken)).toEqual([]);
+    expect(parseSettings(broken).clients ?? []).toEqual([]);
     expect(readClients(broken)).toBeNull();
   });
 

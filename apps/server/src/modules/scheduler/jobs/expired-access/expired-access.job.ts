@@ -5,6 +5,7 @@ import { map, pipe, unique } from 'remeda';
 
 import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 
+import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { SubscriptionAccessService } from '../../../subscription-link';
 import { CONFIG_GRACE_HOURS } from '../../config';
@@ -35,9 +36,15 @@ export class ExpiredAccessJob {
   private async sweep({ user, state, act }: SweepInput): Promise<string[]> {
     const owners = await this.ownersOf({ user, state });
 
-    await Promise.allSettled(owners.map((userId) => act(userId)));
+    const results = await Promise.allSettled(owners.map((userId) => act(userId)));
 
-    return owners;
+    const failed = results.filter((result) => result.status === 'rejected');
+
+    for (const result of failed) {
+      this.logger.error(`sweeping a subscriber failed: ${describeError(result.reason)}`);
+    }
+
+    return owners.filter((_, index) => results[index].status === 'fulfilled');
   }
 
   @Cron(CronExpression.EVERY_5_MINUTES)

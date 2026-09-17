@@ -13,6 +13,7 @@ export type VlessClient = {
 export type CreateVlessClientInput = {
   email: string;
   id: string;
+  deferRestart?: boolean;
 };
 
 export type CreateVlessClientResult = {

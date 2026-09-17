@@ -21,7 +21,7 @@ export class VlessClients {
     return (settings?.clients ?? []).filter((client) => Boolean(client?.id && client?.email));
   }
 
-  async create({ email, id }: CreateVlessClientInput): Promise<CreateVlessClientResult> {
+  async create({ email, id, deferRestart }: CreateVlessClientInput): Promise<CreateVlessClientResult> {
     return serializeByKey({
       key: this.nodeKey,
       task: async () => {
@@ -30,7 +30,10 @@ export class VlessClients {
 
         if (existing) {
           await this.panel.setClientsEnabled({ emails: [email], enabled: true });
-          await this.panel.restartCore();
+
+          if (!deferRestart) {
+            await this.panel.restartCore();
+          }
 
           return { nodeCredential: existing.id, email };
         }
@@ -38,14 +41,13 @@ export class VlessClients {
         const inbound = await this.inbounds.get(VLESS_INBOUND_REMARK);
 
         await this.panel.addVlessClient({ inboundId: inbound.id, email, id });
-        await this.panel.restartCore();
+
+        if (!deferRestart) {
+          await this.panel.restartCore();
+        }
 
         return { nodeCredential: id, email };
       }
     });
-  }
-
-  async delete(email: string): Promise<void> {
-    return serializeByKey({ key: this.nodeKey, task: () => this.panel.deleteClient(email) });
   }
 }
