@@ -348,7 +348,9 @@
     "setup": "Setup",
     "faq": "FAQ",
     "about": "About",
-    "account": "Account"
+    "account": "Account",
+    "menu": "Menu",
+    "openMenu": "Open menu"
   },
   "footer": {
     "copy": "© {year} {name}",

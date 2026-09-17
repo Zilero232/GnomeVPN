@@ -17,7 +17,8 @@ export const realityConfigSchema = z.object({
   publicKey: z.string().min(1),
   shortId: z.string().min(1),
   fingerprint: z.string().min(1),
-  flow: z.string().default('')
+  flow: z.string().default(''),
+  serviceName: z.string().default('')
 });
 
 export const tunnelConfigSchema = z

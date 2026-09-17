@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { PEER_PROTOCOL_SUFFIX } from '../../../config';
 import { peerClientName } from '../peer-name';
 
 describe('peerClientName', () => {
@@ -42,7 +43,25 @@ describe('peerClientName', () => {
     const wireguard = peerClientName({ ...shared, protocol: 'wireguard' });
 
     expect(hysteria).not.toBe(wireguard);
-    expect(wireguard).toBe(`${hysteria}-wg`);
+    expect(wireguard).toBe(`${hysteria}${PEER_PROTOCOL_SUFFIX.wireguard}`);
+  });
+
+  it('scopes a vless client so it cannot collide with the hysteria2 one on the same node', () => {
+    const shared = { kind: 'config', name: 'incy', nodeId: 'nl-1', userId: 'user-1' } as const;
+
+    const hysteria = peerClientName({ ...shared, protocol: 'hysteria2' });
+    const vless = peerClientName({ ...shared, protocol: 'vless' });
+
+    expect(vless).not.toBe(hysteria);
+    expect(vless).toBe(`${hysteria}${PEER_PROTOCOL_SUFFIX.vless}`);
+  });
+
+  it('gives every protocol on one node a name of its own, which the panel requires', () => {
+    const shared = { kind: 'config', name: 'incy', nodeId: 'nl-1', userId: 'user-1' } as const;
+
+    const names = (['hysteria2', 'vless', 'wireguard'] as const).map((protocol) => peerClientName({ ...shared, protocol }));
+
+    expect(new Set(names).size).toBe(names.length);
   });
 
   it('leaves a hysteria2 name exactly as it was before the protocol was part of it', () => {

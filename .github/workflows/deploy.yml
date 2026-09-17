@@ -1,9 +1,10 @@
 name: deploy
 
-# Images to ghcr, then a pull on the VPS. The VPS holds no clone of the
-# repository, so docker-compose.yml and the Caddyfile are copied on every
-# deploy — Caddy reads the latter through a bind mount rather than from an
-# image layer.
+# Images to ghcr, then a pull on the VPS. The web and the server build in
+# parallel jobs and share .github/actions/docker-image. The VPS holds no clone
+# of the repository, so docker-compose.yml and the Caddyfile are copied on
+# every deploy — Caddy reads the latter through a bind mount rather than from
+# an image layer.
 #
 # Why it is shaped this way: ../../CLAUDE.md, "What the workflows assume".
 #
@@ -30,7 +31,9 @@ env:
 permissions: {}
 
 jobs:
-  images:
+  # The two images share nothing at build time, so they build side by side —
+  # the deploy waits on the slower one rather than on their sum.
+  web:
     permissions:
       contents: read
       packages: write
@@ -38,49 +41,39 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
 
-    outputs:
-      owner: ${{ steps.owner.outputs.value }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/docker-image
+        with:
+          image: web
+          dockerfile: apps/client/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
+          build-args: NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  server:
+    permissions:
+      contents: read
+      packages: write
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - name: Lowercase the image prefix
-        id: owner
-        run: echo "value=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
-
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+      - uses: ./.github/actions/docker-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push the web image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
-        with:
-          context: .
-          file: apps/client/Dockerfile
-          push: true
-          tags: ghcr.io/${{ steps.owner.outputs.value }}/gnomevpn-web:latest
-          build-args: NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          cache-from: type=gha,scope=web
-          cache-to: type=gha,mode=max,scope=web
-
-      - name: Build and push the server image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
-        with:
-          context: .
-          file: apps/server/Dockerfile
-          push: true
-          tags: ghcr.io/${{ steps.owner.outputs.value }}/gnomevpn-server:latest
-          cache-from: type=gha,scope=server
-          cache-to: type=gha,mode=max,scope=server
+          image: server
+          dockerfile: apps/server/Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   vps:
-    needs: images
+    needs: [web, server]
 
     permissions:
       contents: read

@@ -18,6 +18,7 @@ export type PeerIdentity = {
 export type ReconcilePeer = PeerIdentity & {
   id: string;
   state: PeerState;
+  nodeCredential: string;
 };
 
 export type RemoveRevokedInput = {
@@ -27,6 +28,10 @@ export type RemoveRevokedInput = {
 };
 
 export type SyncEnabledInput = RemoveRevokedInput;
+
+export type RestoreMissingInput = RemoveRevokedInput & {
+  node: ReconcileNode;
+};
 
 export type CollectOrphansInput = {
   xray: XrayClient;

@@ -95,6 +95,14 @@
   }
 }
 
+.accountLink {
+  text-decoration: none;
+
+  @include below(sm) {
+    display: none;
+  }
+}
+
 .downloadLabel {
   @include below(sm) {
     display: none;

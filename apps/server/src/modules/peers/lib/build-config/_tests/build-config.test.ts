@@ -57,7 +57,8 @@ describe('buildTunnelConfig over vless', () => {
       publicKey: node.realityPublicKey,
       shortId: node.realityShortId,
       fingerprint: REALITY.fingerprint,
-      flow: REALITY.flow
+      flow: REALITY.flow,
+      serviceName: REALITY.serviceName
     });
   });
 

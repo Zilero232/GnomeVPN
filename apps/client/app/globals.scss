@@ -121,10 +121,13 @@ select,
 .gnomevpn-toaster {
   top: calc(var(--safe-area-top) + 10px) !important;
 
-  --width: min(100vw - 24px, 340px);
+  --width: min(100vw - 24px, 380px);
 }
 
 .gnomevpn-toaster [data-sonner-toast] {
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   padding: 12px 15px;
   border: 1px solid rgb(230 240 236 / 9%);
@@ -135,6 +138,7 @@ select,
     0 0 0 1px rgb(0 0 0 / 40%),
     0 18px 40px -22px rgb(0 0 0 / 75%);
   color: var(--color-text);
+  margin-inline-start: auto;
 }
 
 .gnomevpn-toaster [data-sonner-toast]:after {

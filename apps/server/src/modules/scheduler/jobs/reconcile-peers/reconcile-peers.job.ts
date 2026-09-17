@@ -1,6 +1,7 @@
+import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { isEmpty } from 'remeda';
+import { isEmpty, isNonNullish } from 'remeda';
 
 import type {
   CollectOrphansInput,
@@ -8,13 +9,15 @@ import type {
   PeerIdentity,
   ReconcileNode,
   RemoveRevokedInput,
+  RestoreMissingInput,
   SyncEnabledInput
 } from './reconcile-peers.job.types';
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { PEER_PREFIX, peerClientNames } from '../../../peers';
+import { PEER_PREFIX, peerClientName, peerClientNames } from '../../../peers';
 import { BOOT_GRACE_MS, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
+import { ownerIdOf } from './lib';
 
 @Injectable()
 export class ReconcilePeersJob {
@@ -42,7 +45,8 @@ export class ReconcilePeersJob {
           name: true,
           nodeId: true,
           protocol: true,
-          state: true
+          state: true,
+          nodeCredential: true
         }
       }),
       xray.clientEnabledByEmail(),
@@ -50,10 +54,11 @@ export class ReconcilePeersJob {
     ]);
 
     const removed = await this.removeRevoked({ xray, peers, nodeClients });
+    const restored = await this.restoreMissing({ xray, node, peers, nodeClients });
     const synced = await this.syncEnabled({ xray, peers, nodeClients });
     const collected = await this.collectOrphans({ xray, nodeId: node.id, peers, nodeClients, online });
 
-    if (removed || synced || collected) {
+    if (removed || restored || synced || collected) {
       await xray.restartCore();
     }
   }
@@ -78,6 +83,43 @@ export class ReconcilePeersJob {
     await Promise.all(doomed.map((email) => xray.deleteClient(email)));
 
     return !isEmpty(doomed);
+  }
+
+  private async restoreMissing({ xray, node, peers, nodeClients }: RestoreMissingInput): Promise<boolean> {
+    const missing = peers.filter((peer) => peer.state !== 'revoked' && !this.namesOf(peer).some((email) => nodeClients.has(email)));
+
+    if (isEmpty(missing)) {
+      return false;
+    }
+
+    let restored = 0;
+    let failedCount = 0;
+
+    for (const peer of missing) {
+      const email = peerClientName(peer);
+
+      try {
+        await (peer.protocol === TUNNEL_PROTOCOL.vless
+          ? xray.createVlessClient(email, peer.nodeCredential)
+          : xray.createClient(email, peer.nodeCredential));
+
+        nodeClients.set(email, true);
+        restored += 1;
+      } catch (error) {
+        failedCount += 1;
+        this.logger.warn(`restoring ${email} failed on node ${node.id}: ${describeError(error)}`);
+      }
+    }
+
+    if (failedCount > 0) {
+      this.logger.warn(`restoring ${failedCount} of ${missing.length} peer(s) failed on node ${node.id}`);
+    }
+
+    if (restored > 0) {
+      this.logger.log(`restored ${restored} peer(s) missing from node ${node.id}`);
+    }
+
+    return restored > 0;
   }
 
   private async syncEnabled({ xray, peers, nodeClients }: SyncEnabledInput): Promise<boolean> {
@@ -111,6 +153,28 @@ export class ReconcilePeersJob {
     return true;
   }
 
+  private async withoutAnOwner(emails: string[]): Promise<string[]> {
+    if (isEmpty(emails)) {
+      return [];
+    }
+
+    const owners = new Map(emails.map((email) => [email, ownerIdOf(email)]));
+    const named = [...new Set([...owners.values()].filter(isNonNullish))];
+
+    const alive = await this.prisma.user.findMany({
+      where: { id: { in: named } },
+      select: { id: true }
+    });
+
+    const living = new Set(alive.map((user) => user.id));
+
+    return emails.filter((email) => {
+      const owner = owners.get(email);
+
+      return isNonNullish(owner) && !living.has(owner);
+    });
+  }
+
   private isServerOwned(email: string): boolean {
     return Object.values(PEER_PREFIX).some((prefix) => email.startsWith(prefix));
   }
@@ -126,7 +190,7 @@ export class ReconcilePeersJob {
     const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
     const seenNow = new Set<string>();
 
-    const doomed: string[] = [];
+    const candidates: string[] = [];
 
     for (const email of nodeClients.keys()) {
       if (known.has(email) || !this.isServerOwned(email)) {
@@ -139,8 +203,10 @@ export class ReconcilePeersJob {
         continue;
       }
 
-      doomed.push(email);
+      candidates.push(email);
     }
+
+    const doomed = await this.withoutAnOwner(candidates);
 
     await Promise.all(doomed.map((email) => xray.deleteClient(email)));
 

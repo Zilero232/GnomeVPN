@@ -4,7 +4,9 @@ import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { describe, expect, it } from 'vitest';
 
 import { serverName } from '../../server-name';
+import { HYSTERIA2_SCHEME } from '../hysteria2/hysteria2.constants';
 import { incyServerUri } from '../incy-uri';
+import { VLESS_NETWORK } from '../vless/vless.constants';
 
 const config: TunnelConfig = {
   auth: 'secret-auth',
@@ -18,10 +20,10 @@ const config: TunnelConfig = {
 };
 
 describe('incyServerUri', () => {
-  it('builds a hy2 link INCY can parse', () => {
+  it('builds a hysteria2 link INCY can parse', () => {
     const uri = incyServerUri({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' });
 
-    expect(uri.startsWith('hy2://secret-auth@203.0.113.10:443/')).toBe(true);
+    expect(uri.startsWith(`${HYSTERIA2_SCHEME}://secret-auth@203.0.113.10:443/`)).toBe(true);
   });
 
   it('carries the sni the node presents', () => {
@@ -68,14 +70,15 @@ const vlessConfig: TunnelConfig = {
     publicKey: 'node-reality-public-key',
     shortId: 'aabbccdd',
     fingerprint: 'chrome',
-    flow: 'xtls-rprx-vision'
+    flow: '',
+    serviceName: 'grpc'
   }
 };
 
 const vlessParams = (uri: string) => new URL(uri).searchParams;
 
 describe('incyServerUri over vless', () => {
-  it('builds a vless link rather than a hy2 one', () => {
+  it('builds a vless link rather than a hysteria2 one', () => {
     const uri = incyServerUri({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null });
 
     expect(uri.startsWith('vless://')).toBe(true);
@@ -93,7 +96,19 @@ describe('incyServerUri over vless', () => {
   it('rides tcp, which is the whole point of offering it beside hysteria2', () => {
     const params = vlessParams(incyServerUri({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
 
-    expect(params.get('type')).toBe('tcp');
+    expect(params.get('type')).toBe(VLESS_NETWORK);
+  });
+
+  it('names the grpc service, without which the client reaches no inbound', () => {
+    const params = vlessParams(incyServerUri({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+
+    expect(params.get('serviceName')).toBe(vlessConfig.reality?.serviceName);
+  });
+
+  it('carries no flow: a raw-tcp flow on a grpc stream is refused by the core', () => {
+    const params = vlessParams(incyServerUri({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+
+    expect(params.has('flow')).toBe(false);
   });
 
   it('never marks a reality server insecure — it presents a real certificate', () => {
@@ -102,11 +117,10 @@ describe('incyServerUri over vless', () => {
     expect(params.has('insecure')).toBe(false);
   });
 
-  it('distinguishes the two entries for one node, so the list is not two identical names', () => {
+  it('leaves the name free of transport labels, which the client renders from the uri itself', () => {
     const vless = incyServerUri({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null });
-    const hysteria = incyServerUri({ config, country: 'Netherlands', countryCode: 'NL', city: null });
 
-    expect(new URL(vless).hash).not.toBe(new URL(hysteria).hash);
+    expect(decodeURIComponent(new URL(vless).hash)).toBe(`#${serverName({ country: 'Netherlands', countryCode: 'NL', city: null })}`);
   });
 
   it('refuses to advertise a server whose node was never given reality keys', () => {
