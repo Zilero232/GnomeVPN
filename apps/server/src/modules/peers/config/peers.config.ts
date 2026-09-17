@@ -1,5 +1,5 @@
 export const TUNNEL = {
-  insecure: true,
+  insecure: false,
   dns: ['1.1.1.1', '8.8.8.8']
 } as const;
 
@@ -8,10 +8,17 @@ export const PEER_PREFIX = {
   config: 'cfg-'
 } as const;
 
+export const PEER_PROTOCOL_SUFFIX = {
+  hysteria2: '',
+  vless: '-vl',
+  wireguard: '-wg'
+} as const;
+
 export const REALITY = {
   listenPort: 443,
   fingerprint: 'chrome',
-  flow: 'xtls-rprx-vision'
+  flow: '',
+  serviceName: 'grpc'
 } as const;
 
 export const REALITY_SHORT_ID_BYTES = 8;
