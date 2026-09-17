@@ -13,6 +13,9 @@ model Node {
 
   wgPublicKey String? @map("wg_public_key")
 
+  realityPublicKey String? @map("reality_public_key")
+  realityShortId   String? @map("reality_short_id")
+
   apiUrl         String @map("api_url")
   apiTokenEnvVar String @map("api_token_env_var")
 

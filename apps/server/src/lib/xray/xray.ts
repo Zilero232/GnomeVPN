@@ -1,6 +1,8 @@
 import { Logger } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 
 import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput } from './hysteria';
+import type { CreateVlessClientResult } from './vless';
 import type { AddWireguardPeerInput, WireguardInboundInput } from './wireguard';
 import type { XrayClientOptions } from './xray.types';
 
@@ -9,6 +11,7 @@ import { HysteriaClients } from './hysteria';
 import { inboundPayload, Inbounds } from './inbounds';
 import { PanelClient } from './panel-client';
 import { serializeByKey } from './serialize';
+import { VLESS_INBOUND_REMARK, VlessClients } from './vless';
 import { WireguardPeers } from './wireguard';
 import { REQUEST_TIMEOUT_MS, XRAY_STATE_RUNNING } from './xray.constants';
 import { generateAuth, readClients } from './xray.helpers';
@@ -20,6 +23,7 @@ export class XrayClient {
   private readonly nodeKey: string;
   private readonly inbounds: Inbounds;
   private readonly hysteria: HysteriaClients;
+  private readonly vless: VlessClients;
   private readonly wireguard: WireguardPeers;
 
   constructor(opts: XrayClientOptions) {
@@ -33,11 +37,16 @@ export class XrayClient {
 
     this.inbounds = new Inbounds(this.panel);
     this.hysteria = new HysteriaClients(this.panel, this.inbounds, this.nodeKey);
+    this.vless = new VlessClients(this.panel, this.inbounds, this.nodeKey);
     this.wireguard = new WireguardPeers(this.panel, this.inbounds, this.nodeKey);
   }
 
   async hasInbound(): Promise<boolean> {
     return Boolean(await this.inbounds.find());
+  }
+
+  async hasVlessInbound(): Promise<boolean> {
+    return Boolean(await this.inbounds.find(VLESS_INBOUND_REMARK));
   }
 
   async hasWireguardInbound(): Promise<boolean> {
@@ -70,8 +79,40 @@ export class XrayClient {
     });
   }
 
+  // Same contract as updateInbound: a re-provision must never drop the clients
+  // already on the node, so an inbound whose client list cannot be read is left
+  // alone rather than rewritten from the template.
+  async ensureVlessInbound(inbound: Record<string, unknown>): Promise<void> {
+    return serializeByKey({
+      key: this.nodeKey,
+      task: async () => {
+        const current = await this.inbounds.find(VLESS_INBOUND_REMARK);
+
+        if (!current) {
+          await this.inbounds.create(inbound, VLESS_INBOUND_REMARK);
+
+          return;
+        }
+
+        const clients = readClients(current);
+
+        if (clients === null) {
+          throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'refusing to rewrite a reality inbound whose clients could not be read');
+        }
+
+        const settings = { ...(inbound.settings as object), clients };
+
+        await this.panel.updateInbound(current.id, inboundPayload({ ...inbound, settings }, VLESS_INBOUND_REMARK));
+      }
+    });
+  }
+
   async createClient(email: string): Promise<CreateClientResult> {
     return this.hysteria.create({ email, auth: generateAuth() });
+  }
+
+  async createVlessClient(email: string): Promise<CreateVlessClientResult> {
+    return this.vless.create({ email, id: randomUUID() });
   }
 
   async deleteClient(email: string): Promise<void> {

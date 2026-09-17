@@ -1,31 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
 import { extraDevicesPriceRub, resolveLimits } from '../addons';
-import { EXTRA_DEVICE_PRICE_RUB } from '../addons.constants';
+import { DEFAULT_DEVICE_LIMIT, EXTRA_DEVICE_PRICE_RUB, MAX_EXTRA_DEVICES } from '../addons.constants';
 
 describe('resolveLimits', () => {
-  it('falls back to the base limits for null', () => {
-    expect(resolveLimits(null)).toMatchObject({ deviceLimit: 2, configLimit: 5, extraDevices: 0 });
+  it('falls back to the base limit when nothing was bought', () => {
+    for (const input of [null, undefined, 0]) {
+      expect(resolveLimits(input)).toMatchObject({ deviceLimit: DEFAULT_DEVICE_LIMIT, extraDevices: 0 });
+    }
   });
 
-  it('falls back to the base limits for undefined', () => {
-    expect(resolveLimits(undefined)).toMatchObject({ deviceLimit: 2, configLimit: 5, extraDevices: 0 });
-  });
-
-  it('clamps a negative count to zero', () => {
-    expect(resolveLimits(-4)).toMatchObject({ deviceLimit: 2, configLimit: 5, extraDevices: 0 });
+  it('clamps a negative count to zero rather than shrinking the limit', () => {
+    expect(resolveLimits(-4)).toMatchObject({ deviceLimit: DEFAULT_DEVICE_LIMIT, extraDevices: 0 });
   });
 
   it('caps anything above the maximum', () => {
-    expect(resolveLimits(99)).toMatchObject({ deviceLimit: 10, configLimit: 21, extraDevices: 8 });
+    expect(resolveLimits(MAX_EXTRA_DEVICES + 91)).toMatchObject({
+      deviceLimit: DEFAULT_DEVICE_LIMIT + MAX_EXTRA_DEVICES,
+      extraDevices: MAX_EXTRA_DEVICES
+    });
   });
 
-  it('adds two configs per extra device', () => {
-    expect(resolveLimits(3)).toMatchObject({ deviceLimit: 5, configLimit: 11, extraDevices: 3 });
+  it('adds one device slot per device bought', () => {
+    const bought = 3;
+
+    expect(resolveLimits(bought).deviceLimit).toBe(DEFAULT_DEVICE_LIMIT + bought);
   });
 
   it('reports the price and the ceiling alongside the limits', () => {
-    expect(resolveLimits(1)).toMatchObject({ pricePerDeviceRub: EXTRA_DEVICE_PRICE_RUB, maxExtraDevices: 8 });
+    expect(resolveLimits(1)).toMatchObject({ pricePerDeviceRub: EXTRA_DEVICE_PRICE_RUB, maxExtraDevices: MAX_EXTRA_DEVICES });
   });
 });
 

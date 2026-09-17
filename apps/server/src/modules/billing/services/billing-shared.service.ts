@@ -1,4 +1,4 @@
-import type { CheckoutClient } from '@gnomevpn/schemas';
+import type {} from '@gnomevpn/schemas';
 
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
@@ -29,8 +29,8 @@ export class BillingSharedService {
     return this.config.get('YOOKASSA_RECURRING');
   }
 
-  returnUrlFor(client: CheckoutClient): string {
-    return client === 'desktop' ? this.config.get('YOOKASSA_RETURN_URL_DESKTOP') : this.config.get('YOOKASSA_RETURN_URL');
+  returnUrl(): string {
+    return this.config.get('YOOKASSA_RETURN_URL');
   }
 
   async setAutoRenew({ userId, isEnabled }: SetAutoRenewServiceInput): Promise<void> {

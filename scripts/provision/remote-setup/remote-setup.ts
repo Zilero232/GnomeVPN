@@ -3,12 +3,14 @@ import type { SshClient } from '@gnomevpn/scripts/ssh';
 import { all, arg, dirOf, dockerExec, dockerShell, line, orElse, silent } from '@gnomevpn/scripts/shell';
 import pWaitFor from 'p-wait-for';
 
-import type { ConfigurePanelInput, EnsuredWireguardKeys, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
+import type { ConfigurePanelInput, EnsuredRealityKeys, EnsuredWireguardKeys, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
 
 import { PANEL_USERNAME } from '../../../apps/server/src/lib/xray';
 import { WG } from '../../../apps/server/src/modules/peers/config';
+import { generateRealityKeys, generateRealityShortId } from '../../../apps/server/src/modules/peers/lib/reality-keys';
 import { generateWireguardKeys } from '../../../apps/server/src/modules/peers/lib/wg-keys';
 import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
+import { REALITY_KEY_PATH, REALITY_LISTEN_PORT, REALITY_PUB_PATH, REALITY_SID_PATH } from '../reality-inbound';
 import { WG_KEY_PATH, WG_PUB_PATH } from '../wireguard-inbound';
 import { CONTAINER_NAME, DOCKER_INSTALL_URL, PANEL_BOOT_INTERVAL_MS, PANEL_BOOT_TIMEOUT_MS, REMOTE_DIR } from './remote-setup.constants';
 
@@ -48,7 +50,7 @@ export const openTunnelPort = async (ssh: SshClient) => {
     return;
   }
 
-  const rules = [`${LISTEN_PORT}/udp`, `${PANEL_PORT}/tcp`, `${WG.listenPort}/udp`];
+  const rules = [`${LISTEN_PORT}/udp`, `${REALITY_LISTEN_PORT}/tcp`, `${PANEL_PORT}/tcp`, `${WG.listenPort}/udp`];
 
   for (const rule of rules) {
     await ssh.exec(line(['ufw', 'allow', rule]));
@@ -82,6 +84,39 @@ export const ensureWireguardKeys = async (ssh: SshClient): Promise<EnsuredWiregu
   }
 
   return { privateKey, publicKey, wasGenerated: privateKey === fresh.privateKey };
+};
+
+export const ensureRealityKeys = async (ssh: SshClient): Promise<EnsuredRealityKeys> => {
+  const fresh = generateRealityKeys();
+  const freshShortId = generateRealityShortId();
+
+  const result = await ssh.exec(
+    inContainer(
+      all([
+        line(['mkdir', '-p', dirOf(REALITY_KEY_PATH)]),
+        orElse([silent(line(['test', '-s', REALITY_KEY_PATH])), `printf "%s" ${arg(fresh.privateKey)} > ${REALITY_KEY_PATH}`]),
+        orElse([silent(line(['test', '-s', REALITY_PUB_PATH])), `printf "%s" ${arg(fresh.publicKey)} > ${REALITY_PUB_PATH}`]),
+        orElse([silent(line(['test', '-s', REALITY_SID_PATH])), `printf "%s" ${arg(freshShortId)} > ${REALITY_SID_PATH}`]),
+        line(['cat', REALITY_KEY_PATH]),
+        'echo',
+        line(['cat', REALITY_PUB_PATH]),
+        'echo',
+        line(['cat', REALITY_SID_PATH])
+      ])
+    )
+  );
+
+  if (result.exitCode !== 0) {
+    throw new Error(`cannot reach the panel container to read the Reality keys: ${result.stderr.trim() || 'no output'}`);
+  }
+
+  const [privateKey, publicKey, shortId] = result.stdout.trim().split('\n');
+
+  if (!privateKey || !publicKey || !shortId) {
+    throw new Error('the panel container returned no Reality keys');
+  }
+
+  return { privateKey, publicKey, shortId, wasGenerated: privateKey === fresh.privateKey };
 };
 
 const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput) => {

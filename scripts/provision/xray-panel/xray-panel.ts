@@ -16,6 +16,13 @@ export const ensureInbound = async ({ inbound, ...credentials }: EnsureInboundIn
   await xray.restartCore();
 };
 
+export const ensureVlessInbound = async ({ inbound, ...credentials }: EnsureInboundInput) => {
+  const xray = new XrayClient(credentials);
+
+  await xray.ensureVlessInbound(inbound);
+  await xray.restartCore();
+};
+
 export const ensureWireguardInbound = async ({ inbound, ...credentials }: EnsureWireguardInboundInput) => {
   const xray = new XrayClient(credentials);
 

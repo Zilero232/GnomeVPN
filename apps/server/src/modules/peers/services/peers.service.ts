@@ -5,6 +5,7 @@ import { groupBy, isEmpty } from 'remeda';
 import type { Prisma } from '../../../../generated';
 import type {
   CreatedPeer,
+  CreateVlessClientInput,
   CreateWireguardClientInput,
   DiscardPeerInput,
   FindPeersInput,
@@ -58,12 +59,28 @@ export class PeersService {
       return this.createWireguardClient({ node, nodeId, email });
     }
 
+    if (protocol === TUNNEL_PROTOCOL.vless) {
+      return this.createVlessClient({ node, email });
+    }
+
     try {
       const created = await xrayClientForNode(node).createClient(email);
 
       return { nodeCredential: created.nodeCredential, email, protocol: TUNNEL_PROTOCOL.hysteria2 };
     } catch (error) {
       this.logger.error(`createClient failed on ${node.apiUrl}: ${describeError(error)}`);
+
+      throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
+    }
+  }
+
+  private async createVlessClient({ node, email }: CreateVlessClientInput): Promise<CreatedPeer> {
+    try {
+      const created = await xrayClientForNode(node).createVlessClient(email);
+
+      return { nodeCredential: created.nodeCredential, email, protocol: TUNNEL_PROTOCOL.vless };
+    } catch (error) {
+      this.logger.error(`createVlessClient failed on ${node.apiUrl}: ${describeError(error)}`);
 
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
     }

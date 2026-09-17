@@ -1,12 +1,12 @@
 'use client';
 
 import { useFormatter, useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { SITE } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
-import { BrandMark, Text } from '@/shared/ui';
+import { Link } from '@/shared/i18n/navigation';
+import { BrandMark, Text } from '@/ui-kit';
 
 import { PRIVACY_SECTIONS, PRIVACY_UPDATED } from '../config';
 

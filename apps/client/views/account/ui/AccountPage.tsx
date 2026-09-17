@@ -1,6 +1,6 @@
 'use client';
 
-import { CreditCard, FileKey, LogOut, UserRound } from 'lucide-react';
+import { CreditCard, LogOut, Smartphone, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
@@ -8,8 +8,8 @@ import { useAvatarSeed, useCurrentUser } from '@/entities/auth/user';
 import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { useSignOut } from '@/features/auth/sign-out';
 import { useVerifyEmailOutcome } from '@/features/auth/verify-email';
-import { ConfigList } from '@/features/vpn/download-config';
-import { Avatar, Text } from '@/shared/ui';
+import { IncyCard } from '@/features/vpn/connect-incy';
+import { Avatar, Text } from '@/ui-kit';
 
 import type { AccountTab } from './components';
 
@@ -20,7 +20,7 @@ import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
-  const tConfigs = useTranslations('configs');
+  const tIncy = useTranslations('incy');
   const { email, name } = useCurrentUser();
   const { subscription, isLoading } = useSubscriptionStatus();
 
@@ -37,11 +37,10 @@ export const AccountPage = () => {
       render: () => <SubscriptionCard isLoading={isLoading} subscription={subscription} />
     },
     {
-      value: 'configs',
-      label: tConfigs('title'),
-      icon: FileKey,
-      render: () => <ConfigList />,
-      isBare: true
+      value: 'incy',
+      label: tIncy('tab'),
+      icon: Smartphone,
+      render: () => <IncyCard />
     },
     {
       value: 'profile',

@@ -1,17 +1,19 @@
 # syntax=docker/dockerfile:1
 #
-# GnomeVPN web client — static Next.js export served by Caddy.
+# GnomeVPN web client — Next.js server.
 #
 # The build context MUST be the monorepo root: the client depends on the
 # `@gnomevpn/schemas` workspace package.
 # Build from the repo root with:
 #   docker build -f apps/client/Dockerfile -t gnomevpn-web .
 #
-# This image serves the landing page and the account area. The desktop app talks
-# to the API directly, so nothing here proxies the tunnel.
+# This image runs the Next.js server itself rather than shipping a static
+# export: pages render per request, so SEO metadata and the landing page reflect
+# server state instead of whatever was true at build time. Caddy sits in front
+# of it and terminates TLS.
 #
-# NEXT_PUBLIC_* values are baked into the static bundle at build time and must be
-# passed as build args — they are not secrets, they ship to the browser.
+# NEXT_PUBLIC_* values are inlined into the browser bundle at build time and
+# must be passed as build args — they are not secrets, they ship to the browser.
 
 FROM oven/bun:1.3.14 AS build
 WORKDIR /app
@@ -25,9 +27,6 @@ COPY apps/client/package.json ./apps/client/package.json
 COPY apps/server/package.json ./apps/server/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
-# --frozen-lockfile validates the workspace topology, so the tauri manifest must
-# be present even though this image never builds the desktop app.
-COPY apps/tauri/package.json ./apps/tauri/package.json
 # Lifecycle scripts are off because the server's postinstall runs
 # `prisma generate` before its schema is copied in.
 # A retry loop that wipes the download cache between attempts survives transient
@@ -41,11 +40,27 @@ RUN for attempt in 1 2 3; do \
 COPY packages/schemas ./packages/schemas
 COPY apps/client ./apps/client
 
-RUN bun --filter @gnomevpn/client build && test -f apps/client/out/index.html
+RUN bun --filter @gnomevpn/client build && test -f apps/client/.next/standalone/apps/client/server.js
 
-FROM caddy:2-alpine AS runner
+FROM node:22-alpine AS runner
+WORKDIR /app
 
-COPY infra/caddy/Caddyfile /etc/caddy/Caddyfile
-COPY --from=build /app/apps/client/out /srv/www
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
-EXPOSE 80 443
+RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
+
+# `output: 'standalone'` traces the runtime dependencies into .next/standalone,
+# laid out from `outputFileTracingRoot` — the monorepo root — so the server
+# entrypoint keeps its apps/client prefix. static/ and public/ are not traced
+# and are copied in beside it.
+COPY --from=build --chown=nextjs:nodejs /app/apps/client/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/apps/client/.next/static ./apps/client/.next/static
+COPY --from=build --chown=nextjs:nodejs /app/apps/client/public ./apps/client/public
+
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["node", "apps/client/server.js"]

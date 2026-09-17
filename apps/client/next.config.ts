@@ -28,17 +28,32 @@ loadRootEnv();
 
 const withNextIntl = createNextIntlPlugin('./shared/i18n/request.ts');
 
+const SECURITY_HEADERS = [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' }
+];
+
 const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: rootPackage.version
   },
-  output: 'export',
+  output: 'standalone',
+  outputFileTracingRoot: path.resolve(clientRoot, '..', '..'),
   reactCompiler: true,
-  reactStrictMode: false,
-  images: { unoptimized: true },
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 7
+  },
   experimental: { optimizePackageImports: ['lucide-react', 'remeda', 'date-fns'] },
   sassOptions: { implementation: 'sass-embedded', loadPaths: [clientRoot] },
-  turbopack: { resolveAlias: { '@': clientRoot } }
+  turbopack: { resolveAlias: { '@': clientRoot } },
+  headers: () => Promise.resolve([{ source: '/:path*', headers: SECURITY_HEADERS }])
 };
 
 export default withNextIntl(nextConfig);

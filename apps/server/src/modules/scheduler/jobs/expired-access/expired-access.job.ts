@@ -6,8 +6,7 @@ import { map, pipe, unique } from 'remeda';
 import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 
 import { PrismaService } from '../../../../core';
-import { ConfigAccessService } from '../../../configs';
-import { SessionAccessService } from '../../../sessions';
+import { SubscriptionAccessService } from '../../../subscription-link';
 import { CONFIG_GRACE_HOURS } from '../../config';
 import { activeSince, lapsedBefore } from '../../lib';
 
@@ -17,13 +16,12 @@ export class ExpiredAccessJob {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly sessions: SessionAccessService,
-    private readonly configs: ConfigAccessService
+    private readonly access: SubscriptionAccessService
   ) {}
 
-  private async ownersOf({ kind, user, state }: OwnersOfInput): Promise<string[]> {
+  private async ownersOf({ user, state }: OwnersOfInput): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
-      where: { kind, user, ...(state ? { state } : {}) },
+      where: { kind: 'config', user, ...(state ? { state } : {}) },
       select: { userId: true }
     });
 
@@ -34,8 +32,8 @@ export class ExpiredAccessJob {
     );
   }
 
-  private async sweep({ kind, user, state, act }: SweepInput): Promise<string[]> {
-    const owners = await this.ownersOf({ kind, user, state });
+  private async sweep({ user, state, act }: SweepInput): Promise<string[]> {
+    const owners = await this.ownersOf({ user, state });
 
     await Promise.allSettled(owners.map((userId) => act(userId)));
 
@@ -46,31 +44,24 @@ export class ExpiredAccessJob {
   async run(): Promise<void> {
     const now = new Date();
 
-    const [sessions, configs, restored] = await Promise.all([
+    const [revoked, restored] = await Promise.all([
       this.sweep({
-        kind: 'session',
-        user: lapsedBefore(now),
-        act: (userId) => this.sessions.disconnectAll(userId)
-      }),
-      this.sweep({
-        kind: 'config',
         user: lapsedBefore(subHours(now, CONFIG_GRACE_HOURS)),
-        act: (userId) => this.configs.setEnabledAll({ userId, enabled: false })
+        act: (userId) => this.access.setEnabledAll({ userId, enabled: false })
       }),
       this.sweep({
-        kind: 'config',
         user: activeSince(now),
         state: 'disabled',
-        act: (userId) => this.configs.setEnabledAll({ userId, enabled: true })
+        act: (userId) => this.access.setEnabledAll({ userId, enabled: true })
       })
     ]);
 
-    if (sessions.length > 0 || configs.length > 0) {
-      this.logger.log(`Revoked access: ${sessions.length} session(s), ${configs.length} config owner(s)`);
+    if (revoked.length > 0) {
+      this.logger.log(`Revoked access for ${revoked.length} subscriber(s)`);
     }
 
     if (restored.length > 0) {
-      this.logger.log(`Restored access for ${restored.length} config owner(s)`);
+      this.logger.log(`Restored access for ${restored.length} subscriber(s)`);
     }
   }
 }

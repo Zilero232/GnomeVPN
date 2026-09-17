@@ -11,7 +11,9 @@ const node: TunnelNode = {
   host: '203.0.113.10',
   port: 443,
   serverName: 'cdn.example.com',
-  wgPublicKey: 'node-public-key'
+  wgPublicKey: 'node-public-key',
+  realityPublicKey: 'node-reality-key',
+  realityShortId: 'aabbccdd'
 };
 
 const wgInput = {

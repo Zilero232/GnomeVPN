@@ -5,7 +5,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
-import { ConfigAccessService } from '../../configs';
+import { SubscriptionAccessService } from '../../subscription-link';
 import { BillingSharedService } from './billing-shared.service';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class WebhookService {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly shared: BillingSharedService,
-    private readonly configs: ConfigAccessService
+    private readonly access: SubscriptionAccessService
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
@@ -112,7 +112,7 @@ export class WebhookService {
       return;
     }
 
-    await this.configs.setEnabledAll({ userId: row.userId, enabled: true }).catch((error: unknown) => {
+    await this.access.setEnabledAll({ userId: row.userId, enabled: true }).catch((error: unknown) => {
       this.logger.error(`paid access for ${row.userId} was not re-enabled, the sweep will retry: ${describeError(error)}`);
     });
   }

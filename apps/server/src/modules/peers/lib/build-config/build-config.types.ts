@@ -5,6 +5,8 @@ export type TunnelNode = {
   port: number;
   serverName: string;
   wgPublicKey: string | null;
+  realityPublicKey: string | null;
+  realityShortId: string | null;
 };
 
 export type BuildConfigInput = {

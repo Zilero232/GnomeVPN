@@ -47,6 +47,11 @@ export type CreatedPeer = {
   wgPrivateKey?: string;
 };
 
+export type CreateVlessClientInput = {
+  node: PeerNode;
+  email: string;
+};
+
 export type CreateWireguardClientInput = {
   node: PeerNode;
   nodeId: string;

@@ -3,7 +3,7 @@ export const SITE = {
   email: 'support@gnomevpn.ru',
   name: 'GnomeVPN',
   title: 'GnomeVPN',
-  description: 'Личный кабинет GnomeVPN.',
+  description: 'VPN на Hysteria2: быстрый туннель по QUIC, серверы в нескольких странах, одна ссылка на все устройства.',
   ogImage: '/brand/og.png',
   locale: 'ru_RU',
   lang: 'ru-RU',
@@ -13,7 +13,7 @@ export const SITE = {
   },
   en: {
     title: 'GnomeVPN',
-    description: 'GnomeVPN account.',
+    description: 'A Hysteria2 VPN: a fast QUIC tunnel, servers in several countries, one link for every device.',
     locale: 'en_US',
     lang: 'en-US'
   }

@@ -2,20 +2,15 @@
 
 import { useTranslations } from 'next-intl';
 
-import { DOWNLOAD_PLATFORM_KINDS, DOWNLOAD_PLATFORMS, useRelease } from '@/entities/app/release';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Spinner } from '@/shared/ui';
+import { INCY_PLATFORMS } from '@/entities/app/incy';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, LinkCard, Text } from '@/ui-kit';
 
 import type { DownloadAppDialogProps } from './DownloadAppDialog.types';
 
-import { PlatformCard } from './components';
-
 import s from './DownloadAppDialog.module.scss';
-
-const RELEASES_URL = 'https://github.com/Zilero232/GnomeVPN/releases';
 
 export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogProps) => {
   const t = useTranslations('downloadApp');
-  const { data: release, isLoading, isError } = useRelease(isOpen);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -25,45 +20,15 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
-        {isLoading && (
-          <div className={s.state}>
-            <Spinner />
-          </div>
-        )}
+        <div className={s.grid}>
+          {INCY_PLATFORMS.map(({ id, icon, href }) => (
+            <LinkCard key={id} href={href} icon={icon} label={t(`platforms.${id}`)} />
+          ))}
+        </div>
 
-        {isError && (
-          <div className={s.state}>
-            <span>{t('loadFailed')}</span>
-            <a className={s.link} href={RELEASES_URL} rel='noopener noreferrer' target='_blank'>
-              {t('openReleases')}
-            </a>
-          </div>
-        )}
-
-        {release && (
-          <>
-            {DOWNLOAD_PLATFORM_KINDS.map((kind) => (
-              <section key={kind} className={s.group}>
-                <h3 className={s.groupTitle}>{t(`groups.${kind}`)}</h3>
-
-                <div className={s.grid} data-kind={kind}>
-                  {DOWNLOAD_PLATFORMS.filter((platform) => platform.kind === kind).map(({ id, labelKey, Icon }) => (
-                    <PlatformCard
-                      key={id}
-                      asset={release.assets.find((asset) => asset.platform === id)}
-                      Icon={Icon}
-                      label={t(`platforms.${labelKey}`)}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-
-            <div className={s.meta}>
-              <span>{t('version', { version: release.version })}</span>
-            </div>
-          </>
-        )}
+        <Text size='xs' tone='muted'>
+          {t('hint')}
+        </Text>
       </DialogContent>
     </Dialog>
   );

@@ -6,13 +6,15 @@ Guidance for Claude Code in this repo. Keep it short, link out for details.
 
 GnomeVPN — a commercial VPN built on Hysteria2 (QUIC/UDP). Bun-workspaces monorepo.
 
-- **Web client**: Next.js 16 / React 19 (`apps/client/`)
-- **Desktop**: Tauri 2 shell (`apps/tauri/`) + a privileged service on all three OSes (`crates/vpn-service/`)
+- **Web client**: Next.js 16 / React 19, server-rendered (`apps/client/`)
 - **API**: NestJS on Bun + Prisma + Postgres, auth via better-auth (`apps/server/`)
-- **Tunnel**: Hysteria2 on the nodes (served by the 3x-ui panel); sing-box owns the TUN adapter on the desktop
+- **Tunnel**: Hysteria2 (QUIC/UDP) and VLESS + Reality (TCP) on the nodes, both
+  served by the 3x-ui panel
+- **VPN client**: [INCY](https://incy.cc/) — a third-party app the user installs; we
+  ship a subscription link, not a binary
 - **Shared types**: Zod schemas in `packages/schemas/` (`@gnomevpn/schemas`)
 
-## Why Hysteria2 and not Reality
+## Why Hysteria2 leads
 
 The project ran on VLESS + XTLS-Reality first. Measured on a Russian ISP in this
 repo's history: the TSPU actively fingerprints the REALITY handshake over _any_
@@ -24,37 +26,79 @@ through where it drops REALITY.
 
 Hysteria2 masquerades as an HTTP/3 site (`masquerade: proxy` to `MASQUERADE_HOST`)
 and needs a TLS cert on the node — a self-signed cert generated per node, which
-clients accept because they run with `insecure: true`. Each client has its own
-`auth` password; that password is the tunnel credential, stored per peer.
+clients accept because the subscription marks every Hysteria2 server
+`insecure=1`. Each client has its own `auth` password; that password is the
+tunnel credential, stored per peer.
+
+The Reality inbound is different on both counts: it borrows a real site's
+certificate rather than presenting its own, so its entries are never marked
+insecure, and its credential is a UUID rather than a password.
+
+## Two protocols, one subscription
+
+Hysteria2 is the default: QUIC holds up under packet loss where TCP collapses,
+which is what makes it good on mobile. But QUIC is UDP, and some networks —
+corporate Wi-Fi, a few carriers, most hotels — drop UDP wholesale. There the
+tunnel cannot come up at all.
+
+VLESS + Reality is the way out: TCP on 443, wearing the TLS handshake of a real
+third-party site. The two share port 443 without conflict because one is UDP and
+the other TCP.
+
+Both ride in the same subscription. The user sees `🇳🇱 Netherlands` and
+`🇳🇱 Netherlands · TCP` and picks whichever connects; nothing has to be
+configured.
+
+**This repo has measured REALITY failing before.** The TSPU fingerprinted the
+handshake over any TCP port and killed sessions within minutes — that is why the
+project left it in the first place. It is here as a fallback for blocked UDP, not
+as a claim that it survives active probing. If it turns out dead again, the
+Hysteria2 entry is still first in the list.
+
+A node only advertises VLESS when `realityPublicKey` and `realityShortId` are
+set, which happens at provisioning. A node provisioned before this existed keeps
+serving Hysteria2 alone rather than advertising a server the client cannot reach.
+
+## Why INCY and not our own client
+
+The repo used to carry a Tauri desktop shell, a privileged Rust service on three
+operating systems and an Android tunnel — around 2,500 files of platform code.
+All of it is gone. The client is now INCY, a free third-party app that exists on
+iOS, Android, Windows, Linux, Android TV and Apple TV.
+
+We give it one URL. It fetches a base64 list of `hy2://` URIs, reads the traffic
+counters and the renewal date out of the response headers, and renders our name,
+our support link and our servers. Nothing about the tunnel changed — the nodes,
+the panel and the peer model are the same.
+
+What this bought: iOS and TV, which we never had and could not have shipped
+cheaply. What it cost: the client is not ours, and the user installs an app with
+someone else's name. The site says so plainly rather than hiding it — see the
+`about` and `faq` namespaces in the locales.
+
+The subscription URL is a standard format, so it also works in Hiddify, v2rayNG,
+Streisand and the rest. That is deliberate: a user who dislikes INCY is not stuck.
 
 ## Layout
 
 ```text
 apps/
 ├── client/          # Next.js — FSD architecture (CLAUDE.md)
-├── server/          # NestJS API — modules/, lib/, core/, common/ (CLAUDE.md)
-└── tauri/           # Rust shell — src/, capabilities/, tauri.conf.json (CLAUDE.md)
-crates/
-├── vpn-ipc/         # Wire protocol: types, framing, validation, tunnel configs
-└── vpn-service/     # Privileged service: tunnel, routes, DNS (CLAUDE.md)
+└── server/          # NestJS API — modules/, lib/, core/, common/ (CLAUDE.md)
 packages/
 ├── schemas/         # Zod schemas, imported by client and server
 └── scripts/         # shared script layer: reporter, ssh, shell
 scripts/
 └── provision/       # VPN node setup over SSH — the only local pipeline left
 .github/workflows/
-├── release.yml      # v* tag → checks → desktop matrix + android → publish
+├── checks.yml       # push/PR → typecheck, lint, tests, prerender
 └── deploy.yml       # manual → images to ghcr → pull on the VPS
 infra/
-├── caddy/           # TLS + reverse proxy
-└── xray/            # the 3x-ui compose stack shipped to every node
+└── caddy/           # TLS + reverse proxy, bind-mounted on the VPS
 ```
 
-**Releases and deploys are workflows, not local commands.** Building for a
-platform means building on it — macOS cannot be built off a Mac — so the matrix
-is not a convenience, it is the only way to ship every target. `tauri-action`
-owns the desktop bundles and the merged `latest.json`; nothing in this repo
-hand-rolls an updater manifest.
+**Deploys are a workflow, not a local command.** There are no binaries to build
+or sign any more: `deploy.yml` pushes two images to ghcr and the VPS pulls them.
 
 Provisioning stays local because it talks to nodes over SSH with credentials
 that live in `.env.nodes`, and because it is run by a human deciding to add a
@@ -68,96 +112,62 @@ keeps stdout while `silent()` drops it).
 `nodes.json` and `.env.nodes` sit at the repo root — both gitignored, both
 holding secrets; `nodes.example.json` is the committed template.
 
-## The split that shapes everything
+## The subscription is the product surface
 
-**On every desktop OS** the app is two processes:
+`apps/server/src/modules/subscription-link/` is the whole delivery path:
 
-- `GnomeVPN` — the window. **No administrator rights.**
-- `gnomevpn-service` — runs privileged. Spawns `sing-box`, which owns the TUN adapter, the routing table and DNS.
+- `GET /subscription-link` and `POST /subscription-link/rotate` — authenticated,
+  hand the user their URL and its `incy://crypt1/…` deep link.
+- `GET /sub/:token` — **unauthenticated**, this is what INCY fetches. The token
+  is the credential: 32 random bytes, one row per user, rotatable.
 
-Only the transport under them differs. Windows registers `GnomeVPNService` with
-the SCM and talks over a named pipe; macOS and Linux run the same binary as a
-launchd daemon / systemd unit and talk over a Unix socket at
-`/var/run/gnomevpn/service.sock`. Everything above the socket — the framing, the
-request types, the supervisor, the retry loop, the sing-box config — is one
-implementation shared by all three.
+It lives on `/sub` and not `/subscription` because `/subscription/status` already
+exists — a token named `status` would have shadowed it.
 
-This is why the app never raises an elevation prompt on launch, and why every
-request reaching the service is validated: any local process can open that
-socket, and the service can rewrite the system's routes. The pipe is guarded by
-an SDDL on Windows and by a peer-uid check (`SO_PEERCRED` / `getpeereid`, via
-`UnixStream::peer_cred`) on Unix. They are not equally tight: the SDDL grants
-read/write to interactive users and blocks low-integrity processes, while the
-Unix check accepts root and every uid at or above the platform's first human uid.
-On a shared machine that is every logged-in account, not just the one running the
-app — closing that gap needs a `gnomevpn` group the installer creates and the
-socket is chowned to, which nothing does today.
+Each request ensures one `kind: 'config'` peer named `incy` per available node,
+reusing `PeersService.issueAndPersist`, and renders them as `hy2://` URIs. A node
+that fails to issue is logged and skipped: one dead node must not empty the
+user's server list.
 
-Every request is validated regardless, and the handshake gate in `pipe/session.rs`
-drops any connection that sends something before `Hello`.
+**Headers carry everything the app displays.** `subscription-userinfo` holds the
+expiry, `profile-title` the name, `profile-web-page-url` the account link. Any
+non-ASCII value must be sent as `base64:<…>` — HTTP headers cannot carry UTF-8,
+and a raw Cyrillic title silently breaks the whole response.
 
-**Never move privileged work back into the GUI crate.** It would bring the
-elevation prompt back to every launch.
+`@incy/link-encoder` builds the deep link. Its AES key ships inside every INCY
+client, so the encryption hides the URL from scanners, not from people.
 
-**On Android the split is by process, not by privilege.** `GnomeVpnService` runs
-in `:tunnel` (`android:process`), opens the TUN descriptor _and_ runs the engine
-on it — `src/mobile_vpn/` spawns `hysteria` under `tun2proxy` from inside that
-process. The descriptor never crosses back to the UI, which is what lets the
-tunnel survive the user swiping the app away. `build_hysteria_config` lives in
-`vpn-ipc` for that path; every desktop OS uses `build_singbox_config` from the
-same crate.
+The docs are at https://incy.gitbook.io/docs/docs-en — `subscription-format`
+and `share-links` are the two pages that matter.
 
 ## What the workflows assume
 
-The YAML carries almost no comments; the reasoning is here.
+**`checks.yml`** — runs on pushes to master, on pull requests and on a `v*` tag.
+Typecheck, lint, tests, then a client build. The build is last because it is the
+only thing that catches a page which typechecks but throws during prerender.
 
-**`release.yml`** — `checks` → `draft` → `desktop` + `android` → `publish`. A `v*` tag builds
-everything; a manual run takes a `targets` choice (`all` / `desktop` / `android`) to rebuild one
-platform without paying for the other.
+A tag additionally asserts that it matches the root `package.json` version.
 
-- The tag triggers it directly rather than through `workflow_run`, which cannot filter on a tag:
-  it fired for every branch and pull request, and ran the whole frontend-and-service build twice
-  for one release.
-- `checks` guards that the tag matches the root `package.json` version. A mismatch would ship
-  bundles named after one version while the updater manifest advertises another.
-- The root `permissions: {}` strips every scope, so `checks` has to declare `contents: read` back:
-  this repository is private, and without it the clone fails as a 404, not a 403.
-- The build steps before `bun run verify` exist because the tauri build script validates every
-  path in `bundle.resources` and points `frontendDist` at `../client/out` — clippy cannot touch
-  the crate until sing-box, the service, the icons and the frontend all exist.
-- Tests run in `checks` separately: they are not part of `verify`, which is the lint-and-typecheck
-  gate.
-- The draft is created before either build so desktop and android upload into it concurrently,
-  rather than android queueing behind the matrix. It stays a draft until `publish` flips it.
-- `publish` tolerates a failed android build and an android-only manual run, but refuses to
-  publish if something that was asked for actually failed.
-- **macOS builds twice, once per architecture.** Both run on the same arm64 runner, so
-  `SINGBOX_ARCH` and `SERVICE_TARGET` point the two fetch/build scripts at the target the bundle
-  is for, and the sing-box cache is keyed on the matrix label rather than the runner OS —
-  otherwise the second macOS job restores the first one's binary.
-- The android job cannot use `cache: gradle`: that action hashes `**/*.gradle*` for its key, and
-  `tauri android init` only generates `gen/android` later in the same job. With nothing to hash it
-  fails outright. `tauri android init` also regenerates the project, so the overlay and the
-  signing config are applied after it, never before.
-- `setup-android` ships the SDK but not the NDK, and `build-tools` is not in its default package
-  set — without it there is no `apksigner` to verify the signed apk with.
+**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS.
+Migrations run **before** `docker compose up -d`: doing it after means the new
+build serves traffic against the old schema and can query a column its migration
+has not added yet. `up -d` returns when the container starts, not when the app
+answers, so the deploy waits on the compose healthchecks for both `server` and
+`web`.
 
-**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS. Migrations run **before**
-`docker compose up -d`: doing it after means the new build serves traffic against the old schema
-and can query a column its migration has not added yet. `up -d` returns when the container
-starts, not when the app answers, so the deploy waits on the compose healthcheck.
+`docker-compose.yml` and `infra/caddy/Caddyfile` are copied to the VPS on every
+deploy and land flat next to each other — the compose file bind-mounts
+`./Caddyfile`, so a nested path would mount a directory.
 
-Both files pin every action to a commit SHA rather than a tag — a tag can be moved, and these
-jobs hold the signing keys and production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
-placeholders because the server postinstall runs `prisma generate`, which resolves `DIRECT_URL`
-through `env()` but never connects.
+Both files pin every action to a commit SHA rather than a tag — a tag can be
+moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
+placeholders because the server postinstall runs `prisma generate`, which
+resolves `DIRECT_URL` through `env()` but never connects.
 
 ## Per-app guidance
 
-- **[apps/client/CLAUDE.md](apps/client/CLAUDE.md)** — FSD layers, public-API rules, i18n, `shared/ui`
+- **[apps/client/CLAUDE.md](apps/client/CLAUDE.md)** — FSD layers, public-API rules, i18n, `ui-kit`
 - **[apps/server/CLAUDE.md](apps/server/CLAUDE.md)** — module convention, error handling, Prisma, node provisioning
-- **[apps/tauri/CLAUDE.md](apps/tauri/CLAUDE.md)** — Tauri commands, capabilities, service client
-- **[crates/vpn-service/CLAUDE.md](crates/vpn-service/CLAUDE.md)** — tunnel engine, routing, security boundary
 
 ## Shared versions live in the catalog
 
@@ -178,11 +188,10 @@ React in the tree — every component test died on `Cannot read properties of nu
 (reading 'useState')`, because hooks resolved against a different React than the
 renderer used.
 
-The Rust side works the same way: `[workspace.dependencies]` in the root
-`Cargo.toml` owns the version of anything two crates share (`serde`, `tokio`,
-`thiserror`, …), and each crate writes `serde.workspace = true`. Per-crate
-feature flags still go on the crate — features are additive, so
-`tokio = { workspace = true, features = ["fs"] }` is the normal shape.
+**A peer dependency must match its host's major.** `@nestjs/swagger@12` installs
+cleanly next to NestJS 11 and then fails at runtime with
+`Export named 'loadPackageSync' not found` — `nestjs-zod` catches that as "swagger
+is not installed" and every `@ZodResponse` controller refuses to load.
 
 ## Reuse over reinvention
 
@@ -192,15 +201,10 @@ Before writing a helper by hand, check whether an installed library already cove
 2. Array / object manipulation → **`remeda`**
 3. Typed branching → **`ts-pattern`** (`match`, `.with`, `.exhaustive`)
 4. Dates and durations → **`date-fns`**
-5. Byte sizes → **`pretty-bytes`**
-6. Animation → **`motion`**, presets in a sibling `<Component>.motion.ts`
-7. Retries with backoff → **`p-retry`** (TypeScript), **`backon`** (Rust)
-8. Named pipes → **`interprocess`** (Rust). No hand-rolled `unsafe`.
-
-The only `unsafe` in the repo is the tun2proxy traffic callback in
-`apps/tauri/src/mobile_vpn/counters.rs` — an `extern "C"` fn and the null-checked
-`as_ref` on the pointer it is handed. Nothing else needs it, and nothing else
-should grow it: a new `unsafe` block outside an FFI signature is a review stop.
+5. Animation → **`motion`**, presets in `shared/lib/motion`
+6. Retries with backoff → **`p-retry`**
+7. Unstyled primitives → **`@base-ui/react`** — every `ui-kit` molecule wraps one
+8. Server-side logs → **`pino`** via `shared/lib/server-logger`
 
 ## Style
 
@@ -209,9 +213,8 @@ should grow it: a new `unsafe` block outside an FFI signature is a review stop.
   `connect(nodeId, country)`. The shape lives in a sibling `*.types.ts` as
   `<Fn>Input`, so a call site never has to guess argument order.
 - Tests cover pure logic only — Vitest in `_tests/` folders beside the source,
-  `#[cfg(test)]` modules in the Rust crates, Playwright for public routes.
-  Anything that needs a database, a node over SSH or a live tunnel is verified
-  by building and running, not by a mock.
+  Playwright for public routes. Anything that needs a database, a node over SSH
+  or a live tunnel is verified by building and running, not by a mock.
 - Everything user-visible goes through i18n, both `en.json` and `ru.json`
 - Import order: types → builtin/external → internal (`@/`) → relative → styles →
   side-effects. `perfectionist/sort-imports` enforces it; `bun lint:fix` sorts.
@@ -222,9 +225,8 @@ should grow it: a new `unsafe` block outside an FFI signature is a review stop.
   block and the logic that acts on it; before every
   `return`/`throw`/`continue`/`break`; around every block (`if`, `for`, `try`,
   `switch`) and every **multiline** call. Consecutive one-line statements stay
-  grouped on purpose — `log.step(...)` belongs directly above the `await` it
-  announces. No blank line _inside_ a tight group of related assignments, and
-  never two blank lines in a row.
+  grouped on purpose. No blank line _inside_ a tight group of related
+  assignments, and never two blank lines in a row.
 
   ```ts
   // no — monolithic
@@ -247,66 +249,36 @@ should grow it: a new `unsafe` block outside an FFI signature is a review stop.
 Run before claiming anything works:
 
 ```bash
-bun run verify            # everything below, in one command
-```
-
-That is the whole set — typecheck (all three TS packages), ESLint, Prettier,
-Stylelint, `cargo fmt --check` and `cargo clippy -D warnings`. `bun run fix`
-is its counterpart: every autofixer in the same order.
-
-The individual scripts (`typecheck`, `lint`, `format:check`, `lint:css`,
-`format:rust:check`, `lint:rust`) still exist when you want one of them alone.
-
-Tests are not part of `verify` — they run on their own:
-
-```bash
+bun run verify            # typecheck, ESLint, Prettier, Stylelint
 bun run test              # Vitest, every workspace in one run
-bun run test:coverage     # the same plus a v8 coverage report
-bun run test:rust         # cargo test --workspace
-bun run test:e2e          # Playwright, starts the client dev server itself
+bun --filter @gnomevpn/client build   # the only check that catches SSR breakage
 ```
+
+`bun run fix` is verify's counterpart: every autofixer in the same order.
 
 **`bun run test`, never `bun test`.** Bare `bun test` is Bun's own runner, which
 claims the name before the script does — it collects the same files, then fails
 them all on `vi.setSystemTime is not a function`, because it is not Vitest.
 
 Vitest is wired as projects: `packages/schemas`, `packages/scripts`,
-`apps/server`, `apps/client` and `apps/tauri` each own a `vitest.config.ts`, and
-the root one lists them. The `tauri` project covers the build scripts under
-`apps/tauri/scripts/`, where the Android manifest patcher lives. A test lives in a `_tests/` folder next to what it tests. The Rust
-tests are `#[cfg(test)]` modules: `crates/vpn-ipc` carries most of them — the
-protocol validation, the framing, the stall detector, the latency resolver and
-the two config builders — and `crates/vpn-service` covers the handshake gate in
-`pipe/session.rs`, which decides what an unauthenticated caller may ask for.
+`apps/server` and `apps/client` each own a `vitest.config.ts`, and the root one
+lists them. A test lives in a `_tests/` folder next to what it tests.
 
-**`apps/tauri/src/mobile_vpn/` is `#[cfg(mobile)]` and nothing in `verify`
-compiles it.** Changing that directory, or `vpn-ipc` underneath it, needs a
-manual `cargo clippy -p gnomevpn --target aarch64-linux-android`; the NDK
-environment it wants is written out in
-[apps/tauri/CLAUDE.md](apps/tauri/CLAUDE.md).
-
-**Nothing in CI checks an ordinary commit.** There is no workflow watching master
-or pull requests — the only automated run is the `checks` job in `release.yml`,
-which gates a `v*` tag and runs `verify` plus both test suites. So these commands
-are the first check and the last one: a broken commit reaches master silently and
-surfaces at release time.
-
-`verify` needs a Rust toolchain (`rustup toolchain install`, pinned by
-`rust-toolchain.toml`). Without it `cargo fmt` and `cargo clippy` cannot run and
-the command stops at that step — the TypeScript half having already passed.
+`checks.yml` runs all of the above on every push and pull request. It is the
+only automation that looks at a commit, so a red local run is a red CI run.
 
 ## Things that have already bitten us
 
-- **Per-app split cannot be done from user space.** Redirecting a connection by the process that opened it needs a kernel callout at `FWPM_LAYER_ALE_BIND_REDIRECT`, and that needs an EV-signed driver. WFP `Block`/`Permit`, dropping packets on the TUN, rewriting `IfIdx` and NAT on the physical interface were all tried against a live tunnel and all broke connectivity. sing-box solves it by never redirecting: it pulls everything into the TUN and opens the outgoing connection itself.
-- **`route delete 0.0.0.0`** wipes the physical default route and kills the user's internet. Half-routes (`0.0.0.0/1` + `128.0.0.0/1`) are what sing-box installs instead, and nothing in this repo should touch the routing table by hand.
-- **A running service holds its own binary.** `cargo build` then silently keeps the old file — `scripts/build-service.mjs` checks for this.
-- **Health checks must probe an authenticated endpoint.** An unauthenticated 200 only proves something is listening, not that the tunnel subsystem works.
 - **A Hysteria2 client needs its full field set.** Writing `{email, auth}` alone leaves the panel storing the client but generating `clients: null` in the running core, so every connection fails auth with a 404. `enable/limitIp/totalGB/expiryTime/tgId/reset` must all be present — see `PanelClient.addClient`. 3x-ui v3.6.0 fixed a neighbouring bug (an inbound whose clients are _all_ filtered out now serialises as `[]` rather than `null`) but explicitly left this one open, so the full set is still required.
 - **The panel reports traffic counters, not handshakes.** A peer counts as alive only when its byte count _grows_; treating "has traffic" as "active now" means stale peers are never collected.
-- **Tauri plugins need an entry in `capabilities/`** or the call fails silently in the webview. Desktop-only and mobile-only permissions live in separate files — listing `updater` or `autostart` in the shared one breaks the Android build.
-- **`env(safe-area-inset-*)` is empty in the Android webview.** The values come from `tauri-plugin-safe-area-insets-css`, which `MobileInsets` writes into `--safe-area-inset-*`; the CSS variables fall back to `env()` for the browser.
-- **`unwrap_or_default()` on a serialisation result hides the failure and invents a valid-looking input.** An empty sing-box config is a file that starts fine and fails 25 seconds later as a timeout, five times over, with the real error nowhere. Config builders return `Result`.
-- **A state a job can only enter is a state nothing can leave.** `expired-access` disabled configs and only the payment webhook re-enabled them, so a webhook that failed after its transaction committed stranded a paying user permanently. Any revocation needs a matching restore in the same sweep.
-- **Copying a fixed bug is easier than it sounds.** The tick-counting stall detector was fixed in `vpn-ipc` and left intact in a private copy inside the privileged service. Shared logic belongs in the shared crate; a second copy is a second bug waiting.
+- **A state a job can only enter is a state nothing can leave.** `expired-access` disabled configs and only the payment webhook re-enabled them, so a webhook that failed after its transaction committed stranded a paying user permanently. Any revocation needs a matching restore in the same sweep — `SubscriptionAccessService` is both halves.
 - **A count of hours is not a calendar duration.** `intervalToDuration` splits an interval into months **and** days, so `days * 24 + hours` silently dropped a whole month: a 31-day tunnel rendered as `72:00:00`. Compute elapsed time from the millisecond difference.
-- **The two Rust config builders are reached by different callers and only one is compiled by `verify`.** Android is `#[cfg(mobile)]`; a change to `vpn-ipc` that breaks it passes every local check.
+- **Tolerant parsing on a write path erases data.** `readSettings` returns `null` on malformed JSON so the caller can refuse; a forgiving parse turned unreadable settings into `{}` and overwrote a node's real client list once already.
+- **A peer's client name must carry its protocol.** The email the panel stores is unique per `(user, kind, name, node, protocol)`; leaving the protocol out made a WireGuard peer collide with a Hysteria2 one and reconcile disabled live configs.
+- **`next/root-params` needs the root layout inside the dynamic segment.** With an
+  outer `app/layout.tsx` present, `next typegen` reports "No root params detected"
+  and every `rootParams.locale()` import fails to resolve. The locale layout must
+  be the only root layout.
+- **next-intl falls back to a default environment without an explicit `timeZone`.**
+  Static generation then logs `ENVIRONMENT_FALLBACK` for every page that formats a
+  date. Both `getRequestConfig` and `NextIntlClientProvider` pass `TIME_ZONE`.

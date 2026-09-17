@@ -1,26 +1,13 @@
-import { debug, error, info, warn } from '@tauri-apps/plugin-log';
+import type { LogFields, Logger } from './logger.types';
 
-import { isTauriDesktop } from '../tauri-platform';
+const toConsole = (write: (...args: unknown[]) => void) => (message: string, fields?: LogFields) =>
+  fields ? write(message, fields) : write(message);
 
-type LogFn = (message: string) => void;
-
-const toTauri =
-  (tauriFn: LogFn, consoleFn: LogFn): LogFn =>
-  (message: string) => {
-    if (!isTauriDesktop()) {
-      consoleFn(message);
-
-      return;
-    }
-
-    Promise.resolve(tauriFn(message)).catch(() => consoleFn(message));
-  };
-
-/* eslint-disable no-console -- browser fallback: the Tauri log plugin is unavailable outside the desktop app */
-export const logger = {
-  debug: toTauri(debug, console.debug),
-  info: toTauri(info, console.info),
-  warn: toTauri(warn, console.warn),
-  error: toTauri(error, console.error)
+/* eslint-disable no-console -- the browser half of the logger is the one place allowed to reach the console */
+export const logger: Logger = {
+  debug: toConsole(console.debug),
+  info: toConsole(console.info),
+  warn: toConsole(console.warn),
+  error: toConsole(console.error)
 };
 /* eslint-enable no-console */

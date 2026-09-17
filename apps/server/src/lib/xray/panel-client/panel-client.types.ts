@@ -34,6 +34,12 @@ export type SetClientsEnabledInput = {
   enabled: boolean;
 };
 
+export type AddVlessClientInput = {
+  inboundId: number;
+  email: string;
+  id: string;
+};
+
 export type AddClientInput = {
   inboundId: number;
   email: string;

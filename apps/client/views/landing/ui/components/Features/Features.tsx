@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { Text } from '@/shared/ui';
+import { Text } from '@/ui-kit';
 
 import { FEATURE_CARDS } from '../../../config';
 import { ICON_HOVER, ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';

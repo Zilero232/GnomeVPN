@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 import { useErrorMessage, useFieldError } from '@/entities/app/locale';
 import { useChangeEmail, useCurrentUser } from '@/entities/auth/user';
-import { FormField, Input, SubmitButton, Text } from '@/shared/ui';
+import { FormField, Input, SubmitButton, Text } from '@/ui-kit';
 
 import s from './ChangeEmailForm.module.scss';
 

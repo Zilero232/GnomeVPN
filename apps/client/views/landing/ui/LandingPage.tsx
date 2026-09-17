@@ -3,21 +3,10 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { Text } from '@/shared/ui';
+import { Text } from '@/ui-kit';
+import { PricingCard } from '@/widgets/billing/pricing-plans';
 
-import {
-  Comparison,
-  Faq,
-  Features,
-  Guarantee,
-  Hero,
-  HowItWorks,
-  LandingFooter,
-  LandingHeader,
-  Locations,
-  Platforms,
-  PricingCard
-} from './components';
+import { Comparison, Faq, Features, Guarantee, Hero, HowItWorks, Locations, Platforms } from './components';
 import { REVEAL_VIEWPORT, TITLE_MOTION } from './LandingPage.motion';
 
 import s from './LandingPage.module.scss';
@@ -32,11 +21,10 @@ const SectionTitle = ({ children }: { children: string }) => (
 
 export const LandingPage = () => {
   const t = useTranslations('landing');
+  const tPlans = useTranslations('plans');
 
   return (
     <main className={s.root}>
-      <LandingHeader />
-
       <Hero />
 
       <section className={s.section} id='how'>
@@ -65,7 +53,7 @@ export const LandingPage = () => {
       </section>
 
       <section className={s.section} id='pricing'>
-        <SectionTitle>{t('pricing.title')}</SectionTitle>
+        <SectionTitle>{tPlans('title')}</SectionTitle>
         <PricingCard />
       </section>
 
@@ -77,8 +65,6 @@ export const LandingPage = () => {
         <SectionTitle>{t('faq.title')}</SectionTitle>
         <Faq />
       </section>
-
-      <LandingFooter />
     </main>
   );
 };

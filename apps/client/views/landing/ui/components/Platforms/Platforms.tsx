@@ -3,34 +3,34 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { Text } from '@/shared/ui';
+import { INCY_PLATFORMS } from '@/entities/app/incy';
+import { Text } from '@/ui-kit';
 
-import { PLATFORMS } from '../../../config';
 import { ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
 
 import s from './Platforms.module.scss';
 
 export const Platforms = () => {
   const t = useTranslations('landing.platforms');
+  const tIncy = useTranslations('incy.platforms');
 
   return (
     <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
-      {PLATFORMS.map((platform) => (
+      {INCY_PLATFORMS.map(({ id, icon: Icon }) => (
         <motion.article
-          key={platform.key}
+          key={id}
           className={s.card}
-          data-native={platform.isNative}
           variants={ITEM_MOTION}
           whileHover={{ y: -5, transition: { type: 'spring', stiffness: 400, damping: 24 } }}
         >
-          <Text as='span' className={s.badge}>
-            {t(platform.isNative ? 'native' : 'config')}
-          </Text>
+          <Icon aria-hidden className={s.icon} size={20} />
+
           <Text as='h3' className={s.name}>
-            {platform.name}
+            {tIncy(id)}
           </Text>
+
           <Text as='p' className={s.body}>
-            {t(`${platform.key}Body`)}
+            {t(`${id}Body`)}
           </Text>
         </motion.article>
       ))}

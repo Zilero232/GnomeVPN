@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
-import { FormField, PasswordInput, SubmitButton } from '@/shared/ui';
+import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import type { ResetPasswordValues } from '../model/hooks';
 import type { ResetPasswordFormProps } from './ResetPasswordForm.types';

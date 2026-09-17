@@ -4,7 +4,7 @@ import { CreditCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
-import { Button, Text } from '@/shared/ui';
+import { Button, Text } from '@/ui-kit';
 
 import type { AutoRenewControlProps } from './AutoRenewControl.types';
 

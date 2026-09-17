@@ -9,11 +9,12 @@ model User {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions     Session[]
-  accounts     Account[]
-  payments     Payment[]
-  peers        Peer[]
-  subscription Subscription?
+  sessions         Session[]
+  accounts         Account[]
+  payments         Payment[]
+  peers            Peer[]
+  subscription     Subscription?
+  subscriptionLink SubscriptionLink?
 
   @@map("user")
 }

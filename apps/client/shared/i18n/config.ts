@@ -14,3 +14,5 @@ const KNOWN_LOCALES: readonly string[] = LOCALES;
 const isLocale = (value: string | undefined): value is Locale => value !== undefined && KNOWN_LOCALES.includes(value);
 
 export const resolveLocale = (value: string | undefined): Locale => (isLocale(value) ? value : DEFAULT_LOCALE);
+
+export const TIME_ZONE = 'UTC';

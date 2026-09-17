@@ -18,13 +18,13 @@ export class CardService {
     private readonly shared: BillingSharedService
   ) {}
 
-  async bindCard({ userId, client }: BindCardServiceInput): Promise<BindCardResult> {
+  async bindCard({ userId }: BindCardServiceInput): Promise<BindCardResult> {
     if (!this.shared.isRecurringEnabled()) {
       throw new AppBadRequestException('RECURRING_UNAVAILABLE', 'Recurring payments are not enabled for this shop');
     }
 
     const method = await this.yookassa.bindPaymentMethod({
-      returnUrl: this.shared.returnUrlFor(client),
+      returnUrl: this.shared.returnUrl(),
       idempotenceKey: randomUUID()
     });
 

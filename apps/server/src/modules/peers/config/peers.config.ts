@@ -8,6 +8,14 @@ export const PEER_PREFIX = {
   config: 'cfg-'
 } as const;
 
+export const REALITY = {
+  listenPort: 443,
+  fingerprint: 'chrome',
+  flow: 'xtls-rprx-vision'
+} as const;
+
+export const REALITY_SHORT_ID_BYTES = 8;
+
 export const WG = {
   listenPort: 51820,
   mtu: 1360,

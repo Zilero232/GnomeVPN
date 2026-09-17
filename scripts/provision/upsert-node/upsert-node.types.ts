@@ -11,6 +11,8 @@ export type UpsertNodeInput = {
   serverName: string;
   hysteriaAuth: string;
   wgPublicKey: string;
+  realityPublicKey: string;
+  realityShortId: string;
   apiUrl: string;
   apiTokenEnvVar: string;
 };

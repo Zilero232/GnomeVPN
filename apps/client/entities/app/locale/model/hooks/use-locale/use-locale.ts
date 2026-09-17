@@ -1,25 +1,27 @@
 'use client';
 
-import { useLocalStorage, useMount } from '@siberiacancode/reactuse';
-import { useState } from 'react';
+import { useLocale as useActiveLocale } from 'next-intl';
+import { useTransition } from 'react';
 
 import type { Locale } from '@/shared/i18n';
 
-import { STORAGE_KEYS } from '@/shared/constants';
-import { DEFAULT_LOCALE, resolveLocale } from '@/shared/i18n';
+import { resolveLocale } from '@/shared/i18n';
+import { usePathname, useRouter } from '@/shared/i18n/navigation';
 
-type UseLocale = {
-  locale: Locale;
-  isReady: boolean;
-  setLocale: (locale: Locale) => void;
-};
+import type { UseLocale } from './use-locale.types';
 
 export const useLocale = (): UseLocale => {
-  const { value, set } = useLocalStorage<Locale>(STORAGE_KEYS.locale, DEFAULT_LOCALE);
+  const active = useActiveLocale();
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const [isReady, setIsReady] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  useMount(() => setIsReady(true));
+  const setLocale = (locale: Locale) => {
+    startTransition(() => {
+      router.replace(pathname, { locale });
+    });
+  };
 
-  return { isReady, locale: resolveLocale(value), setLocale: set };
+  return { locale: resolveLocale(active), isPending, setLocale };
 };

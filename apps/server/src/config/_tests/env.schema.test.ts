@@ -23,9 +23,7 @@ describe('validateEnv', () => {
       CORS_ORIGINS: 'http://localhost:3000',
       CLIENT_URL: 'http://localhost:3000',
       YOOKASSA_RETURN_URL: 'http://localhost:3000/account',
-      YOOKASSA_RETURN_URL_DESKTOP: 'gnomevpn://account',
-      SMTP_PORT: 465,
-      GITHUB_TOKEN: ''
+      SMTP_PORT: 465
     });
   });
 

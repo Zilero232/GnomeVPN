@@ -1,4 +1,4 @@
-import type { CheckoutClient, Plan, PlanId } from '@gnomevpn/schemas';
+import type { Plan, PlanId } from '@gnomevpn/schemas';
 
 import type { Prisma } from '../../../generated';
 
@@ -41,13 +41,11 @@ export type GrantExtraDevicesInput = {
 export type BuyExtraDevicesServiceInput = {
   userId: string;
   quantity: number;
-  client: CheckoutClient;
 };
 
 export type CreateCheckoutServiceInput = {
   userId: string;
   planId: PlanId;
-  client: CheckoutClient;
 };
 
 export type SetAutoRenewServiceInput = {
@@ -57,5 +55,4 @@ export type SetAutoRenewServiceInput = {
 
 export type BindCardServiceInput = {
   userId: string;
-  client: CheckoutClient;
 };

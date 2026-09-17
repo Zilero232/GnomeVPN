@@ -1,0 +1,1 @@
+export { IncyPlatforms } from './IncyPlatforms';

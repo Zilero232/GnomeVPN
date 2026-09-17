@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
-import { Text } from '@/shared/ui';
+import { Text } from '@/ui-kit';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
 

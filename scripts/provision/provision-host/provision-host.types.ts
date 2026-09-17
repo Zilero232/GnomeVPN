@@ -46,6 +46,8 @@ export type InstallInboundsInput = {
 export type InstalledInbounds = {
   wgPublicKey: string;
   wgWasGenerated: boolean;
+  realityPublicKey: string;
+  realityShortId: string;
 };
 
 export type RegisterNodeInput = {
@@ -57,6 +59,8 @@ export type RegisterNodeInput = {
   panelPath: string;
   auth: string;
   wgPublicKey: string;
+  realityPublicKey: string;
+  realityShortId: string;
 };
 
 export type RememberNodeSecretsInput = {

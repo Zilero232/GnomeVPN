@@ -1,15 +1,22 @@
+import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import * as rootParams from 'next/root-params';
 
-import { DEFAULT_LOCALE, resolveLocale } from './config';
+import { TIME_ZONE } from './config';
 import { messages } from './messages';
+import { routing } from './routing';
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = requested ? resolveLocale(requested) : DEFAULT_LOCALE;
+export default getRequestConfig(async () => {
+  const requested = await rootParams.locale();
+
+  if (!hasLocale(routing.locales, requested)) {
+    notFound();
+  }
 
   return {
-    locale,
-    messages: messages[locale],
-    timeZone: 'UTC'
+    locale: requested,
+    messages: messages[requested],
+    timeZone: TIME_ZONE
   };
 });

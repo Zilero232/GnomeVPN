@@ -1,0 +1,16 @@
+model SubscriptionLink {
+  id     String @id @default(dbgenerated("gen_random_uuid()"))
+  userId String @unique @map("user_id")
+
+  token String @unique
+
+  lastSeenAt   DateTime? @map("last_seen_at") @db.Timestamptz(3)
+  lastPlatform String?   @map("last_platform")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_link")
+}

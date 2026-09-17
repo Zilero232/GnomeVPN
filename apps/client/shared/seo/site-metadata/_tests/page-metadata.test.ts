@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SITE } from '@/shared/config';
+import { DEFAULT_LOCALE, localePath, LOCALES } from '@/shared/i18n';
 
 import { createPageMetadata } from '../page-metadata';
 
@@ -11,7 +12,8 @@ vi.mock('next/font/local', () => ({
 const input = {
   title: 'Тарифы',
   description: 'Планы подписки.',
-  path: '/pricing'
+  path: '/pricing',
+  locale: DEFAULT_LOCALE
 };
 
 describe('createPageMetadata', () => {
@@ -20,7 +22,7 @@ describe('createPageMetadata', () => {
 
     expect(metadata.title).toBe(input.title);
     expect(metadata.description).toBe(input.description);
-    expect(metadata.openGraph?.url).toBe(input.path);
+    expect(metadata.openGraph?.url).toBe(localePath({ path: input.path, locale: input.locale }));
   });
 
   it('appends the site name to a title that lacks it', () => {
@@ -45,7 +47,20 @@ describe('createPageMetadata', () => {
   it('adds the canonical link for an indexed page', () => {
     const metadata = createPageMetadata({ ...input, index: true });
 
-    expect(metadata.alternates?.canonical).toBe(input.path);
+    expect(metadata.alternates?.canonical).toBe(localePath({ path: input.path, locale: input.locale }));
+  });
+
+  it('points an indexed page at every locale it is served in', () => {
+    const languages = createPageMetadata({ ...input, index: true }).alternates?.languages ?? {};
+
+    expect(Object.keys(languages)).toEqual([...LOCALES, 'x-default']);
+  });
+
+  it('canonicalises each locale to its own url', () => {
+    const forEnglish = createPageMetadata({ ...input, locale: 'en', index: true });
+    const forRussian = createPageMetadata({ ...input, locale: 'ru', index: true });
+
+    expect(forEnglish.alternates?.canonical).not.toBe(forRussian.alternates?.canonical);
   });
 
   it('defaults robots to neither indexing nor following', () => {
