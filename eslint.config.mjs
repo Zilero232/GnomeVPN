@@ -112,5 +112,16 @@ export default eslint(
     rules: {
       'no-console': 'off'
     }
+  },
+
+  // `next typegen` appends its own `# This is NOT the Next.js you know` block to
+  // apps/client/CLAUDE.md, so the file has two H1s and is regenerated on every
+  // run — editing it back would only lose the change.
+  {
+    name: 'gnomevpn/agent-docs',
+    files: ['**/CLAUDE.md'],
+    rules: {
+      'markdown/no-multiple-h1': 'off'
+    }
   }
 );

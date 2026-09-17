@@ -22,3 +22,8 @@ export type XrayInboundPayload = {
 export type XrayInboundSettings = {
   clients?: ({ email?: string; auth?: string } | null)[];
 };
+
+export type CreateInboundInput = {
+  inbound: Record<string, unknown>;
+  remark?: string;
+};

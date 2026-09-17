@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -13,27 +15,19 @@
   background-color: var(--color-bg-deep);
   gap: 4px;
   overflow-x: auto;
-  scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  @include hide-scrollbar;
 }
 
 .tab {
-  position: relative;
+  @include tab-button;
+
   z-index: 1;
   flex: 1 0 auto;
   padding: 8px 14px;
-  border: none;
   border-radius: calc(var(--radius-sm) - 3px);
-  background: none;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
-  transition: color 0.18s ease;
   white-space: nowrap;
 
   &:hover:not([data-active]) {

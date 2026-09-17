@@ -13,7 +13,7 @@ export const useChangeEmail = () =>
       const { error } = await authClient.changeEmail({ newEmail, callbackURL: ROUTES.account });
 
       if (error) {
-        throw new Error(error.message ?? 'Failed to change email');
+        throw new Error(error.message);
       }
     }
   });

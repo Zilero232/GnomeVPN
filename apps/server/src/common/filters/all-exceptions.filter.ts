@@ -1,25 +1,12 @@
-import type { ApiErrorCode } from '@gnomevpn/schemas';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import type { Response } from 'express';
 
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { isNonNullish } from 'remeda';
+import { isNonNullish, isObjectType } from 'remeda';
 
 import { isPrismaRequestError } from '../../core/prisma-error';
-
-const STATUS_TO_CODE: Record<number, ApiErrorCode> = {
-  400: 'VALIDATION_FAILED',
-  401: 'UNAUTHORIZED',
-  402: 'PAYMENT_REQUIRED',
-  403: 'FORBIDDEN'
-};
-
-const codeForStatus = (status: number): ApiErrorCode => STATUS_TO_CODE[status] ?? 'INTERNAL_ERROR';
-
-const PRISMA_ERROR: Record<string, { status: number; code: ApiErrorCode }> = {
-  P2025: { status: HttpStatus.NOT_FOUND, code: 'NOT_FOUND' },
-  P2002: { status: HttpStatus.CONFLICT, code: 'CONFLICT' }
-};
+import { PRISMA_ERROR } from './all-exceptions.constants';
+import { codeForStatus } from './all-exceptions.helpers';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -30,7 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const res = exception.getResponse();
-      const hasCode = typeof res === 'object' && isNonNullish(res) && 'code' in res;
+      const hasCode = isObjectType(res) && isNonNullish(res) && 'code' in res;
       const status = exception.getStatus();
 
       response.status(status).json(hasCode ? res : { error: exception.message, code: codeForStatus(status) });

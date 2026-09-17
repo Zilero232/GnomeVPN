@@ -1,5 +1,7 @@
 import type { Instrumentation } from 'next';
 
+import { isNonNullish, isObjectType } from 'remeda';
+
 export const register = async () => {
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
     return;
@@ -16,11 +18,11 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
   const { serverLogger } = await import('@/shared/lib/server-logger');
 
   serverLogger.error(error instanceof Error ? error.message : String(error), {
-    digest: typeof error === 'object' && error !== null && 'digest' in error ? String(error.digest) : undefined,
     path: request.path,
     method: request.method,
-    routerKind: context.routerKind,
     routeType: context.routeType,
-    routePath: context.routePath
+    routePath: context.routePath,
+    routerKind: context.routerKind,
+    digest: isObjectType(error) && isNonNullish(error) && 'digest' in error ? String(error.digest) : undefined
   });
 };

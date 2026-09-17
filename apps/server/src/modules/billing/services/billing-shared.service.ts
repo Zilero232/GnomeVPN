@@ -1,17 +1,11 @@
 import { findPlan, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
+import { isNullish } from 'remeda';
 
-import type {
-  ActivateInput,
-  AttachMethodInput,
-  AutoRenewInput,
-  GrantExtraDevicesInput,
-  PrismaExecutor,
-  SetAutoRenewServiceInput
-} from '../billing.types';
+import type { ActivateInput, AttachMethodInput, AutoRenewInput, GrantExtraDevicesInput, SetAutoRenewServiceInput } from '../billing.types';
 
 import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
-import { AppConfigService } from '../../../config/config.module';
+import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 
 @Injectable()
@@ -58,7 +52,7 @@ export class BillingSharedService {
     return wasCancelled;
   }
 
-  async activate({ userId, planId, method }: ActivateInput, db: PrismaExecutor = this.prisma): Promise<void> {
+  async activate({ userId, planId, method, db = this.prisma }: ActivateInput): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
       select: {
@@ -91,13 +85,13 @@ export class BillingSharedService {
     });
   }
 
-  async grantExtraDevices({ userId, quantity }: GrantExtraDevicesInput, db: PrismaExecutor = this.prisma): Promise<void> {
+  async grantExtraDevices({ userId, quantity, db = this.prisma }: GrantExtraDevicesInput): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
       select: { extraDevices: true }
     });
 
-    if (!subscription) {
+    if (isNullish(subscription)) {
       this.logger.warn(`paid extra devices for ${userId} without a subscription row`);
 
       return;

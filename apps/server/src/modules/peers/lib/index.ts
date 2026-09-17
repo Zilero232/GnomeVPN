@@ -1,4 +1,4 @@
-export { buildTunnelConfig } from './build-config';
+export { buildTunnelConfig, hasReality } from './build-config';
 export type { BuildConfigInput, TunnelNode } from './build-config';
 export { peerClientName } from './peer-name';
 export type { PeerNameInput } from './peer-name';

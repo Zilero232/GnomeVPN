@@ -4,10 +4,8 @@ import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatforms } from '@/entities/app/incy';
-import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
+import { REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
-
-import { ITEM_MOTION } from '../../LandingPage.motion';
 
 import s from './Platforms.module.scss';
 
@@ -17,15 +15,10 @@ export const Platforms = () => {
   const platforms = usePlatforms();
 
   return (
-    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+    <motion.div className={s.list} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
       {platforms.map(({ id, icon: Icon }) => (
-        <motion.article
-          key={id}
-          className={s.card}
-          variants={ITEM_MOTION}
-          whileHover={{ y: -5, transition: { type: 'spring', stiffness: 400, damping: 24 } }}
-        >
-          <Icon aria-hidden className={s.icon} size={20} />
+        <motion.article key={id} className={s.row} variants={ROW_MOTION}>
+          <Icon aria-hidden className={s.icon} size={18} strokeWidth={1.7} />
 
           <Text as='h3' className={s.name}>
             {tIncy(id)}

@@ -1,11 +1,8 @@
 import type { PeerKind, PeerState, TunnelProtocol } from '../../../../../generated';
+import type { IdentifiedNode } from '../../../../common/lib';
 import type { XrayClient } from '../../../../lib';
 
-export type ReconcileNode = {
-  id: string;
-  apiUrl: string;
-  apiTokenEnvVar: string;
-};
+export type ReconcileNode = IdentifiedNode;
 
 export type PeerIdentity = {
   userId: string;

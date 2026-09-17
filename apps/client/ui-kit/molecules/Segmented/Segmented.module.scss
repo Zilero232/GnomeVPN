@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   position: relative;
   display: flex;
@@ -20,23 +22,18 @@
 }
 
 .option {
-  position: relative;
+  @include tab-button;
+
   z-index: 1;
   display: flex;
   flex: 1 1 0;
   align-items: center;
   justify-content: center;
   padding: 0 12px;
-  border: none;
   border-radius: var(--radius-sm);
-  background-color: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   gap: 7px;
-  transition: color 0.18s ease;
   white-space: nowrap;
 
   svg {

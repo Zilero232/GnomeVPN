@@ -1,6 +1,7 @@
 import type { WebhookEvent } from '@gnomevpn/schemas';
 
 import { Injectable, Logger } from '@nestjs/common';
+import { isNullish } from 'remeda';
 
 import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
@@ -42,7 +43,7 @@ export class WebhookService {
       }
     });
 
-    if (!row) {
+    if (isNullish(row)) {
       this.logger.warn(`webhook for an unknown payment ${paymentId}`);
 
       return;
@@ -88,19 +89,17 @@ export class WebhookService {
           }
 
           if (row.kind === 'extraDevices') {
-            await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices }, tx);
+            await this.shared.grantExtraDevices({ userId: row.userId, quantity: row.extraDevices, db: tx });
 
             return true;
           }
 
-          await this.shared.activate(
-            {
-              userId: row.userId,
-              planId: row.plan,
-              method: payment.paymentMethodId ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle } : null
-            },
-            tx
-          );
+          await this.shared.activate({
+            userId: row.userId,
+            planId: row.plan,
+            method: payment.paymentMethodId ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle } : null,
+            db: tx
+          });
 
           return true;
         },
@@ -123,7 +122,7 @@ export class WebhookService {
       select: { userId: true }
     });
 
-    if (!subscription) {
+    if (isNullish(subscription)) {
       return;
     }
 

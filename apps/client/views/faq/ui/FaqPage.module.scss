@@ -1,33 +1,15 @@
 @use '@/shared/styles/mixins' as *;
 
 .root {
-  display: flex;
-  max-width: 760px;
-  flex-direction: column;
-  padding: 64px 20px 80px;
-  margin: 0 auto;
-  gap: 40px;
-
-  @include below(md) {
-    padding: 40px 16px 56px;
-    gap: 28px;
-  }
+  @include marketing-page(760px, 40px, 28px);
 }
 
 .head {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  @include stack(12px);
 }
 
 .title {
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-
-  @include below(md) {
-    font-size: 26px;
-  }
+  @include marketing-title;
 }
 
 .intro {

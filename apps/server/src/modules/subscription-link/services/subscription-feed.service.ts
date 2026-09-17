@@ -12,7 +12,7 @@ import type {
 
 import { AppNotFoundException } from '../../../common/exceptions';
 import { describeError } from '../../../common/lib';
-import { AppConfigService } from '../../../config/config.module';
+import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { buildTunnelConfig } from '../../peers';
 import { NODE_FEED_SELECT } from '../config';

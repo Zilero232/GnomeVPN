@@ -7,6 +7,7 @@ import type { BuildConfigInput } from './build-config.types';
 
 import { AppServiceUnavailableException } from '../../../../common/exceptions';
 import { REALITY, TUNNEL } from '../../config';
+import { hasReality } from './build-config.helpers';
 
 const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig => ({
   protocol: TUNNEL_PROTOCOL.hysteria2,
@@ -20,7 +21,7 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
 });
 
 const buildVlessConfig = ({ node, auth }: BuildConfigInput): TunnelConfig => {
-  if (!node.realityPublicKey || !node.realityShortId) {
+  if (!hasReality(node)) {
     throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'node has no reality endpoint');
   }
 

@@ -1,3 +1,5 @@
+import { isNullish } from 'remeda';
+
 import type { NodeAccess } from './node-credentials.types';
 
 import { XrayClient } from '../../lib';
@@ -6,7 +8,7 @@ import { AppServiceUnavailableException } from '../exceptions';
 export const resolveNodeApiKey = (ref: string): string => {
   const key = process.env[ref];
 
-  if (!key) {
+  if (isNullish(key)) {
     throw new AppServiceUnavailableException('NODE_UNAVAILABLE', `Missing ${ref} in the environment`);
   }
 

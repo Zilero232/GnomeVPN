@@ -4,7 +4,6 @@ export { resetSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
 export { api, ApiError, apiErrorCode, toApiError } from './http';
-export { listPlatforms } from './platforms';
 export { queryClient } from './query-client';
 export { getSubscriptionStatus } from './subscription';
 export { getSubscriptionLink, rotateSubscriptionLink } from './subscription-link';

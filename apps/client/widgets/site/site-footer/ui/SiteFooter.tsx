@@ -1,9 +1,9 @@
 import { useTranslations } from 'next-intl';
 
 import { SITE } from '@/shared/config';
+import { FOOTER_LINKS } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
 
-import { FOOTER_LINKS } from '../config';
 import { FooterCopy } from './components';
 
 import s from './SiteFooter.module.scss';

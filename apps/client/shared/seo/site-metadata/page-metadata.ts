@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { isNonNullish } from 'remeda';
+
 import { SITE } from '@/shared/config';
 import { DEFAULT_LOCALE, localePath, LOCALES } from '@/shared/i18n';
 
@@ -18,18 +20,18 @@ const languageAlternates = (path: string) =>
 
 export const createPageMetadata = ({ title, description, path, locale, index = false, follow = false }: PageMetadataInput): Metadata => {
   const ogTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
-  const canonical = localePath({ path, locale });
+  const canonical = isNonNullish(path) ? localePath({ path, locale }) : undefined;
   const images = [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }];
 
   return {
     title,
     description,
-    ...(index ? { alternates: { canonical, languages: languageAlternates(path) } } : {}),
+    ...(index && isNonNullish(path) ? { alternates: { canonical, languages: languageAlternates(path) } } : {}),
     robots: { index, follow },
     openGraph: {
       title: ogTitle,
       description,
-      url: canonical,
+      ...(isNonNullish(canonical) ? { url: canonical } : {}),
       type: 'website',
       locale: OG_LOCALES[locale],
       images

@@ -27,7 +27,7 @@ export const ProfileCard = () => {
       <hr className={s.divider} />
 
       <div className={s.section}>
-        <Text as='h3' className={s.subtitle}>
+        <Text as='h2' className={s.subtitle}>
           {t('security')}
         </Text>
 

@@ -1,10 +1,6 @@
 import type { PeerKind, Prisma, TunnelProtocol } from '../../../generated';
+import type { NodeAccess } from '../../common/lib';
 import type { XrayClient } from '../../lib/xray';
-
-export type PeerNode = {
-  apiUrl: string;
-  apiTokenEnvVar: string;
-};
 
 export type PeerRef = {
   id: string;
@@ -16,17 +12,8 @@ export type PeerRef = {
   nodeCredential: string;
 };
 
-export type OnlinePeerRef = {
-  id: string;
-  nodeId: string;
-  userId: string;
-  kind: PeerKind;
-  protocol: TunnelProtocol;
-  name: string | null;
-};
-
 export type IssuePeerInput = {
-  node: PeerNode;
+  node: NodeAccess;
   nodeId?: string;
   userId: string;
   kind: PeerKind;
@@ -50,7 +37,7 @@ export type DeleteClientInput = {
 };
 
 export type DiscardPeerInput = {
-  node: PeerNode;
+  node: NodeAccess;
   email: string;
 };
 

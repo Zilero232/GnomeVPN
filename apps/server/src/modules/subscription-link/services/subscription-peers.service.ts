@@ -1,12 +1,13 @@
+import type { TunnelProtocol } from '@gnomevpn/schemas';
+
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { isNonNullish } from 'remeda';
 
 import type { EnsurePeerInput, PersistPeerInput, SubscriptionNode, SubscriptionPeer } from '../subscription-link.service.types';
 
 import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
-import { PeersService } from '../../peers';
+import { hasReality, PeersService } from '../../peers';
 import { SUBSCRIPTION_PEER_NAME } from '../config';
 
 @Injectable()
@@ -18,10 +19,8 @@ export class SubscriptionPeersService {
     private readonly peers: PeersService
   ) {}
 
-  protocolsFor(node: SubscriptionNode) {
-    const hasReality = isNonNullish(node.realityPublicKey) && isNonNullish(node.realityShortId);
-
-    return hasReality ? [TUNNEL_PROTOCOL.hysteria2, TUNNEL_PROTOCOL.vless] : [TUNNEL_PROTOCOL.hysteria2];
+  protocolsFor(node: SubscriptionNode): TunnelProtocol[] {
+    return hasReality(node) ? [TUNNEL_PROTOCOL.hysteria2, TUNNEL_PROTOCOL.vless] : [TUNNEL_PROTOCOL.hysteria2];
   }
 
   async ensure({ userId, node, protocol }: EnsurePeerInput): Promise<SubscriptionPeer | null> {

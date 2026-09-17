@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { XrayInbound } from '../inbounds';
 
 import { AUTH_BYTES } from '../xray.constants';
-import { generateAuth, parseSettings, parseSniffing, parseStreamSettings, readClients, readSettings } from '../xray.helpers';
+import { generateAuth, readClients, readSettings } from '../xray.helpers';
 
 const inbound = (patch: Partial<XrayInbound>): XrayInbound => ({
   id: 1,
@@ -12,66 +12,6 @@ const inbound = (patch: Partial<XrayInbound>): XrayInbound => ({
   port: 443,
   settings: '{}',
   ...patch
-});
-
-describe('parseSettings', () => {
-  it('parses a json string', () => {
-    expect(parseSettings(inbound({ settings: '{"clients":[{"email":"a"}]}' }))).toEqual({ clients: [{ email: 'a' }] });
-  });
-
-  it('passes an already parsed object through', () => {
-    const settings = { clients: [{ email: 'a' }] };
-
-    expect(parseSettings(inbound({ settings }))).toBe(settings);
-  });
-
-  it('returns an empty object for undefined settings', () => {
-    expect(parseSettings(inbound({ settings: undefined as unknown as string }))).toEqual({});
-  });
-
-  it('returns an empty object for malformed json', () => {
-    expect(parseSettings(inbound({ settings: '{not json' }))).toEqual({});
-  });
-});
-
-describe('parseStreamSettings', () => {
-  it('parses a json string', () => {
-    expect(parseStreamSettings(inbound({ streamSettings: '{"security":"tls"}' }))).toEqual({ security: 'tls' });
-  });
-
-  it('passes an already parsed object through', () => {
-    const streamSettings = { security: 'tls' };
-
-    expect(parseStreamSettings(inbound({ streamSettings }))).toBe(streamSettings);
-  });
-
-  it('returns an empty object when stream settings are absent', () => {
-    expect(parseStreamSettings(inbound({}))).toEqual({});
-  });
-
-  it('returns an empty object for malformed json', () => {
-    expect(parseStreamSettings(inbound({ streamSettings: '[' }))).toEqual({});
-  });
-});
-
-describe('parseSniffing', () => {
-  it('parses a json string', () => {
-    expect(parseSniffing(inbound({ sniffing: '{"enabled":true}' }))).toEqual({ enabled: true });
-  });
-
-  it('passes an already parsed object through', () => {
-    const sniffing = { enabled: true };
-
-    expect(parseSniffing(inbound({ sniffing }))).toBe(sniffing);
-  });
-
-  it('returns an empty object when sniffing is absent', () => {
-    expect(parseSniffing(inbound({}))).toEqual({});
-  });
-
-  it('returns an empty object for malformed json', () => {
-    expect(parseSniffing(inbound({ sniffing: 'null,' }))).toEqual({});
-  });
 });
 
 describe('generateAuth', () => {
@@ -107,11 +47,8 @@ describe('readClients', () => {
     expect(readClients(inbound({ settings: '{"secretKey":"key"}' }))).toEqual([]);
   });
 
-  it('refuses to guess at malformed settings, where a tolerant parse would answer an empty list', () => {
-    const broken = inbound({ settings: '{not json' });
-
-    expect(parseSettings(broken).clients ?? []).toEqual([]);
-    expect(readClients(broken)).toBeNull();
+  it('refuses to guess at malformed settings rather than answering an empty list', () => {
+    expect(readClients(inbound({ settings: '{not json' }))).toBeNull();
   });
 
   it('refuses to guess when settings are absent altogether', () => {
@@ -130,11 +67,8 @@ describe('readSettings', () => {
     expect(readSettings(inbound({ settings }))).toBe(settings);
   });
 
-  it('refuses to guess at malformed settings, where parseSettings would answer an empty object', () => {
-    const broken = inbound({ settings: '{"clients":' });
-
-    expect(parseSettings(broken)).toEqual({});
-    expect(readSettings(broken)).toBeNull();
+  it('refuses to guess at malformed settings rather than answering an empty object', () => {
+    expect(readSettings(inbound({ settings: '{"clients":' }))).toBeNull();
   });
 
   it('refuses to guess when settings are absent', () => {

@@ -1,5 +1,14 @@
 export const NO_LIMIT = 0;
 
+export const CLIENT_DEFAULTS = {
+  enable: true,
+  limitIp: NO_LIMIT,
+  totalGB: NO_LIMIT,
+  expiryTime: NO_LIMIT,
+  tgId: NO_LIMIT,
+  reset: NO_LIMIT
+} as const;
+
 const INBOUNDS = '/panel/api/inbounds';
 const SERVER = '/panel/api/server';
 const CLIENTS = '/panel/api/clients';

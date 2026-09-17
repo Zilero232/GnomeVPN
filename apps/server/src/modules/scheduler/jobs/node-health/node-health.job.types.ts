@@ -1,5 +1,1 @@
-export type ProbeNodeRow = {
-  id: string;
-  apiUrl: string;
-  apiTokenEnvVar: string;
-};
+export type { IdentifiedNode as ProbeNodeRow } from '../../../../common/lib';

@@ -1,10 +1,10 @@
+@use '@/shared/styles/mixins' as *;
+
 .grid {
   display: grid;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-border);
-  gap: 1px;
+
+  @include hairline-cards;
+
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 

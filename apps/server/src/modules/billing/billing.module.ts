@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { AppConfigService } from '../../config/config.module';
+import { AppConfigService } from '../../config';
 import { makeYooKassaClient, YooKassaClient } from '../../lib';
 import { SubscriptionLinkModule } from '../subscription-link';
 import { BillingController } from './billing.controller';

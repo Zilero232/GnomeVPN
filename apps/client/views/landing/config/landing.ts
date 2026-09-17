@@ -17,6 +17,4 @@ export const LOCATIONS = [
 
 export const COMPARISON_ROWS = ['speed', 'ads', 'blocking', 'limits'] as const;
 
-export type ComparisonRow = (typeof COMPARISON_ROWS)[number];
-
 export type FeatureCard = (typeof FEATURE_CARDS)[number];
