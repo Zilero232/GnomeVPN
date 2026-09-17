@@ -26,15 +26,20 @@
 
 .actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
 
-  // Two buttons of different widths look accidental once they wrap onto
-  // separate lines, which is every phone.
+  > * {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
   @include below(md) {
     flex-direction: column;
-    align-items: stretch;
+
+    > * {
+      flex: 0 0 auto;
+    }
   }
 }
 

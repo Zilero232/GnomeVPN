@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   padding: 28px 0;
   border-top: 1px solid var(--color-border);
@@ -6,10 +8,18 @@
 
 .inner {
   display: flex;
+  width: 100%;
+  max-width: 1080px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  padding: 0 24px;
+  margin: 0 auto;
   gap: 16px;
+
+  @include below(md) {
+    padding: 0 12px;
+  }
 }
 
 .copy {

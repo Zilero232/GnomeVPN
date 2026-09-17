@@ -10,6 +10,7 @@ import { Link, usePathname } from '@/shared/i18n/navigation';
 import { BrandMark, Button } from '@/ui-kit';
 
 import { SITE_NAV } from '../config';
+import { SiteNavMenu } from './components';
 
 import s from './SiteHeader.module.scss';
 
@@ -56,9 +57,11 @@ export const SiteHeader = () => {
           <div className={s.actions}>
             <LocaleSwitcher />
 
-            <Link href={ROUTES.account}>
+            <Link className={s.accountLink} href={ROUTES.account}>
               <Button>{t('account')}</Button>
             </Link>
+
+            <SiteNavMenu />
           </div>
         </div>
       </header>
