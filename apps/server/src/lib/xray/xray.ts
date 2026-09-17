@@ -95,12 +95,12 @@ export class XrayClient {
     });
   }
 
-  async createClient(email: string): Promise<CreateClientResult> {
-    return this.hysteria.create({ email, auth: generateAuth() });
+  async createClient(email: string, auth?: string): Promise<CreateClientResult> {
+    return this.hysteria.create({ email, auth: auth ?? generateAuth() });
   }
 
-  async createVlessClient(email: string): Promise<CreateVlessClientResult> {
-    return this.vless.create({ email, id: randomUUID() });
+  async createVlessClient(email: string, id?: string): Promise<CreateVlessClientResult> {
+    return this.vless.create({ email, id: id ?? randomUUID() });
   }
 
   async deleteClient(email: string): Promise<void> {
@@ -120,7 +120,9 @@ export class XrayClient {
   }
 
   async clientEnabledByEmail(): Promise<Map<string, boolean>> {
-    const [hysteria, vless] = await Promise.all([this.hysteria.list(), this.vless.list()]);
+    const hasVless = await this.hasVlessInbound();
+
+    const [hysteria, vless] = await Promise.all([this.hysteria.list(), hasVless ? this.vless.list() : []]);
 
     return new Map([...hysteria, ...vless].map((client) => [client.email, client.enable ?? true]));
   }
