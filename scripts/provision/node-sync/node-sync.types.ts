@@ -6,6 +6,8 @@ export type SyncableNode = {
   port: number;
   serverName: string;
   hysteriaAuth: string;
+  realityPublicKey: string | null;
+  realityShortId: string | null;
   apiUrl: string;
   apiTokenEnvVar: string;
   displayOrder: number;
