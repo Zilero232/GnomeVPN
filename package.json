@@ -1,6 +1,6 @@
 {
   "name": "gnomevpn",
-  "version": "0.5.7",
+  "version": "1.0.0",
   "private": true,
   "description": "GnomeVPN — a commercial VPN on Hysteria2, delivered through the INCY client. Bun-workspaces monorepo.",
   "keywords": [

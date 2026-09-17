@@ -98,7 +98,6 @@ export const Segmented = <T extends string>({
         const isActive = option.value === value;
 
         return (
-          // a native radio cannot host the sliding indicator and per-option icons; this follows the ARIA radiogroup pattern with roving tabindex
           <button
             key={option.value}
             ref={(node) => {

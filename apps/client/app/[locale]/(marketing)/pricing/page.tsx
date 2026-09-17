@@ -3,7 +3,7 @@ import * as rootParams from 'next/root-params';
 
 import { ROUTES } from '@/shared/constants';
 import { resolveLocale } from '@/shared/i18n';
-import { createPageMetadata } from '@/shared/seo';
+import { createPageMetadata, PageJsonLd } from '@/shared/seo';
 import { PricingPage } from '@/views/pricing';
 
 export const generateMetadata = async () => {
@@ -20,6 +20,17 @@ export const generateMetadata = async () => {
   });
 };
 
-const Page = () => <PricingPage />;
+const Page = async () => {
+  const locale = resolveLocale(await rootParams.locale());
+  const t = await getTranslations({ locale, namespace: 'pricing' });
+
+  return (
+    <>
+      <PageJsonLd locale={locale} name={t('meta.title')} path={ROUTES.pricing} />
+
+      <PricingPage />
+    </>
+  );
+};
 
 export default Page;

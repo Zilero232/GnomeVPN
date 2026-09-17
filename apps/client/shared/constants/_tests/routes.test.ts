@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isGuestOnlyRoute, isKnownRoute, isPublicRoute, ROUTES } from '../routes';
+import { indexedRoutes, isGuestOnlyRoute, isIndexedRoute, isKnownRoute, isPublicRoute, ROUTES } from '../routes';
 
 describe('isKnownRoute', () => {
   it('accepts every declared route', () => {
@@ -49,5 +49,24 @@ describe('isGuestOnlyRoute', () => {
   it('matches exactly, so a subpath of auth is not guest-only', () => {
     expect(isGuestOnlyRoute('/auth/sign-in')).toBe(false);
     expect(isGuestOnlyRoute('/auth/')).toBe(false);
+  });
+});
+
+describe('indexedRoutes', () => {
+  it('only lists routes anyone can open, so the sitemap never advertises a login wall', () => {
+    expect(indexedRoutes().every(isPublicRoute)).toBe(true);
+  });
+
+  it('never lists a route behind the session', () => {
+    expect(indexedRoutes()).not.toContain(ROUTES.account);
+    expect(indexedRoutes()).not.toContain(ROUTES.auth);
+  });
+
+  it('leaves out the guest-only route, which has nothing to index', () => {
+    expect(indexedRoutes()).not.toContain(ROUTES.auth);
+  });
+
+  it('agrees with isIndexedRoute', () => {
+    expect(indexedRoutes().every(isIndexedRoute)).toBe(true);
   });
 });

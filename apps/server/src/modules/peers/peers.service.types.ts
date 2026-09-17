@@ -4,7 +4,6 @@ import type { XrayClient } from '../../lib/xray';
 export type PeerNode = {
   apiUrl: string;
   apiTokenEnvVar: string;
-  wgPublicKey?: string | null;
 };
 
 export type PeerRef = {
@@ -43,25 +42,16 @@ export type CreatedPeer = {
   nodeCredential: string;
   email: string;
   protocol: TunnelProtocol;
-  wgAssignedIp?: string;
-  wgPrivateKey?: string;
 };
 
-export type CreateVlessClientInput = {
-  node: PeerNode;
-  email: string;
-};
-
-export type CreateWireguardClientInput = {
-  node: PeerNode;
-  nodeId: string;
+export type DeleteClientInput = {
+  client: XrayClient;
   email: string;
 };
 
 export type DiscardPeerInput = {
   node: PeerNode;
   email: string;
-  protocol: TunnelProtocol;
 };
 
 export type FindPeersInput = {
@@ -74,11 +64,6 @@ export type FindPeersInput = {
 export type SetPeerEnabledInput = {
   where: Prisma.PeerWhereInput;
   enabled: boolean;
-};
-
-export type PeerWgData = {
-  wgAssignedIp: string | null;
-  wgPrivateKey: string | null;
 };
 
 export type ForEachNodeInput<TPeer> = {

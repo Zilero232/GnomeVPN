@@ -10,7 +10,6 @@ export type UpsertNodeInput = {
   port: number;
   serverName: string;
   hysteriaAuth: string;
-  wgPublicKey: string;
   realityPublicKey: string;
   realityShortId: string;
   apiUrl: string;

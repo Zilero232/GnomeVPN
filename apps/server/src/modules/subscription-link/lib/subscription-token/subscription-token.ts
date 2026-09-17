@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
 
-import { SUBSCRIPTION_TOKEN_BYTES } from '../../config';
+import { TOKEN_BYTES } from './subscription-token.constants';
 
-export const generateSubscriptionToken = (): string => randomBytes(SUBSCRIPTION_TOKEN_BYTES).toString('base64url');
+export const generateSubscriptionToken = (): string => randomBytes(TOKEN_BYTES).toString('base64url');

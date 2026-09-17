@@ -13,7 +13,8 @@ src/
 │   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
 │   ├── health/      # /health — also probes the database
 │   ├── nodes/       # node list with health status (auth-gated) — config/ lib/
-│   ├── peers/       # xray clients shared by sessions and the subscription — config/ lib/
+│   ├── peers/       # xray clients the subscription issues — config/ lib/
+│   ├── platforms/   # the INCY download links, cached — config/ dto/ services/
 │   ├── scheduler/   # cron jobs — config/ jobs/
 │   ├── sessions/    # live tunnels, one slot per device — config/ dto/
 │   ├── subscription/# plan status and the access guard — guards/
@@ -40,7 +41,7 @@ A module is `x.module.ts` + `x.controller.ts` + `services/`, plus `dto/`, `guard
 
 **A folder is one concern, not one function.** Each gets its own `index.ts`,
 `<name>.types.ts` and `<name>.constants.ts` where it needs them, so a reader
-opens `wireguard/` and finds every WireGuard thing and nothing else.
+opens `vless/` and finds every VLESS thing and nothing else.
 
 The unit is the concern because the alternative was tried: `lib/xray` once held
 seven folders and fifteen files for a handful of lines — `strip-cidr-mask/` was a
@@ -128,7 +129,7 @@ lib/xray/
 ├── panel-client/   # the 3x-ui HTTP API, and nothing above it
 ├── inbounds/       # find/create an inbound, shape its payload — used by both protocols
 ├── hysteria/       # Hysteria2 clients: create, delete, enable
-├── wireguard/      # WireGuard peers: IP allocation, collision checks, its own inbound
+├── vless/          # VLESS + Reality clients, in their own inbound
 └── xray.ts         # the facade the rest of the server calls
 ```
 
@@ -137,18 +138,15 @@ not to Xray-core. The panel runs the core; Hysteria2 is an inbound inside it,
 which is why a fix released for the standalone `apernet/hysteria` server does not
 reach these nodes.
 
-It was one 300-line class holding both protocols, and that is how a restart bug
-hid in it: WireGuard needs the core restarted after a rewrite, Hysteria2 needs it
-after a client changes, and with both paths interleaved the second was easy to
-miss. Splitting by protocol makes each rule visible where it applies.
+It was one 300-line class holding every protocol, and that is how a restart bug
+hid in it: each inbound needs the core restarted after its own kind of change,
+and with the paths interleaved one was easy to miss. Splitting by protocol makes
+each rule visible where it applies.
 
-**Deleting a peer is protocol-specific, and so is rolling one back.** The two
-protocols live in different inbounds, so `deleteClient` (Hysteria2) cannot remove
-a WireGuard peer and vice versa — `discard` takes the protocol and picks
-`deleteWireguardPeer` or `deleteClient` accordingly. It used to always call the
-Hysteria2 path, so a failed `persist` on a WireGuard config left the peer on the
-node with its IP claimed and no database row pointing at it; only `collectOrphans`
-would eventually notice, two passes later.
+Both protocols are ordinary panel clients, so one `deleteClient` removes either.
+`peerClientNames` still derives the pre-protocol name alongside the current one,
+so a peer written before the protocol became part of the key can still be found
+on its node.
 
 **Every write path parses settings strictly.** `readSettings` returns `null` on
 malformed JSON and the caller refuses to rewrite; `parseJson` returns `{}` and is
@@ -190,6 +188,38 @@ for the same reason `addClient` does.
 read**, exactly like `updateInbound`. A re-provision that overwrote the client
 list from the template would wipe every subscriber on that node.
 
+`SubscriptionPeersService` owns the peer rows; `SubscriptionFeedService` owns
+the response. Splitting them keeps the transaction and the retry out of the
+path that only renders URIs.
+
+`lib/` under the module is split the same way, one folder per concern:
+
+```text
+lib/
+├── client-platform/   # what the User-Agent says the caller is
+├── incy-headers/      # the response headers, with header-value/ and userinfo/
+├── incy-uri/          # the server list, with hysteria2/ and vless/ beside it
+├── server-name/       # the flag-and-country label both protocols share
+└── subscription-token/
+```
+
+The two URI builders were one file once, which hid that they share nothing but
+the server label — and that label is what keeps `🇳🇱 Netherlands` apart from
+`🇳🇱 Netherlands · TCP` in the app's list.
+
+`clientEnabledByEmail` must list **every** protocol the subscription issues.
+It once listed Hysteria2 and WireGuard, and when WireGuard was removed a VLESS
+client looked to `reconcile-peers` like a peer that had vanished from its node.
+
+## Platform downloads
+
+`GET /platforms` is the INCY download list: anonymous, because the landing page
+renders it before anyone signs up, and cached for a day through
+`CacheInterceptor` because it is a constant rather than a query.
+
+The URLs point at `releases/latest`, so they follow INCY's current release
+without a redeploy. Only a renamed artifact forces a change here.
+
 **Every non-ASCII header value must be `base64:<…>`.** HTTP headers cannot carry
 UTF-8: a raw Cyrillic `profile-title` or `announce` does not merely render wrong,
 it breaks the response. `incyHeaderValue` decides per value.
@@ -221,34 +251,19 @@ _before_ the new client is created. Only peers the node reports as **not** onlin
 are eligible; if every slot is genuinely in use it throws
 `DEVICE_LIMIT_REACHED` instead of cutting someone off.
 
-**Liveness comes from the Xray core, which cannot see WireGuard.**
-`onlineEmails()` reads `/panel/api/clients/onlines` — sessions the core itself
-proxies. A WireGuard peer is handled by the kernel module, never appears there,
-and so is _unknown_, not _idle_. `onlinePeerIds` folds that into the same
-`assumeOnlineWhenNodeSilent` flag it already uses for an unreachable node: the
-session path leaves it `true`, so an unknown peer holds its slot and a live
-tunnel is never silently evicted. Treating unknown as idle is what let a third
-device tear down somebody's active WireGuard tunnel.
+**Liveness comes from the Xray core.** `onlineEmails()` reads
+`/panel/api/clients/onlines` — the sessions the core itself proxies. A node that
+does not answer leaves every peer _unknown_, not _idle_, and `onlinePeerIds`
+folds that into `assumeOnlineWhenNodeSilent`: left `true`, an unknown peer holds
+its slot rather than being evicted on no evidence.
 
 **The client email is scoped by protocol, and it has to be.** The database is
 unique on `(userId, kind, name, nodeId, protocol)` — five fields — while the
-email was built from four. One user issuing both a Hysteria2 and a WireGuard
-config under the same name on the same node therefore produced two rows and one
-email, and `clientEnabledByEmail` merges both protocols into a single map keyed
-on it: the WireGuard client overwrote the Hysteria2 one, and `syncEnabled` then
-disabled a live config against the wrong client's state. WireGuard names now
-carry a `-wg` suffix; Hysteria2 keeps its name exactly as before, so nothing
-already on a node had to be renamed.
-
-Clients created before that change still carry the unsuffixed name, so
-`peerClientNames` answers both — the scoped one first. Reconcile recognises
-either, which is what keeps `collectOrphans` from deleting a live WireGuard
-client the moment the rename ships, and revocation clears both.
-
-Order matters: `createClient` deletes any client with the same email first,
-because the panel rejects duplicates. Releasing the old peer _after_ creating the
-new one would delete the client that was just handed out — that bug cost a
-"NODE_UNAVAILABLE" that had nothing to do with the node being down.
+email was built from four. One user issuing two protocols under the same name on
+the same node therefore produced two rows and one email, and
+`clientEnabledByEmail` merges every protocol into a single map keyed on it: one
+client overwrote the other, and `syncEnabled` then disabled a live config against
+the wrong client's state.
 
 **Disconnecting deletes the row first and releases the panel client afterwards.**
 `release()` is an HTTP call to the node, so waiting for it means a slow or
@@ -269,7 +284,7 @@ Use a raw cron string when the interval has no `CronExpression` constant. Invent
 
 `bun provision` reads `nodes.json` from the repo root (gitignored — it holds root SSH passwords; `nodes.example.json` next to it is the committed template) and sets each host up over SSH: install Docker, ship the 3x-ui compose stack, open 443/udp, configure the panel, generate the TLS cert, register the node.
 
-The script is staged: `prepareHost` (docker, firewall, port hopping, compose) → `startPanel` (configure, wait for the api) → `installInbounds` (cert, Hysteria2, WireGuard) → `registerNode` (env secrets, database row). Remote commands are composed through `@gnomevpn/scripts/shell` rather than written as strings — `arg()` quotes anything untrusted, and `quiet()`/`silent()` are distinct on purpose: `quiet` hides stderr but keeps stdout, which is what reading a remote key needs.
+The script is staged: `prepareHost` (docker, firewall, port hopping, compose) → `startPanel` (configure, wait for the api) → `installInbounds` (cert, Hysteria2, Reality) → `registerNode` (env secrets, database row). Remote commands are composed through `@gnomevpn/scripts/shell` rather than written as strings — `arg()` quotes anything untrusted, and `quiet()`/`silent()` are distinct on purpose: `quiet` hides stderr but keeps stdout, which is what reading a remote key needs.
 
 The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built in `scripts/provision/hysteria-inbound`, served by the 3x-ui panel — no separate hysteria process. It listens on **443/UDP** (QUIC), so `openTunnelPort` opens udp, not tcp. `ensureCert` generates a self-signed EC cert inside the container (`/etc/gnomevpn/{cert,key}.pem`); clients accept it with `insecure: true`.
 
@@ -291,10 +306,6 @@ be known to be handed to the device.
 behaves identically, which is why the old path called `restartCore()` too. Drop
 it and the client sits in the database while the running core has never heard of
 it, so the very first connection fails auth with a 404.
-
-WireGuard peers keep the rewrite-and-restart path entirely: `fillProtocolDefaults`
-in 3x-ui has no WireGuard branch, so that endpoint cannot serve their
-`publicKey`/`allowedIPs` shape.
 
 The masquerade target is `MASQUERADE_HOST` in `scripts/provision/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
 

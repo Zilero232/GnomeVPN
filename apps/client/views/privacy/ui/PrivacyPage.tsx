@@ -5,6 +5,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { SITE } from '@/shared/config';
 import { ROUTES } from '@/shared/constants';
+import { DATE_FORMAT } from '@/shared/i18n';
 import { Link } from '@/shared/i18n/navigation';
 import { BrandMark, Text } from '@/ui-kit';
 
@@ -33,7 +34,7 @@ export const PrivacyPage = () => {
           </Text>
           <Text as='p' className={s.updated}>
             {t('updated', {
-              date: format.dateTime(new Date(PRIVACY_UPDATED), { dateStyle: 'long' })
+              date: format.dateTime(new Date(PRIVACY_UPDATED), DATE_FORMAT)
             })}
           </Text>
           <Text as='p' className={s.intro}>

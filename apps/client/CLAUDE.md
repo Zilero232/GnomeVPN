@@ -69,6 +69,22 @@ canonical URL and the `hreflang` alternates for both locales.
 Private routes (`/account`, `/auth`, `/reset-password`) are explicitly disallowed
 in robots and carry `index: false`.
 
+## Platform downloads come from the API
+
+`GET /platforms` returns `{ id, href }` for every platform INCY ships on. The
+icons cannot travel with them — they are React components — so `PLATFORM_ICONS`
+in `entities/app/incy` maps an id to its icon and `usePlatforms` joins the two.
+
+Changing a download URL is a server deploy, not a client rebuild. The endpoint
+is anonymous because the landing page lists the downloads before anyone signs up.
+
+## One FAQ, two placements
+
+`entities/app/faq` owns the questions. The FAQ page renders `FAQ_GROUPS`; the
+landing page renders `FAQ_HIGHLIGHTS`, a subset of the same ids. They were two
+separate sets once and had already drifted into asking the same thing in
+different words.
+
 ## Server-only code
 
 - `instrumentation.ts` runs once at boot. It validates the `NEXT_PUBLIC_*` env by

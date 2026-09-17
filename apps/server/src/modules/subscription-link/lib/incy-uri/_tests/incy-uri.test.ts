@@ -3,7 +3,8 @@ import type { TunnelConfig } from '@gnomevpn/schemas';
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { describe, expect, it } from 'vitest';
 
-import { incyServerName, incyServerUri } from '../incy-uri';
+import { serverName } from '../../server-name';
+import { incyServerUri } from '../incy-uri';
 
 const config: TunnelConfig = {
   auth: 'secret-auth',
@@ -49,21 +50,7 @@ describe('incyServerUri', () => {
   it('names the server in the fragment', () => {
     const uri = incyServerUri({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' });
 
-    expect(decodeURIComponent(new URL(uri).hash)).toBe(`#${incyServerName({ country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' })}`);
-  });
-});
-
-describe('incyServerName', () => {
-  it('prefixes the name with the country flag', () => {
-    expect(incyServerName({ country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' })).toBe('🇳🇱 Netherlands Amsterdam');
-  });
-
-  it('drops the city when the node has none', () => {
-    expect(incyServerName({ country: 'Netherlands', countryCode: 'NL', city: null })).toBe('🇳🇱 Netherlands');
-  });
-
-  it('falls back to the plain country when the code is not two letters', () => {
-    expect(incyServerName({ country: 'Netherlands', countryCode: '', city: null })).toBe('Netherlands');
+    expect(decodeURIComponent(new URL(uri).hash)).toBe(`#${serverName({ country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' })}`);
   });
 });
 

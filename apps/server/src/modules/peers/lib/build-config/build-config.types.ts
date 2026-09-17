@@ -4,7 +4,6 @@ export type TunnelNode = {
   host: string;
   port: number;
   serverName: string;
-  wgPublicKey: string | null;
   realityPublicKey: string | null;
   realityShortId: string | null;
 };
@@ -13,6 +12,4 @@ export type BuildConfigInput = {
   node: TunnelNode;
   protocol: TunnelProtocol;
   auth: string;
-  wgPrivateKey?: string;
-  wgAssignedIp?: string;
 };

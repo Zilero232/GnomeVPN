@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { INCY_PLATFORMS } from '@/entities/app/incy';
+import { usePlatforms } from '@/entities/app/incy';
 import { Text } from '@/ui-kit';
 
 import { ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
@@ -13,10 +13,11 @@ import s from './Platforms.module.scss';
 export const Platforms = () => {
   const t = useTranslations('landing.platforms');
   const tIncy = useTranslations('incy.platforms');
+  const platforms = usePlatforms();
 
   return (
     <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
-      {INCY_PLATFORMS.map(({ id, icon: Icon }) => (
+      {platforms.map(({ id, icon: Icon }) => (
         <motion.article
           key={id}
           className={s.card}

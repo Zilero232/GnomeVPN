@@ -1,9 +1,2 @@
-export {
-  DEFAULT_TUNNEL_PROTOCOL,
-  realityConfigSchema,
-  TUNNEL_PROTOCOL,
-  tunnelConfigSchema,
-  tunnelProtocolSchema,
-  wireguardConfigSchema
-} from './tunnel';
-export type { RealityConfig, TunnelConfig, TunnelProtocol, WireguardConfig } from './tunnel';
+export { DEFAULT_TUNNEL_PROTOCOL, TUNNEL_PROTOCOL, tunnelConfigSchema, tunnelProtocolSchema } from './tunnel';
+export type { TunnelConfig, TunnelProtocol } from './tunnel';

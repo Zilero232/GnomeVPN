@@ -241,10 +241,8 @@
     "title": "Connect with INCY",
     "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
     "copyDeepLink": "Copy INCY link",
-    "copyUrl": "Copy subscription address",
     "showQr": "QR code",
     "deepLinkCopied": "Link copied",
-    "urlCopied": "Subscription address copied",
     "qrTitle": "Open with your camera",
     "qrHint": "Point your phone camera at the code, or scan it from INCY on a TV.",
     "qrNote": "The code carries your subscription link — keep it to yourself.",
@@ -298,19 +296,6 @@
     "retry": "Try again",
     "home": "Go home",
     "details": "Error details"
-  },
-  "downloadApp": {
-    "title": "Install INCY",
-    "description": "GnomeVPN runs through INCY, a free app. Install it, then add the link from your account.",
-    "hint": "Once installed, copy the link from the App tab in your account.",
-    "platforms": {
-      "ios": "iPhone and Mac",
-      "android": "Android",
-      "windows": "Windows",
-      "macos": "macOS",
-      "linux": "Linux",
-      "tv": "TV"
-    }
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -377,22 +362,20 @@
   "pricing": {
     "meta": {
       "title": "Pricing",
-      "description": "What GnomeVPN costs: monthly, six months, a year. Servers in several countries, up to five devices, no logs."
+      "description": "What GnomeVPN costs: monthly, six months, a year. Servers in several countries, two devices, no logs."
     },
     "title": "Pricing",
     "intro": "One plan, every server. The longer the term, the cheaper the month. Pay by card and turn auto-renewal off whenever you like.",
     "includedTitle": "Included in every plan",
     "included": {
       "servers": "Every server in every country",
-      "devices": "Up to 5 devices at once",
+      "devices": "Two devices at once",
       "protocol": "Hysteria2 over QUIC",
       "noLogs": "No connection logs",
       "support": "Email support",
       "platforms": "iPhone, Android, Windows, Linux, TV"
     },
-    "faqTitle": "Questions about billing",
-    "ctaText": "Ready to connect? Signing up takes a couple of minutes.",
-    "ctaAction": "Go to account"
+    "faqTitle": "Questions about billing"
   },
   "faq": {
     "meta": {
@@ -426,7 +409,7 @@
       },
       "howManyDevices": {
         "q": "How many devices can I use?",
-        "a": "Five at once by default. There is one link per account — paste it on your phone, your laptop and your TV. If you need more, you can buy extra devices in your account."
+        "a": "Two at once by default. There is one link per account — paste it on your phone, your laptop and your TV, but two connections run at a time. If you need more, buy extra devices in your account."
       },
       "whichCountries": {
         "q": "Which countries do you have servers in?",
@@ -488,8 +471,6 @@
     "intro": "GnomeVPN runs through INCY, a free app you install once. After that a single link from your account does the rest.",
     "downloadTitle": "1. Install INCY",
     "stepsTitle": "2. Add your subscription",
-    "ctaText": "Your subscription link is waiting in your account.",
-    "ctaAction": "Open account",
     "steps": {
       "install": {
         "title": "Install the app"
@@ -585,8 +566,7 @@
         "title": "What we do not promise",
         "body": "We do not promise it will work everywhere forever: blocking changes, and sometimes nodes have to change with it. We do not promise anonymity — a VPN hides traffic from your ISP, it does not make you invisible. If the service is not for you, we refund within 14 days."
       }
-    },
-    "cta": "See pricing"
+    }
   },
   "plans": {
     "title": "Pricing",

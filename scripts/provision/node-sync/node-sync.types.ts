@@ -6,7 +6,6 @@ export type SyncableNode = {
   port: number;
   serverName: string;
   hysteriaAuth: string;
-  wgPublicKey: string | null;
   apiUrl: string;
   apiTokenEnvVar: string;
   displayOrder: number;

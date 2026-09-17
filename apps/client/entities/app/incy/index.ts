@@ -1,3 +1,3 @@
-export { INCY_PLATFORMS } from './config';
-
+export { PLATFORM_ICONS } from './config';
 export type { IncyPlatform } from './config';
+export { usePlatforms } from './model/hooks';

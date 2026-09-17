@@ -10,8 +10,6 @@ export const ROUTES = {
   account: '/account'
 } as const;
 
-export const DOWNLOAD_HASH = '#download';
-
 const KNOWN_ROUTES: string[] = Object.values(ROUTES);
 const PUBLIC_ROUTES: string[] = [
   ROUTES.landing,

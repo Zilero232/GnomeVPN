@@ -41,7 +41,7 @@ model Account {
   userId     String @map("user_id")
   accountId  String @map("account_id")
   providerId String @map("provider_id")
-  issuer     String
+  issuer     String @default("local:credential")
 
   accessToken           String?   @map("access_token")
   refreshToken          String?   @map("refresh_token")

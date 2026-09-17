@@ -10,7 +10,7 @@ export type ProvisionResult = {
   country: string;
   status: ProvisionStatus;
   error?: string;
-  lostWireguardKeys?: boolean;
+  lostRealityKeys?: boolean;
 };
 
 export type ProvisionHostInput = {
@@ -44,10 +44,9 @@ export type InstallInboundsInput = {
 };
 
 export type InstalledInbounds = {
-  wgPublicKey: string;
-  wgWasGenerated: boolean;
   realityPublicKey: string;
   realityShortId: string;
+  realityWasGenerated: boolean;
 };
 
 export type RegisterNodeInput = {
@@ -58,7 +57,6 @@ export type RegisterNodeInput = {
   password: string;
   panelPath: string;
   auth: string;
-  wgPublicKey: string;
   realityPublicKey: string;
   realityShortId: string;
 };

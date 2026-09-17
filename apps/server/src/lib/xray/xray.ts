@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 
 import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput } from './hysteria';
 import type { CreateVlessClientResult } from './vless';
-import type { AddWireguardPeerInput, WireguardInboundInput } from './wireguard';
 import type { XrayClientOptions } from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
@@ -12,7 +11,6 @@ import { inboundPayload, Inbounds } from './inbounds';
 import { PanelClient } from './panel-client';
 import { serializeByKey } from './serialize';
 import { VLESS_INBOUND_REMARK, VlessClients } from './vless';
-import { WireguardPeers } from './wireguard';
 import { REQUEST_TIMEOUT_MS, XRAY_STATE_RUNNING } from './xray.constants';
 import { generateAuth, readClients } from './xray.helpers';
 
@@ -24,7 +22,6 @@ export class XrayClient {
   private readonly inbounds: Inbounds;
   private readonly hysteria: HysteriaClients;
   private readonly vless: VlessClients;
-  private readonly wireguard: WireguardPeers;
 
   constructor(opts: XrayClientOptions) {
     this.nodeKey = opts.baseUrl.replace(/\/$/, '');
@@ -38,7 +35,6 @@ export class XrayClient {
     this.inbounds = new Inbounds(this.panel);
     this.hysteria = new HysteriaClients(this.panel, this.inbounds, this.nodeKey);
     this.vless = new VlessClients(this.panel, this.inbounds, this.nodeKey);
-    this.wireguard = new WireguardPeers(this.panel, this.inbounds, this.nodeKey);
   }
 
   async hasInbound(): Promise<boolean> {
@@ -49,16 +45,8 @@ export class XrayClient {
     return Boolean(await this.inbounds.find(VLESS_INBOUND_REMARK));
   }
 
-  async hasWireguardInbound(): Promise<boolean> {
-    return this.wireguard.hasInbound();
-  }
-
   async createInbound(inbound: Record<string, unknown>): Promise<void> {
     await this.inbounds.create(inbound);
-  }
-
-  async ensureWireguardInbound(inbound: WireguardInboundInput): Promise<void> {
-    return this.wireguard.ensureInbound(inbound);
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {
@@ -131,18 +119,10 @@ export class XrayClient {
     return this.hysteria.deleteOrphans();
   }
 
-  async addWireguardPeer(input: AddWireguardPeerInput): Promise<string> {
-    return this.wireguard.add(input);
-  }
-
-  async deleteWireguardPeer(email: string): Promise<void> {
-    return this.wireguard.remove(email);
-  }
-
   async clientEnabledByEmail(): Promise<Map<string, boolean>> {
-    const [hysteria, wireguard] = await Promise.all([this.hysteria.list(), this.wireguard.list()]);
+    const [hysteria, vless] = await Promise.all([this.hysteria.list(), this.vless.list()]);
 
-    return new Map([...hysteria, ...wireguard].map((client) => [client.email, client.enable ?? true]));
+    return new Map([...hysteria, ...vless].map((client) => [client.email, client.enable ?? true]));
   }
 
   async restartCore(): Promise<void> {

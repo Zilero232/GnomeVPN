@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, QrCode, RefreshCw, Smartphone } from 'lucide-react';
+import { QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -52,14 +52,9 @@ export const IncyCard = () => {
       </div>
 
       <div className={s.actions}>
-        <Button className={s.primary} onClick={() => void onCopy(link.deepLink, t('deepLinkCopied'))}>
+        <Button onClick={() => void onCopy(link.deepLink, t('deepLinkCopied'))}>
           <Smartphone aria-hidden size={16} />
           {t('copyDeepLink')}
-        </Button>
-
-        <Button variant='ghost' onClick={() => void onCopy(link.url, t('urlCopied'))}>
-          <Copy aria-hidden size={16} />
-          {t('copyUrl')}
         </Button>
 
         <Button variant='ghost' onClick={() => setIsQrOpen(true)}>
@@ -69,11 +64,11 @@ export const IncyCard = () => {
       </div>
 
       <div className={s.rotate}>
-        <Text size='xs' tone='muted'>
+        <Text className={s.rotateHint} size='xs' tone='muted'>
           {t('rotateHint')}
         </Text>
 
-        <Button disabled={rotate.isPending} variant='ghost' onClick={() => rotate.mutate()}>
+        <Button className={s.rotateButton} disabled={rotate.isPending} variant='ghost' onClick={() => rotate.mutate()}>
           <RefreshCw aria-hidden size={14} />
           {t('rotate')}
         </Button>

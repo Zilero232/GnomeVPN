@@ -3,10 +3,9 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { ABOUT_FACTS, ABOUT_SECTIONS } from '@/entities/app/about';
 import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
-
-import { ABOUT_FACTS, ABOUT_SECTIONS } from '../config';
 
 import s from './AboutPage.module.scss';
 

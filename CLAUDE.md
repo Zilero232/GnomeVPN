@@ -132,7 +132,11 @@ user's server list.
 **Headers carry everything the app displays.** `subscription-userinfo` holds the
 expiry, `profile-title` the name, `profile-web-page-url` the account link. Any
 non-ASCII value must be sent as `base64:<…>` — HTTP headers cannot carry UTF-8,
-and a raw Cyrillic title silently breaks the whole response.
+and a raw Cyrillic title silently breaks the whole response. `headerValue`
+decides that per value, so nothing has to remember it at the call site.
+
+`subscription-userinfo: 0` is not "no traffic used" — it tells the app to hide
+the traffic block entirely, which is what a user without a period should see.
 
 `@incy/link-encoder` builds the deep link. Its AES key ships inside every INCY
 client, so the encryption hides the URL from scanners, not from people.

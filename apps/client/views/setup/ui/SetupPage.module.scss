@@ -58,23 +58,3 @@
     grid-template-columns: 1fr;
   }
 }
-
-.cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-surface);
-  gap: 16px;
-
-  @include below(md) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-.ctaText {
-  font-size: 15px;
-}

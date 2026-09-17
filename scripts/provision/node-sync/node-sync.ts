@@ -21,7 +21,6 @@ const row = (node: SyncableNode) =>
     String(node.port),
     quote(node.serverName),
     quote(node.hysteriaAuth),
-    quote(node.wgPublicKey),
     quote(node.apiUrl),
     quote(node.apiTokenEnvVar),
     String(node.displayOrder)

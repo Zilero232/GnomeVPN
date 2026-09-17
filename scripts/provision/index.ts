@@ -38,9 +38,9 @@ const provisionAll = async (nodes: NodeConfig[]): Promise<ProvisionResult[]> => 
     results.push(result);
     log.info(`  ${result.status}${result.error ? `: ${result.error}` : ''}`);
 
-    if (result.lostWireguardKeys) {
-      log.warn('  the wireguard server key was missing and had to be regenerated');
-      log.warn('  every wireguard config issued for this node before now is dead');
+    if (result.lostRealityKeys) {
+      log.warn('  the reality server key was missing and had to be regenerated');
+      log.warn('  every VLESS entry issued for this node before now is dead');
     }
   }
 

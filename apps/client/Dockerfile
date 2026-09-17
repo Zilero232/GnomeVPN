@@ -27,6 +27,7 @@ COPY apps/client/package.json ./apps/client/package.json
 COPY apps/server/package.json ./apps/server/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
+
 # Lifecycle scripts are off because the server's postinstall runs
 # `prisma generate` before its schema is copied in.
 # A retry loop that wipes the download cache between attempts survives transient

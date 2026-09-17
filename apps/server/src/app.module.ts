@@ -1,3 +1,4 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -10,6 +11,7 @@ import { BillingModule } from './modules/billing';
 import { HealthModule } from './modules/health';
 import { NodesModule } from './modules/nodes';
 import { PeersModule } from './modules/peers';
+import { PlatformsModule } from './modules/platforms';
 import { SchedulerModule } from './modules/scheduler';
 import { SubscriptionModule } from './modules/subscription';
 import { SubscriptionLinkModule } from './modules/subscription-link';
@@ -18,6 +20,7 @@ import { SubscriptionLinkModule } from './modules/subscription-link';
   imports: [
     AppConfigModule,
     PrismaModule,
+    CacheModule.register({ isGlobal: true }),
     ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }] }),
     AuthModule,
     HealthModule,
@@ -25,6 +28,7 @@ import { SubscriptionLinkModule } from './modules/subscription-link';
     BillingModule,
     NodesModule,
     PeersModule,
+    PlatformsModule,
     SubscriptionLinkModule,
     SchedulerModule
   ],

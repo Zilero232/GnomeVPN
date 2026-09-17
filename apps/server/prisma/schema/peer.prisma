@@ -28,16 +28,12 @@ model Peer {
 
   nodeCredential String @map("node_credential")
 
-  wgAssignedIp String? @map("wg_assigned_ip")
-  wgPrivateKey String? @map("wg_private_key")
-
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, kind, name, nodeId, protocol])
-  @@unique([nodeId, wgAssignedIp])
   @@index([userId])
   @@index([nodeId, state])
   @@map("peer")

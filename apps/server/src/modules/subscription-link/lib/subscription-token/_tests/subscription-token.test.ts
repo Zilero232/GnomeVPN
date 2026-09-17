@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { SUBSCRIPTION_TOKEN_BYTES } from '../../../config';
 import { generateSubscriptionToken } from '../subscription-token';
+import { TOKEN_BYTES } from '../subscription-token.constants';
 
 describe('generateSubscriptionToken', () => {
   it('carries the full entropy the config asks for', () => {
-    expect(Buffer.from(generateSubscriptionToken(), 'base64url')).toHaveLength(SUBSCRIPTION_TOKEN_BYTES);
+    expect(Buffer.from(generateSubscriptionToken(), 'base64url')).toHaveLength(TOKEN_BYTES);
   });
 
   it('stays url-safe, since the token is the url', () => {

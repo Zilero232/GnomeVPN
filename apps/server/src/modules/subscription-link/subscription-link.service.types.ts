@@ -1,7 +1,5 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
 
-import type { Peer } from '../../../generated';
-
 export type SubscriptionNode = {
   id: string;
   country: string;
@@ -12,9 +10,17 @@ export type SubscriptionNode = {
   serverName: string;
   apiUrl: string;
   apiTokenEnvVar: string;
-  wgPublicKey: string | null;
   realityPublicKey: string | null;
   realityShortId: string | null;
+};
+
+export type SubscriptionPeer = {
+  nodeCredential: string;
+};
+
+export type FeedTarget = {
+  node: SubscriptionNode;
+  protocol: TunnelProtocol;
 };
 
 export type SubscriptionBody = {
@@ -22,9 +28,16 @@ export type SubscriptionBody = {
   headers: Record<string, string>;
 };
 
-export type TouchLinkInput = {
+export type BuildFeedInput = {
   token: string;
-  platform: string | null;
+  userAgent: string | null;
+};
+
+export type TouchLinkInput = BuildFeedInput;
+
+export type ServerUrisInput = {
+  userId: string;
+  nodes: SubscriptionNode[];
 };
 
 export type EnsurePeerInput = {
@@ -33,26 +46,24 @@ export type EnsurePeerInput = {
   protocol: TunnelProtocol;
 };
 
-export type ServerUrisInput = {
-  userId: string;
-  nodes: SubscriptionNode[];
-};
-
-export type PersistSubscriptionPeerInput = {
+export type PersistPeerInput = {
   userId: string;
   nodeId: string;
   protocol: TunnelProtocol;
   nodeCredential: string;
 };
 
-export type SubscriptionPeer = Pick<Peer, 'nodeCredential' | 'nodeId'>;
-
-export type BuildFeedInput = {
-  token: string;
-  userAgent: string | null;
-};
-
 export type SetEnabledAllInput = {
   userId: string;
   enabled: boolean;
+};
+
+export type UpsertLinkInput = {
+  userId: string;
+  replaceToken: boolean;
+};
+
+export type PresentLinkInput = {
+  token: string;
+  createdAt: Date;
 };

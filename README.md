@@ -24,12 +24,17 @@ Most VPN protocols announce themselves. WireGuard's handshake is a fixed-size UD
 packet; OpenVPN has a recognisable header. Where traffic is inspected, that is
 enough to drop the connection.
 
-GnomeVPN runs on **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3 site.
-The choice was measured, not assumed: this repository first shipped VLESS +
+GnomeVPN leads with **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3
+site. The choice was measured, not assumed: this repository first shipped VLESS +
 XTLS-Reality, and Russian DPI equipment fingerprinted the REALITY handshake over
 _any_ TCP port, killing sessions within minutes of real traffic. Plain WireGuard
 on UDP/51820 passed on the same network. UDP is policed differently, so the
 tunnel moved.
+
+QUIC is still UDP, though, and some networks drop UDP wholesale — office Wi-Fi,
+hotels, a few carriers. So every node also serves **VLESS + Reality** on TCP/443,
+and the subscription lists both. The two share the port because one is UDP and
+the other TCP.
 
 ## One link, every platform
 
@@ -59,23 +64,25 @@ with it.
 ## How a connection happens
 
 ```text
-  Browser                     API                       Node
-     │                         │                          │
-     │  GET /subscription-link │                          │
-     ├────────────────────────►│                          │
-     │  url + incy:// deeplink │                          │
-     │◄────────────────────────┤                          │
-     │                         │                          │
-  INCY app                     │                          │
-     │  GET /sub/<token>       │                          │
-     ├────────────────────────►│  ensure a peer per node  │
-     │                         ├─────────────────────────►│
-     │  base64(hy2://… × N)    │                          │
-     │  + subscription headers │                          │
-     │◄────────────────────────┤                          │
-     │                                                    │
-     │              QUIC / UDP 443                        │
-     ├───────────────────────────────────────────────────►│
+  Browser                     API                          Node
+     │                         │                             │
+     │  GET /subscription-link │                             │
+     ├────────────────────────►│                             │
+     │  url + incy:// deeplink │                             │
+     │◄────────────────────────┤                             │
+     │                         │                             │
+  INCY app                     │                             │
+     │  GET /sub/<token>       │                             │
+     ├────────────────────────►│  a peer per node, per       │
+     │                         │  protocol                   │
+     │                         ├────────────────────────────►│
+     │  base64 list of         │                             │
+     │  hy2:// and vless://    │                             │
+     │  + subscription headers │                             │
+     │◄────────────────────────┤                             │
+     │                                                       │
+     │      QUIC/UDP 443, or TCP/443 where UDP is blocked    │
+     ├──────────────────────────────────────────────────────►│
 ```
 
 The token in the URL is the credential — INCY cannot log in, so 32 random bytes
