@@ -9,7 +9,6 @@ import { PrismaModule } from './core';
 import { AuthModule } from './modules/auth';
 import { BillingModule } from './modules/billing';
 import { HealthModule } from './modules/health';
-import { NodesModule } from './modules/nodes';
 import { PeersModule } from './modules/peers';
 import { PlatformsModule } from './modules/platforms';
 import { SchedulerModule } from './modules/scheduler';
@@ -26,7 +25,6 @@ import { SubscriptionLinkModule } from './modules/subscription-link';
     HealthModule,
     SubscriptionModule,
     BillingModule,
-    NodesModule,
     PeersModule,
     PlatformsModule,
     SubscriptionLinkModule,

@@ -1,40 +1,20 @@
-export {
-  Avatar,
-  Badge,
-  BrandMark,
-  Button,
-  CountryFlag,
-  IconButton,
-  Input,
-  Label,
-  PasswordInput,
-  Select,
-  Spinner,
-  Stack,
-  Switch,
-  Text
-} from './atoms';
+export { Avatar, Badge, BrandMark, Button, CountryFlag, Input, Label, PasswordInput, Spinner, Stack, Text } from './atoms';
 export type {
   AvatarProps,
   BadgeProps,
   BrandMarkProps,
   ButtonProps,
   CountryFlagProps,
-  IconButtonProps,
   InputProps,
   LabelProps,
   PasswordInputProps,
-  SelectOption,
-  SelectProps,
   SpinnerProps,
   StackProps,
-  SwitchProps,
   TextProps
 } from './atoms';
 export {
   Accordion,
   AppSplash,
-  Banner,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -51,8 +31,6 @@ export {
 export type {
   AccordionItem,
   AccordionProps,
-  BannerProps,
-  BannerTone,
   FormFieldProps,
   LinkCardProps,
   SegmentedOption,

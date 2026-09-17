@@ -97,6 +97,13 @@ different words.
 - `app/api/health/route.ts` is what the container healthcheck probes. Keep it
   cheap: it must not touch the API or the database.
 
+## The long-form references
+
+`docs/fsd.md` and `docs/style.md` carry the full versions of what this file
+summarises: the layer rules with examples, the segment table, hook ordering,
+blank-line rules, form conventions. This file is the short answer; those two are
+where a rule is argued rather than stated.
+
 ## Verification
 
 `bun --filter @gnomevpn/client build` is the only check that catches SSR

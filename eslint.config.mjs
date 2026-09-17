@@ -13,7 +13,6 @@ export default eslint(
       '**/generated',
       '**/next-env.d.ts',
       '**/target',
-      'apps/tauri/gen',
       'apps/server/prisma/migrations',
       'docs/**',
       '**/*.md/**'

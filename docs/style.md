@@ -53,7 +53,7 @@ features/vpn/connect/ui/
 **Subcomponents** (used only inside the parent) — each one in a `components/` folder:
 
 ```
-features/vpn/split-tunneling/ui/SplitTunnelingDialog/
+features/vpn/connect-incy/ui/components/IncyQrDialog/
   SplitTunnelingDialog.tsx
   SplitTunnelingDialog.types.ts
   SplitTunnelingDialog.module.scss
@@ -83,16 +83,16 @@ import { SplitModeToggle } from './components/SplitModeToggle';
 **File rules:**
 
 - `.types.ts` — created only when there are Props or local union types.
-- `.module.scss` — component styles (imported as `import s from './Foo.module.scss'`). Required everywhere: in `shared/ui` as much as in widgets/features/views. There is no CSS-in-JS in this project.
+- `.module.scss` — component styles (imported as `import s from './Foo.module.scss'`). Required everywhere: in `ui-kit` as much as in widgets/features/views. There is no CSS-in-JS in this project.
 - `.motion.ts` — animation presets for `motion`, next to the component (`ConnectButton.motion.ts`, `ProtocolSwitch.motion.ts`). Don't duplicate an animation with a CSS transition.
-- `shared/ui/` — the atomic layer (atoms/molecules/organisms). **No flat `button.tsx`** — every primitive lives in a PascalCase folder (§2.1). From outside — `@/shared/ui`.
+- `ui-kit/` — the atomic layer (atoms/molecules/organisms). **No flat `button.tsx`** — every primitive lives in a PascalCase folder (§2.1). From outside — `@/ui-kit`.
 
-### 2.1. `shared/ui` structure
+### 2.1. `ui-kit` structure
 
 Every primitive gets its own folder. Flat kebab-case files in `atoms/` are legacy; don't add new ones.
 
 ```
-shared/ui/
+ui-kit/
   index.ts                    ← re-export atoms + molecules + organisms
   atoms/
     index.ts                  ← re-export every atom
@@ -129,8 +129,8 @@ shared/ui/
 - Styles are **`*.module.scss`**; shared utilities are imported as `@use '@/shared/styles/mixins' as *` (the `@/` alias comes from `loadPaths` + `turbopack.resolveAlias` in `next.config.ts`, so no `../../../`).
 - Headless + a11y — **`@base-ui/react`**; imported from the package subpath: `@base-ui/react/dialog`, `@base-ui/react/select`, `@base-ui/react/field`, `@base-ui/react/tabs`. Rename the base primitive at the import (`Select as BaseSelect`) so our own export can carry the plain name.
 - React types are **named imports** (`ComponentProps`, `ReactNode`, …), not `import type * as React`.
-- Inside `shared/ui`, imports between layers are relative (`../../atoms/Button`). From outside — only `@/shared/ui`.
-- The barrels at all three levels (`atoms/index.ts`, `molecules/index.ts`, `organisms/index.ts` and the root `shared/ui/index.ts`) use **explicit named** re-exports, with values and types in separate blocks.
+- Inside `ui-kit`, imports between layers are relative (`../../atoms/Button`). From outside — only `@/ui-kit`.
+- The barrels at all three levels (`atoms/index.ts`, `molecules/index.ts`, `organisms/index.ts` and the root `ui-kit/index.ts`) use **explicit named** re-exports, with values and types in separate blocks.
 
 ### Slice barrel
 
@@ -227,11 +227,12 @@ export const ConnectButton = ({ status, disabled, onToggle }: ConnectButtonProps
 Symmetrical to `ui/`: **a hook with types of its own gets its own folder**, a flat file only when there are no types.
 
 ```
-features/vpn/split-tunneling/model/hooks/
+features/vpn/connect-incy/model/hooks/
   index.ts                        ← segment barrel
-  use-split-tunneling/
-    use-split-tunneling.ts
-    use-split-tunneling.types.ts
+  use-subscription-link/
+    use-subscription-link.ts
+  use-rotate-link/
+    use-rotate-link.ts
     index.ts
   use-app-source/
     use-app-source.ts
@@ -261,14 +262,14 @@ repeats a component's props, don't duplicate it; derive it instead:
 
 | Layer | Format |
 |---|---|
-| `shared/ui/**` | `*.module.scss` + CSS variables from `app/globals.scss` |
+| `ui-kit/**` | `*.module.scss` + CSS variables from `app/globals.scss` |
 | widgets / features / views | `*.module.scss` |
 
 There is no CSS-in-JS in this project — no Tailwind, no `.styles.ts`, no `cva`.
 
 | Case | Where |
 |---|---|
-| Component styles in `shared/ui` | `<Name>.module.scss` |
+| Component styles in `ui-kit` | `<Name>.module.scss` |
 | Styles for a slice subcomponent | `<Name>.module.scss` next to it |
 | Conditional classes | `clsx(s.root, isBlocked && s.blocked)` or SCSS modifiers |
 | Primitive variants/sizes | a map in `<Name>.variants.ts` (`Button.variants.ts`) |
@@ -293,14 +294,14 @@ Over the line means refactor:
 
 **A multi-export primitive** (`Dialog` ships `Dialog`, `DialogContent`,
 `DialogHeader`, `DialogTitle`, `DialogDescription`) stays in one file **as long as it
-fits the limit** — `shared/ui/molecules/Dialog/Dialog.tsx` is thin wrappers over
+fits the limit** — `ui-kit/molecules/Dialog/Dialog.tsx` is thin wrappers over
 `@base-ui/react/dialog`, all five of them in 35 lines. The moment it goes over, the parts
 move out into `components/<Name>/` and `<Name>.tsx` stays as a thin re-export.
 Group by meaning, not one file per export: closely related parts
 (`Header`/`Title`/`Description`) live together.
 
 Subcomponent nesting may go to a second level when a subcomponent has grown of its own
-accord: `views/app-view/ui/components/AppMenu/components/MenuItem/`. No deeper than that —
+accord: `views/setup/ui/components/SetupSteps/`. No deeper than that —
 it is a signal that the block should be lifted into a slice of its own.
 
 **Context shared between the parts goes in its own module** next to `<Name>.tsx`, not
@@ -314,13 +315,13 @@ them. That is how `features/vpn/connect` is built — the context in
 
 | What | How | Example |
 |---|---|---|
-| Slices | kebab-case | `split-tunneling`, `check-update` |
+| Slices | kebab-case | `connect-incy`, `switch-locale` |
 | Segments | kebab-case | `ui`, `model`, `lib`, `api`, `config` |
 | Component folder | PascalCase | `SplitTunnelingDialog/`, `NodePicker/` |
 | Component file | PascalCase + `.tsx` | `SplitTunnelingDialog.tsx` |
 | Types file | `<Name>.types.ts` | `SplitTunnelingDialog.types.ts` |
 | Styles file | `<Name>.module.scss` | `Button.module.scss` |
-| Hook file | kebab-case | `use-split-tunneling.ts` |
+| Hook file | kebab-case | `use-subscription-link.ts` |
 | React component (export) | PascalCase | `SplitTunnelingDialog` |
 | Hook | `use` + camelCase | `useAutoConnect`, `useSplitTunneling` |
 | Utility | camelCase | `matchesQuery`, `openExternal` |
@@ -354,7 +355,7 @@ import { toast } from 'sonner';
 
 // 2. internal values
 import { logger } from '@/shared/lib';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button } from '@/ui-kit';
 
 // 3. types (external + local)
 import type { Node } from '@gnomevpn/schemas';
@@ -376,15 +377,15 @@ A deep import past a barrel is forbidden:
 
 ```ts
 // ✗ FORBIDDEN
-import { SplitModeToggle } from '@/features/vpn/split-tunneling/ui/SplitTunnelingDialog/components/SplitModeToggle';
-import { Button } from '@/shared/ui/atoms/Button';
+import { SplitModeToggle } from '@/features/vpn/connect-incy/ui/components/IncyQrDialog/components/SplitModeToggle';
+import { Button } from '@/ui-kit/atoms/Button';
 
 // ✓ OK
-import { SplitTunnelingButton } from '@/features/vpn/split-tunneling';
-import { Button } from '@/shared/ui';
+import { IncyCard } from '@/features/vpn/connect-incy';
+import { Button } from '@/ui-kit';
 ```
 
-`shared/ui` has a single root barrel, `@/shared/ui` (the atomic layer sits under it). Inside a slice, relative imports are fine.
+`ui-kit` has a single root barrel, `@/ui-kit` (the atomic layer sits under it). Inside a slice, relative imports are fine.
 
 ESLint does not check FSD boundaries — those are caught at review.
 
@@ -395,7 +396,7 @@ ESLint does not check FSD boundaries — those are caught at review.
 **A slice:**
 
 ```ts
-// features/vpn/download-config/index.ts
+// features/vpn/connect-incy/index.ts
 export { useConfigs, useIssueConfig, useRevokeConfig } from './model/hooks';
 export { ConfigList } from './ui/ConfigList';
 
@@ -544,7 +545,7 @@ const clientKind = (): CheckoutClient => (isTauriDesktop() ? 'desktop' : 'web');
   match(state).with('idle', () => null)
   ```
 
-- **Primitives in `shared/ui/`** — their own convention (PascalCase folders, SCSS modules, Base UI). See §2.1.
+- **Primitives in `ui-kit/`** — their own convention (PascalCase folders, SCSS modules, Base UI). See §2.1.
 
 **The review rule:** if the arrow is to the right of an `=` (a function declaration), block body. If the arrow sits inside `(...)` or `{...}` (an argument), it's your call — usually an expression.
 
@@ -760,7 +761,7 @@ slice.
 
 **Grouping inside `model/`.** When a slice accumulates many `model` files, group
 them into subfolders by nature (`model/context/`, `model/hooks/`) — see
-`features/vpn/connect` and `features/vpn/split-tunneling`. That is organisation
+`features/vpn/connect-incy` and `features/billing/checkout`. That is organisation
 **inside** the `model/` segment, not a separate top-level `hooks/` segment (which
 is forbidden — see below).
 
@@ -801,9 +802,9 @@ shape of the file rather than by its nature, which is an FSD anti-pattern.
 **`lib/`** — pure functions with no React dependency:
 
 ```
-features/vpn/split-tunneling/lib/
-  matches-query/       ← the fuzzy app-search matcher
-  with-picked-apps/    ← merges manually picked apps into the scanned list
+shared/seo/json-ld/
+  breadcrumb-json-ld/  ← the trail a page reports to a crawler
+  faq-json-ld/         ← the questions a FAQ page reports
 ```
 
 A function that returns JSX is a component: move it to `ui/`.

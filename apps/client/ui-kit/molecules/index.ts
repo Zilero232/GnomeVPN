@@ -1,8 +1,6 @@
 export { Accordion } from './Accordion';
 export type { AccordionItem, AccordionProps } from './Accordion';
 export { AppSplash } from './AppSplash';
-export { Banner } from './Banner';
-export type { BannerProps, BannerTone } from './Banner';
 export { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './Dialog';
 export { FormField } from './FormField';
 export type { FormFieldProps } from './FormField';
