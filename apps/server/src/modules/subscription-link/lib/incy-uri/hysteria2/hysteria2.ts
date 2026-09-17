@@ -11,7 +11,9 @@ export const hysteria2Uri = ({ config, country, countryCode, city }: IncyServerU
   url.pathname = '/';
   url.searchParams.set('sni', config.serverName);
 
-  if (config.insecure) {
+  if (config.certFingerprint) {
+    url.searchParams.set('pinSHA256', config.certFingerprint);
+  } else if (config.insecure) {
     url.searchParams.set('insecure', INSECURE);
   }
 

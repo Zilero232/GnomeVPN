@@ -207,6 +207,12 @@ The two URI builders were one file once, which hid that they share nothing but
 the server label — and that label is what keeps `🇳🇱 Netherlands` apart from
 `🇳🇱 Netherlands · TCP` in the app's list.
 
+**A self-signed node is pinned, not trusted blindly.** `hysteria2Uri` emits
+`pinSHA256` from the node's `certFingerprint`; `insecure=1` survives only as the
+fallback for a node provisioned before the fingerprint was captured. A current
+xray core refuses to start at all on `allowInsecure`, so a node without a
+fingerprint is a node nobody can reach over Hysteria2 — reprovision it.
+
 `clientEnabledByEmail` must list **every** protocol the subscription issues.
 It once listed Hysteria2 and WireGuard, and when WireGuard was removed a VLESS
 client looked to `reconcile-peers` like a peer that had vanished from its node.

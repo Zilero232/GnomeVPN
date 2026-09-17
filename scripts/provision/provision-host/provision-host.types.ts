@@ -44,6 +44,7 @@ export type InstallInboundsInput = {
 };
 
 export type InstalledInbounds = {
+  certFingerprint: string;
   realityPublicKey: string;
   realityShortId: string;
   realityWasGenerated: boolean;
@@ -57,6 +58,7 @@ export type RegisterNodeInput = {
   password: string;
   panelPath: string;
   auth: string;
+  certFingerprint: string;
   realityPublicKey: string;
   realityShortId: string;
 };

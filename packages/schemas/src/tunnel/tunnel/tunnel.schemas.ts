@@ -28,6 +28,7 @@ export const tunnelConfigSchema = z
     auth: z.string().default(''),
     serverName: z.string().default(''),
     insecure: z.boolean().default(false),
+    certFingerprint: z.string().default(''),
     dns: z.array(z.string().min(1)),
     wireguard: wireguardConfigSchema.optional(),
     reality: realityConfigSchema.optional()

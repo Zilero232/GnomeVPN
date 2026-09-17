@@ -10,6 +10,7 @@ const config: TunnelConfig = {
   auth: 'secret-auth',
   dns: ['1.1.1.1'],
   insecure: true,
+  certFingerprint: '',
   port: 443,
   protocol: TUNNEL_PROTOCOL.hysteria2,
   server: '203.0.113.10',
@@ -58,6 +59,7 @@ const vlessConfig: TunnelConfig = {
   auth: '0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',
   dns: ['1.1.1.1'],
   insecure: false,
+  certFingerprint: '',
   port: 443,
   protocol: TUNNEL_PROTOCOL.vless,
   server: '203.0.113.10',
@@ -111,5 +113,22 @@ describe('incyServerUri over vless', () => {
     const { reality, ...withoutReality } = vlessConfig;
 
     expect(incyServerUri({ config: withoutReality as TunnelConfig, country: 'Netherlands', countryCode: 'NL', city: null })).toBe('');
+  });
+});
+
+describe('incyServerUri certificate pinning', () => {
+  const pinned = { ...config, certFingerprint: 'AA:BB:CC:DD' };
+
+  it('pins the node certificate rather than turning verification off', () => {
+    const params = new URL(incyServerUri({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+
+    expect(params.get('pinSHA256')).toBe(pinned.certFingerprint);
+    expect(params.has('insecure')).toBe(false);
+  });
+
+  it('falls back to insecure only where no fingerprint was captured', () => {
+    const params = new URL(incyServerUri({ config, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+
+    expect(params.get('insecure')).toBe('1');
   });
 });

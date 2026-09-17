@@ -14,6 +14,7 @@ export const NODE_FEED_SELECT = {
   host: true,
   port: true,
   serverName: true,
+  certFingerprint: true,
   apiUrl: true,
   apiTokenEnvVar: true,
   realityPublicKey: true,

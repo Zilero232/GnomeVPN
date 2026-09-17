@@ -40,6 +40,22 @@ export const ensureCert = async (ssh: SshClient) => {
   await ssh.exec(inContainer(all([line(['mkdir', '-p', dirOf(CERT_PATH)]), `(${orElse([`test -f ${CERT_PATH}`, generate])})`])));
 };
 
+export const readCertFingerprint = async (ssh: SshClient): Promise<string> => {
+  const result = await ssh.exec(inContainer(line([`openssl x509 -in ${CERT_PATH}`, '-noout -fingerprint -sha256'])));
+
+  if (result.exitCode !== 0) {
+    throw new Error(`cannot read the node certificate fingerprint: ${result.stderr.trim() || 'no output'}`);
+  }
+
+  const fingerprint = result.stdout.trim().split('=')[1];
+
+  if (!fingerprint) {
+    throw new Error('the node returned no certificate fingerprint');
+  }
+
+  return fingerprint;
+};
+
 export const openTunnelPort = async (ssh: SshClient) => {
   const hasUfw = await ssh.exec('command -v ufw');
 

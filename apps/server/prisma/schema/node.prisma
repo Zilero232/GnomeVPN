@@ -11,6 +11,8 @@ model Node {
   serverName   String @map("server_name")
   hysteriaAuth String @map("hysteria_auth")
 
+  certFingerprint String? @map("cert_fingerprint")
+
   realityPublicKey String? @map("reality_public_key")
   realityShortId   String? @map("reality_short_id")
 

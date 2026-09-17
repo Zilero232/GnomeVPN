@@ -8,6 +8,7 @@ export type SubscriptionNode = {
   host: string;
   port: number;
   serverName: string;
+  certFingerprint: string | null;
   apiUrl: string;
   apiTokenEnvVar: string;
   realityPublicKey: string | null;

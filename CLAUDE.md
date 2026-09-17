@@ -25,10 +25,15 @@ network), so the tunnel moved to Hysteria2: QUIC over UDP, which the TSPU lets
 through where it drops REALITY.
 
 Hysteria2 masquerades as an HTTP/3 site (`masquerade: proxy` to `MASQUERADE_HOST`)
-and needs a TLS cert on the node — a self-signed cert generated per node, which
-clients accept because the subscription marks every Hysteria2 server
-`insecure=1`. Each client has its own `auth` password; that password is the
-tunnel credential, stored per peer.
+and needs a TLS cert on the node — a self-signed cert generated per node. The
+subscription pins its SHA-256 as `pinSHA256`, read off the node at provisioning
+and stored as `certFingerprint`. **`insecure=1` is not an option any more**: newer
+xray cores reject the parameter outright with `The feature "allowInsecure" has
+been removed`, and the tunnel refuses to start. Pinning is also stricter than
+what it replaces — it names one certificate rather than accepting any.
+
+Each client has its own `auth` password; that password is the tunnel credential,
+stored per peer.
 
 The Reality inbound is different on both counts: it borrows a real site's
 certificate rather than presenting its own, so its entries are never marked

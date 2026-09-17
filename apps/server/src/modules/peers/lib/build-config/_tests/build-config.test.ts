@@ -10,6 +10,7 @@ const node: TunnelNode = {
   host: '203.0.113.10',
   port: 443,
   serverName: 'cdn.example.com',
+  certFingerprint: 'AA:BB:CC:DD',
   realityPublicKey: 'node-reality-key',
   realityShortId: 'aabbccdd'
 };
@@ -21,6 +22,7 @@ describe('buildTunnelConfig over hysteria2', () => {
   it('builds the tunnel from the node endpoint', () => {
     expect(buildTunnelConfig(hysteria2)).toEqual({
       auth: hysteria2.auth,
+      certFingerprint: node.certFingerprint,
       dns: [...TUNNEL.dns],
       insecure: TUNNEL.insecure,
       port: node.port,
@@ -34,8 +36,14 @@ describe('buildTunnelConfig over hysteria2', () => {
     expect(buildTunnelConfig(hysteria2)).not.toHaveProperty('reality');
   });
 
-  it('marks the node insecure, because its certificate is self-signed', () => {
-    expect(buildTunnelConfig(hysteria2).insecure).toBe(true);
+  it('carries the node certificate fingerprint, which the client pins instead of skipping verification', () => {
+    expect(buildTunnelConfig(hysteria2).certFingerprint).toBe(node.certFingerprint);
+  });
+
+  it('leaves the fingerprint empty for a node provisioned before one was captured', () => {
+    const bare = { ...node, certFingerprint: null };
+
+    expect(buildTunnelConfig({ ...hysteria2, node: bare }).certFingerprint).toBe('');
   });
 });
 

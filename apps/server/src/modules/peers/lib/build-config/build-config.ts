@@ -15,6 +15,7 @@ const buildHysteria2Config = ({ node, auth }: BuildConfigInput): TunnelConfig =>
   auth,
   serverName: node.serverName,
   insecure: TUNNEL.insecure,
+  certFingerprint: node.certFingerprint ?? '',
   dns: [...TUNNEL.dns]
 });
 
@@ -30,6 +31,7 @@ const buildVlessConfig = ({ node, auth }: BuildConfigInput): TunnelConfig => {
     auth,
     serverName: node.serverName,
     insecure: false,
+    certFingerprint: '',
     dns: [...TUNNEL.dns],
     reality: {
       publicKey: node.realityPublicKey,

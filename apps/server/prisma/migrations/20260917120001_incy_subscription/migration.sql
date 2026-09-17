@@ -37,6 +37,13 @@ ALTER TABLE "node"
   ADD COLUMN "reality_public_key" TEXT,
   ADD COLUMN "reality_short_id" TEXT;
 
+-- The Hysteria2 inbound presents a self-signed certificate, so the client has
+-- to be told which one to expect. `insecure=1` used to say "any" and newer xray
+-- cores reject the parameter outright, so the subscription pins the node's own
+-- SHA-256 instead — which is stricter than what it replaces.
+ALTER TABLE "node"
+  ADD COLUMN "cert_fingerprint" TEXT;
+
 -- WireGuard was reachable only from the desktop client. Nothing can create such
 -- a peer any more, so its rows and columns are dead weight. The enum variant
 -- stays: Postgres cannot drop a value from an enum type.
