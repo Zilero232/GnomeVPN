@@ -1,10 +1,10 @@
 'use client';
 
+import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { ROUTES } from '@/shared/constants';
-import { Link } from '@/shared/i18n/navigation';
-import { Button, Text } from '@/ui-kit';
+import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '@/shared/lib';
+import { Text } from '@/ui-kit';
 
 import { ABOUT_FACTS, ABOUT_SECTIONS } from '../config';
 
@@ -14,8 +14,8 @@ export const AboutPage = () => {
   const t = useTranslations('about');
 
   return (
-    <main className={s.root}>
-      <header className={s.head}>
+    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
+      <motion.header className={s.head} variants={HEAD_MOTION}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -23,19 +23,26 @@ export const AboutPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </header>
+      </motion.header>
 
-      <dl className={s.facts}>
+      <motion.dl className={s.facts} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         {ABOUT_FACTS.map((fact) => (
-          <div key={fact} className={s.fact}>
+          <motion.div key={fact} className={s.fact} variants={ROW_MOTION}>
             <dt className={s.factLabel}>{t(`facts.${fact}.label`)}</dt>
             <dd className={s.factValue}>{t(`facts.${fact}.value`)}</dd>
-          </div>
+          </motion.div>
         ))}
-      </dl>
+      </motion.dl>
 
       {ABOUT_SECTIONS.map((section) => (
-        <section key={section} className={s.section}>
+        <motion.section
+          key={section}
+          className={s.section}
+          initial='hidden'
+          variants={SECTION_MOTION}
+          viewport={REVEAL_VIEWPORT}
+          whileInView='visible'
+        >
           <Text as='h2' className={s.heading}>
             {t(`sections.${section}.title`)}
           </Text>
@@ -43,14 +50,8 @@ export const AboutPage = () => {
           <Text as='p' className={s.body}>
             {t(`sections.${section}.body`)}
           </Text>
-        </section>
+        </motion.section>
       ))}
-
-      <footer className={s.cta}>
-        <Link href={ROUTES.pricing}>
-          <Button>{t('cta')}</Button>
-        </Link>
-      </footer>
-    </main>
+    </motion.main>
   );
 };

@@ -61,14 +61,7 @@
     },
     "faq": {
       "title": "Questions",
-      "q1": "Do you keep logs?",
-      "a1": "No. The server knows only that your subscription is active. Which sites you opened, which address you connected from and when is neither collected nor stored.",
-      "q2": "Why is the app someone else's?",
-      "a2": "Our own app for five platforms would mean years of maintenance and a constant fight with app stores. INCY has already done that, and it reaches iPhone and TVs. We put the effort into servers instead of rewriting what works.",
-      "q3": "What happens when I cancel?",
-      "a3": "Access stays until the end of the period you paid for — exactly what you bought. Nothing is charged after that.",
-      "q4": "Why so cheap?",
-      "a4": "We spend nothing on influencer ads and keep no office. The price covers server rent and card processing."
+      "more": "All questions"
     },
     "nav": {
       "ariaLabel": "Page sections",
@@ -95,9 +88,11 @@
     "platforms": {
       "title": "Where it runs",
       "iosBody": "INCY from the App Store. The same subscription works on Mac and Apple TV.",
-      "androidBody": "INCY from Google Play, or the APK where Play is unavailable. Android TV too.",
-      "desktopBody": "An installer for Windows and deb, rpm packages for Linux from the INCY releases page.",
-      "tvBody": "Added by scanning a QR code from your phone — no typing links with a remote."
+      "androidBody": "INCY from Google Play, or the APK from the releases page where Play is unavailable.",
+      "windowsBody": "An .exe installer. It only asks for admin rights while installing.",
+      "macosBody": "The Apple Silicon build. There is a separate installer for Intel.",
+      "linuxBody": "deb and rpm packages, plus an archive for installing by hand.",
+      "tvBody": "The subscription is added by scanning a QR code from your phone — no typing with a remote."
     },
     "locations": {
       "title": "Where the servers are",
@@ -243,9 +238,8 @@
     }
   },
   "incy": {
-    "tab": "App",
     "title": "Connect with INCY",
-    "hint": "Install INCY and add a single link — every server, your remaining traffic and the renewal date show up on their own.",
+    "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
     "copyDeepLink": "Copy INCY link",
     "copyUrl": "Copy subscription address",
     "showQr": "QR code",
@@ -261,9 +255,20 @@
     "platforms": {
       "ios": "iPhone and Mac",
       "android": "Android",
-      "desktop": "Windows and Linux",
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
       "tv": "TV"
-    }
+    },
+    "downloads": {
+      "ios": "App Store",
+      "android": "Google Play",
+      "windows": ".exe installer",
+      "macos": "Apple Silicon .dmg",
+      "linux": ".deb package",
+      "tv": "Android TV and Apple TV"
+    },
+    "setupLink": "How to install the app →"
   },
   "tray": {
     "tooltip": "GnomeVPN",
@@ -301,7 +306,9 @@
     "platforms": {
       "ios": "iPhone and Mac",
       "android": "Android",
-      "desktop": "Windows and Linux",
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
       "tv": "TV"
     }
   },
@@ -507,14 +514,14 @@
       },
       "android": {
         "name": "Android",
-        "install": "Install INCY from Google Play. If Play is unavailable, the INCY downloads page has an APK.",
+        "install": "Install INCY from Google Play. If Play is unavailable, the INCY releases page has an APK.",
         "copyLink": "Open your account on this site, go to the App tab and press Copy INCY link.",
         "import": "In INCY tap + and import from the clipboard. Easier still: tap the link on the site — it opens the app and adds the subscription for you.",
         "connect": "Pick a country and connect. Android asks permission to set up a VPN connection — confirm it."
       },
       "desktop": {
-        "name": "Windows and Linux",
-        "install": "Download the installer from the INCY releases page: an exe for Windows, a deb, rpm or archive for Linux.",
+        "name": "Windows, macOS and Linux",
+        "install": "Download the installer above: exe for Windows, dmg for Mac, deb or rpm for Linux.",
         "copyLink": "Open your account in a browser, go to the App tab and copy the link.",
         "import": "Start INCY, press + and paste the link. Add it as a subscription rather than a single server, so the server list keeps updating itself.",
         "connect": "Pick a country and connect. On Windows you will be asked to approve an elevation prompt — it is needed to create the network adapter."
@@ -523,7 +530,7 @@
         "name": "TV",
         "install": "On Android TV install INCY from Google Play; on Apple TV from the App Store.",
         "copyLink": "Typing the link on a TV remote is no fun: open your account on your phone and show the QR code on the App tab.",
-        "import": "In INCY on the TV choose to add a subscription and scan the QR code from your phone's screen.",
+        "import": "In INCY on the TV choose to add a subscription and scan the QR code from your phone screen.",
         "connect": "Pick a country and connect. From then on the tunnel comes up by itself when the TV turns on."
       }
     }

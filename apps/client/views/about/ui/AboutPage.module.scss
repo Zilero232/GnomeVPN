@@ -43,7 +43,18 @@
   margin: 0;
   background-color: var(--color-surface);
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+  // Four facts. `auto-fit` fits three and drops the fourth onto a line of its
+  // own; an explicit count keeps them on one row and halves cleanly below.
+  grid-template-columns: repeat(4, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(xs) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fact {

@@ -1,5 +1,11 @@
+@use '@/shared/styles/mixins' as *;
+
 .grid {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+
+  @include below(sm) {
+    grid-template-columns: 1fr;
+  }
 }

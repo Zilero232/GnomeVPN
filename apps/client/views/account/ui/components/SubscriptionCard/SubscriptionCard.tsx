@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { match } from 'ts-pattern';
 
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
+import { IncyCard } from '@/features/vpn/connect-incy';
 import { Text } from '@/ui-kit';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
@@ -64,6 +65,10 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
               </div>
             )}
           </dl>
+        </div>
+
+        <div className={s.connect}>
+          <IncyCard />
         </div>
 
         {subscription && (

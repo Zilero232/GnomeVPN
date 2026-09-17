@@ -11,6 +11,7 @@ import s from './DownloadAppDialog.module.scss';
 
 export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogProps) => {
   const t = useTranslations('downloadApp');
+  const tIncy = useTranslations('incy');
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -22,7 +23,7 @@ export const DownloadAppDialog = ({ isOpen, onOpenChange }: DownloadAppDialogPro
 
         <div className={s.grid}>
           {INCY_PLATFORMS.map(({ id, icon, href }) => (
-            <LinkCard key={id} href={href} icon={icon} label={t(`platforms.${id}`)} />
+            <LinkCard key={id} hint={tIncy(`downloads.${id}`)} href={href} icon={icon} label={tIncy(`platforms.${id}`)} />
           ))}
         </div>
 

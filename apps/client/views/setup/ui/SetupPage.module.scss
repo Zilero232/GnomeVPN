@@ -44,7 +44,19 @@
 .grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+  // Six tiles: an explicit count keeps them in even rows. `auto-fit` packs as
+  // many as fit and leaves a ragged last row — three then one, at the width
+  // this section is usually read at.
+  grid-template-columns: repeat(3, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .cta {

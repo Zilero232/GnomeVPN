@@ -5,10 +5,11 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { ROUTES } from '@/shared/constants';
+import { Link } from '@/shared/i18n/navigation';
 import { Button, Spinner, Text } from '@/ui-kit';
 
 import { useRotateLink, useSubscriptionLink } from '../model/hooks';
-import { IncyPlatforms } from './components/IncyPlatforms';
 import { IncyQrDialog } from './components/IncyQrDialog';
 
 import s from './IncyCard.module.scss';
@@ -44,9 +45,11 @@ export const IncyCard = () => {
         <Text size='sm' tone='muted'>
           {t('hint')}
         </Text>
-      </div>
 
-      <IncyPlatforms />
+        <Link className={s.setupLink} href={ROUTES.setup}>
+          {t('setupLink')}
+        </Link>
+      </div>
 
       <div className={s.actions}>
         <Button className={s.primary} onClick={() => void onCopy(link.deepLink, t('deepLinkCopied'))}>

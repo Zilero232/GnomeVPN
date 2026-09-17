@@ -49,7 +49,18 @@
   padding: 0;
   margin: 0;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+  // Six items: rows of three read as a block, rows of two on a narrow screen.
+  grid-template-columns: repeat(3, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(sm) {
+    grid-template-columns: 1fr;
+  }
+
   list-style: none;
 }
 

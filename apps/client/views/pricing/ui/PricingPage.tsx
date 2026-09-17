@@ -1,11 +1,11 @@
 'use client';
 
 import { Check } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { ROUTES } from '@/shared/constants';
-import { Link } from '@/shared/i18n/navigation';
-import { Accordion, Button, Text } from '@/ui-kit';
+import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
+import { Accordion, Text } from '@/ui-kit';
 import { PricingCard } from '@/widgets/billing/pricing-plans';
 
 import { PRICING_FAQ, PRICING_INCLUDED } from '../config';
@@ -17,8 +17,8 @@ export const PricingPage = () => {
   const tFaq = useTranslations('faq.questions');
 
   return (
-    <main className={s.root}>
-      <header className={s.head}>
+    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
+      <motion.header className={s.head} variants={HEAD_MOTION}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -26,11 +26,11 @@ export const PricingPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </header>
+      </motion.header>
 
       <PricingCard />
 
-      <section className={s.included}>
+      <motion.section className={s.included} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         <Text as='h2' className={s.sectionTitle}>
           {t('includedTitle')}
         </Text>
@@ -43,9 +43,9 @@ export const PricingPage = () => {
             </li>
           ))}
         </ul>
-      </section>
+      </motion.section>
 
-      <section className={s.faq}>
+      <motion.section className={s.faq} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         <Text as='h2' className={s.sectionTitle}>
           {t('faqTitle')}
         </Text>
@@ -57,17 +57,7 @@ export const PricingPage = () => {
             content: tFaq(`${question}.a`)
           }))}
         />
-      </section>
-
-      <footer className={s.cta}>
-        <Text as='p' className={s.ctaText}>
-          {t('ctaText')}
-        </Text>
-
-        <Link href={ROUTES.account}>
-          <Button>{t('ctaAction')}</Button>
-        </Link>
-      </footer>
-    </main>
+      </motion.section>
+    </motion.main>
   );
 };

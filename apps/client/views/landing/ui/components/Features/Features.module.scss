@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .grid {
   display: grid;
   overflow: hidden;
@@ -5,7 +7,18 @@
   border-radius: var(--radius-lg);
   background-color: var(--color-border);
   gap: 1px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+
+  // Six cards, same reasoning as the platforms grid: an explicit count keeps
+  // the rows even instead of leaving a ragged tail.
+  grid-template-columns: repeat(3, 1fr);
+
+  @include below(xl) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include below(sm) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
