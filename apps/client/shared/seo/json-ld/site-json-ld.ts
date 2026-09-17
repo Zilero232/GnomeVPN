@@ -3,7 +3,7 @@ import { LOWEST_MONTHLY_RUB, PLANS } from '@gnomevpn/schemas';
 import { SITE } from '@/shared/config';
 import { LOCALES } from '@/shared/i18n';
 
-const absolute = (path: string) => new URL(path, SITE.url).toString();
+import { absoluteUrl } from '../site-metadata';
 
 const offers = PLANS.map((plan) => ({
   '@type': 'Offer',
@@ -12,7 +12,7 @@ const offers = PLANS.map((plan) => ({
   priceCurrency: 'RUB',
   category: 'subscription',
   availability: 'https://schema.org/InStock',
-  url: absolute('/pricing')
+  url: absoluteUrl('/pricing')
 }));
 
 export const siteJsonLd = {
@@ -23,7 +23,7 @@ export const siteJsonLd = {
       '@id': `${SITE.url}/#organization`,
       name: SITE.name,
       url: SITE.url,
-      logo: absolute('/brand/logo-mark.svg'),
+      logo: absoluteUrl('/brand/logo-mark.svg'),
       email: SITE.email,
       contactPoint: {
         '@type': 'ContactPoint',

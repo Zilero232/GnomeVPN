@@ -1,6 +1,6 @@
 import type { Variants } from 'motion/react';
 
-const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
 export const REVEAL_VIEWPORT = { once: true, amount: 0.2 } as const;
 

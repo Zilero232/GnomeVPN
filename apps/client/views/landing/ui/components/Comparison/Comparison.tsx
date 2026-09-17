@@ -4,10 +4,10 @@ import { Check, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { COMPARISON_ROWS } from '../../../config';
-import { REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '../../LandingPage.motion';
 
 import s from './Comparison.module.scss';
 

@@ -9,6 +9,8 @@ import { ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
 import { Button, Spinner, Text } from '@/ui-kit';
 
+import type { CopyInput } from './IncyCard.types';
+
 import { useRotateLink, useSubscriptionLink } from '../model/hooks';
 import { IncyQrDialog } from './components/IncyQrDialog';
 
@@ -21,7 +23,7 @@ export const IncyCard = () => {
 
   const [isQrOpen, setIsQrOpen] = useState(false);
 
-  const onCopy = async (value: string, message: string) => {
+  const onCopy = async ({ value, message }: CopyInput) => {
     await navigator.clipboard.writeText(value);
 
     toast.success(message);
@@ -52,7 +54,7 @@ export const IncyCard = () => {
       </div>
 
       <div className={s.actions}>
-        <Button onClick={() => void onCopy(link.deepLink, t('deepLinkCopied'))}>
+        <Button onClick={() => void onCopy({ value: link.deepLink, message: t('deepLinkCopied') })}>
           <Smartphone aria-hidden size={16} />
           {t('copyDeepLink')}
         </Button>

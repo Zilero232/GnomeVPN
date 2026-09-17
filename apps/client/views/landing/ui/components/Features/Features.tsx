@@ -3,10 +3,11 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { FEATURE_CARDS } from '../../../config';
-import { ICON_HOVER, ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
+import { ICON_HOVER, ITEM_MOTION } from '../../LandingPage.motion';
 import { FEATURE_ICONS } from './Features.config';
 
 import s from './Features.module.scss';

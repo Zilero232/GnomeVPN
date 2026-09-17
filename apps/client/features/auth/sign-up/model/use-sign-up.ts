@@ -11,5 +11,5 @@ export { signUpSchema };
 export const useSignUp = () =>
   useMutation({
     mutationFn: async ({ email, password, name }: SignUpValues) =>
-      unwrapAuth(await authClient.signUp.email({ email, password, name }), 'errors.signUpFailed')
+      unwrapAuth({ result: await authClient.signUp.email({ email, password, name }), fallbackKey: 'errors.signUpFailed' })
   });

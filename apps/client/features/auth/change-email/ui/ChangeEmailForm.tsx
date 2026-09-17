@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useErrorMessage, useFieldError } from '@/entities/app/locale';
+import { useFieldError, useToastError } from '@/entities/app/locale';
 import { useChangeEmail, useCurrentUser } from '@/entities/auth/user';
 import { FormField, Input, SubmitButton, Text } from '@/ui-kit';
 
@@ -19,7 +19,7 @@ const DEFAULT_VALUES: ChangeEmailValues = { newEmail: '' };
 export const ChangeEmailForm = () => {
   const t = useTranslations('account.profile');
   const fieldError = useFieldError();
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   const { email } = useCurrentUser();
   const { isPending, mutate } = useChangeEmail();
@@ -40,7 +40,7 @@ export const ChangeEmailForm = () => {
         toast.success(t('emailChangeRequested'));
         reset(DEFAULT_VALUES);
       },
-      onError: (error: Error) => toast.error(errorMessage(error))
+      onError: toastError
     });
   });
 

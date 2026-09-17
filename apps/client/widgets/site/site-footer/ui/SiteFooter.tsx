@@ -1,22 +1,22 @@
-import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 
 import { SITE } from '@/shared/config';
 import { Link } from '@/shared/i18n/navigation';
 
 import { FOOTER_LINKS } from '../config';
+import { FooterCopy } from './components';
 
 import s from './SiteFooter.module.scss';
 
 export const SiteFooter = () => {
   const t = useTranslations('footer');
 
-  const year = format(new Date(), 'yyyy');
+  const buildYear = new Date().getFullYear();
 
   return (
     <footer className={s.root}>
       <div className={s.inner}>
-        <span className={s.copy}>{t('copy', { name: SITE.name, year })}</span>
+        <FooterCopy buildYear={buildYear} className={s.copy} />
 
         <nav className={s.links}>
           {FOOTER_LINKS.map(({ key, href }) => (

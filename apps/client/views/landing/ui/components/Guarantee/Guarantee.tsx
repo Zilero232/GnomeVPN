@@ -6,9 +6,10 @@ import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
+import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Button, Text } from '@/ui-kit';
 
-import { ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
+import { ITEM_MOTION } from '../../LandingPage.motion';
 
 import s from './Guarantee.module.scss';
 

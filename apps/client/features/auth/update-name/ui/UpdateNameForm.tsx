@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useErrorMessage, useFieldError } from '@/entities/app/locale';
+import { useFieldError, useToastError } from '@/entities/app/locale';
 import { useCurrentUser, useUpdateName } from '@/entities/auth/user';
 import { FormField, Input, SubmitButton } from '@/ui-kit';
 
@@ -17,7 +17,7 @@ import s from './UpdateNameForm.module.scss';
 export const UpdateNameForm = () => {
   const t = useTranslations('account.profile');
   const fieldError = useFieldError();
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   const { name } = useCurrentUser();
   const { isPending, mutate } = useUpdateName();
@@ -39,7 +39,7 @@ export const UpdateNameForm = () => {
         toast.success(t('nameUpdated'));
         reset(values);
       },
-      onError: (error: Error) => toast.error(errorMessage(error))
+      onError: toastError
     });
   });
 

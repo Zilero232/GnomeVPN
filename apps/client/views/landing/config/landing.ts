@@ -10,8 +10,6 @@ export const HOW_IT_WORKS_STEPS = ['step1', 'step2', 'step3'] as const;
 
 export const FEATURE_CARDS = ['protocol', 'devices', 'platforms', 'locations', 'noLogs', 'openFormat'] as const;
 
-export const FAQ_ITEMS = ['1', '2', '3', '4'] as const;
-
 export const LOCATIONS = [
   { code: 'nl', key: 'netherlands' },
   { code: 'fi', key: 'finland' }

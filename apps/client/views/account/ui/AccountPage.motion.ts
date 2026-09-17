@@ -1,6 +1,6 @@
 import type { Variants } from 'motion/react';
 
-const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+import { EASE_OUT } from '@/shared/lib';
 
 export const PAGE_MOTION: Variants = {
   hidden: { opacity: 0 },

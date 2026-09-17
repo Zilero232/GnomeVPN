@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { indexedRoutes, isGuestOnlyRoute, isIndexedRoute, isKnownRoute, isPublicRoute, ROUTES } from '../routes';
+import { indexedRoutes, isGuestOnlyRoute, isKnownRoute, isPublicRoute, ROUTES } from '../routes';
 
 describe('isKnownRoute', () => {
   it('accepts every declared route', () => {
@@ -64,9 +64,5 @@ describe('indexedRoutes', () => {
 
   it('leaves out the guest-only route, which has nothing to index', () => {
     expect(indexedRoutes()).not.toContain(ROUTES.auth);
-  });
-
-  it('agrees with isIndexedRoute', () => {
-    expect(indexedRoutes().every(isIndexedRoute)).toBe(true);
   });
 });

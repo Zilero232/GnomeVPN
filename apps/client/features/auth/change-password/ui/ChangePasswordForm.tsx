@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useErrorMessage, useFieldError, usePasswordLabels } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
 import { useChangePassword } from '@/entities/auth/user';
 import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
 
@@ -24,7 +24,7 @@ export const ChangePasswordForm = () => {
   const t = useTranslations('account.profile');
   const fieldError = useFieldError();
   const passwordLabels = usePasswordLabels();
-  const errorMessage = useErrorMessage();
+  const toastError = useToastError();
 
   const { isPending, mutate } = useChangePassword();
 
@@ -44,7 +44,7 @@ export const ChangePasswordForm = () => {
         toast.success(t('passwordChanged'));
         reset(DEFAULT_VALUES);
       },
-      onError: (error: Error) => toast.error(errorMessage(error))
+      onError: toastError
     });
   });
 

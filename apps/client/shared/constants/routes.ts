@@ -31,6 +31,4 @@ export const isPublicRoute = (pathname: string): boolean => PUBLIC_ROUTES.includ
 
 export const isGuestOnlyRoute = (pathname: string): boolean => GUEST_ONLY_ROUTES.includes(pathname);
 
-export const isIndexedRoute = (pathname: string): boolean => INDEXED_ROUTES.includes(pathname);
-
 export const indexedRoutes = (): string[] => [...INDEXED_ROUTES];

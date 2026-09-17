@@ -4,9 +4,10 @@ import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatforms } from '@/entities/app/incy';
+import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
-import { ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
+import { ITEM_MOTION } from '../../LandingPage.motion';
 
 import s from './Platforms.module.scss';
 

@@ -1,11 +1,8 @@
 'use client';
 
-import { useLocalStorage } from '@siberiacancode/reactuse';
-
-import type { Locale } from '@/shared/i18n';
-
-import { ROUTES, STORAGE_KEYS } from '@/shared/constants';
-import { DEFAULT_LOCALE, messages, resolveLocale } from '@/shared/i18n';
+import { ROUTES } from '@/shared/constants';
+import { messages, resolveLocale } from '@/shared/i18n';
+import { isBrowser } from '@/shared/lib';
 import { Button, StatusScreen } from '@/ui-kit';
 
 import type { ErrorViewProps } from './ErrorView.types';
@@ -13,9 +10,9 @@ import type { ErrorViewProps } from './ErrorView.types';
 import s from './ErrorView.module.scss';
 
 export const ErrorView = ({ error, reset }: ErrorViewProps) => {
-  const { value } = useLocalStorage<Locale>(STORAGE_KEYS.locale, DEFAULT_LOCALE);
+  const [, segment] = isBrowser() ? window.location.pathname.split('/') : [];
 
-  const t = messages[resolveLocale(value)].error;
+  const t = messages[resolveLocale(segment)].error;
 
   return (
     <StatusScreen body={t.body} code={t.code} title={t.title} tone='danger'>

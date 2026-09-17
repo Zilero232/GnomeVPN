@@ -3,10 +3,11 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { REVEAL_VIEWPORT } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { Comparison, Faq, Features, Guarantee, Hero, HowItWorks, Locations, Platforms } from './components';
-import { REVEAL_VIEWPORT, TITLE_MOTION } from './LandingPage.motion';
+import { TITLE_MOTION } from './LandingPage.motion';
 
 import s from './LandingPage.module.scss';
 

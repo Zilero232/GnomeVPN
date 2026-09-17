@@ -3,10 +3,11 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { CountryFlag, Text } from '@/ui-kit';
 
 import { LOCATIONS } from '../../../config';
-import { CARD_HOVER, ITEM_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '../../LandingPage.motion';
+import { CARD_HOVER, ITEM_MOTION } from '../../LandingPage.motion';
 
 import s from './Locations.module.scss';
 
