@@ -37,7 +37,8 @@ const buildVlessConfig = ({ node, auth }: BuildConfigInput): TunnelConfig => {
       publicKey: node.realityPublicKey,
       shortId: node.realityShortId,
       fingerprint: REALITY.fingerprint,
-      flow: REALITY.flow
+      flow: REALITY.flow,
+      serviceName: REALITY.serviceName
     }
   };
 };

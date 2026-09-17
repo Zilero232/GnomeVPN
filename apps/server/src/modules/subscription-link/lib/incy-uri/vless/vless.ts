@@ -1,7 +1,7 @@
 import type { IncyServerUriInput } from '../incy-uri.types';
 
 import { serverName } from '../../server-name';
-import { VLESS_ENCRYPTION, VLESS_NAME_SUFFIX, VLESS_NETWORK, VLESS_SCHEME, VLESS_SECURITY } from './vless.constants';
+import { VLESS_ENCRYPTION, VLESS_GRPC_MODE, VLESS_NETWORK, VLESS_SCHEME, VLESS_SECURITY } from './vless.constants';
 
 export const vlessUri = ({ config, country, countryCode, city }: IncyServerUriInput): string => {
   if (!config.reality) {
@@ -22,11 +22,16 @@ export const vlessUri = ({ config, country, countryCode, city }: IncyServerUriIn
   url.searchParams.set('pbk', config.reality.publicKey);
   url.searchParams.set('sid', config.reality.shortId);
 
+  if (config.reality.serviceName) {
+    url.searchParams.set('serviceName', config.reality.serviceName);
+    url.searchParams.set('mode', VLESS_GRPC_MODE);
+  }
+
   if (config.reality.flow) {
     url.searchParams.set('flow', config.reality.flow);
   }
 
-  url.hash = serverName({ country, countryCode, city, suffix: VLESS_NAME_SUFFIX });
+  url.hash = serverName({ country, countryCode, city });
 
   return url.toString();
 };
