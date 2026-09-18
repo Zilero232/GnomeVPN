@@ -11,10 +11,18 @@ export type PeerIdentity = {
   protocol: TunnelProtocol;
 };
 
+export type PeerOwner = {
+  subscription: {
+    currentPeriodEnd: Date | null;
+    extraDevices: number;
+  } | null;
+};
+
 export type ReconcilePeer = PeerIdentity & {
   id: string;
   state: PeerState;
   nodeCredential: string;
+  user: PeerOwner;
 };
 
 export type NoteFailureInput = {

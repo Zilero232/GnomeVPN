@@ -18,5 +18,7 @@ export const NODE_FEED_SELECT = {
   apiUrl: true,
   apiTokenEnvVar: true,
   realityPublicKey: true,
-  realityShortId: true
+  realityShortId: true,
+  createdAt: true,
+  lastHealthyAt: true
 } as const;

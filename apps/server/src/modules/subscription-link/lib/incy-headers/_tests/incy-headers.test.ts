@@ -6,6 +6,7 @@ import { userinfo } from '../userinfo';
 
 const input = {
   currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+  traffic: { up: 1_024, down: 8_192 },
   clientUrl: 'https://gnomevpn.ru',
   supportUrl: 'https://t.me/gnomevpn',
   announce: null
@@ -17,7 +18,7 @@ describe('incyHeaders', () => {
   });
 
   it('carries the expiry the app renders as a countdown', () => {
-    expect(incyHeaders(input)['subscription-userinfo']).toBe(userinfo(input.currentPeriodEnd));
+    expect(incyHeaders(input)['subscription-userinfo']).toBe(userinfo({ currentPeriodEnd: input.currentPeriodEnd, traffic: input.traffic }));
   });
 
   it('omits the support link when none is configured', () => {

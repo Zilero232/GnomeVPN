@@ -11,3 +11,7 @@ export const CONFIG_GRACE_HOURS = 6;
 export const IN_FLIGHT_WINDOW_HOURS = 24;
 
 export const RECONCILE_FAILURE_ALERT_THRESHOLD = 5;
+
+export const NODE_CPU_ALERT_PERCENT = 90;
+
+export const NODE_MEMORY_ALERT_RATIO = 0.9;

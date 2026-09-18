@@ -2,5 +2,5 @@ export { describeError } from './describe-error';
 export { IDENTIFIED_NODE_SELECT, NODE_ACCESS_SELECT, resolveNodeApiKey, xrayClientForNode } from './node-credentials';
 export type { IdentifiedNode, NodeAccess } from './node-credentials';
 
-export { isPeriodActive, nextPeriodEnd, resolveStatus } from './period';
+export { activeDeviceLimit, isPeriodActive, nextPeriodEnd, resolveStatus } from './period';
 export type { PeriodInput } from './period';

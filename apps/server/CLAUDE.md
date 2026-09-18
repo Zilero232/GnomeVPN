@@ -234,34 +234,71 @@ it breaks the response. `incyHeaderValue` decides per value.
 there is no period to report it must be the literal `0`, which tells the app to
 hide the traffic block entirely rather than render zeros.
 
+`upload`/`download` are the bytes the nodes have counted for this user's peers,
+summed over every node by `SubscriptionPeersService.traffic` from the
+`clientStats` the panel already returns with `/panel/api/inbounds/list`. `total`
+stays `0` — it is the traffic **quota**, and the subscription has none. A node
+that fails to answer contributes zero rather than failing the response, the same
+rule the server list follows.
+
+Traffic is read **after** the peers are issued, not alongside them: a peer the
+panel has just been asked to create has no `clientStats` row yet.
+
+`announce` is a banner the app shows on every fetch, and nobody writes it by
+hand: `lib/announcement` derives it from what the request already knows. It
+returns **one** message, because the header is one — the order is the priority.
+A lapsed or missing subscription outranks everything, then an expiry inside
+`EXPIRY_WARNING_DAYS`, then a node that has gone quiet, then a node added inside
+`FRESH_NODE_DAYS`. Nothing to say returns `null` and the header is omitted rather
+than sent blank.
+
+**A down node is found through `lastHealthyAt`, not `isAvailable`.** Nothing
+clears `isAvailable` — provisioning is the only thing that ever writes it — so a
+dead node keeps serving in the list. `node-health` stamps `lastHealthyAt` every
+minute, and a stamp older than `NODE_STALE_MINUTES` is what "down" means here. A
+node that has never reported counts as down rather than as new.
+
+The text is Russian, and only Russian: the subscription request carries no
+`Accept-Language`, and INCY's User-Agent names the platform, not the locale.
+Plurals and country lists go through `Intl.PluralRules` and `Intl.ListFormat`
+rather than hand-rolled suffix rules.
+
 The format is documented at https://incy.gitbook.io/docs/docs-en — the pages
 that matter are `subscription-format` (headers, body) and `share-links`
 (the exact `hy2://` query parameters).
 
-## Session slots
+## Device limits
 
-A subscription covers `DEFAULT_DEVICE_LIMIT` (2) live tunnels at once. The web
-client sends a `deviceId` it generates once and keeps in `localStorage`; that id
-becomes the peer's `name`, which makes the xray client email unique per device
-(`app-<userId>-<deviceId>`).
+A subscription covers `DEFAULT_DEVICE_LIMIT` (2) simultaneous connections, plus
+whatever `extraDevices` the user has bought. `resolveLimits` turns the two into a
+`deviceLimit`, and `activeDeviceLimit` in `common/lib/period` is the one place
+that reads it off a subscription — it returns the default whenever the period has
+lapsed, so extras stop counting the moment they stop being paid for.
 
-**Live tunnels and subscription peers are counted separately.** `deviceLimit`
-bounds `kind: 'session'` peers, `configLimit` bounds `kind: 'config'` ones — the
-peers the INCY subscription issues, one per node — and `resolveLimits` derives
-both from the same purchased `extraDevices`. The two never compete for the same
-budget.
+**The limit is enforced on the node, as `limitIp` on the panel client.** It
+travels from `SubscriptionFeedService` through `PeersService.issue` into
+`addClient`/`addVlessClient`; `CLIENT_DEFAULTS` no longer carries it, because it
+is the one client field that differs per user. Since 3x-ui v3.3.1 the panel
+counts IPs through Xray's online-stats API rather than by parsing `access.log`,
+so nothing extra has to be installed on a node — no Fail2ban, no access log. Over
+the limit, `disconnectClientTemporarily` drops the client from the running core
+and re-adds it 100 ms later; it refuses the surplus connection rather than
+banning anybody.
 
-Reconnecting from a known device reuses its slot. A third device evicts an idle
-one rather than being refused — `freeSlot` orders by `createdAt` and frees space
-_before_ the new client is created. Only peers the node reports as **not** online
-are eligible; if every slot is genuinely in use it throws
-`DEVICE_LIMIT_REACHED` instead of cutting someone off.
+**The limit is per node, not per account.** Each panel only sees the IPs
+connected to itself, so a subscription can hold `deviceLimit` connections on
+every node at once. That is a ceiling on sharing, not an exact seat count.
+
+**A restored peer must get its owner's limit back.** `restoreMissing` recreates a
+client the node has lost, and it reads the limit from the peer's own subscription
+— `RECONCILE_PEER_SELECT` pulls `user.subscription` for exactly this. Reissuing
+with the default would silently revoke devices the user paid for.
 
 **Liveness comes from the Xray core.** `onlineEmails()` reads
 `/panel/api/clients/onlines` — the sessions the core itself proxies. A node that
-does not answer leaves every peer _unknown_, not _idle_, and `onlinePeerIds`
-folds that into `assumeOnlineWhenNodeSilent`: left `true`, an unknown peer holds
-its slot rather than being evicted on no evidence.
+does not answer returns `null` rather than an empty set, which is the difference
+between _unknown_ and _idle_: `collectOrphans` only reaps a client the node
+positively reports as offline, never one it has no evidence about.
 
 **The client email is scoped by protocol, and it has to be.** The database is
 unique on `(userId, kind, name, nodeId, protocol)` — five fields — while the
@@ -271,16 +308,17 @@ the same node therefore produced two rows and one email, and
 client overwrote the other, and `syncEnabled` then disabled a live config against
 the wrong client's state.
 
-**Disconnecting deletes the row first and releases the panel client afterwards.**
-`release()` is an HTTP call to the node, so waiting for it means a slow or
-unreachable panel holds up the response — and the device counter in the UI keeps
-showing a session the user just closed. `releaseAll` removes the rows, then fires
-the panel calls detached; a leaked client is collected by `peer-gc` anyway, while
-a stuck disconnect is visible immediately.
+**Releasing a peer deletes the row first and the panel client afterwards.**
+Deleting a client is an HTTP call to the node, so waiting for it means a slow or
+unreachable panel holds up the response. `releaseDetached` removes the rows, then
+fires the panel calls detached; a leaked client is collected by `collectOrphans`
+on the next sweep anyway, while a stuck release would be visible immediately.
 
 ## Cron jobs
 
-`modules/scheduler` runs four: node health, peer garbage collection, expired access, recurring charges.
+`modules/scheduler` runs four: node health, peer reconciliation, expired access, recurring charges.
+
+`node-health` probes every available node each minute. `health()` returns the inbound's state together with the panel's own `cpu`, memory ratio and TCP count, so a node crossing `NODE_CPU_ALERT_PERCENT` or `NODE_MEMORY_ALERT_RATIO` is logged as a warning before it starts dropping tunnels.
 
 `expired-access` sweeps in both directions — it revokes sessions and subscription peers whose subscription lapsed (`lapsedBefore`), and restores peers left `disabled` while the subscription is live (`activeSince`). The two predicates are complements and are tested as such; a gap between them either strands a paying user or keeps serving an expired one. `kind: 'config'` peers get `CONFIG_GRACE_HOURS` before revocation, sessions do not.
 

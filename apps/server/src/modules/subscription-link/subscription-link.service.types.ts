@@ -13,6 +13,8 @@ export type SubscriptionNode = {
   apiTokenEnvVar: string;
   realityPublicKey: string | null;
   realityShortId: string | null;
+  createdAt: Date;
+  lastHealthyAt: Date | null;
 };
 
 export type SubscriptionPeer = {
@@ -39,12 +41,14 @@ export type TouchLinkInput = BuildFeedInput;
 export type ServerUrisInput = {
   userId: string;
   nodes: SubscriptionNode[];
+  limitIp: number;
 };
 
 export type EnsurePeerInput = {
   userId: string;
   node: SubscriptionNode;
   protocol: TunnelProtocol;
+  limitIp: number;
 };
 
 export type PersistPeerInput = {
@@ -52,6 +56,16 @@ export type PersistPeerInput = {
   nodeId: string;
   protocol: TunnelProtocol;
   nodeCredential: string;
+};
+
+export type NodeTrafficInput = {
+  userId: string;
+  nodes: SubscriptionNode[];
+};
+
+export type OneNodeTrafficInput = {
+  node: SubscriptionNode;
+  emails: Set<string>;
 };
 
 export type SetEnabledAllInput = {

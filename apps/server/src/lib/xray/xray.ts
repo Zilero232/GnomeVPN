@@ -4,7 +4,7 @@ import { isNullish } from 'remeda';
 
 import type { CreateClientResult, SetClientsEnabledInput } from './hysteria';
 import type { CreateVlessClientResult } from './vless';
-import type { IssueClientInput, IssueVlessClientInput, RewriteInboundInput, XrayClientOptions } from './xray.types';
+import type { IssueClientInput, IssueVlessClientInput, NodeHealth, NodeTraffic, RewriteInboundInput, XrayClientOptions } from './xray.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
 import { HysteriaClients } from './hysteria';
@@ -13,7 +13,7 @@ import { PanelClient } from './panel-client';
 import { serializeByKey } from './serialize';
 import { VLESS_INBOUND_REMARK, VlessClients } from './vless';
 import { REQUEST_TIMEOUT_MS, XRAY_STATE_RUNNING } from './xray.constants';
-import { generateAuth, readClients } from './xray.helpers';
+import { generateAuth, readClients, sumTraffic, usageRatio } from './xray.helpers';
 
 export class XrayClient {
   private static readonly logger = new Logger(XrayClient.name);
@@ -90,12 +90,12 @@ export class XrayClient {
     });
   }
 
-  async createClient({ email, auth, deferRestart }: IssueClientInput): Promise<CreateClientResult> {
-    return this.hysteria.create({ email, auth: auth ?? generateAuth(), deferRestart });
+  async createClient({ email, auth, limitIp, deferRestart }: IssueClientInput): Promise<CreateClientResult> {
+    return this.hysteria.create({ email, auth: auth ?? generateAuth(), limitIp, deferRestart });
   }
 
-  async createVlessClient({ email, id, deferRestart }: IssueVlessClientInput): Promise<CreateVlessClientResult> {
-    return this.vless.create({ email, id: id ?? randomUUID(), deferRestart });
+  async createVlessClient({ email, id, limitIp, deferRestart }: IssueVlessClientInput): Promise<CreateVlessClientResult> {
+    return this.vless.create({ email, id: id ?? randomUUID(), limitIp, deferRestart });
   }
 
   async deleteClient(email: string): Promise<void> {
@@ -122,6 +122,14 @@ export class XrayClient {
     return this.panel.onlineEmails();
   }
 
+  async trafficFor(emails: Set<string>): Promise<NodeTraffic> {
+    const stats = await this.panel.clientTraffic();
+
+    const mine = stats.filter((stat) => emails.has(stat.email));
+
+    return sumTraffic(mine.map((stat) => ({ up: stat.up ?? 0, down: stat.down ?? 0 })));
+  }
+
   async isReachable(): Promise<boolean> {
     try {
       await this.panel.listInbounds();
@@ -134,9 +142,14 @@ export class XrayClient {
     }
   }
 
-  async health(): Promise<boolean> {
+  async health(): Promise<NodeHealth> {
     const [inbound, status] = await Promise.all([this.inbounds.get(), this.panel.serverStatus()]);
 
-    return inbound.enable && status.xray?.state === XRAY_STATE_RUNNING;
+    return {
+      isHealthy: inbound.enable && status.xray?.state === XRAY_STATE_RUNNING,
+      cpu: status.cpu ?? null,
+      memoryRatio: usageRatio(status.mem),
+      tcpCount: status.tcpCount ?? null
+    };
   }
 }

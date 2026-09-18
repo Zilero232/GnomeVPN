@@ -10,6 +10,12 @@ export type PanelResponse<T> = {
   obj: T;
 };
 
+export type PanelClientStat = {
+  email: string;
+  up?: number;
+  down?: number;
+};
+
 export type PanelInbound = {
   id: number;
   enable: boolean;
@@ -19,9 +25,19 @@ export type PanelInbound = {
   settings: string | Record<string, unknown>;
   streamSettings?: string | Record<string, unknown>;
   sniffing?: string | Record<string, unknown>;
+  clientStats?: PanelClientStat[];
+};
+
+export type PanelResourceUsage = {
+  current?: number;
+  total?: number;
 };
 
 export type PanelServerStatus = {
+  cpu?: number;
+  mem?: PanelResourceUsage;
+  disk?: PanelResourceUsage;
+  tcpCount?: number;
   xray?: {
     state?: string;
   };
@@ -38,12 +54,14 @@ export type AddVlessClientInput = {
   inboundId: number;
   email: string;
   id: string;
+  limitIp: number;
 };
 
 export type AddClientInput = {
   inboundId: number;
   email: string;
   auth: string;
+  limitIp: number;
 };
 
 export type AddPanelClientInput = {

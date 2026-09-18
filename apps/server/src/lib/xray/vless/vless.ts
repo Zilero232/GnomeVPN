@@ -15,7 +15,7 @@ export class VlessClients {
       nodeKey,
       remark: VLESS_INBOUND_REMARK,
       credentialOf: (client) => client.id,
-      add: ({ inboundId, email, credential }) => panel.addVlessClient({ inboundId, email, id: credential })
+      add: ({ inboundId, email, credential, limitIp }) => panel.addVlessClient({ inboundId, email, id: credential, limitIp })
     });
   }
 
@@ -23,7 +23,7 @@ export class VlessClients {
     return this.clients.list();
   }
 
-  async create({ email, id, deferRestart }: CreateVlessClientInput): Promise<CreateVlessClientResult> {
-    return this.clients.create({ email, credential: id, deferRestart });
+  async create({ email, id, limitIp, deferRestart }: CreateVlessClientInput): Promise<CreateVlessClientResult> {
+    return this.clients.create({ email, credential: id, limitIp, deferRestart });
   }
 }
