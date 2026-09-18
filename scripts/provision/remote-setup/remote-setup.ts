@@ -92,8 +92,8 @@ export const ensureRealityKeys = async (ssh: SshClient): Promise<EnsuredRealityK
     inContainer(
       all([
         line(['mkdir', '-p', dirOf(REALITY_KEY_PATH)]),
-        ...seed.map(([path, value]) => orElse([silent(line(['test', '-s', path])), `printf "%s" ${arg(value)} > ${path}`])),
-        line(['cat', ...seed.map(([path]) => path)])
+        ...seed.map(([path, value]) => orElse([silent(line(['test', '-s', path])), `printf '%s\\\\n' ${arg(value)} > ${path}`])),
+        ...seed.map(([path]) => line(['awk', arg('NR==1{print; exit}'), path]))
       ])
     )
   );
@@ -102,7 +102,10 @@ export const ensureRealityKeys = async (ssh: SshClient): Promise<EnsuredRealityK
     throw new Error(`cannot reach the panel container to read the Reality keys: ${result.stderr.trim() || 'no output'}`);
   }
 
-  const [privateKey, publicKey, shortId] = result.stdout.trim().split('\n');
+  const [privateKey, publicKey, shortId] = result.stdout
+    .trim()
+    .split('\n')
+    .map((value) => value.trim());
 
   if (!privateKey || !publicKey || !shortId) {
     throw new Error('the panel container returned no Reality keys');
