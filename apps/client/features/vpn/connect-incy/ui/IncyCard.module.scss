@@ -62,9 +62,6 @@
 
 // The hint wraps at this width, so its last word hangs alone under a full
 // line unless the column is capped.
-.rotateHint {
-  max-width: 56ch;
-}
 
 .rotateButton {
   flex-shrink: 0;

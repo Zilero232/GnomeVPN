@@ -36,14 +36,14 @@ describe('peerClientName', () => {
     expect(peerClientName({ kind: 'session', name: 'desktop', userId: 'user-1' })).not.toContain('node-9');
   });
 
-  it('scopes a wireguard client so it cannot collide with the hysteria2 one', () => {
+  it('scopes a vless client so it cannot collide with the hysteria2 one', () => {
     const shared = { kind: 'session', name: 'desktop', nodeId: 'nl-1', userId: 'user-1' } as const;
 
     const hysteria = peerClientName({ ...shared, protocol: 'hysteria2' });
-    const wireguard = peerClientName({ ...shared, protocol: 'wireguard' });
+    const vless = peerClientName({ ...shared, protocol: 'vless' });
 
-    expect(hysteria).not.toBe(wireguard);
-    expect(wireguard).toBe(`${hysteria}${PEER_PROTOCOL_SUFFIX.wireguard}`);
+    expect(hysteria).not.toBe(vless);
+    expect(vless).toBe(`${hysteria}${PEER_PROTOCOL_SUFFIX.vless}`);
   });
 
   it('scopes a vless client so it cannot collide with the hysteria2 one on the same node', () => {
@@ -59,7 +59,7 @@ describe('peerClientName', () => {
   it('gives every protocol on one node a name of its own, which the panel requires', () => {
     const shared = { kind: 'config', name: 'incy', nodeId: 'nl-1', userId: 'user-1' } as const;
 
-    const names = (['hysteria2', 'vless', 'wireguard'] as const).map((protocol) => peerClientName({ ...shared, protocol }));
+    const names = (['hysteria2', 'vless'] as const).map((protocol) => peerClientName({ ...shared, protocol }));
 
     expect(new Set(names).size).toBe(names.length);
   });
@@ -75,10 +75,10 @@ describe('peerClientName', () => {
   });
 
   it('scopes by protocol whether or not a node is named', () => {
-    const withNode = peerClientName({ kind: 'session', name: 'desktop', nodeId: 'nl-1', protocol: 'wireguard', userId: 'user-1' });
-    const without = peerClientName({ kind: 'session', name: 'desktop', protocol: 'wireguard', userId: 'user-1' });
+    const withNode = peerClientName({ kind: 'session', name: 'desktop', nodeId: 'nl-1', protocol: 'vless', userId: 'user-1' });
+    const without = peerClientName({ kind: 'session', name: 'desktop', protocol: 'vless', userId: 'user-1' });
 
-    expect(withNode).toBe('app-user-1-desktop-nl-1-wg');
-    expect(without).toBe('app-user-1-desktop-wg');
+    expect(withNode).toBe('app-user-1-desktop-nl-1-vl');
+    expect(without).toBe('app-user-1-desktop-vl');
   });
 });

@@ -1,6 +1,6 @@
 import { isTruthy } from 'remeda';
 
-import type { DescribeCardInput } from './describe-card.types';
+import type { DescribeCardInput } from './yookassa.types';
 
 export const describeCard = ({ card, title }: DescribeCardInput): string | null => {
   if (!card?.last4) {

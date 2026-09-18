@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .overlay {
   position: fixed;
   z-index: 50;
@@ -23,24 +25,41 @@
   max-width: 460px;
   max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 48px);
   flex-direction: column;
-  padding: 26px;
+  padding: 28px;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-lg);
   animation: dialog-in 0.18s ease;
   background-color: var(--color-surface-raised);
   box-shadow: 0 32px 72px -28px rgb(0 0 0 / 85%);
-  gap: 20px;
+  gap: 22px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   transform: translate(-50%, -50%);
+
+  @include below(md) {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - var(--safe-area-top) - 32px);
+    padding: 22px 20px calc(22px + var(--safe-area-bottom));
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-right: none;
+    border-bottom: none;
+    border-left: none;
+    animation: sheet-in 0.2s ease;
+    transform: none;
+  }
 }
 
 .close {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 18px;
+  right: 18px;
   display: inline-flex;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
@@ -50,10 +69,12 @@
   cursor: pointer;
   transition:
     color 0.16s ease,
-    border-color 0.16s ease;
+    border-color 0.16s ease,
+    background-color 0.16s ease;
 
   &:hover {
     border-color: var(--color-border);
+    background-color: rgb(230 240 236 / 5%);
     color: var(--color-text);
   }
 
@@ -61,28 +82,33 @@
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
+
+  @include below(md) {
+    top: 14px;
+    right: 14px;
+  }
 }
 
 .header {
-  display: flex;
-  flex-direction: column;
-  padding-right: 32px;
-  gap: 6px;
+  @include stack(8px);
+
+  padding-right: 38px;
 }
 
 .title {
   margin: 0;
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .description {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 @keyframes fade-in {
@@ -104,5 +130,17 @@
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

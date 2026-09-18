@@ -1,6 +1,5 @@
 import type { PeerKind, PeerState, TunnelProtocol } from '../../../../../generated';
 import type { IdentifiedNode } from '../../../../common/lib';
-import type { XrayClient } from '../../../../lib';
 
 export type ReconcileNode = IdentifiedNode;
 
@@ -18,27 +17,12 @@ export type ReconcilePeer = PeerIdentity & {
   nodeCredential: string;
 };
 
-export type RemoveRevokedInput = {
-  xray: XrayClient;
-  peers: ReconcilePeer[];
-  nodeClients: Map<string, boolean>;
-};
-
-export type SyncEnabledInput = RemoveRevokedInput;
-
-export type RestoreMissingInput = RemoveRevokedInput & {
-  node: ReconcileNode;
-};
-
-export type CollectOrphansInput = {
-  xray: XrayClient;
-  nodeId: string;
-  peers: ReconcilePeer[];
-  nodeClients: Map<string, boolean>;
-  online: Set<string> | null;
-};
-
 export type NoteFailureInput = {
   nodeId: string;
   reason: unknown;
+};
+
+export type ReconcileNodeInput = {
+  node: ReconcileNode;
+  withOrphans: boolean;
 };

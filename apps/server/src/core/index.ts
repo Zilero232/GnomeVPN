@@ -1,4 +1,4 @@
-export { basePrisma } from './base-prisma';
-export { PrismaModule } from './prisma.module';
-export { PrismaService } from './prisma.service';
+export { basePrisma, isPrismaRequestError, PrismaModule, PrismaService } from './prisma';
+export type { PrismaRequestError } from './prisma';
+
 export { withSerializableRetry } from './serializable-retry';

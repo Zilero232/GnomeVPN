@@ -6,13 +6,11 @@ enum PeerKind {
 enum TunnelProtocol {
   hysteria2
   vless
-  wireguard
 }
 
 enum PeerState {
   active
   disabled
-  revoked
 }
 
 model Peer {

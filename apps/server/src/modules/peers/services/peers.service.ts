@@ -3,7 +3,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { groupBy, isEmpty, isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
-import type { Prisma } from '../../../../generated';
 import type {
   CreatedPeer,
   DeleteClientInput,
@@ -82,10 +81,6 @@ export class PeersService {
         await run({ client: xrayClientForNode(node), peers: nodePeers });
       })
     );
-  }
-
-  async revoke(where: Prisma.PeerWhereInput): Promise<void> {
-    await this.prisma.peer.updateMany({ where, data: { state: 'revoked' } });
   }
 
   private async deleteFromNodes(peers: PeerRef[]): Promise<void> {

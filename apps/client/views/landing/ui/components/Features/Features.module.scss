@@ -23,6 +23,10 @@
   &:first-child,
   &:last-child {
     grid-column: 1 / -1;
+
+    .body {
+      max-width: none;
+    }
   }
 
   &:hover {
@@ -55,7 +59,6 @@
 }
 
 .body {
-  max-width: 62ch;
   margin: 0;
   color: var(--color-text-muted);
   font-size: 14px;

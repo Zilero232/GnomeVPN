@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { isNullish } from 'remeda';
 
-import type { CreateClientResult, SetClientEnabledInput, SetClientsEnabledInput } from './hysteria';
+import type { CreateClientResult, SetClientsEnabledInput } from './hysteria';
 import type { CreateVlessClientResult } from './vless';
 import type { IssueClientInput, IssueVlessClientInput, RewriteInboundInput, XrayClientOptions } from './xray.types';
 
@@ -102,16 +102,8 @@ export class XrayClient {
     return this.hysteria.delete(email);
   }
 
-  async setClientEnabled({ email, enabled }: SetClientEnabledInput): Promise<void> {
-    return this.hysteria.setEnabled({ emails: [email], enabled });
-  }
-
   async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {
     return this.hysteria.setEnabled({ emails, enabled });
-  }
-
-  async deleteOrphanClients(): Promise<number> {
-    return this.hysteria.deleteOrphans();
   }
 
   async clientEnabledByEmail(): Promise<Map<string, boolean>> {

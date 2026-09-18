@@ -37,8 +37,4 @@ export class HysteriaClients {
   async setEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {
     return serializeByKey({ key: this.nodeKey, task: () => this.panel.setClientsEnabled({ emails, enabled }) });
   }
-
-  async deleteOrphans(): Promise<number> {
-    return serializeByKey({ key: this.nodeKey, task: () => this.panel.deleteOrphanClients() });
-  }
 }

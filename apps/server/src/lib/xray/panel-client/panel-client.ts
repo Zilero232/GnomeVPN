@@ -86,12 +86,6 @@ export class PanelClient {
     await this.post(PANEL_ROUTES.deleteClient(email));
   }
 
-  async deleteOrphanClients(): Promise<number> {
-    const result = await this.post<{ deleted: number }>(PANEL_ROUTES.deleteOrphans);
-
-    return result.deleted ?? 0;
-  }
-
   private async addPanelClient({ inboundId, client }: AddPanelClientInput): Promise<void> {
     await this.post(PANEL_ROUTES.addClient, {
       inboundIds: [inboundId],

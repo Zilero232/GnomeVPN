@@ -43,7 +43,6 @@
 }
 
 .title {
-  max-width: 15ch;
   margin: 0 0 26px;
 
   @include rise(0.6s, 0.08s, 16px);
@@ -71,7 +70,6 @@
 }
 
 .lead {
-  max-width: 52ch;
   margin: 0 0 40px;
 
   @include rise(0.6s, 0.16s, 16px);

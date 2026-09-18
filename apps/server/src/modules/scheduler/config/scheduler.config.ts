@@ -1,6 +1,8 @@
 export const BOOT_GRACE_MS = 3 * 60_000;
 
-export const RECONCILE_CRON = '*/1 * * * *';
+export const RECONCILE_CRON = '*/5 * * * *';
+
+export const COLLECT_ORPHANS_CRON = '17 4 * * 0';
 
 export const RENEW_WINDOW_HOURS = 24;
 
