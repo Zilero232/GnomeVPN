@@ -22,3 +22,9 @@ export type EnsuredRealityKeys = {
   shortId: string;
   wasGenerated: boolean;
 };
+
+export type KeepCoreRunningInput = {
+  ssh: SshClient;
+  panelPath: string;
+  token: string;
+};

@@ -3,7 +3,7 @@ import type { SshClient } from '@gnomevpn/scripts/ssh';
 import { all, arg, dirOf, dockerExec, dockerShell, line, orElse, silent } from '@gnomevpn/scripts/shell';
 import pWaitFor from 'p-wait-for';
 
-import type { ConfigurePanelInput, EnsuredRealityKeys, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
+import type { ConfigurePanelInput, EnsuredRealityKeys, KeepCoreRunningInput, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
 
 import { PANEL_USERNAME } from '../../../apps/server/src/lib/xray';
 import { generateRealityKeys, generateRealityShortId } from '../../../apps/server/src/modules/peers/lib/reality-keys';
@@ -18,6 +18,14 @@ export const ensureDocker = async (ssh: SshClient) => {
 
   if (installed.exitCode !== 0) {
     await ssh.exec(`curl -fsSL ${DOCKER_INSTALL_URL} | sh`);
+  }
+};
+
+export const ensureJq = async (ssh: SshClient) => {
+  const installed = await ssh.exec('command -v jq');
+
+  if (installed.exitCode !== 0) {
+    await ssh.exec('apt-get update -qq && apt-get install -y -qq jq');
   }
 };
 
@@ -74,18 +82,18 @@ export const ensureRealityKeys = async (ssh: SshClient): Promise<EnsuredRealityK
   const fresh = generateRealityKeys();
   const freshShortId = generateRealityShortId();
 
+  const seed = [
+    [REALITY_KEY_PATH, fresh.privateKey],
+    [REALITY_PUB_PATH, fresh.publicKey],
+    [REALITY_SID_PATH, freshShortId]
+  ] as const;
+
   const result = await ssh.exec(
     inContainer(
       all([
         line(['mkdir', '-p', dirOf(REALITY_KEY_PATH)]),
-        orElse([silent(line(['test', '-s', REALITY_KEY_PATH])), `printf "%s" ${arg(fresh.privateKey)} > ${REALITY_KEY_PATH}`]),
-        orElse([silent(line(['test', '-s', REALITY_PUB_PATH])), `printf "%s" ${arg(fresh.publicKey)} > ${REALITY_PUB_PATH}`]),
-        orElse([silent(line(['test', '-s', REALITY_SID_PATH])), `printf "%s" ${arg(freshShortId)} > ${REALITY_SID_PATH}`]),
-        line(['cat', REALITY_KEY_PATH]),
-        'echo',
-        line(['cat', REALITY_PUB_PATH]),
-        'echo',
-        line(['cat', REALITY_SID_PATH])
+        ...seed.map(([path, value]) => orElse([silent(line(['test', '-s', path])), `printf "%s" ${arg(value)} > ${path}`])),
+        line(['cat', ...seed.map(([path]) => path)])
       ])
     )
   );
@@ -123,6 +131,23 @@ const waitForPanel = async ({ ssh, panelPath }: WaitForPanelInput) => {
   }
 };
 
+const keepCoreRunning = async ({ ssh, panelPath, token }: KeepCoreRunningInput): Promise<void> => {
+  const api = `http://127.0.0.1:${PANEL_PORT}/${panelPath}/panel/api/setting`;
+  const auth = `Authorization: Bearer ${token}`;
+
+  const result = await ssh.exec(
+    line([
+      `curl -s -X POST -H ${arg(auth)} ${arg(`${api}/all`)}`,
+      `| jq -c ${arg('.obj + {restartXrayOnClientDisable: false}')}`,
+      `| curl -s -o /dev/null -w "%{http_code}" -X POST -H ${arg(auth)} -H "Content-Type: application/json" --data-binary @- ${arg(`${api}/update`)}`
+    ])
+  );
+
+  if (result.stdout.trim() !== '200') {
+    throw new Error(`could not turn off the core restart on client disable: ${result.stdout.trim() || result.stderr.trim()}`);
+  }
+};
+
 export const configurePanel = async ({ ssh, password, panelPath }: ConfigurePanelInput): Promise<string> => {
   await ssh.exec(
     dockerExec({
@@ -141,6 +166,8 @@ export const configurePanel = async ({ ssh, password, panelPath }: ConfigurePane
   if (!token) {
     throw new Error(`could not read an api token from the panel: ${result.stdout.trim()}`);
   }
+
+  await keepCoreRunning({ ssh, panelPath, token });
 
   return token;
 };

@@ -19,7 +19,16 @@ import { upsertEnvGroup } from '../env-file';
 import { buildHysteriaInbound, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
 import { nodeKeyName, panelPasswordName, panelPathName, resolveNodeCredentials } from '../node-credentials';
 import { buildRealityInbound } from '../reality-inbound';
-import { configurePanel, ensureCert, ensureDocker, ensureRealityKeys, openTunnelPort, readCertFingerprint, shipStack } from '../remote-setup';
+import {
+  configurePanel,
+  ensureCert,
+  ensureDocker,
+  ensureJq,
+  ensureRealityKeys,
+  openTunnelPort,
+  readCertFingerprint,
+  shipStack
+} from '../remote-setup';
 import { upsertNode } from '../upsert-node';
 import { ensureInbound, ensureVlessInbound, isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './provision-host.constants';
@@ -41,6 +50,7 @@ const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> =>
 
 const prepareHost = async ({ ssh, xrayComposeContent }: PrepareHostInput) => {
   await ensureDocker(ssh);
+  await ensureJq(ssh);
   await openTunnelPort(ssh);
   await shipStack({ ssh, composeContent: xrayComposeContent });
 };

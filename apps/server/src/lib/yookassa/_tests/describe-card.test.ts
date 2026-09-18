@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { describeCard } from '../describe-card';
+import { describeCard } from '../yookassa.helpers';
 
 describe('describeCard', () => {
   it('joins the card type with the masked last four digits', () => {

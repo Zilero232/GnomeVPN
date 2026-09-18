@@ -22,6 +22,5 @@ export const PANEL_ROUTES = {
   onlines: `${CLIENTS}/onlines`,
   addClient: `${CLIENTS}/add`,
   deleteClient: (email: string) => `${CLIENTS}/del/${encodeURIComponent(email)}`,
-  deleteOrphans: `${CLIENTS}/delOrphans`,
   setEnabled: (enabled: boolean) => `${CLIENTS}/${enabled ? 'bulkEnable' : 'bulkDisable'}`
 } as const;

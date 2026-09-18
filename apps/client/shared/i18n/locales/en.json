@@ -266,7 +266,11 @@
       "linux": ".deb package",
       "tv": "Android TV and Apple TV"
     },
-    "setupLink": "How to install the app →"
+    "setupLink": "How to install the app →",
+    "rotateConfirmTitle": "Rotate the subscription link?",
+    "rotateConfirmBody": "The current link stops working the moment you confirm. Every device you have added it to loses the connection until you paste the new one.",
+    "rotateConfirmAction": "Rotate link",
+    "rotateConfirmCancel": "Keep the current one"
   },
   "tray": {
     "tooltip": "GnomeVPN",

@@ -12,7 +12,7 @@ import { Button, Spinner, Text } from '@/ui-kit';
 import type { CopyInput } from './IncyCard.types';
 
 import { useRotateLink, useSubscriptionLink } from '../model/hooks';
-import { IncyQrDialog } from './components/IncyQrDialog';
+import { IncyQrDialog, IncyRotateDialog } from './components';
 
 import s from './IncyCard.module.scss';
 
@@ -22,6 +22,11 @@ export const IncyCard = () => {
   const rotate = useRotateLink();
 
   const [isQrOpen, setIsQrOpen] = useState(false);
+  const [isRotateOpen, setIsRotateOpen] = useState(false);
+
+  const onRotate = () => {
+    rotate.mutate(undefined, { onSettled: () => setIsRotateOpen(false) });
+  };
 
   const onCopy = async ({ value, message }: CopyInput) => {
     await navigator.clipboard.writeText(value);
@@ -66,17 +71,19 @@ export const IncyCard = () => {
       </div>
 
       <div className={s.rotate}>
-        <Text className={s.rotateHint} size='xs' tone='muted'>
+        <Text size='xs' tone='muted'>
           {t('rotateHint')}
         </Text>
 
-        <Button className={s.rotateButton} disabled={rotate.isPending} variant='ghost' onClick={() => rotate.mutate()}>
+        <Button className={s.rotateButton} disabled={rotate.isPending} variant='ghost' onClick={() => setIsRotateOpen(true)}>
           <RefreshCw aria-hidden size={14} />
           {t('rotate')}
         </Button>
       </div>
 
       <IncyQrDialog isOpen={isQrOpen} value={link.deepLink} onOpenChange={setIsQrOpen} />
+
+      <IncyRotateDialog isOpen={isRotateOpen} isPending={rotate.isPending} onConfirm={onRotate} onOpenChange={setIsRotateOpen} />
     </div>
   );
 };

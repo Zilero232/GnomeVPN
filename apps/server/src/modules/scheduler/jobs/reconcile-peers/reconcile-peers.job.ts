@@ -1,228 +1,45 @@
-import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { filter, isEmpty, isNonNullish, isNullish, pipe, unique } from 'remeda';
 
-import type {
-  CollectOrphansInput,
-  NoteFailureInput,
-  ReconcileNode,
-  RemoveRevokedInput,
-  RestoreMissingInput,
-  SyncEnabledInput
-} from './reconcile-peers.job.types';
+import type { NoteFailureInput, ReconcileNodeInput } from './reconcile-peers.job.types';
 
-import { describeError, xrayClientForNode } from '../../../../common/lib';
+import { describeError, IDENTIFIED_NODE_SELECT, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { PEER_PREFIX, peerClientName, peerClientNames } from '../../../peers';
-import { BOOT_GRACE_MS, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
-import { ownerIdOf } from './lib';
+import { BOOT_GRACE_MS, COLLECT_ORPHANS_CRON, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
+import { collectOrphans, restoreMissing, syncEnabled } from './lib';
+import { RECONCILE_PEER_SELECT } from './reconcile-peers.job.constants';
 
 @Injectable()
 export class ReconcilePeersJob {
   private readonly logger = new Logger(ReconcilePeersJob.name);
   private readonly bootedAt = Date.now();
-  private readonly suspects = new Map<string, Set<string>>();
   private readonly failures = new Map<string, number>();
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private async reconcileNode(node: ReconcileNode): Promise<void> {
+  private async reconcileNode({ node, withOrphans }: ReconcileNodeInput): Promise<void> {
     const xray = xrayClientForNode(node);
 
     const [peers, nodeClients, online] = await Promise.all([
-      this.prisma.peer.findMany({
-        where: { nodeId: node.id },
-        select: {
-          id: true,
-          userId: true,
-          kind: true,
-          name: true,
-          nodeId: true,
-          protocol: true,
-          state: true,
-          nodeCredential: true
-        }
-      }),
+      this.prisma.peer.findMany({ where: { nodeId: node.id }, select: RECONCILE_PEER_SELECT }),
       xray.clientEnabledByEmail(),
-      xray.onlineEmails()
+      withOrphans ? xray.onlineEmails() : Promise.resolve(null)
     ]);
 
-    const removed = await this.removeRevoked({ xray, peers, nodeClients });
-    const restored = await this.restoreMissing({ xray, node, peers, nodeClients });
-    const synced = await this.syncEnabled({ xray, peers, nodeClients });
-    const collected = await this.collectOrphans({ xray, nodeId: node.id, peers, nodeClients, online });
+    const restored = await restoreMissing({ logger: this.logger, xray, node, peers, nodeClients });
+    const synced = await syncEnabled({ xray, peers, nodeClients });
 
-    if (removed || restored || synced || collected) {
+    const collected = await collectOrphans({ prisma: this.prisma, xray, peers, nodeClients, online });
+
+    if (restored || synced || collected) {
       await xray.restartCore();
     }
   }
 
-  private async removeRevoked({ xray, peers, nodeClients }: RemoveRevokedInput): Promise<boolean> {
-    const gone = peers.filter((peer) => peer.state === 'revoked');
+  private async sweep(withOrphans: boolean): Promise<void> {
+    const nodes = await this.prisma.node.findMany({ select: IDENTIFIED_NODE_SELECT });
 
-    const doomed: string[] = [];
-
-    for (const peer of gone) {
-      const claimed = await this.prisma.peer.deleteMany({
-        where: { id: peer.id, state: 'revoked' }
-      });
-
-      if (claimed.count === 0) {
-        continue;
-      }
-
-      doomed.push(...peerClientNames(peer).filter((email) => nodeClients.has(email)));
-    }
-
-    await Promise.all(doomed.map((email) => xray.deleteClient(email)));
-
-    return !isEmpty(doomed);
-  }
-
-  private async restoreMissing({ xray, node, peers, nodeClients }: RestoreMissingInput): Promise<boolean> {
-    const missing = peers.filter((peer) => peer.state !== 'revoked' && !peerClientNames(peer).some((email) => nodeClients.has(email)));
-
-    if (isEmpty(missing)) {
-      return false;
-    }
-
-    let restored = 0;
-    let failedCount = 0;
-
-    for (const peer of missing) {
-      const email = peerClientName(peer);
-
-      try {
-        await (peer.protocol === TUNNEL_PROTOCOL.vless
-          ? xray.createVlessClient({ email, id: peer.nodeCredential, deferRestart: true })
-          : xray.createClient({ email, auth: peer.nodeCredential, deferRestart: true }));
-
-        nodeClients.set(email, true);
-        restored += 1;
-      } catch (error) {
-        failedCount += 1;
-        this.logger.warn(`restoring ${email} failed on node ${node.id}: ${describeError(error)}`);
-      }
-    }
-
-    if (failedCount > 0) {
-      this.logger.warn(`restoring ${failedCount} of ${missing.length} peer(s) failed on node ${node.id}`);
-    }
-
-    if (restored > 0) {
-      this.logger.log(`restored ${restored} peer(s) missing from node ${node.id}`);
-    }
-
-    return restored > 0;
-  }
-
-  private async syncEnabled({ xray, peers, nodeClients }: SyncEnabledInput): Promise<boolean> {
-    const toEnable: string[] = [];
-    const toDisable: string[] = [];
-
-    for (const peer of peers) {
-      if (peer.state !== 'active' && peer.state !== 'disabled') {
-        continue;
-      }
-
-      const email = peerClientNames(peer).find((candidate) => nodeClients.has(candidate));
-
-      if (!email) {
-        continue;
-      }
-
-      const desired = peer.state === 'active';
-
-      if (nodeClients.get(email) !== desired) {
-        (desired ? toEnable : toDisable).push(email);
-      }
-    }
-
-    if (isEmpty(toEnable) && isEmpty(toDisable)) {
-      return false;
-    }
-
-    await Promise.all([xray.setClientsEnabled({ emails: toEnable, enabled: true }), xray.setClientsEnabled({ emails: toDisable, enabled: false })]);
-
-    return true;
-  }
-
-  private async withoutAnOwner(emails: string[]): Promise<string[]> {
-    if (isEmpty(emails)) {
-      return [];
-    }
-
-    const owners = new Map(emails.map((email) => [email, ownerIdOf(email)]));
-    const named = pipe([...owners.values()], filter(isNonNullish), unique());
-
-    const alive = await this.prisma.user.findMany({
-      where: { id: { in: named } },
-      select: { id: true }
-    });
-
-    const living = new Set(alive.map((user) => user.id));
-
-    return emails.filter((email) => {
-      const owner = owners.get(email);
-
-      return isNonNullish(owner) && !living.has(owner);
-    });
-  }
-
-  private isServerOwned(email: string): boolean {
-    return Object.values(PEER_PREFIX).some((prefix) => email.startsWith(prefix));
-  }
-
-  private async collectOrphans({ xray, nodeId, peers, nodeClients, online }: CollectOrphansInput): Promise<boolean> {
-    if (isNullish(online)) {
-      this.suspects.delete(nodeId);
-
-      return false;
-    }
-
-    const known = new Set(peers.flatMap((peer) => peerClientNames(peer)));
-    const seenBefore = this.suspects.get(nodeId) ?? new Set<string>();
-    const seenNow = new Set<string>();
-
-    const candidates: string[] = [];
-
-    for (const email of nodeClients.keys()) {
-      if (known.has(email) || !this.isServerOwned(email)) {
-        continue;
-      }
-
-      if (!seenBefore.has(email)) {
-        seenNow.add(email);
-
-        continue;
-      }
-
-      candidates.push(email);
-    }
-
-    const doomed = await this.withoutAnOwner(candidates);
-
-    await Promise.all(doomed.map((email) => xray.deleteClient(email)));
-
-    const collected = !isEmpty(doomed);
-
-    this.suspects.set(nodeId, seenNow);
-
-    return collected;
-  }
-
-  @Cron(RECONCILE_CRON)
-  async run(): Promise<void> {
-    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
-      return;
-    }
-
-    const nodes = await this.prisma.node.findMany({
-      select: { id: true, apiUrl: true, apiTokenEnvVar: true }
-    });
-
-    const results = await Promise.allSettled(nodes.map((node) => this.reconcileNode(node)));
+    const results = await Promise.allSettled(nodes.map((node) => this.reconcileNode({ node, withOrphans })));
 
     results.forEach((result, index) => {
       const nodeId = nodes[index].id;
@@ -235,6 +52,24 @@ export class ReconcilePeersJob {
 
       this.noteFailure({ nodeId, reason: result.reason });
     });
+  }
+
+  @Cron(RECONCILE_CRON)
+  async run(): Promise<void> {
+    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
+      return;
+    }
+
+    await this.sweep(false);
+  }
+
+  @Cron(COLLECT_ORPHANS_CRON)
+  async collect(): Promise<void> {
+    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
+      return;
+    }
+
+    await this.sweep(true);
   }
 
   private noteFailure({ nodeId, reason }: NoteFailureInput): void {

@@ -13,24 +13,24 @@ describe('peerClientNames', () => {
     expect(peerClientNames(SHARED)).toEqual(['app-user-1-desktop-nl-1']);
   });
 
-  it('answers both the scoped and the pre-scoping name for a wireguard peer', () => {
-    expect(peerClientNames({ ...SHARED, protocol: 'wireguard' })).toEqual(['app-user-1-desktop-nl-1-wg', 'app-user-1-desktop-nl-1']);
+  it('answers both the scoped and the pre-scoping name for a vless peer', () => {
+    expect(peerClientNames({ ...SHARED, protocol: 'vless' })).toEqual(['app-user-1-desktop-nl-1-vl', 'app-user-1-desktop-nl-1']);
   });
 
   it('puts the current name first, so a caller that writes takes the new one', () => {
-    const [first] = peerClientNames({ ...SHARED, protocol: 'wireguard' });
+    const [first] = peerClientNames({ ...SHARED, protocol: 'vless' });
 
-    expect(first).toBe('app-user-1-desktop-nl-1-wg');
+    expect(first).toBe('app-user-1-desktop-nl-1-vl');
   });
 
-  it('recognises a wireguard client created before the rename, so reconcile does not collect it', () => {
-    const names = peerClientNames({ ...SHARED, protocol: 'wireguard' });
+  it('recognises a vless client created before the rename, so reconcile does not collect it', () => {
+    const names = peerClientNames({ ...SHARED, protocol: 'vless' });
 
     expect(names).toContain('app-user-1-desktop-nl-1');
   });
 
   it('never repeats a name', () => {
-    for (const protocol of ['hysteria2', 'wireguard'] as const) {
+    for (const protocol of ['hysteria2', 'vless'] as const) {
       const names = peerClientNames({ ...SHARED, protocol });
 
       expect(new Set(names).size).toBe(names.length);
@@ -38,12 +38,12 @@ describe('peerClientNames', () => {
   });
 
   it('keeps a config peer under its own prefix', () => {
-    expect(peerClientNames({ ...SHARED, kind: 'config', protocol: 'wireguard' })).toEqual(['cfg-user-1-desktop-nl-1-wg', 'cfg-user-1-desktop-nl-1']);
+    expect(peerClientNames({ ...SHARED, kind: 'config', protocol: 'vless' })).toEqual(['cfg-user-1-desktop-nl-1-vl', 'cfg-user-1-desktop-nl-1']);
   });
 
   it('works for a peer with no node, where the name carries no node segment', () => {
-    expect(peerClientNames({ kind: 'session', name: 'desktop', protocol: 'wireguard', userId: 'user-1' })).toEqual([
-      'app-user-1-desktop-wg',
+    expect(peerClientNames({ kind: 'session', name: 'desktop', protocol: 'vless', userId: 'user-1' })).toEqual([
+      'app-user-1-desktop-vl',
       'app-user-1-desktop'
     ]);
   });

@@ -1,6 +1,6 @@
 import pRetry from 'p-retry';
 
-import { isPrismaRequestError } from './prisma-error';
+import { isPrismaRequestError } from '../prisma';
 
 const SERIALIZATION_FAILURE = 'P2034';
 const RETRIES = 4;

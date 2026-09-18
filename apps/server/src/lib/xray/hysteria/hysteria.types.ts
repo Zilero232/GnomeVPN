@@ -20,11 +20,6 @@ export type CreateClientResult = {
   email: string;
 };
 
-export type SetClientEnabledInput = {
-  email: string;
-  enabled: boolean;
-};
-
 export type SetClientsEnabledInput = {
   emails: string[];
   enabled: boolean;

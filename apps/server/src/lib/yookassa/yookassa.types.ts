@@ -74,3 +74,8 @@ export type YooKassaRequestInput = {
   init: RequestInit;
   idempotenceKey?: string;
 };
+
+export type DescribeCardInput = {
+  card?: CardData;
+  title?: string;
+};

@@ -1,4 +1,4 @@
-import { Prisma } from '../../../generated';
+import { Prisma } from '../../../../generated';
 
 export type PrismaRequestError = Prisma.PrismaClientKnownRequestError;
 

@@ -1,8 +1,6 @@
 import { useTranslations } from 'next-intl';
 
 import { SITE } from '@/shared/config';
-import { FOOTER_LINKS } from '@/shared/constants';
-import { Link } from '@/shared/i18n/navigation';
 
 import { FooterCopy } from './components';
 
@@ -18,17 +16,9 @@ export const SiteFooter = () => {
       <div className={s.inner}>
         <FooterCopy buildYear={buildYear} className={s.copy} />
 
-        <nav className={s.links}>
-          {FOOTER_LINKS.map(({ key, href }) => (
-            <Link key={key} className={s.link} href={href}>
-              {t(key)}
-            </Link>
-          ))}
-
-          <a className={s.link} href={`mailto:${SITE.email}`}>
-            {t('support')}
-          </a>
-        </nav>
+        <a className={s.link} href={`mailto:${SITE.email}`}>
+          {t('support')}
+        </a>
       </div>
     </footer>
   );

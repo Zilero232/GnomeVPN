@@ -2,8 +2,8 @@ import { isNullish } from 'remeda';
 
 import type { NodeAccess } from './node-credentials.types';
 
-import { XrayClient } from '../../lib';
-import { AppServiceUnavailableException } from '../exceptions';
+import { XrayClient } from '../../../lib';
+import { AppServiceUnavailableException } from '../../exceptions';
 
 export const resolveNodeApiKey = (ref: string): string => {
   const key = process.env[ref];

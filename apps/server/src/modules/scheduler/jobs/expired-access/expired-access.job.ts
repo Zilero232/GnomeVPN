@@ -51,7 +51,7 @@ export class ExpiredAccessJob {
   async run(): Promise<void> {
     const now = new Date();
 
-    const [revoked, restored] = await Promise.all([
+    const [disabled, restored] = await Promise.all([
       this.sweep({
         user: lapsedBefore(subHours(now, CONFIG_GRACE_HOURS)),
         act: (userId) => this.access.setEnabledAll({ userId, enabled: false })
@@ -63,8 +63,8 @@ export class ExpiredAccessJob {
       })
     ]);
 
-    if (!isEmpty(revoked)) {
-      this.logger.log(`Revoked access for ${revoked.length} subscriber(s)`);
+    if (!isEmpty(disabled)) {
+      this.logger.log(`Disabled access for ${disabled.length} subscriber(s)`);
     }
 
     if (!isEmpty(restored)) {

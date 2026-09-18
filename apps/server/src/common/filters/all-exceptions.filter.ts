@@ -4,7 +4,7 @@ import type { Response } from 'express';
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { isNonNullish, isObjectType } from 'remeda';
 
-import { isPrismaRequestError } from '../../core/prisma-error';
+import { isPrismaRequestError } from '../../core';
 import { PRISMA_ERROR } from './all-exceptions.constants';
 import { codeForStatus } from './all-exceptions.helpers';
 

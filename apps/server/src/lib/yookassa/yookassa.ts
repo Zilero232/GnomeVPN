@@ -14,8 +14,8 @@ import type {
 } from './yookassa.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
-import { describeCard } from './lib';
 import { API_URL, CURRENCY, REQUEST_TIMEOUT_MS } from './yookassa.constants';
+import { describeCard } from './yookassa.helpers';
 
 export class YooKassaClient {
   private readonly logger = new Logger(YooKassaClient.name);

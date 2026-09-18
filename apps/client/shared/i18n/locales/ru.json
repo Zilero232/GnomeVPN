@@ -266,7 +266,11 @@
       "linux": "Пакет .deb",
       "tv": "Android TV и Apple TV"
     },
-    "setupLink": "Как установить приложение →"
+    "setupLink": "Как установить приложение →",
+    "rotateConfirmTitle": "Обновить ссылку на подписку?",
+    "rotateConfirmBody": "Текущая ссылка перестанет работать сразу после подтверждения. На всех устройствах, где она добавлена, связь пропадёт, пока вы не вставите новую.",
+    "rotateConfirmAction": "Обновить ссылку",
+    "rotateConfirmCancel": "Оставить текущую"
   },
   "tray": {
     "tooltip": "GnomeVPN",

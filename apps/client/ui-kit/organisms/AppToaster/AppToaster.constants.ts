@@ -6,6 +6,11 @@ export const TOAST_GAP = 8;
 
 export const TOAST_OPTIONS = {
   style: {
+    right: 0,
+    left: 0,
+    width: 'fit-content',
+    maxWidth: '100%',
+    marginInline: 'auto',
     fontFamily: 'var(--font-sans)'
   }
 };
