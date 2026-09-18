@@ -18,7 +18,7 @@ export class HysteriaClients {
       inbounds,
       nodeKey,
       credentialOf: (client) => client.auth,
-      add: ({ inboundId, email, credential }) => panel.addClient({ inboundId, email, auth: credential })
+      add: ({ inboundId, email, credential, limitIp }) => panel.addClient({ inboundId, email, auth: credential, limitIp })
     });
   }
 
@@ -26,8 +26,8 @@ export class HysteriaClients {
     return this.clients.list();
   }
 
-  async create({ email, auth, deferRestart }: CreateClientInput): Promise<CreateClientResult> {
-    return this.clients.create({ email, credential: auth, deferRestart });
+  async create({ email, auth, limitIp, deferRestart }: CreateClientInput): Promise<CreateClientResult> {
+    return this.clients.create({ email, credential: auth, limitIp, deferRestart });
   }
 
   async delete(email: string): Promise<void> {

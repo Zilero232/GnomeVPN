@@ -2,7 +2,6 @@ export const NO_LIMIT = 0;
 
 export const CLIENT_DEFAULTS = {
   enable: true,
-  limitIp: NO_LIMIT,
   totalGB: NO_LIMIT,
   expiryTime: NO_LIMIT,
   tgId: NO_LIMIT,

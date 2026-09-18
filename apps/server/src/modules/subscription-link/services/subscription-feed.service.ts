@@ -11,12 +11,12 @@ import type {
 } from '../subscription-link.service.types';
 
 import { AppNotFoundException } from '../../../common/exceptions';
-import { describeError } from '../../../common/lib';
+import { activeDeviceLimit, describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { buildTunnelConfig } from '../../peers';
 import { NODE_FEED_SELECT } from '../config';
-import { clientPlatform, incyHeaders, incyServerUri } from '../lib';
+import { announcement, clientPlatform, incyHeaders, incyServerUri } from '../lib';
 import { SubscriptionPeersService } from './subscription-peers.service';
 
 @Injectable()
@@ -32,7 +32,7 @@ export class SubscriptionFeedService {
   async build({ token, userAgent }: BuildFeedInput): Promise<SubscriptionBody> {
     const link = await this.prisma.subscriptionLink.findUnique({
       where: { token },
-      select: { userId: true, user: { select: { subscription: { select: { currentPeriodEnd: true } } } } }
+      select: { userId: true, user: { select: { subscription: { select: { currentPeriodEnd: true, extraDevices: true } } } } }
     });
 
     if (!link) {
@@ -41,16 +41,25 @@ export class SubscriptionFeedService {
 
     void this.touch({ token, userAgent });
 
+    const subscription = link.user.subscription;
+
     const nodes = await this.availableNodes();
-    const uris = await this.serverUris({ userId: link.userId, nodes });
+    const uris = await this.serverUris({ userId: link.userId, nodes, limitIp: activeDeviceLimit(subscription) });
+
+    const traffic = await this.subscriptionPeers.traffic({ userId: link.userId, nodes });
 
     return {
       body: Buffer.from(uris.join('\n'), 'utf8').toString('base64'),
       headers: incyHeaders({
-        currentPeriodEnd: link.user.subscription?.currentPeriodEnd ?? null,
+        currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
+        traffic,
         clientUrl: this.config.get('CLIENT_URL'),
         supportUrl: this.config.get('SUPPORT_URL') || null,
-        announce: null
+        announce: announcement({
+          nodes,
+          hasSubscription: isNonNullish(subscription),
+          currentPeriodEnd: subscription?.currentPeriodEnd ?? null
+        })
       })
     };
   }
@@ -74,10 +83,10 @@ export class SubscriptionFeedService {
     });
   }
 
-  private async serverUris({ userId, nodes }: ServerUrisInput): Promise<string[]> {
+  private async serverUris({ userId, nodes, limitIp }: ServerUrisInput): Promise<string[]> {
     const targets: FeedTarget[] = nodes.flatMap((node) => this.subscriptionPeers.protocolsFor(node).map((protocol) => ({ node, protocol })));
 
-    const issued = await Promise.all(targets.map(({ node, protocol }) => this.subscriptionPeers.ensure({ userId, node, protocol })));
+    const issued = await Promise.all(targets.map(({ node, protocol }) => this.subscriptionPeers.ensure({ userId, node, protocol, limitIp })));
 
     return targets
       .map(({ node, protocol }, index) => {

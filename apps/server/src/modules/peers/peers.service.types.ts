@@ -18,6 +18,7 @@ export type IssuePeerInput = {
   userId: string;
   kind: PeerKind;
   protocol: TunnelProtocol;
+  limitIp: number;
   name?: string;
 };
 

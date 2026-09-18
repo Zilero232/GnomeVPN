@@ -1,6 +1,8 @@
+export { announcement } from './announcement';
+export type { AnnouncementInput, AnnouncementNode } from './announcement';
 export { clientPlatform } from './client-platform';
 export { headerValue, incyHeaders, userinfo } from './incy-headers';
-export type { IncyHeaders, IncyHeadersInput } from './incy-headers';
+export type { IncyHeaders, IncyHeadersInput, UserinfoInput } from './incy-headers';
 export { incyServerUri } from './incy-uri';
 export type { IncyServerUriInput } from './incy-uri';
 export { serverName } from './server-name';

@@ -21,7 +21,7 @@ export class ProtocolClients<TClient extends ProtocolClient> {
     return (settings.clients ?? []).filter((client) => Boolean(client?.email) && isNonNullish(this.options.credentialOf(client)));
   }
 
-  async create({ email, credential, deferRestart }: IssueProtocolClientInput): Promise<IssueProtocolClientResult> {
+  async create({ email, credential, limitIp, deferRestart }: IssueProtocolClientInput): Promise<IssueProtocolClientResult> {
     return serializeByKey({
       key: this.options.nodeKey,
       task: async () => {
@@ -37,7 +37,7 @@ export class ProtocolClients<TClient extends ProtocolClient> {
 
         const inbound = await this.options.inbounds.get(this.options.remark);
 
-        await this.options.add({ inboundId: inbound.id, email, credential });
+        await this.options.add({ inboundId: inbound.id, email, credential, limitIp });
         await this.restart(deferRestart);
 
         return { nodeCredential: credential, email };

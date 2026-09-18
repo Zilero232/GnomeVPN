@@ -10,6 +10,7 @@ export type AddProtocolClientInput = {
   inboundId: number;
   email: string;
   credential: string;
+  limitIp: number;
 };
 
 export type ProtocolClientsInput<TClient extends ProtocolClient> = {
@@ -24,6 +25,7 @@ export type ProtocolClientsInput<TClient extends ProtocolClient> = {
 export type IssueProtocolClientInput = {
   email: string;
   credential: string;
+  limitIp: number;
   deferRestart?: boolean;
 };
 

@@ -45,13 +45,13 @@ export class PeersService {
     return created;
   }
 
-  async issue({ node, nodeId, userId, kind, protocol, name }: IssuePeerInput): Promise<CreatedPeer> {
+  async issue({ node, nodeId, userId, kind, protocol, limitIp, name }: IssuePeerInput): Promise<CreatedPeer> {
     const email = peerClientName({ userId, kind, name, nodeId, protocol });
     const client = xrayClientForNode(node);
 
     const create = match(protocol)
-      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient({ email }))
-      .otherwise(() => () => client.createClient({ email }));
+      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient({ email, limitIp }))
+      .otherwise(() => () => client.createClient({ email, limitIp }));
 
     try {
       const created = await create();

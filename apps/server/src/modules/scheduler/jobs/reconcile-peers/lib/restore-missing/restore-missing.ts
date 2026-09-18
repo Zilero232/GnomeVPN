@@ -3,7 +3,7 @@ import { isEmpty } from 'remeda';
 
 import type { RestoreMissingInput } from './restore-missing.types';
 
-import { describeError } from '../../../../../../common/lib';
+import { activeDeviceLimit, describeError } from '../../../../../../common/lib';
 import { peerClientName, peerClientNames } from '../../../../../peers';
 
 export const restoreMissing = async ({ logger, xray, node, peers, nodeClients }: RestoreMissingInput): Promise<boolean> => {
@@ -18,11 +18,12 @@ export const restoreMissing = async ({ logger, xray, node, peers, nodeClients }:
 
   for (const peer of missing) {
     const email = peerClientName(peer);
+    const limitIp = activeDeviceLimit(peer.user.subscription);
 
     try {
       await (peer.protocol === TUNNEL_PROTOCOL.vless
-        ? xray.createVlessClient({ email, id: peer.nodeCredential, deferRestart: true })
-        : xray.createClient({ email, auth: peer.nodeCredential, deferRestart: true }));
+        ? xray.createVlessClient({ email, id: peer.nodeCredential, limitIp, deferRestart: true })
+        : xray.createClient({ email, auth: peer.nodeCredential, limitIp, deferRestart: true }));
 
       nodeClients.set(email, true);
       restored += 1;

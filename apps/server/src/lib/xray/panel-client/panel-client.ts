@@ -5,6 +5,7 @@ import type {
   AddPanelClientInput,
   AddVlessClientInput,
   PanelClientInput,
+  PanelClientStat,
   PanelInbound,
   PanelOnlines,
   PanelResponse,
@@ -78,6 +79,12 @@ export class PanelClient {
     await this.post(PANEL_ROUTES.restartCore);
   }
 
+  async clientTraffic(): Promise<PanelClientStat[]> {
+    const inbounds = await this.listInbounds();
+
+    return inbounds.flatMap((inbound) => inbound.clientStats ?? []);
+  }
+
   serverStatus(): Promise<PanelServerStatus> {
     return this.get(PANEL_ROUTES.serverStatus);
   }
@@ -93,12 +100,12 @@ export class PanelClient {
     });
   }
 
-  async addClient({ inboundId, email, auth }: AddClientInput): Promise<void> {
-    await this.addPanelClient({ inboundId, client: { email, auth } });
+  async addClient({ inboundId, email, auth, limitIp }: AddClientInput): Promise<void> {
+    await this.addPanelClient({ inboundId, client: { email, auth, limitIp } });
   }
 
-  async addVlessClient({ inboundId, email, id }: AddVlessClientInput): Promise<void> {
-    await this.addPanelClient({ inboundId, client: { email, id, flow: VLESS_FLOW } });
+  async addVlessClient({ inboundId, email, id, limitIp }: AddVlessClientInput): Promise<void> {
+    await this.addPanelClient({ inboundId, client: { email, id, flow: VLESS_FLOW, limitIp } });
   }
 
   async setClientsEnabled({ emails, enabled }: SetClientsEnabledInput): Promise<void> {
