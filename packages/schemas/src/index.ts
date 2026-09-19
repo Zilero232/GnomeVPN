@@ -1,5 +1,6 @@
 export * from './auth';
 export * from './billing';
+export * from './clients';
 export * from './errors';
 export * from './platforms';
 export * from './subscription';

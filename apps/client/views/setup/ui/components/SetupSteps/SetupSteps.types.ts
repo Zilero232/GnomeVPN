@@ -1,6 +1,9 @@
-import type { SetupPlatform } from '../../../config';
+export type SetupStep = {
+  key: string;
+  title: string;
+  body: string;
+};
 
 export type SetupStepsProps = {
-  platform: SetupPlatform;
-  steps: readonly string[];
+  steps: SetupStep[];
 };

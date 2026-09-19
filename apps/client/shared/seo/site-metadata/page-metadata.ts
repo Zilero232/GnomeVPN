@@ -3,20 +3,16 @@ import type { Metadata } from 'next';
 import { isNonNullish } from 'remeda';
 
 import { SITE } from '@/shared/config';
-import { DEFAULT_LOCALE, localePath, LOCALES } from '@/shared/i18n';
+import { localePath } from '@/shared/i18n';
 
 import type { PageMetadataInput } from './page-metadata.types';
+
+import { languageAlternates } from './site-metadata.helpers';
 
 const OG_LOCALES: Record<string, string> = {
   ru: SITE.locale,
   en: SITE.en.locale
 };
-
-const languageAlternates = (path: string) =>
-  Object.fromEntries([
-    ...LOCALES.map((locale) => [locale, localePath({ path, locale })]),
-    ['x-default', localePath({ path, locale: DEFAULT_LOCALE })]
-  ]);
 
 export const createPageMetadata = ({ title, description, path, locale, index = false, follow = false }: PageMetadataInput): Metadata => {
   const ogTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;

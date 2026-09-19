@@ -1,0 +1,85 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  gap: 10px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  gap: 6px;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-raised);
+  gap: 12px;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.body {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  font-weight: 500;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.download {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  gap: 4px;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.import {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  gap: 6px;
+  text-decoration: none;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}

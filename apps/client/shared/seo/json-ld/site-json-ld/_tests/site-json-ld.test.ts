@@ -1,17 +1,35 @@
-import { PLANS } from '@gnomevpn/schemas';
+import { CLIENT_REGISTRY, PLANS } from '@gnomevpn/schemas';
 import { describe, expect, it } from 'vitest';
 
 import { productJsonLd, siteJsonLd } from '../site-json-ld';
+import { PLATFORM_LABELS } from '../site-json-ld.constants';
 
 const nodeOf = (type: string) => siteJsonLd['@graph'].find((entry) => entry['@type'] === type);
 
 describe('siteJsonLd', () => {
-  it('describes the organisation and the site, leaving the product to the pages that sell it', () => {
-    expect(siteJsonLd['@graph'].map((entry) => entry['@type'])).toEqual(['Organization', 'WebSite']);
+  it('describes the organisation, the site and the app, leaving the product to the pages that sell it', () => {
+    expect(siteJsonLd['@graph'].map((entry) => entry['@type'])).toEqual(['Organization', 'WebSite', 'SoftwareApplication']);
   });
 
   it('ties the site back to the one organisation node', () => {
     expect(nodeOf('WebSite')?.publisher).toEqual({ '@id': nodeOf('Organization')?.['@id'] });
+  });
+
+  it('ties the app back to the same organisation node', () => {
+    expect(nodeOf('SoftwareApplication')?.publisher).toEqual({ '@id': nodeOf('Organization')?.['@id'] });
+  });
+
+  it('prices the app from the plans, so a repricing cannot leave it stale', () => {
+    expect(nodeOf('SoftwareApplication')?.offers?.offerCount).toBe(PLANS.length);
+    expect(nodeOf('SoftwareApplication')?.offers?.highPrice).toBe(Math.max(...PLANS.map((plan) => plan.priceRub)));
+  });
+
+  it('names the platforms the app actually ships on rather than a hardcoded list', () => {
+    const operatingSystem = nodeOf('SoftwareApplication')?.operatingSystem ?? '';
+
+    for (const platform of CLIENT_REGISTRY.incy.platforms) {
+      expect(operatingSystem).toContain(PLATFORM_LABELS[platform]);
+    }
   });
 });
 

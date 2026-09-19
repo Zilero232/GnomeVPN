@@ -1,0 +1,70 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  @include marketing-page(760px, 36px, 26px);
+}
+
+.head {
+  @include stack(12px);
+}
+
+.title {
+  @include marketing-title;
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.section {
+  @include stack(10px);
+}
+
+.heading {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.body {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.tableWrap {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  thead th {
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  tbody th {
+    color: var(--color-text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  tr:last-child th,
+  tr:last-child td {
+    border-bottom: none;
+  }
+}

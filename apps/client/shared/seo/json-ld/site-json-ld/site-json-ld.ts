@@ -1,11 +1,14 @@
-import { PLANS } from '@gnomevpn/schemas';
+import { CLIENT_REGISTRY, PLANS } from '@gnomevpn/schemas';
 
 import { SITE } from '@/shared/config';
 import { LOCALES } from '@/shared/i18n';
 
 import { absoluteUrl } from '../../site-metadata';
+import { PLATFORM_LABELS } from './site-json-ld.constants';
 
 const priceRub = PLANS.map((plan) => plan.priceRub);
+
+const OPERATING_SYSTEMS = [...new Set(CLIENT_REGISTRY.incy.platforms.map((platform) => PLATFORM_LABELS[platform]))];
 
 const offers = PLANS.map((plan) => ({
   '@type': 'Offer',
@@ -42,6 +45,23 @@ export const siteJsonLd = {
       description: SITE.description,
       publisher: { '@id': `${SITE.url}/#organization` },
       inLanguage: [...LOCALES]
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE.url}/#app`,
+      name: SITE.name,
+      description: SITE.description,
+      applicationCategory: 'SecurityApplication',
+      applicationSubCategory: 'VPN',
+      operatingSystem: OPERATING_SYSTEMS.join(', '),
+      publisher: { '@id': `${SITE.url}/#organization` },
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'RUB',
+        lowPrice: Math.min(...priceRub),
+        highPrice: Math.max(...priceRub),
+        offerCount: PLANS.length
+      }
     }
   ]
 };

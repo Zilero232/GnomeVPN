@@ -22,6 +22,20 @@
   }
 }
 
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
 .copy {
   color: var(--color-text-muted);
   font-size: 13px;

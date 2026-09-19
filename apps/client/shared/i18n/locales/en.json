@@ -240,11 +240,11 @@
   "incy": {
     "title": "Connect with INCY",
     "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
-    "copyDeepLink": "Copy INCY link",
+    "copyDeepLink": "INCY link",
     "showQr": "QR code",
     "deepLinkCopied": "Link copied",
-    "qrTitle": "Open with your camera",
-    "qrHint": "Point your phone camera at the code, or scan it from INCY on a TV.",
+    "qrTitle": "Scan the code",
+    "qrHint": "Point a phone camera at it, or scan it from the app on a TV.",
     "qrNote": "The code carries your subscription link — keep it to yourself.",
     "rotate": "Rotate link",
     "rotateHint": "If the link reached the wrong hands, rotate it. The old one stops working immediately.",
@@ -270,7 +270,43 @@
     "rotateConfirmTitle": "Rotate the subscription link?",
     "rotateConfirmBody": "The current link stops working the moment you confirm. Every device you have added it to loses the connection until you paste the new one.",
     "rotateConfirmAction": "Rotate link",
-    "rotateConfirmCancel": "Keep the current one"
+    "rotateConfirmCancel": "Keep the current one",
+    "copyDeepLinkHint": "Opens the INCY app",
+    "copyUrl": "Subscription URL",
+    "copyUrlHint": "Hiddify, v2rayNG and others",
+    "urlCopied": "Subscription URL copied",
+    "showQrHint": "For a TV",
+    "qrKindLabel": "What the code carries",
+    "qrKinds": {
+      "url": "Any app",
+      "incy": "INCY"
+    },
+    "qrKindHints": {
+      "url": "The plain subscription URL — Hiddify, v2rayNG and INCY all read it.",
+      "incy": "The INCY deep link. Only INCY understands this one."
+    },
+    "otherApps": "Use another app",
+    "otherAppsHint": "The same subscription — pick the app you already have.",
+    "clientDownload": "Download",
+    "clientImport": "Add",
+    "clientCopy": "Copy URL",
+    "clients": {
+      "incy": "INCY",
+      "hiddify": "Hiddify",
+      "v2rayng": "v2rayNG",
+      "streisand": "Streisand",
+      "nekobox": "NekoBox",
+      "clashMeta": "Clash Meta"
+    },
+    "otherAppsDesktopHint": "The same subscription. Copy the link and paste it into the app — the Add button only works on a phone or tablet.",
+    "platformNames": {
+      "ios": "iOS",
+      "android": "Android",
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
+      "tv": "TV"
+    }
   },
   "tray": {
     "tooltip": "GnomeVPN",
@@ -354,7 +390,8 @@
     "about": "About",
     "account": "Account",
     "menu": "Menu",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "servers": "Servers"
   },
   "footer": {
     "copy": "© {year} {name}",
@@ -363,7 +400,9 @@
     "faq": "FAQ",
     "about": "About",
     "privacy": "Privacy",
-    "support": "Support"
+    "support": "Support",
+    "servers": "Servers",
+    "ariaLabel": "Footer navigation"
   },
   "pricing": {
     "meta": {
@@ -464,6 +503,10 @@
       "trial": {
         "q": "Is there a free trial?",
         "a": "There is no separate trial, but there is a 14-day refund — much the same thing, except you get full access from the start."
+      },
+      "otherApps": {
+        "q": "Can I use Hiddify or another app instead of INCY?",
+        "a": "Yes. Your subscription URL is a standard one, so Hiddify, v2rayNG, Streisand, NekoBox and Clash Meta all read it — the same servers, the same traffic counter, the same renewal date. Copy the subscription URL on the App tab (not the INCY link, which only INCY understands) and add it in the app as a subscription. We recommend INCY because we have tested it on every platform, but nothing binds you to it."
       }
     },
     "stillStuck": "Still stuck? Email us — we answer within a day."
@@ -520,6 +563,47 @@
         "import": "In INCY on the TV choose to add a subscription and scan the QR code from your phone screen.",
         "connect": "Pick a country and connect. From then on the tunnel comes up by itself when the TV turns on."
       }
+    },
+    "other": {
+      "title": "3. Or use another app",
+      "intro": "INCY is what we recommend, not what we require. Your subscription URL is a standard one, so any app that takes a subscription link reads it — the same servers, the same traffic counter, the same renewal date.",
+      "clients": {
+        "hiddify": {
+          "name": "Hiddify",
+          "hint": "iPhone, Android, Windows, macOS, Linux"
+        },
+        "v2rayng": {
+          "name": "v2rayNG",
+          "hint": "Android"
+        },
+        "streisand": {
+          "name": "Streisand",
+          "hint": "iPhone and Mac"
+        },
+        "nekobox": {
+          "name": "NekoBox",
+          "hint": "Android"
+        },
+        "clashMeta": {
+          "name": "Clash Meta",
+          "hint": "Android"
+        }
+      },
+      "steps": {
+        "copy": {
+          "title": "Copy the subscription URL",
+          "body": "Open your account, go to the App tab and press Copy subscription URL. This is the plain https link — not the INCY one, which only INCY understands."
+        },
+        "add": {
+          "title": "Add it as a subscription",
+          "body": "In the app choose to add a subscription or profile from a URL and paste it. Add it as a subscription rather than a single server, so the server list keeps updating itself."
+        },
+        "connect": {
+          "title": "Pick a server and connect",
+          "body": "Each country appears twice: the plain entry is Hysteria2 over UDP, the one marked TCP is VLESS + Reality. Start with the first; if the network blocks UDP, switch to TCP."
+        }
+      },
+      "note": "Whatever app you pick, the link stays yours alone. If it leaks, rotate it in your account and the old one dies at once."
     }
   },
   "about": {
@@ -590,5 +674,58 @@
     "feature2": "Unlimited traffic",
     "feature3": "Cancel auto-renewal in one click",
     "feature4": "No connection logs"
+  },
+  "servers": {
+    "meta": {
+      "title": "Servers and protocols",
+      "description": "Which protocols GnomeVPN runs — Hysteria2 over QUIC and VLESS + Reality over TCP — what each one survives, and which to pick when a network blocks one of them."
+    },
+    "title": "Servers and protocols",
+    "intro": "Every country in your subscription appears twice: once over Hysteria2 and once over VLESS + Reality. They share port 443 because one is UDP and the other TCP, and you switch between them in the app without changing anything else.",
+    "tableTitle": "The two side by side",
+    "rows": {
+      "label": "Property",
+      "transport": "Transport",
+      "port": "Port",
+      "lossBehaviour": "Under packet loss",
+      "blocking": "When blocked",
+      "bestFor": "Best for"
+    },
+    "protocols": {
+      "hysteria2": {
+        "name": "Hysteria2",
+        "transport": "QUIC over UDP",
+        "port": "443/UDP",
+        "lossBehaviour": "Holds its speed. QUIC recovers a lost packet without stalling the whole stream, which is what TCP cannot do.",
+        "blocking": "Fails where a network drops UDP outright — corporate Wi-Fi, some carriers, most hotels.",
+        "bestFor": "Mobile networks, poor Wi-Fi, anything that loses packets."
+      },
+      "vless": {
+        "name": "VLESS + Reality",
+        "transport": "TCP with a real TLS handshake",
+        "port": "443/TCP",
+        "lossBehaviour": "Slows down like any TCP connection: one lost packet stalls everything behind it.",
+        "blocking": "Passes where UDP is dropped, because it looks like an ordinary HTTPS connection to a real site.",
+        "bestFor": "Networks that allow only TCP."
+      }
+    },
+    "sections": {
+      "whyTwo": {
+        "title": "Why two and not one",
+        "body": "Hysteria2 is the better tunnel almost everywhere: QUIC keeps its speed on a network that loses packets, which is exactly what a phone on mobile data does. But QUIC is UDP, and some networks drop UDP wholesale — there the tunnel cannot come up at all. VLESS + Reality is the way through those: it is plain TCP on 443 wearing the TLS handshake of a real third-party site, so a network that allows HTTPS allows it too."
+      },
+      "whichToPick": {
+        "title": "Which one to pick",
+        "body": "Start with the plain entry — that is Hysteria2, and on most networks it is the faster of the two. If it will not connect, switch to the entry marked TCP for the same country. Nothing needs configuring either way: both are already in your subscription, and the app remembers which one worked."
+      },
+      "howMany": {
+        "title": "How many devices",
+        "body": "One subscription covers several devices at once, and the app on each of them fetches the same link. You do not get a separate config per device: the link is the credential, so adding a phone means pasting the same URL into it."
+      },
+      "addingMore": {
+        "title": "When a country appears or disappears",
+        "body": "The server list lives in the subscription, not in the app, so a node we add shows up on the next refresh without you doing anything. The same is true in reverse: a node taken out of rotation stops being offered. That is the reason to add the link as a subscription rather than as a single server."
+      }
+    }
   }
 }

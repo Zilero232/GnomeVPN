@@ -1,5 +1,5 @@
 export const FAQ_GROUPS = [
-  { key: 'start', questions: ['whatIsIncy', 'whyNotOwnApp', 'howToConnect', 'whichProtocol', 'howManyDevices'] },
+  { key: 'start', questions: ['whatIsIncy', 'whyNotOwnApp', 'otherApps', 'howToConnect', 'whichProtocol', 'howManyDevices'] },
   { key: 'usage', questions: ['whichCountries', 'speed', 'torrents', 'streaming'] },
   { key: 'trouble', questions: ['notConnecting', 'slowSpeed', 'linkLeaked', 'changePhone'] },
   { key: 'billing', questions: ['howToPay', 'refund', 'autoRenew', 'trial'] }

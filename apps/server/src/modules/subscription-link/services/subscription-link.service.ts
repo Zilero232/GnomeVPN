@@ -8,7 +8,7 @@ import type { PresentLinkInput, UpsertLinkInput } from '../subscription-link.ser
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { INCY_DEEP_LINK_NAME, SUBSCRIPTION_PATH } from '../config';
-import { generateSubscriptionToken } from '../lib';
+import { clientLinks, generateSubscriptionToken } from '../lib';
 
 @Injectable()
 export class SubscriptionLinkService {
@@ -40,10 +40,12 @@ export class SubscriptionLinkService {
 
   private present({ token, createdAt }: PresentLinkInput): SubscriptionLink {
     const url = new URL(`${SUBSCRIPTION_PATH}/${token}`, this.config.get('API_URL')).toString();
+    const deepLink = encryptLink(url, { name: INCY_DEEP_LINK_NAME });
 
     return {
       url,
-      deepLink: encryptLink(url, { name: INCY_DEEP_LINK_NAME }),
+      deepLink,
+      clients: clientLinks({ url, deepLink }),
       createdAt: createdAt.toISOString()
     };
   }
