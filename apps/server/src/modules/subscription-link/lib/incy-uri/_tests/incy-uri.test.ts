@@ -142,13 +142,29 @@ describe('incyServerUri over vless', () => {
 });
 
 describe('incyServerUri certificate pinning', () => {
-  const pinned = { ...config, certFingerprint: 'AA:BB:CC:DD' };
+  const digest = 'a'.repeat(64);
+  const opensslFormat = (digest.match(/.{2}/g) ?? []).join(':').toUpperCase();
+  const pinned = { ...config, certFingerprint: opensslFormat };
 
   it('pins the node certificate rather than turning verification off', () => {
     const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
 
-    expect(params.get('pinSHA256')).toBe(pinned.certFingerprint);
+    expect(params.get('pinSHA256')).toBe(digest);
     expect(params.has('insecure')).toBe(false);
+  });
+
+  it('normalises what openssl prints, which a core comparing the pin as a string cannot match', () => {
+    const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+
+    expect(params.get('pinSHA256')).not.toBe(opensslFormat);
+  });
+
+  it('falls back to the insecure flag when the stored fingerprint is not a sha-256', () => {
+    const malformed = { ...config, certFingerprint: 'AA:BB:CC' };
+    const params = new URL(uriOf({ config: malformed, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+
+    expect(params.has('pinSHA256')).toBe(false);
+    expect(params.get('insecure')).toBe('1');
   });
 
   it('falls back to insecure only where no fingerprint was captured', () => {

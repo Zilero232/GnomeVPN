@@ -172,6 +172,21 @@ and the button looks broken. `OtherAppsList` gates the import link behind
 because a tablet at any width resolves the scheme and a narrow desktop window
 does not.
 
+**`pinSHA256` is 64 lowercase hex characters, and `openssl` does not print it
+that way.** `openssl x509 -fingerprint -sha256` returns `AA:BB:CC:…` — uppercase,
+colon-separated — and that is what `certFingerprint` holds, because provisioning
+stores the command's output verbatim. A core compares the pin as a string, so the
+colons alone make every match fail; 3x-ui shipped the same bug by sending base64.
+`pinnedFingerprint` normalises on read rather than in the column, so nodes
+provisioned before this keep working without a re-provision, and a value that is
+not a sha-256 falls back to the `insecure` flag instead of pinning something no
+client can match.
+
+**sing-box does not implement `pinSHA256` at all**, so Hiddify ignores it and then
+refuses the node's self-signed certificate. A pinned entry therefore connects in
+INCY and fails in Hiddify — the fix for that is a certificate Hiddify already
+trusts, not a wider `insecure`.
+
 **A builder that cannot produce a URI returns `null`, never `''`.** `vlessUri`
 returned an empty string for a node without reality keys, and `serverUris`
 filters on `isNonNullish` — so the empty string survived into the feed and a
