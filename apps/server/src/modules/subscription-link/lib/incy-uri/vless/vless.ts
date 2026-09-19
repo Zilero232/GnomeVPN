@@ -3,9 +3,9 @@ import type { IncyServerUriInput } from '../incy-uri.types';
 import { serverName } from '../../server-name';
 import { VLESS_ENCRYPTION, VLESS_GRPC_MODE, VLESS_NETWORK, VLESS_SCHEME, VLESS_SECURITY } from './vless.constants';
 
-export const vlessUri = ({ config, country, countryCode, city }: IncyServerUriInput): string => {
+export const vlessUri = ({ config, country, countryCode, city }: IncyServerUriInput): string | null => {
   if (!config.reality) {
-    return '';
+    return null;
   }
 
   const url = new URL(`${VLESS_SCHEME}://${config.server}`);

@@ -146,6 +146,37 @@ the traffic block entirely, which is what a user without a period should see.
 `@incy/link-encoder` builds the deep link. Its AES key ships inside every INCY
 client, so the encryption hides the URL from scanners, not from people.
 
+**`hide-url: 1` is set, and it costs the account-page button.** It keeps the
+token out of INCY's Share/Copy/QR, which is the point; the same flag also
+suppresses whatever `profile-web-page-url` would render, so the button that
+opens the account page does nothing while it is on. The header stays because
+not handing a user a one-tap way to forward their own credential is worth more
+than the link. Do not "fix" the dead button by dropping the flag.
+
+**Any client that takes a subscription link works, not only INCY.** The feed is a
+standard base64 list, so Hiddify, v2rayNG, Streisand, NekoBox and Clash Meta read
+it unchanged. `CLIENT_REGISTRY` in `packages/schemas/src/clients/` is the single
+source: download URL, platforms, and an import scheme where one is **documented**
+— `hiddify://import/<url>` takes the URL raw in the path, `v2rayng://install-sub`
+and `clash://install-config` take it percent-encoded in a query. Streisand and
+NekoBox publish no scheme, so they carry `importUrl: null` and the user pastes by
+hand; inventing a scheme yields a button that opens nothing.
+
+The server renders those into `clients` on `GET /subscription-link`. The client
+only draws them — it holds icons and copy, never a URL.
+
+**An import scheme only resolves on a touch device.** `hiddify://` and `clash://`
+are registered by the mobile apps, so a desktop browser does nothing with them
+and the button looks broken. `OtherAppsList` gates the import link behind
+`(pointer: coarse)` and falls back to copying the URL — width is the wrong test,
+because a tablet at any width resolves the scheme and a narrow desktop window
+does not.
+
+**A builder that cannot produce a URI returns `null`, never `''`.** `vlessUri`
+returned an empty string for a node without reality keys, and `serverUris`
+filters on `isNonNullish` — so the empty string survived into the feed and a
+client parsing the list hit a blank entry.
+
 The docs are at https://incy.gitbook.io/docs/docs-en — `subscription-format`
 and `share-links` are the two pages that matter.
 
@@ -172,6 +203,27 @@ Both files pin every action to a commit SHA rather than a tag — a tag can be
 moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
 placeholders because the server postinstall runs `prisma generate`, which
 resolves `DIRECT_URL` through `env()` but never connects.
+
+## Indexed pages are a set, not a page
+
+A public page is only indexed when it is in `INDEXED_ROUTES` (`shared/constants/routes.ts`).
+That one list drives the sitemap, `robots.txt` and the `llms.txt` page list, so a
+page added to the app and not to the list is invisible to every crawler and to
+the site's own footer.
+
+Adding an indexed page means five places, not one: the route in `ROUTES`, an
+entry in `INDEXED_ROUTES` and `PUBLIC_ROUTES`, `FOOTER_NAV` (internal links are
+what stop it being an orphan), `LLMS_PAGES`, and a `meta.title`/`meta.description`
+pair in **both** locales. `bun run test` catches the missing translation — a
+`servers.rows.label` left as `''` failed the messages suite — and
+`bun --filter @gnomevpn/client build` catches the rest.
+
+The structured data is one graph in `shared/seo/json-ld`: `Organization`,
+`WebSite` and `SoftwareApplication` ship on every page, `Product` only on
+pricing, `FAQPage` on the FAQ and `HowTo` on `/setup`. `siteJsonLd`'s test
+asserts the graph's exact node list, so adding a node means updating it there
+too — deliberately, because a silently growing graph is how duplicate entities
+reach a crawler.
 
 ## Per-app guidance
 

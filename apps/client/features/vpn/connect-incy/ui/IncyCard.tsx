@@ -1,6 +1,6 @@
 'use client';
 
-import { QrCode, RefreshCw, Smartphone } from 'lucide-react';
+import { Check, ChevronDown, Link2, QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -12,7 +12,8 @@ import { Button, Spinner, Text } from '@/ui-kit';
 import type { CopyInput } from './IncyCard.types';
 
 import { useRotateLink, useSubscriptionLink } from '../model/hooks';
-import { IncyQrDialog, IncyRotateDialog } from './components';
+import { IncyQrDialog, IncyRotateDialog, OtherAppsList } from './components';
+import { COPIED_RESET_MS } from './IncyCard.constants';
 
 import s from './IncyCard.module.scss';
 
@@ -23,15 +24,20 @@ export const IncyCard = () => {
 
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [isRotateOpen, setIsRotateOpen] = useState(false);
+  const [isOtherOpen, setIsOtherOpen] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const onRotate = () => {
     rotate.mutate(undefined, { onSettled: () => setIsRotateOpen(false) });
   };
 
-  const onCopy = async ({ value, message }: CopyInput) => {
+  const onCopy = async ({ value, message, id }: CopyInput) => {
     await navigator.clipboard.writeText(value);
 
+    setCopied(id);
     toast.success(message);
+
+    setTimeout(setCopied, COPIED_RESET_MS, null);
   };
 
   if (isLoading || !link) {
@@ -59,15 +65,29 @@ export const IncyCard = () => {
       </div>
 
       <div className={s.actions}>
-        <Button onClick={() => void onCopy({ value: link.deepLink, message: t('deepLinkCopied') })}>
-          <Smartphone aria-hidden size={16} />
+        <Button className={s.action} size='lg' onClick={() => void onCopy({ value: link.deepLink, message: t('deepLinkCopied'), id: 'incy' })}>
+          {copied === 'incy' ? <Check aria-hidden size={16} /> : <Smartphone aria-hidden size={16} />}
           {t('copyDeepLink')}
         </Button>
 
-        <Button variant='ghost' onClick={() => setIsQrOpen(true)}>
+        <Button className={s.action} size='lg' variant='ghost' onClick={() => void onCopy({ value: link.url, message: t('urlCopied'), id: 'url' })}>
+          {copied === 'url' ? <Check aria-hidden size={16} /> : <Link2 aria-hidden size={16} />}
+          {t('copyUrl')}
+        </Button>
+
+        <Button className={s.action} size='lg' variant='ghost' onClick={() => setIsQrOpen(true)}>
           <QrCode aria-hidden size={16} />
           {t('showQr')}
         </Button>
+      </div>
+
+      <div className={s.other}>
+        <button aria-expanded={isOtherOpen} className={s.otherToggle} type='button' onClick={() => setIsOtherOpen((open) => !open)}>
+          <ChevronDown aria-hidden className={s.chevron} data-open={isOtherOpen} size={16} />
+          {t('otherApps')}
+        </button>
+
+        {isOtherOpen && <OtherAppsList clients={link.clients} url={link.url} onCopy={onCopy} />}
       </div>
 
       <div className={s.rotate}>
@@ -81,7 +101,7 @@ export const IncyCard = () => {
         </Button>
       </div>
 
-      <IncyQrDialog isOpen={isQrOpen} value={link.deepLink} onOpenChange={setIsQrOpen} />
+      <IncyQrDialog deepLink={link.deepLink} isOpen={isQrOpen} url={link.url} onOpenChange={setIsQrOpen} />
 
       <IncyRotateDialog isOpen={isRotateOpen} isPending={rotate.isPending} onConfirm={onRotate} onOpenChange={setIsRotateOpen} />
     </div>

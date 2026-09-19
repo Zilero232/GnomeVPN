@@ -1,5 +1,8 @@
+export type QrKind = 'incy' | 'url';
+
 export type IncyQrDialogProps = {
-  value: string;
+  deepLink: string;
+  url: string;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 };

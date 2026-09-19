@@ -8,7 +8,7 @@ import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/sha
 import { LinkCard, Tabs, Text } from '@/ui-kit';
 
 import { SETUP_PLATFORMS, SETUP_STEPS } from '../config';
-import { SetupSteps } from './components/SetupSteps';
+import { OtherClients, SetupSteps } from './components';
 
 import s from './SetupPage.module.scss';
 
@@ -50,9 +50,25 @@ export const SetupPage = () => {
           items={SETUP_PLATFORMS.map((platform) => ({
             value: platform,
             label: t(`platforms.${platform}.name`),
-            content: <SetupSteps platform={platform} steps={SETUP_STEPS} />
+            content: (
+              <SetupSteps
+                steps={SETUP_STEPS.map((step) => ({
+                  key: step,
+                  title: t(`steps.${step}.title`),
+                  body: t(`platforms.${platform}.${step}`)
+                }))}
+              />
+            )
           }))}
         />
+      </motion.section>
+
+      <motion.section className={s.other} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+        <Text as='h2' className={s.sectionTitle}>
+          {t('other.title')}
+        </Text>
+
+        <OtherClients />
       </motion.section>
     </motion.main>
   );

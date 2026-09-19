@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 
 import { SITE } from '@/shared/config';
+import { ROUTES } from '@/shared/constants';
+
+import { languageAlternates } from './site-metadata.helpers';
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -17,8 +20,10 @@ export const defaultMetadata: Metadata = {
     shortcut: '/brand/favicon.svg',
     apple: [{ url: '/brand/logo-mark.svg', type: 'image/svg+xml' }]
   },
+  manifest: '/manifest.webmanifest',
   alternates: {
-    canonical: '/'
+    canonical: '/',
+    languages: languageAlternates(ROUTES.landing)
   },
   openGraph: {
     type: 'website',
