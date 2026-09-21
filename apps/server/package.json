@@ -30,6 +30,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@gnomevpn/logger": "workspace:*",
     "@gnomevpn/schemas": "workspace:*",
     "@incy/link-encoder": "^1.3.0",
     "@nestjs/cache-manager": "^12.0.0",

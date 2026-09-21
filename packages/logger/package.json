@@ -1,9 +1,9 @@
 {
-  "name": "@gnomevpn/scripts",
+  "name": "@gnomevpn/logger",
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared script layer for GnomeVPN provisioning — reporter, ssh and shell helpers.",
+  "description": "One pino configuration shared by the GnomeVPN server, client and scripts.",
   "homepage": "https://gnomevpn.ru",
   "bugs": {
     "url": "https://github.com/Zilero232/GnomeVPN/issues"
@@ -11,27 +11,22 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Zilero232/GnomeVPN.git",
-    "directory": "packages/scripts"
+    "directory": "packages/logger"
   },
   "license": "SEE LICENSE IN LICENSE",
   "author": "Alexandr Artemev",
   "exports": {
-    "./reporter": "./src/reporter/index.ts",
-    "./shell": "./src/shell/index.ts",
-    "./ssh": "./src/ssh/index.ts"
+    ".": "./src/index.ts"
   },
+  "main": "src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gnomevpn/logger": "workspace:*",
-    "node-ssh": "^13.2.1",
-    "p-retry": "catalog:",
-    "shell-quote": "^1.10.0"
+    "pino": "catalog:",
+    "pino-pretty": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
-    "@types/shell-quote": "^1.7.5",
     "typescript": "catalog:"
   }
 }

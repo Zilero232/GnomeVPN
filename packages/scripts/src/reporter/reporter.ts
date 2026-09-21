@@ -1,16 +1,22 @@
-import type { Reporter, WriteInput } from './reporter.types';
+import { createLogger } from '@gnomevpn/logger';
 
-const write = ({ stream, scope, message }: WriteInput) => {
-  console[stream](`[${scope}] ${message}`);
+import type { Reporter } from './reporter.types';
+
+import { PRETTY_FORMAT, SERVICE_NAME } from './reporter.constants';
+
+const root = createLogger({ service: SERVICE_NAME, pretty: PRETTY_FORMAT });
+
+export const reporter = (scope: string): Reporter => {
+  const log = root.child({ scope });
+
+  return {
+    info: (message, fields) => log.info(fields ?? {}, message),
+    step: (message, fields) => log.info(fields ?? {}, `→ ${message}`),
+    warn: (message, fields) => log.warn(fields ?? {}, message),
+    fail: (message, code = 1) => {
+      log.error(message);
+
+      return process.exit(code);
+    }
+  };
 };
-
-export const reporter = (scope: string): Reporter => ({
-  info: (message) => write({ stream: 'log', scope, message }),
-  step: (message) => write({ stream: 'log', scope, message: `→ ${message}` }),
-  warn: (message) => write({ stream: 'warn', scope, message }),
-  fail: (message, code = 1) => {
-    write({ stream: 'error', scope, message });
-
-    return process.exit(code);
-  }
-});

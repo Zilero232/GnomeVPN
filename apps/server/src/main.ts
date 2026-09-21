@@ -8,12 +8,13 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { allowedOrigins } from './config/cors';
 import { validateEnv } from './config/env.schema';
+import { appLogger } from './core';
 
 import 'reflect-metadata';
 
 const env = validateEnv(process.env);
 
-const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false, logger: appLogger });
 
 app.set('trust proxy', 1);
 

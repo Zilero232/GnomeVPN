@@ -1,12 +1,8 @@
-export type WriteInput = {
-  stream: 'error' | 'log' | 'warn';
-  scope: string;
-  message: string;
-};
+export type LogFields = Record<string, unknown>;
 
 export type Reporter = {
-  info: (message: string) => void;
-  step: (message: string) => void;
-  warn: (message: string) => void;
+  info: (message: string, fields?: LogFields) => void;
+  step: (message: string, fields?: LogFields) => void;
+  warn: (message: string, fields?: LogFields) => void;
   fail: (message: string, code?: number) => never;
 };
