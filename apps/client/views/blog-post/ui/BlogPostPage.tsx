@@ -3,19 +3,24 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { POST_SECTIONS } from '@/entities/app/blog';
-import { ROUTES } from '@/shared/constants';
+import { BLOG_SLUGS, POST_SECTIONS } from '@/entities/app/blog';
+import { blogPostRoute, ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
 import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
+import { RelatedLinks } from '@/widgets/site/related-links';
 
 import type { BlogPostPageProps } from './BlogPostPage.types';
+
+import { RELATED_COUNT } from './BlogPostPage.constants';
 
 import s from './BlogPostPage.module.scss';
 
 export const BlogPostPage = ({ slug }: BlogPostPageProps) => {
   const t = useTranslations(`blog.posts.${slug}`);
   const tBlog = useTranslations('blog');
+
+  const related = BLOG_SLUGS.filter((other) => other !== slug).slice(0, RELATED_COUNT);
 
   return (
     <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
@@ -51,6 +56,8 @@ export const BlogPostPage = ({ slug }: BlogPostPageProps) => {
           </Text>
         </motion.section>
       ))}
+
+      <RelatedLinks links={related.map((other) => ({ href: blogPostRoute(other), label: tBlog(`posts.${other}.title`) }))} />
 
       <motion.aside className={s.cta} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         <Text as='p' className={s.body}>

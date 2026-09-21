@@ -13,7 +13,7 @@ export const contentType = 'image/png';
 
 const Image = async () => {
   const locale = resolveLocale(await rootParams.locale());
-  const t = await getTranslations({ locale, namespace: 'landing' });
+  const t = await getTranslations({ locale, namespace: 'common' });
 
   return new ImageResponse(
     <div
@@ -30,9 +30,9 @@ const Image = async () => {
     >
       <div style={{ fontSize: 34, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#3ddc91' }}>{SITE.name}</div>
 
-      <div style={{ marginTop: 28, fontSize: 68, lineHeight: 1.1, fontWeight: 700 }}>{t('meta.title')}</div>
+      <div style={{ marginTop: 28, fontSize: 68, lineHeight: 1.1, fontWeight: 700 }}>{t('ogTitle')}</div>
 
-      <div style={{ marginTop: 26, fontSize: 32, lineHeight: 1.4, color: '#9fb0aa' }}>{t('meta.description')}</div>
+      <div style={{ marginTop: 26, fontSize: 32, lineHeight: 1.4, color: '#9fb0aa' }}>{t('ogDescription')}</div>
     </div>,
     size
   );

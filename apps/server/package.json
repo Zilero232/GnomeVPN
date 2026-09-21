@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "GnomeVPN API — NestJS on Bun with Prisma, better-auth and the 3x-ui panel client.",
-  "homepage": "https://gnomevpn.ru",
+  "homepage": "https://gnome-vpn.com",
   "bugs": {
     "url": "https://github.com/Zilero232/GnomeVPN/issues"
   },

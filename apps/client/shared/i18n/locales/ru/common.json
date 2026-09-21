@@ -3,5 +3,8 @@
   "brand": "GnomeVPN",
   "loading": "Загрузка…",
   "showPassword": "Показать пароль",
-  "hidePassword": "Скрыть пароль"
+  "hidePassword": "Скрыть пароль",
+  "ogTitle": "VPN на Hysteria2",
+  "ogDescription": "Быстрый туннель по QUIC. Серверы в нескольких странах, одна ссылка на все устройства.",
+  "relatedTitle": "Читайте также"
 }

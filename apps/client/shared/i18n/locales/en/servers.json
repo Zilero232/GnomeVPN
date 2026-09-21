@@ -49,5 +49,10 @@
       "title": "When a country appears or disappears",
       "body": "The server list lives in the subscription, not in the app, so a node we add shows up on the next refresh without you doing anything. The same is true in reverse: a node taken out of rotation stops being offered. That is the reason to add the link as a subscription rather than as a single server."
     }
+  },
+  "related": {
+    "comparison": "Hysteria2 or VLESS + Reality: the full comparison",
+    "hotel": "What to do when the VPN will not work in a hotel",
+    "setup": "How to set up the VPN — a step-by-step guide"
   }
 }

@@ -4,8 +4,10 @@ import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { PROTOCOL_IDS, PROTOCOL_ROWS, SERVER_SECTIONS } from '@/entities/app/protocols';
+import { blogPostRoute, ROUTES } from '@/shared/constants';
 import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
+import { RelatedLinks } from '@/widgets/site/related-links';
 
 import s from './ServersPage.module.scss';
 
@@ -76,6 +78,14 @@ export const ServersPage = () => {
           </Text>
         </motion.section>
       ))}
+
+      <RelatedLinks
+        links={[
+          { href: blogPostRoute('hysteria2-vs-vless'), label: t('related.comparison') },
+          { href: blogPostRoute('vpn-not-working-hotel-wifi'), label: t('related.hotel') },
+          { href: ROUTES.setup, label: t('related.setup') }
+        ]}
+      />
     </motion.main>
   );
 };
