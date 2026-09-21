@@ -140,6 +140,20 @@ reusing `PeersService.issueAndPersist`, and renders them as `hy2://` URIs. A nod
 that fails to issue is logged and skipped: one dead node must not empty the
 user's server list.
 
+**The feed hands out servers only while the period is active.** The token
+proves who is asking, not that they have paid: `SubscriptionLink` is created on
+the first visit to the account page, before any trial or checkout, and
+`ensure()` would happily issue an enabled client on every node for whoever
+holds it. `build` checks `isPeriodActive` first and answers an empty list with
+the "no subscription" announce otherwise — the headers still go, so INCY shows
+the state rather than an error. `expired-access` keeps its six-hour grace, but
+that grace is for a payer whose renewal is late, not a substitute for this gate.
+
+**`/sub/:token` is throttled tighter than the rest of the API.** Every valid
+fetch is a round-trip to every node, so a leaked token in a loop is an
+amplifier against the panels; `FEED.throttle` overrides the global limit on
+that one route. INCY itself refetches once every few hours.
+
 **Headers carry everything the app displays.** `subscription-userinfo` holds the
 expiry, `profile-title` the name, `profile-web-page-url` the account link. Any
 non-ASCII value must be sent as `base64:<…>` — HTTP headers cannot carry UTF-8,
@@ -265,9 +279,21 @@ names the same URL and reports no delivery error. That error is what catches a
 rotated secret: the URL still matches, so nothing else would notice that
 Telegram is being turned away by the header check.
 
-A webhook is only registered when `API_URL` is https and a secret is set. Both
-are Telegram's own requirements, and calling `setWebhook` without them fails the
-whole announcement, taking the command list with it.
+A webhook is only registered when `TELEGRAM_WEBHOOK_URL` is https and a secret
+is set. Both are Telegram's own requirements, and calling `setWebhook` without
+them fails the whole announcement, taking the command list with it.
+
+**The webhook has its own host, and that host resolves to AAAA only.** Telegram
+takes the `A` record whenever a name has one, and IPv4 from this VPS to
+`api.telegram.org` is SNI-blocked in both directions — so pointing the webhook
+at `API_URL` gets `Connection timed out` no matter how many AAAA records sit
+beside the A. `bot.gnome-vpn.com` carries no `A`, which leaves Telegram nothing
+else to pick. Caddy serves it `/telegram/*` and 404s the rest: it is a callback
+endpoint, not a second copy of the API.
+
+That asymmetry is the current shape of the block, not a guarantee. IPv6
+filtering is being built out, so this buys time rather than settling it — the
+fallback, when it goes, is long polling, which needs no inbound path at all.
 
 The boot logs what `getWebhookInfo` answered — the registered URL, the last
 delivery error and the pending count — because that is the whole of what a
@@ -357,6 +383,14 @@ moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set t
 placeholders because the server postinstall runs `prisma generate`, which
 resolves `DIRECT_URL` through `env()` but never connects.
 
+## A node's URL is a secret, so logs name the node instead
+
+`node.apiUrl` embeds the 3x-ui panel's random web path — the only thing between
+the public panel port and its login page. `REDACTED_PATHS` strips object keys,
+which cannot help once the URL is interpolated into a message string, and
+`node-health` writes one every minute. Log lines name `node.id` (or the bare
+host for `XrayClient`, which has nothing else), never the URL.
+
 ## One logger, one list of secrets
 
 `@gnomevpn/logger` holds the only `pino()` call in the repo. The server, the web
@@ -386,6 +420,16 @@ subscription.
 **The trial is a day, not an hour or a week.** A day is long enough to install
 the app, connect and judge the speed on the reader's own network, which is the
 only way a VPN can be judged at all.
+
+**A message is read as a link code only when it is shaped like one.** Anything
+else a reader types gets the help text. Without `looksLikeLinkCode`, every
+stray message became a database claim attempt — a free guessing oracle across
+every live code at once, and updates from Telegram never pass the per-IP
+throttler because they all arrive from Telegram.
+
+**`ResolvedChat` carries the Telegram id.** `findChat` already has it, and a
+handler that needs it — `setLocale` — would otherwise read `identityOf` a second
+time around the shared unwrap that just did.
 
 **A callback payload is untrusted input, whatever button rendered it.**
 `countFrom` checks the shape before the value because `Number()` reads `" 2"`

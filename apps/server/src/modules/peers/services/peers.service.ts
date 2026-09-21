@@ -58,7 +58,7 @@ export class PeersService {
 
       return { nodeCredential: created.nodeCredential, email, protocol };
     } catch (error) {
-      this.logger.error(`issuing a ${protocol} client failed on ${node.apiUrl}: ${describeError(error)}`);
+      this.logger.error(`issuing a ${protocol} client failed on node ${nodeId}: ${describeError(error)}`);
 
       throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
     }

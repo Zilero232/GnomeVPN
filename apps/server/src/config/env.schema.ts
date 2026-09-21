@@ -35,7 +35,8 @@ export const envSchema = z.object({
 
   TELEGRAM_BOT_TOKEN: z.string().default(''),
   TELEGRAM_BOT_USERNAME: z.string().default(''),
-  TELEGRAM_WEBHOOK_SECRET: z.string().default('')
+  TELEGRAM_WEBHOOK_SECRET: z.string().default(''),
+  TELEGRAM_WEBHOOK_URL: z.union([z.literal(''), z.url({ protocol: /^https$/u })]).default('')
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LINK_CODE } from '../../../config';
-import { generateLinkCode, normaliseLinkCode } from '../link-code';
+import { generateLinkCode, looksLikeLinkCode, normaliseLinkCode } from '../link-code';
 
 describe('generateLinkCode', () => {
   it('returns a code of the agreed length', () => {
@@ -41,5 +41,32 @@ describe('normaliseLinkCode', () => {
     const code = generateLinkCode();
 
     expect(normaliseLinkCode(code)).toBe(code);
+  });
+});
+
+describe('looksLikeLinkCode', () => {
+  it('accepts every code the generator can produce', () => {
+    for (let i = 0; i < 50; i += 1) {
+      expect(looksLikeLinkCode(generateLinkCode())).toBe(true);
+    }
+  });
+
+  it('accepts the code the way a person types it', () => {
+    const code = generateLinkCode();
+
+    expect(looksLikeLinkCode(` ${code.toLowerCase()} `)).toBe(true);
+  });
+
+  it('refuses ordinary chat, so a stray message never reaches the database', () => {
+    expect(looksLikeLinkCode('hello')).toBe(false);
+    expect(looksLikeLinkCode('привет')).toBe(false);
+    expect(looksLikeLinkCode('')).toBe(false);
+    expect(looksLikeLinkCode('ABCD234')).toBe(false);
+    expect(looksLikeLinkCode('ABCD23456')).toBe(false);
+  });
+
+  it('refuses the characters the alphabet leaves out', () => {
+    expect(looksLikeLinkCode('ABCD0123')).toBe(false);
+    expect(looksLikeLinkCode('ABCDIOL1')).toBe(false);
   });
 });

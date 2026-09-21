@@ -123,5 +123,8 @@
       "stylelint --fix",
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }

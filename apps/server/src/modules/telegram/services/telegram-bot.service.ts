@@ -3,7 +3,7 @@ import type { Update } from 'grammy/types';
 
 import { Injectable, Logger } from '@nestjs/common';
 import { Bot } from 'grammy';
-import { isNullish } from 'remeda';
+import { isNonNullish, isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
 import type { PressInput } from '../telegram.types';
@@ -11,7 +11,7 @@ import type { PressInput } from '../telegram.types';
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { BOT_API, CALLBACK_PREFIX } from '../config';
-import { buttonFor, callbackPattern } from '../lib';
+import { buttonFor, callbackPattern, looksLikeLinkCode } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
 import { TelegramAppsService } from './telegram-apps.service';
 import { TelegramBillingService } from './telegram-billing.service';
@@ -78,7 +78,7 @@ export class TelegramBotService implements OnModuleInit {
     bot.command('start', (ctx) => {
       const code = ctx.match;
 
-      return code ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
+      return looksLikeLinkCode(code) ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
     });
 
     bot.command('help', (ctx) => this.account.help(ctx));
@@ -101,9 +101,14 @@ export class TelegramBotService implements OnModuleInit {
     bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.devices), (ctx) => this.billing.buyDevices(ctx));
 
     bot.on('message:text', (ctx) => {
-      const button = buttonFor(ctx.message.text);
+      const { text } = ctx.message;
+      const button = buttonFor(text);
 
-      return isNullish(button) ? this.account.consume({ ctx, text: ctx.message.text }) : this.press({ ctx, button });
+      if (isNonNullish(button)) {
+        return this.press({ ctx, button });
+      }
+
+      return looksLikeLinkCode(text) ? this.account.consume({ ctx, text }) : this.account.help(ctx);
     });
   }
 

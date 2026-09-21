@@ -6,3 +6,7 @@ export const generateLinkCode = (): string =>
   Array.from({ length: LINK_CODE.length }, () => LINK_CODE.alphabet[randomInt(LINK_CODE.alphabet.length)]).join('');
 
 export const normaliseLinkCode = (raw: string): string => raw.trim().toUpperCase().replaceAll(/\s+/gu, '');
+
+const CODE_SHAPE = new RegExp(`^[${LINK_CODE.alphabet}]{${LINK_CODE.length}}$`, 'u');
+
+export const looksLikeLinkCode = (raw: string): boolean => CODE_SHAPE.test(normaliseLinkCode(raw));

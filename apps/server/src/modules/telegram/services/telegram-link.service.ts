@@ -83,7 +83,7 @@ export class TelegramLinkService {
       return null;
     }
 
-    return { userId: row.userId, locale: resolveLocale(row.locale ?? row.languageCode) };
+    return { userId: row.userId, telegramId, locale: resolveLocale(row.locale ?? row.languageCode) };
   }
 
   async findUserId(telegramId: bigint): Promise<string | null> {

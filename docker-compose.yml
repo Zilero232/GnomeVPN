@@ -69,14 +69,11 @@ services:
     # The postgres entrypoint reads POSTGRES_* directly from the env file.
     env_file:
       - ./.env
-    # Published on every interface so a desktop client can reach it by IP.
-    # UFW does not cover this: Docker writes its own rules into the FORWARD
-    # chain, ahead of UFW, so `ufw deny 5432` has no effect here. The port is
-    # open to the internet and the password is the only thing in front of it —
-    # keep POSTGRES_PASSWORD long and random, and prefer `docker compose exec
-    # postgres psql` or an SSH tunnel when a GUI is not required.
+    # Loopback only. Docker writes its own rules ahead of UFW, so a published
+    # port would be open to the internet whatever UFW says — reach it through an
+    # SSH tunnel, which every desktop client can open for itself (DEPLOY.md).
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

@@ -18,13 +18,13 @@ export class NodeHealthJob {
     const health = await xrayClientForNode(node)
       .health()
       .catch((error: unknown) => {
-        throw new Error(`${node.apiUrl}: ${describeError(error)}`);
+        throw new Error(`${node.id}: ${describeError(error)}`);
       });
 
     this.noteLoad({ node, health });
 
     if (!health.isHealthy) {
-      this.logger.warn(`node ${node.apiUrl} answered but its inbound is disabled`);
+      this.logger.warn(`node ${node.id} answered but its inbound is disabled`);
 
       return;
     }
@@ -37,11 +37,11 @@ export class NodeHealthJob {
 
   private noteLoad({ node, health }: NoteLoadInput): void {
     if (isNonNullish(health.cpu) && health.cpu >= ALERT.nodeCpuPercent) {
-      this.logger.warn(`node ${node.apiUrl} is at ${health.cpu.toFixed(0)}% cpu`);
+      this.logger.warn(`node ${node.id} is at ${health.cpu.toFixed(0)}% cpu`);
     }
 
     if (isNonNullish(health.memoryRatio) && health.memoryRatio >= ALERT.nodeMemoryRatio) {
-      this.logger.warn(`node ${node.apiUrl} is at ${(health.memoryRatio * 100).toFixed(0)}% memory`);
+      this.logger.warn(`node ${node.id} is at ${(health.memoryRatio * 100).toFixed(0)}% memory`);
     }
   }
 

@@ -109,6 +109,7 @@ export type LinkedAccount = {
 
 export type ResolvedChat = {
   userId: string;
+  telegramId: bigint;
   locale: BotLocale;
 };
 
@@ -150,6 +151,5 @@ export type SetLocaleInput = {
 
 export type ClaimTrialInput = {
   ctx: BotContext;
-  userId: string;
-  locale: BotLocale;
+  chat: ResolvedChat;
 };
