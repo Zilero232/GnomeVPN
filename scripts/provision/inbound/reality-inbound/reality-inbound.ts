@@ -1,14 +1,7 @@
 import type { BuildRealityInboundInput } from './reality-inbound.types';
 
-import {
-  REALITY_DEST,
-  REALITY_INBOUND_TAG,
-  REALITY_LISTEN_PORT,
-  REALITY_NETWORK,
-  REALITY_SERVER_NAMES,
-  REALITY_SERVICE_NAME,
-  SNIFF_PROTOCOLS
-} from './reality-inbound.constants';
+import { REALITY_DEST, REALITY_LISTEN_PORT, REALITY_SERVER_NAMES } from '../../config';
+import { REALITY_INBOUND_TAG, REALITY_NETWORK, REALITY_SERVICE_NAME, SNIFF_PROTOCOLS } from './reality-inbound.constants';
 
 export const buildRealityInbound = ({ privateKey, shortId }: BuildRealityInboundInput): Record<string, unknown> => ({
   tag: REALITY_INBOUND_TAG,

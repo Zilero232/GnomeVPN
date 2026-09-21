@@ -50,33 +50,11 @@
   font-weight: 500;
 }
 
-.meta {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-}
-
 .platforms {
   overflow: hidden;
   min-width: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.download {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  gap: 4px;
-  text-decoration: none;
-
-  &:hover {
-    color: var(--color-accent);
-  }
 }
 
 .import {

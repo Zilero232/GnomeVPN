@@ -4,15 +4,12 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { prop } from 'remeda';
 
-import type { NodeConfig } from './nodes-config';
-import type { ProvisionResult } from './provision-host';
+import type { NodeConfig } from './node';
+import type { ProvisionResult } from './pipeline';
 
 import { basePrisma } from '../../apps/server/src/core';
-import { syncToProduction } from './node-sync';
-import { loadNodesConfig } from './nodes-config';
-import { provisionHost } from './provision-host';
-import { formatSummary } from './provision-report';
-import { pruneNodes } from './prune-nodes';
+import { loadNodesConfig, pruneNodes, syncToProduction } from './node';
+import { formatSummary, provisionHost } from './pipeline';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const NODES_CONFIG_PATH = resolve(ROOT, 'nodes.json');

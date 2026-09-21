@@ -5,10 +5,19 @@ import pWaitFor from 'p-wait-for';
 
 import type { ConfigurePanelInput, EnsuredRealityKeys, KeepCoreRunningInput, ShipStackInput, WaitForPanelInput } from './remote-setup.types';
 
-import { PANEL_USERNAME } from '../../../apps/server/src/lib/xray';
-import { generateRealityKeys, generateRealityShortId } from '../../../apps/server/src/modules/peers/lib/reality-keys';
-import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, PANEL_PORT } from '../hysteria-inbound';
-import { REALITY_KEY_PATH, REALITY_LISTEN_PORT, REALITY_PUB_PATH, REALITY_SID_PATH } from '../reality-inbound';
+import { PANEL_USERNAME } from '../../../../apps/server/src/lib/xray';
+import { generateRealityKeys, generateRealityShortId } from '../../../../apps/server/src/modules/peers/lib/reality-keys';
+import {
+  CERT_PATH,
+  KEY_PATH,
+  LISTEN_PORT,
+  MASQUERADE_HOST,
+  PANEL_PORT,
+  REALITY_KEY_PATH,
+  REALITY_LISTEN_PORT,
+  REALITY_PUB_PATH,
+  REALITY_SID_PATH
+} from '../../config';
 import { CONTAINER_NAME, DOCKER_INSTALL_URL, PANEL_BOOT_INTERVAL_MS, PANEL_BOOT_TIMEOUT_MS, REMOTE_DIR } from './remote-setup.constants';
 
 const inContainer = (script: string) => dockerShell({ container: CONTAINER_NAME, script });

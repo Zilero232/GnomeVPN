@@ -1,4 +1,4 @@
-import type { basePrisma } from '../../../apps/server/src/core';
+import type { basePrisma } from '../../../../apps/server/src/core';
 
 export type PrismaLike = typeof basePrisma;
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMediaQuery } from '@siberiacancode/reactuse';
-import { Copy, Download, ExternalLink } from 'lucide-react';
+import { Copy, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { isNonNullish } from 'remeda';
 
@@ -33,7 +33,7 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
       </Text>
 
       <ul className={s.list}>
-        {others.map(({ id, importUrl, downloadUrl, platforms }) => {
+        {others.map(({ id, importUrl, platforms }) => {
           const Icon = CLIENT_ICONS[id];
           const canImport = isTouchDevice && isNonNullish(importUrl);
 
@@ -46,16 +46,9 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
                   {t(`clients.${id}`)}
                 </Text>
 
-                <span className={s.meta}>
-                  <Text as='span' className={s.platforms} size='xs' tone='muted'>
-                    {platforms.map((platform) => t(`platformNames.${platform}`)).join(' · ')}
-                  </Text>
-
-                  <a className={s.download} href={downloadUrl} rel='noopener noreferrer' target='_blank'>
-                    <Download aria-hidden size={12} />
-                    {t('clientDownload')}
-                  </a>
-                </span>
+                <Text as='span' className={s.platforms} size='xs' tone='muted'>
+                  {platforms.map((platform) => t(`platformNames.${platform}`)).join(' · ')}
+                </Text>
               </span>
 
               {canImport ? (

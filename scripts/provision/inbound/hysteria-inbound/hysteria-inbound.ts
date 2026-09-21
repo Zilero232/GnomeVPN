@@ -1,6 +1,7 @@
 import type { BuildInboundInput } from './hysteria-inbound.types';
 
-import { CERT_PATH, INBOUND_TAG, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST, SNIFF_PROTOCOLS, UDP_IDLE_TIMEOUT } from './hysteria-inbound.constants';
+import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST } from '../../config';
+import { INBOUND_TAG, SNIFF_PROTOCOLS, UDP_IDLE_TIMEOUT } from './hysteria-inbound.constants';
 
 export const buildHysteriaInbound = ({ auth, sni }: BuildInboundInput): Record<string, unknown> => ({
   tag: INBOUND_TAG,

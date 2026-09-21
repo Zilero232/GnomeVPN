@@ -287,7 +287,6 @@
     },
     "otherApps": "Use another app",
     "otherAppsHint": "The same subscription. Add opens the app; if it is not installed, the link is already copied.",
-    "clientDownload": "Download",
     "clientImport": "Add",
     "clientCopy": "Copy URL",
     "clients": {
