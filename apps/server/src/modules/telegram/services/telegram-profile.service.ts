@@ -3,6 +3,7 @@ import type { MenuButton } from 'grammy/types';
 
 import { Injectable, Logger } from '@nestjs/common';
 import pRetry from 'p-retry';
+import { isDeepEqual } from 'remeda';
 
 import type { DescribeInput } from '../telegram.types';
 
@@ -21,6 +22,14 @@ export class TelegramProfileService {
     await this.initialise(bot);
 
     try {
+      await this.listen(bot);
+
+      this.logger.log('telegram bot is ready');
+    } catch (error) {
+      this.logger.error(`telegram webhook could not be registered: ${describeError(error)}`);
+    }
+
+    try {
       await this.describe({ bot, locale: FALLBACK_BOT_LOCALE, isFallback: true });
 
       for (const locale of BOT_LOCALES) {
@@ -28,11 +37,8 @@ export class TelegramProfileService {
       }
 
       await bot.api.setChatMenuButton({ menu_button: this.menuButton() });
-      await this.listen(bot);
-
-      this.logger.log('telegram bot is ready');
     } catch (error) {
-      this.logger.warn(`telegram bot could not reach the api: ${describeError(error)}`);
+      this.logger.warn(`telegram profile not updated: ${describeError(error)}`);
     }
   }
 
@@ -80,13 +86,32 @@ export class TelegramProfileService {
   }
 
   private async describe({ bot, locale, isFallback }: DescribeInput): Promise<void> {
-    const profile = profileText(BOT_PROFILE[locale]);
+    const { name, description, shortDescription } = profileText(BOT_PROFILE[locale]);
+    const commands = [...BOT_COMMANDS[locale]];
     const options = isFallback ? {} : { language_code: locale };
 
-    await bot.api.setMyCommands(BOT_COMMANDS[locale], options);
-    await bot.api.setMyName(profile.name, options);
-    await bot.api.setMyDescription(profile.description, options);
-    await bot.api.setMyShortDescription(profile.shortDescription, options);
+    const [live, liveName, liveDescription, liveShort] = await Promise.all([
+      bot.api.getMyCommands(options),
+      bot.api.getMyName(options),
+      bot.api.getMyDescription(options),
+      bot.api.getMyShortDescription(options)
+    ]);
+
+    if (!isDeepEqual(live, commands)) {
+      await bot.api.setMyCommands(commands, options);
+    }
+
+    if (liveName.name !== name) {
+      await bot.api.setMyName(name, options);
+    }
+
+    if (liveDescription.description !== description) {
+      await bot.api.setMyDescription(description, options);
+    }
+
+    if (liveShort.short_description !== shortDescription) {
+      await bot.api.setMyShortDescription(shortDescription, options);
+    }
   }
 
   private menuButton(): MenuButton {
