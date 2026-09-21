@@ -3,26 +3,20 @@ import { describe, expect, it } from 'vitest';
 import { WEBHOOK } from '../../../config';
 import { webhookUrl } from '../webhook-url';
 
-const secret = 'a-secret';
+const served = `/${WEBHOOK.path}`;
 
 describe('webhookUrl', () => {
   it('points at the path the controller serves', () => {
-    expect(webhookUrl({ apiUrl: 'https://api.gnome-vpn.com', secret })).toBe(`https://api.gnome-vpn.com/${WEBHOOK.path}`);
+    expect(new URL(webhookUrl('https://bot.gnome-vpn.com')).pathname).toBe(served);
   });
 
-  it('does not double the separator when the base ends in one', () => {
-    const withSlash = webhookUrl({ apiUrl: 'https://api.gnome-vpn.com/', secret });
-
-    expect(withSlash).toBe(webhookUrl({ apiUrl: 'https://api.gnome-vpn.com', secret }));
-    expect(withSlash).not.toContain('//telegram');
+  it('lands on the same path whatever the base carries after the host', () => {
+    for (const base of ['https://bot.gnome-vpn.com/', 'https://bot.gnome-vpn.com/prefix', 'https://bot.gnome-vpn.com/prefix/']) {
+      expect(new URL(webhookUrl(base)).pathname).toBe(served);
+    }
   });
 
-  it('refuses a base Telegram would reject', () => {
-    expect(webhookUrl({ apiUrl: 'http://localhost:4000', secret })).toBeNull();
-    expect(webhookUrl({ apiUrl: 'http://api.gnome-vpn.com', secret })).toBeNull();
-  });
-
-  it('refuses to register without a secret, which would leave the route open', () => {
-    expect(webhookUrl({ apiUrl: 'https://api.gnome-vpn.com', secret: '' })).toBeNull();
+  it('keeps the host it was given', () => {
+    expect(new URL(webhookUrl('https://bot.gnome-vpn.com/anything')).host).toBe('bot.gnome-vpn.com');
   });
 });

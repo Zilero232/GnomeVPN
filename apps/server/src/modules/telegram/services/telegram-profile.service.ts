@@ -3,13 +3,12 @@ import type { MenuButton } from 'grammy/types';
 
 import { Injectable, Logger } from '@nestjs/common';
 import pRetry from 'p-retry';
-import { isNullish } from 'remeda';
 
 import type { DescribeInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
-import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, FALLBACK_BOT_LOCALE, WEBHOOK } from '../config';
+import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, FALLBACK_BOT_LOCALE, HTTPS_PROTOCOL } from '../config';
 import { profileText, webhookUrl } from '../lib';
 
 @Injectable()
@@ -49,13 +48,15 @@ export class TelegramProfileService {
 
   private async listen(bot: Bot): Promise<void> {
     const secret = this.config.get('TELEGRAM_WEBHOOK_SECRET');
-    const url = webhookUrl({ apiUrl: this.config.get('API_URL'), secret });
+    const base = this.config.get('TELEGRAM_WEBHOOK_URL');
 
-    if (isNullish(url)) {
-      this.logger.log('telegram webhook not registered: needs an https API_URL and a webhook secret');
+    if (!secret || !base) {
+      this.logger.log('telegram webhook not registered: TELEGRAM_WEBHOOK_URL and TELEGRAM_WEBHOOK_SECRET are both needed');
 
       return;
     }
+
+    const url = webhookUrl(base);
 
     const current = await bot.api.getWebhookInfo();
 
@@ -91,7 +92,7 @@ export class TelegramProfileService {
   private menuButton(): MenuButton {
     const url = this.config.get('CLIENT_URL');
 
-    if (!url.startsWith(WEBHOOK.httpsPrefix)) {
+    if (new URL(url).protocol !== HTTPS_PROTOCOL) {
       return { type: 'commands' };
     }
 

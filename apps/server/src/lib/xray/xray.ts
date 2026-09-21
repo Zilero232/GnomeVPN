@@ -136,7 +136,7 @@ export class XrayClient {
 
       return true;
     } catch (error) {
-      XrayClient.logger.warn(`node ${this.nodeKey} unreachable: ${error}`);
+      XrayClient.logger.warn(`node ${new URL(this.nodeKey).host} unreachable: ${error}`);
 
       return false;
     }

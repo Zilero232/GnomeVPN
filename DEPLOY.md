@@ -139,11 +139,10 @@ EMAIL_FROM=GnomeVPN <noreply@gnome-vpn.com>
 CLIENT_URL=https://gnome-vpn.com
 
 # Telegram bot — optional. Leave the token empty and the bot never starts.
-# The webhook is registered by hand once, against the deployed API:
-#   curl -F "url=https://api.gnome-vpn.com/telegram/webhook" #        -F "secret_token=<TELEGRAM_WEBHOOK_SECRET>" #        https://api.telegram.org/bot<TOKEN>/setWebhook
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_USERNAME=
 TELEGRAM_WEBHOOK_SECRET=
+TELEGRAM_WEBHOOK_URL=https://bot.gnome-vpn.com
 
 ```
 
@@ -185,13 +184,19 @@ deploy still works. To turn it on:
 give it a display name and then a username ending in `bot`
 (`gnomevpn_bot`). He answers with the token.
 
-**2. Fill in the three variables** in `/opt/gnomevpn/.env`:
+**2. Fill in the four variables** in `/opt/gnomevpn/.env`:
 
 ```env
 TELEGRAM_BOT_TOKEN=<what BotFather sent>
 TELEGRAM_BOT_USERNAME=gnomevpn_bot
 TELEGRAM_WEBHOOK_SECRET=<generated>
+TELEGRAM_WEBHOOK_URL=https://bot.gnome-vpn.com
 ```
+
+**`bot.gnome-vpn.com` needs one DNS record: `AAAA`, and no `A`.** Telegram takes
+the `A` record whenever a name has one, and IPv4 to this host is blocked — with
+no `A` there is nothing else for it to take. The site and the API keep their
+`A` records, because that is how everyone else reaches them.
 
 `bun run secrets` fills in the secrets that are still empty — locally into
 `.env`, and it leaves anything already set alone. `--force` overwrites, which
@@ -203,15 +208,16 @@ button lead nowhere.
 
 **3. Restart the server.** Everything else happens on boot, in both languages:
 the bot's name, its description, its short description, its command list, the
-menu button — and the webhook, pointed at `API_URL`. The bot answers `/start`
-from then on.
+menu button — and the webhook, pointed at `TELEGRAM_WEBHOOK_URL`. The bot
+answers `/start` from then on.
 
 Nothing is registered by hand. `api.telegram.org` is blocked by most Russian
 ISPs, so a manual step would be something only the production host could do, and
 something a domain change or a rotated secret would silently invalidate.
 
-The webhook needs `API_URL` to be https and `TELEGRAM_WEBHOOK_SECRET` to be set;
-without either, the server logs that it skipped it and the rest still applies.
+The webhook needs `TELEGRAM_WEBHOOK_URL` to be https and
+`TELEGRAM_WEBHOOK_SECRET` to be set; without either, the server logs that it
+skipped it and the rest still applies.
 
 `docker compose logs server | grep telegram` is where to look when the bot goes
 quiet: the boot reports the webhook it found, whatever Telegram last failed to
@@ -328,6 +334,34 @@ bunx prisma migrate dev --name <name>
 
 The next `deploy.yml` run will apply it.
 
+### Connecting a GUI to the production database
+
+Postgres binds to loopback, so there is no port to reach from outside — a
+desktop client tunnels in over SSH instead. Every one of them can do this on its
+own; in TablePlus it is the "Over SSH" tab of the connection dialog:
+
+| Field                      | Value                                  |
+| -------------------------- | -------------------------------------- |
+| SSH host                   | the VPS address                        |
+| SSH user                   | `root`                                 |
+| SSH password / key         | the same one you log in with           |
+| Database host              | `127.0.0.1`                            |
+| Database port              | `5432`                                 |
+| User / password / database | `POSTGRES_*` from `/opt/gnomevpn/.env` |
+
+The database host stays `127.0.0.1` because the tunnel makes the server's own
+loopback local to you.
+
+From a terminal the same thing is one command, after which `localhost:5432` is
+the production database for as long as it runs:
+
+```bash
+ssh -L 5432:127.0.0.1:5432 root@<vps>
+```
+
+`docker compose exec postgres psql -U gnomevpn gnomevpn` needs no tunnel at all
+when a shell is enough.
+
 ---
 
 ## Useful commands
@@ -339,29 +373,6 @@ docker compose pull && docker compose up -d   # manual update
 
 # database backup
 docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
-```
-
-Port 5432 is published, so a client such as TablePlus connects straight to
-`<IP>:5432` with the `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` values
-from the VPS `.env`, SSL disabled.
-
-**That port is open to the internet and UFW does not close it** — Docker writes
-its rules into the FORWARD chain, ahead of UFW, so `ufw deny 5432` has no effect.
-The password is the only thing in front of a database holding payer records and
-every peer's tunnel credential, so it has to be long and random.
-
-To narrow it to one address, add a rule to `DOCKER-USER`, the one chain Docker
-leaves alone:
-
-```bash
-iptables -I DOCKER-USER -p tcp --dport 5432 ! -s <your-IP> -j DROP
-```
-
-Or close it again by binding to loopback in `docker-compose.yml`
-(`'127.0.0.1:5432:5432'`) and tunnelling in:
-
-```bash
-ssh -L 5432:localhost:5432 user@<IP>
 ```
 
 ---

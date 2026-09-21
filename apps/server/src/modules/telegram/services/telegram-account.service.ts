@@ -71,19 +71,13 @@ export class TelegramAccountService {
   }
 
   async changeLocale(ctx: BotContext): Promise<void> {
-    const identity = identityOf(ctx.from);
-
-    if (isNullish(identity)) {
-      return;
-    }
-
     await this.shared.answered({
       ctx,
       prefix: CALLBACK_PREFIX.locale,
       act: async ({ chat, value }) => {
         const locale = resolveLocale(value);
 
-        await this.link.setLocale({ telegramId: identity.telegramId, locale });
+        await this.link.setLocale({ telegramId: chat.telegramId, locale });
 
         return this.shared.reply({ ctx, chat: { ...chat, locale }, text: BOT_TEXT[locale].languageChanged });
       }

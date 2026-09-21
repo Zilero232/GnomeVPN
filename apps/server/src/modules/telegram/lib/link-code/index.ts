@@ -1,1 +1,1 @@
-export { generateLinkCode, normaliseLinkCode } from './link-code';
+export { generateLinkCode, looksLikeLinkCode, normaliseLinkCode } from './link-code';

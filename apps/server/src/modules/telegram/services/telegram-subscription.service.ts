@@ -46,7 +46,7 @@ export class TelegramSubscriptionService {
   }
 
   async claimTrialDay(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({ ctx, act: ({ userId, locale }) => this.claimTrial({ ctx, userId, locale }) });
+    await this.shared.withUser({ ctx, act: (chat) => this.claimTrial({ ctx, chat }) });
   }
 
   async startCheckout(ctx: BotContext): Promise<void> {
@@ -99,9 +99,9 @@ export class TelegramSubscriptionService {
     await ctx.reply(BOT_TEXT[locale].choosePlan, { reply_markup: keyboard });
   }
 
-  private async claimTrial({ ctx, userId, locale }: ClaimTrialInput): Promise<void> {
-    const text = BOT_TEXT[locale];
-    const eligibility = await this.trial.eligibility(userId);
+  private async claimTrial({ ctx, chat }: ClaimTrialInput): Promise<void> {
+    const text = BOT_TEXT[chat.locale];
+    const eligibility = await this.trial.eligibility(chat.userId);
 
     const refusal = match(eligibility)
       .with('emailUnverified', () => text.trialNeedsEmail)
@@ -109,13 +109,13 @@ export class TelegramSubscriptionService {
       .otherwise(() => null);
 
     if (isNonNullish(refusal)) {
-      await this.shared.reply({ ctx, chat: { userId, locale }, text: refusal });
+      await this.shared.reply({ ctx, chat, text: refusal });
 
       return;
     }
 
-    await this.trial.claim(userId);
+    await this.trial.claim(chat.userId);
 
-    await this.shared.reply({ ctx, chat: { userId, locale }, text: text.trialGranted });
+    await this.shared.reply({ ctx, chat, text: text.trialGranted });
   }
 }

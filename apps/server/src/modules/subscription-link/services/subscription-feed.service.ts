@@ -11,9 +11,10 @@ import type {
 } from '../subscription-link.service.types';
 
 import { AppNotFoundException } from '../../../common/exceptions';
-import { activeDeviceLimit, describeError } from '../../../common/lib';
+import { activeDeviceLimit, describeError, isPeriodActive } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
+import { NO_TRAFFIC } from '../../../lib/xray';
 import { buildTunnelConfig } from '../../peers';
 import { NODE_FEED_SELECT } from '../config';
 import { announcement, clientPlatform, incyHeaders, incyServerUri, tlsMode } from '../lib';
@@ -42,29 +43,24 @@ export class SubscriptionFeedService {
     void this.touch({ token, userAgent });
 
     const subscription = link.user.subscription;
-
+    const currentPeriodEnd = subscription?.currentPeriodEnd ?? null;
+    const hasAccess = isPeriodActive(currentPeriodEnd);
     const nodes = await this.availableNodes();
-    const uris = await this.serverUris({
-      userId: link.userId,
-      nodes,
-      limitIp: activeDeviceLimit(subscription),
-      tls: tlsMode(userAgent)
-    });
 
-    const traffic = await this.subscriptionPeers.traffic({ userId: link.userId, nodes });
+    const uris = hasAccess
+      ? await this.serverUris({ userId: link.userId, nodes, limitIp: activeDeviceLimit(subscription), tls: tlsMode(userAgent) })
+      : [];
+
+    const traffic = hasAccess ? await this.subscriptionPeers.traffic({ userId: link.userId, nodes }) : NO_TRAFFIC;
 
     return {
       body: Buffer.from(uris.join('\n'), 'utf8').toString('base64'),
       headers: incyHeaders({
-        currentPeriodEnd: subscription?.currentPeriodEnd ?? null,
+        currentPeriodEnd,
         traffic,
         clientUrl: this.config.get('CLIENT_URL'),
         supportUrl: this.config.get('SUPPORT_URL') || null,
-        announce: announcement({
-          nodes,
-          hasSubscription: isNonNullish(subscription),
-          currentPeriodEnd: subscription?.currentPeriodEnd ?? null
-        })
+        announce: announcement({ nodes, hasSubscription: isNonNullish(subscription), currentPeriodEnd })
       })
     };
   }

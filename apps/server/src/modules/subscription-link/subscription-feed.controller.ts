@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 
 import { Controller, Get, Headers, Param, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 
 import { FEED } from './config';
@@ -11,6 +12,7 @@ export class SubscriptionFeedController {
   constructor(private readonly feed: SubscriptionFeedService) {}
 
   @AllowAnonymous()
+  @Throttle({ default: FEED.throttle })
   @Get(':token')
   async serve(@Param('token') token: string, @Headers('user-agent') userAgent: string | undefined, @Res() res: Response): Promise<void> {
     const { body, headers } = await this.feed.build({ token, userAgent: userAgent ?? null });

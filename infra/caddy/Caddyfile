@@ -26,16 +26,20 @@ www.gnome-vpn.com {
 }
 
 api.gnome-vpn.com {
-	# Server-Sent Events must stream unbuffered, and compression buffers.
-	@sse path /events*
-	reverse_proxy @sse server:4000 {
-		flush_interval -1
-	}
+	encode gzip zstd
 
 	reverse_proxy server:4000
 
-	@compressible not path /events*
-	encode @compressible gzip zstd
+	import access_log
+}
+
+# AAAA only: Telegram takes the A record when there is one, and IPv4 here is blocked.
+bot.gnome-vpn.com {
+	# route keeps source order; without it Caddy sorts respond ahead of the proxy.
+	route {
+		reverse_proxy /telegram/* server:4000
+		respond 404
+	}
 
 	import access_log
 }
