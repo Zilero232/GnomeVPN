@@ -9,6 +9,8 @@ export const BOT_LOCALES = ['ru', 'en'] as const;
 
 export const DEFAULT_BOT_LOCALE: BotLocale = 'ru';
 
+export const FALLBACK_BOT_LOCALE: BotLocale = 'en';
+
 const MESSAGES: Record<BotLocale, BotMessages> = { ru, en };
 
 export const BOT_TEXT: Record<BotLocale, BotText> = {

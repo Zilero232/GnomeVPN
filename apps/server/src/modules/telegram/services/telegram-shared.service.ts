@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isNullish } from 'remeda';
 
-import type { BotContext, BotText, ChatState, ReplyInput, WithUserInput } from '../telegram.types';
+import type { AnsweredInput, BotContext, BotText, ChatState, ReplyInput, WithUserInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { SubscriptionService, TrialService } from '../../subscription';
@@ -39,6 +39,29 @@ export class TelegramSharedService {
     const [isSubscribed, eligibility] = await Promise.all([this.subscription.hasActiveAccess(userId), this.trial.eligibility(userId)]);
 
     return { isSubscribed, isTrialAvailable: eligibility === 'available' };
+  }
+
+  async answered({ ctx, prefix, act, tellUnlinked }: AnsweredInput): Promise<void> {
+    const identity = identityOf(ctx.from);
+    const data = ctx.callbackQuery?.data;
+
+    if (isNullish(identity) || isNullish(data)) {
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+
+    const chat = await this.link.findChat(identity.telegramId);
+
+    if (isNullish(chat)) {
+      if (tellUnlinked) {
+        await ctx.reply(this.textFor(ctx).notLinked);
+      }
+
+      return;
+    }
+
+    await act({ chat, value: data.slice(prefix.length) });
   }
 
   async withUser({ ctx, act }: WithUserInput): Promise<void> {

@@ -13,6 +13,8 @@ import { AppConfigService } from '../../../config';
 import { BOT_API, CALLBACK_PREFIX } from '../config';
 import { buttonFor, callbackPattern } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
+import { TelegramAppsService } from './telegram-apps.service';
+import { TelegramBillingService } from './telegram-billing.service';
 import { TelegramProfileService } from './telegram-profile.service';
 import { TelegramSharedService } from './telegram-shared.service';
 import { TelegramSubscriptionService } from './telegram-subscription.service';
@@ -28,6 +30,8 @@ export class TelegramBotService implements OnModuleInit {
     private readonly shared: TelegramSharedService,
     private readonly account: TelegramAccountService,
     private readonly subscription: TelegramSubscriptionService,
+    private readonly apps: TelegramAppsService,
+    private readonly billing: TelegramBillingService,
     private readonly profile: TelegramProfileService
   ) {
     const token = this.config.get('TELEGRAM_BOT_TOKEN');
@@ -83,10 +87,18 @@ export class TelegramBotService implements OnModuleInit {
     bot.command('link', (ctx) => this.subscription.sendLink(ctx));
     bot.command('buy', (ctx) => this.subscription.buy(ctx));
     bot.command('trial', (ctx) => this.subscription.claimTrialDay(ctx));
-    bot.command('unlink', (ctx) => this.account.unlink(ctx));
+    bot.command('unlink', (ctx) => this.account.askUnlink(ctx));
+    bot.command('apps', (ctx) => this.apps.list(ctx));
+    bot.command('rotate', (ctx) => this.billing.askRotate(ctx));
+    bot.command('devices', (ctx) => this.billing.devices(ctx));
 
     bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.plan), (ctx) => this.subscription.startCheckout(ctx));
     bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.locale), (ctx) => this.account.changeLocale(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.client), (ctx) => this.apps.show(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.unlink), (ctx) => this.account.confirmUnlink(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.rotate), (ctx) => this.billing.confirmRotate(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.autoRenew), (ctx) => this.billing.changeAutoRenew(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.devices), (ctx) => this.billing.buyDevices(ctx));
 
     bot.on('message:text', (ctx) => {
       const button = buttonFor(ctx.message.text);
@@ -100,7 +112,12 @@ export class TelegramBotService implements OnModuleInit {
       .with('connect', () => this.subscription.sendLink(ctx))
       .with('status', () => this.subscription.status(ctx))
       .with('trial', () => this.subscription.claimTrialDay(ctx))
-      .with('buy', () => this.subscription.buy(ctx))
+      .with('buy', 'renew', () => this.subscription.buy(ctx))
+      .with('apps', () => this.apps.list(ctx))
+      .with('unlink', () => this.account.askUnlink(ctx))
+      .with('rotate', () => this.billing.askRotate(ctx))
+      .with('autoRenew', () => this.billing.autoRenew(ctx))
+      .with('devices', () => this.billing.devices(ctx))
       .with('language', () => this.account.chooseLanguage(ctx))
       .with('help', () => this.account.help(ctx))
       .exhaustive();

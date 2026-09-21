@@ -6,8 +6,8 @@ import { match } from 'ts-pattern';
 import type { BotContext, ConsumeInput, RefusalInput, SpeakInput } from '../telegram.types';
 
 import { describeError, errorCodeOf } from '../../../common/lib';
-import { BOT_TEXT, CALLBACK_PREFIX, LANGUAGE_BUTTONS } from '../config';
-import { identityOf, resolveLocale } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, CONFIRMED, LANGUAGE_BUTTONS } from '../config';
+import { identityOf, isConfirmed, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
 
@@ -28,13 +28,34 @@ export class TelegramAccountService {
     await this.speak({ ctx, pick: (copy) => copy.help });
   }
 
-  async unlink(ctx: BotContext): Promise<void> {
+  async askUnlink(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
-      act: async ({ userId, locale }) => {
-        await this.link.unlink(userId);
+      act: ({ locale }) => {
+        const text = BOT_TEXT[locale];
+        const keyboard = new InlineKeyboard()
+          .text(text.unlinkYes, `${CALLBACK_PREFIX.unlink}${CONFIRMED}`)
+          .text(text.unlinkNo, `${CALLBACK_PREFIX.unlink}no`);
 
-        return ctx.reply(BOT_TEXT[locale].unlinked, { reply_markup: { remove_keyboard: true } });
+        return ctx.reply(text.unlinkAsk, { reply_markup: keyboard });
+      }
+    });
+  }
+
+  async confirmUnlink(ctx: BotContext): Promise<void> {
+    await this.shared.answered({
+      ctx,
+      prefix: CALLBACK_PREFIX.unlink,
+      act: async ({ chat, value }) => {
+        const text = BOT_TEXT[chat.locale];
+
+        if (!isConfirmed(value)) {
+          return this.shared.reply({ ctx, chat, text: text.unlinkCancelled });
+        }
+
+        await this.link.unlink(chat.userId);
+
+        return ctx.reply(text.unlinked, { reply_markup: { remove_keyboard: true } });
       }
     });
   }
@@ -51,21 +72,22 @@ export class TelegramAccountService {
 
   async changeLocale(ctx: BotContext): Promise<void> {
     const identity = identityOf(ctx.from);
-    const data = ctx.callbackQuery?.data;
 
-    if (isNullish(identity) || isNullish(data)) {
+    if (isNullish(identity)) {
       return;
     }
 
-    await ctx.answerCallbackQuery();
+    await this.shared.answered({
+      ctx,
+      prefix: CALLBACK_PREFIX.locale,
+      act: async ({ chat, value }) => {
+        const locale = resolveLocale(value);
 
-    const locale = resolveLocale(data.slice(CALLBACK_PREFIX.locale.length));
+        await this.link.setLocale({ telegramId: identity.telegramId, locale });
 
-    await this.link.setLocale({ telegramId: identity.telegramId, locale });
-
-    const chat = await this.link.findChat(identity.telegramId);
-
-    await this.shared.reply({ ctx, chat, text: BOT_TEXT[locale].languageChanged });
+        return this.shared.reply({ ctx, chat: { ...chat, locale }, text: BOT_TEXT[locale].languageChanged });
+      }
+    });
   }
 
   async consume({ ctx, text }: ConsumeInput): Promise<void> {

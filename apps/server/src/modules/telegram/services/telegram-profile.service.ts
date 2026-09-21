@@ -9,8 +9,8 @@ import type { DescribeInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
-import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, WEBHOOK } from '../config';
-import { webhookUrl } from '../lib';
+import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, FALLBACK_BOT_LOCALE, WEBHOOK } from '../config';
+import { profileText, webhookUrl } from '../lib';
 
 @Injectable()
 export class TelegramProfileService {
@@ -22,6 +22,8 @@ export class TelegramProfileService {
     await this.initialise(bot);
 
     try {
+      await this.describe({ bot, locale: FALLBACK_BOT_LOCALE, isFallback: true });
+
       for (const locale of BOT_LOCALES) {
         await this.describe({ bot, locale });
       }
@@ -76,9 +78,9 @@ export class TelegramProfileService {
     this.logger.log(`telegram webhook set to ${url}`);
   }
 
-  private async describe({ bot, locale }: DescribeInput): Promise<void> {
-    const profile = BOT_PROFILE[locale];
-    const options = { language_code: locale };
+  private async describe({ bot, locale, isFallback }: DescribeInput): Promise<void> {
+    const profile = profileText(BOT_PROFILE[locale]);
+    const options = isFallback ? {} : { language_code: locale };
 
     await bot.api.setMyCommands(BOT_COMMANDS[locale], options);
     await bot.api.setMyName(profile.name, options);

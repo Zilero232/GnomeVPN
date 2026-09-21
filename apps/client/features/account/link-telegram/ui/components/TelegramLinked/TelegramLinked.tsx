@@ -18,9 +18,19 @@ export const TelegramLinked = ({ bot, username, isPending, onUnlink }: TelegramL
       <div className={s.linked}>
         <Check aria-hidden className={s.check} size={18} />
 
-        <Text as='p' size='sm'>
-          {username ? t('linkedAs', { username }) : t('linkedPlain')}
-        </Text>
+        {username ? (
+          <>
+            <Text as='p' size='sm' tone='muted'>
+              {t('linkedAs')}
+            </Text>
+
+            <span className={s.username}>@{username}</span>
+          </>
+        ) : (
+          <Text as='p' size='sm'>
+            {t('linkedPlain')}
+          </Text>
+        )}
       </div>
 
       <div className={s.abilities}>

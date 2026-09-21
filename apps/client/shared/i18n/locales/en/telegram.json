@@ -13,7 +13,7 @@
   "openBot": "Open the bot",
   "waiting": "Telegram opens — press Start. This page updates by itself.",
   "manualHint": "If Telegram did not open: find @{bot} and send it this code",
-  "linkedAs": "Linked as @{username}",
+  "linkedAs": "Linked",
   "linkedPlain": "Telegram is linked",
   "linkedHint": "Open the bot — manage your subscription with buttons, no commands.",
   "unlink": "Unlink",

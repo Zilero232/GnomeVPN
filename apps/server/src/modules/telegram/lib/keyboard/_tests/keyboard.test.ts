@@ -37,10 +37,15 @@ describe('mainKeyboard', () => {
     expect(first).toBe(BOT_BUTTONS.ru.connect);
   });
 
-  it('always offers a way to pay, whatever the state', () => {
-    for (const state of [fresh, paying, lapsed]) {
-      expect(labelsOf(state)).toContain(BOT_BUTTONS.ru.buy);
-    }
+  it('offers a way to pay in every state, worded for that state', () => {
+    expect(labelsOf(fresh)).toContain(BOT_BUTTONS.ru.buy);
+    expect(labelsOf(lapsed)).toContain(BOT_BUTTONS.ru.buy);
+    expect(labelsOf(paying)).toContain(BOT_BUTTONS.ru.renew);
+  });
+
+  it('does not ask a paying reader to subscribe, nor a lapsed one to renew', () => {
+    expect(labelsOf(paying)).not.toContain(BOT_BUTTONS.ru.buy);
+    expect(labelsOf(lapsed)).not.toContain(BOT_BUTTONS.ru.renew);
   });
 
   it('never renders an empty row', () => {
