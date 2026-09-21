@@ -8,7 +8,7 @@ import { isNonNullish } from 'remeda';
 import { CLIENT_ICONS } from '@/entities/app/incy';
 import { Text } from '@/ui-kit';
 
-import type { OtherAppsListProps } from './OtherAppsList.types';
+import type { ImportInput, OtherAppsListProps } from './OtherAppsList.types';
 
 import { TOUCH_DEVICE_QUERY } from './OtherAppsList.constants';
 
@@ -19,6 +19,12 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
   const isTouchDevice = useMediaQuery(TOUCH_DEVICE_QUERY);
 
   const others = clients.filter((client) => !client.isRecommended);
+
+  const onImport = async ({ importUrl, id }: ImportInput) => {
+    await onCopy({ value: url, message: t('importCopied'), id });
+
+    window.location.href = importUrl;
+  };
 
   return (
     <div className={s.root}>
@@ -41,7 +47,7 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
                 </Text>
 
                 <span className={s.meta}>
-                  <Text as='span' size='xs' tone='muted'>
+                  <Text as='span' className={s.platforms} size='xs' tone='muted'>
                     {platforms.map((platform) => t(`platformNames.${platform}`)).join(' · ')}
                   </Text>
 
@@ -53,12 +59,12 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
               </span>
 
               {canImport ? (
-                <a className={s.import} href={importUrl}>
+                <button className={s.import} type='button' onClick={() => void onImport({ importUrl, id })}>
                   <ExternalLink aria-hidden size={14} />
                   {t('clientImport')}
-                </a>
+                </button>
               ) : (
-                <button className={s.import} type='button' onClick={() => onCopy({ value: url, message: t('urlCopied'), id })}>
+                <button className={s.import} type='button' onClick={() => void onCopy({ value: url, message: t('urlCopied'), id })}>
                   <Copy aria-hidden size={14} />
                   {t('clientCopy')}
                 </button>
