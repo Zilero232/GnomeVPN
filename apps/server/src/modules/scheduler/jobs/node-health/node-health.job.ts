@@ -6,7 +6,7 @@ import type { NoteLoadInput, ProbeNodeRow } from './node-health.job.types';
 
 import { describeError, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { NODE_CPU_ALERT_PERCENT, NODE_MEMORY_ALERT_RATIO } from '../../config';
+import { ALERT } from '../../config';
 
 @Injectable()
 export class NodeHealthJob {
@@ -36,11 +36,11 @@ export class NodeHealthJob {
   }
 
   private noteLoad({ node, health }: NoteLoadInput): void {
-    if (isNonNullish(health.cpu) && health.cpu >= NODE_CPU_ALERT_PERCENT) {
+    if (isNonNullish(health.cpu) && health.cpu >= ALERT.nodeCpuPercent) {
       this.logger.warn(`node ${node.apiUrl} is at ${health.cpu.toFixed(0)}% cpu`);
     }
 
-    if (isNonNullish(health.memoryRatio) && health.memoryRatio >= NODE_MEMORY_ALERT_RATIO) {
+    if (isNonNullish(health.memoryRatio) && health.memoryRatio >= ALERT.nodeMemoryRatio) {
       this.logger.warn(`node ${node.apiUrl} is at ${(health.memoryRatio * 100).toFixed(0)}% memory`);
     }
   }

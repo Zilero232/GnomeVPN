@@ -10,7 +10,7 @@ import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
 import { CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
-import { IN_FLIGHT_WINDOW_HOURS, RENEW_WINDOW_HOURS } from '../../config';
+import { WINDOW } from '../../config';
 
 @Injectable()
 export class RecurringChargeJob {
@@ -29,7 +29,7 @@ export class RecurringChargeJob {
         userId,
         isAutoCharge: true,
         status: 'pending',
-        createdAt: { gt: subHours(new Date(), IN_FLIGHT_WINDOW_HOURS) }
+        createdAt: { gt: subHours(new Date(), WINDOW.inFlightHours) }
       },
       select: { id: true }
     });
@@ -77,7 +77,7 @@ export class RecurringChargeJob {
         cancelAtPeriodEnd: false,
         currentPeriodEnd: {
           gt: new Date(),
-          lt: addHours(new Date(), RENEW_WINDOW_HOURS)
+          lt: addHours(new Date(), WINDOW.renewHours)
         }
       },
       select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true }

@@ -5,7 +5,7 @@ import type { NoteFailureInput, ReconcileNodeInput } from './reconcile-peers.job
 
 import { describeError, IDENTIFIED_NODE_SELECT, xrayClientForNode } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
-import { BOOT_GRACE_MS, COLLECT_ORPHANS_CRON, RECONCILE_CRON, RECONCILE_FAILURE_ALERT_THRESHOLD } from '../../config';
+import { ALERT, SCHEDULE } from '../../config';
 import { collectOrphans, restoreMissing, syncEnabled } from './lib';
 import { RECONCILE_PEER_SELECT } from './reconcile-peers.job.constants';
 
@@ -54,18 +54,18 @@ export class ReconcilePeersJob {
     });
   }
 
-  @Cron(RECONCILE_CRON)
+  @Cron(SCHEDULE.reconcileCron)
   async run(): Promise<void> {
-    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
+    if (Date.now() - this.bootedAt < SCHEDULE.bootGraceMs) {
       return;
     }
 
     await this.sweep(false);
   }
 
-  @Cron(COLLECT_ORPHANS_CRON)
+  @Cron(SCHEDULE.collectOrphansCron)
   async collect(): Promise<void> {
-    if (Date.now() - this.bootedAt < BOOT_GRACE_MS) {
+    if (Date.now() - this.bootedAt < SCHEDULE.bootGraceMs) {
       return;
     }
 
@@ -79,7 +79,7 @@ export class ReconcilePeersJob {
 
     const message = `Reconcile failed for node ${nodeId} (${streak} in a row): ${describeError(reason)}`;
 
-    if (streak >= RECONCILE_FAILURE_ALERT_THRESHOLD) {
+    if (streak >= ALERT.reconcileFailureStreak) {
       this.logger.error(`${message}. Revoked peers on this node stay connected until it converges.`);
 
       return;

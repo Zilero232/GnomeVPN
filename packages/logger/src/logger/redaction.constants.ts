@@ -20,16 +20,3 @@ export const REDACTED_PATHS = [
 ];
 
 export const CENSOR = '[redacted]';
-
-export const DEFAULT_LEVEL = {
-  development: 'debug',
-  production: 'info'
-} as const;
-
-export const JSON_FORMAT = 'json';
-
-export const PRETTY_TARGET = 'pino-pretty';
-
-export const TIME_FORMAT = 'HH:MM:ss';
-
-export const BASE_IGNORED = ['pid', 'hostname', 'service'];

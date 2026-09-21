@@ -483,6 +483,11 @@ Before writing a helper by hand, check whether an installed library already cove
 ## Style
 
 - **No comments.** The code is expected to read on its own.
+- **Constants that are read together group into one `as const` object**, and a
+  `config/` folder splits by concern rather than growing one
+  `<module>.config.ts`. `LINK_CODE.ttlMinutes` names what it belongs to; a flat
+  `LINK_CODE_TTL_MINUTES` beside eight others does not. A lone value, or a name
+  that is part of a package's public API, stays flat.
 - **Two or more parameters → one object.** `connect({ nodeId, country })`, never
   `connect(nodeId, country)`. The shape lives in a sibling `*.types.ts` as
   `<Fn>Input`, so a call site never has to guess argument order.

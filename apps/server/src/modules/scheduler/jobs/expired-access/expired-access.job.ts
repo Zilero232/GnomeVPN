@@ -8,7 +8,7 @@ import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { SubscriptionAccessService } from '../../../subscription-link';
-import { CONFIG_GRACE_HOURS } from '../../config';
+import { WINDOW } from '../../config';
 import { activeSince, lapsedBefore } from '../../lib';
 
 @Injectable()
@@ -53,7 +53,7 @@ export class ExpiredAccessJob {
 
     const [disabled, restored] = await Promise.all([
       this.sweep({
-        user: lapsedBefore(subHours(now, CONFIG_GRACE_HOURS)),
+        user: lapsedBefore(subHours(now, WINDOW.configGraceHours)),
         act: (userId) => this.access.setEnabledAll({ userId, enabled: false })
       }),
       this.sweep({

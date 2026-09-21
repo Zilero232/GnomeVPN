@@ -1,7 +1,7 @@
 import { x25519 } from '@noble/curves/ed25519.js';
 import { describe, expect, it } from 'vitest';
 
-import { REALITY_SHORT_ID_BYTES } from '../../../config';
+import { REALITY } from '../../../config';
 import { generateRealityKeys, generateRealityShortId } from '../reality-keys';
 
 describe('generateRealityKeys', () => {
@@ -29,7 +29,7 @@ describe('generateRealityKeys', () => {
 
 describe('generateRealityShortId', () => {
   it('is hex of the configured length, which is what xray accepts', () => {
-    expect(generateRealityShortId()).toMatch(new RegExp(`^[0-9a-f]{${REALITY_SHORT_ID_BYTES * 2}}$`));
+    expect(generateRealityShortId()).toMatch(new RegExp(`^[0-9a-f]{${REALITY.shortIdBytes * 2}}$`));
   });
 
   it('never repeats', () => {
