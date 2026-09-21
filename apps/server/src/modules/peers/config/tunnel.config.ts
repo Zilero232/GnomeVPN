@@ -1,0 +1,4 @@
+export const TUNNEL = {
+  insecure: false,
+  dns: ['1.1.1.1', '8.8.8.8']
+} as const;

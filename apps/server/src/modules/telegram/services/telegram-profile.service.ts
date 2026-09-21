@@ -2,13 +2,14 @@ import type { Bot } from 'grammy';
 import type { MenuButton } from 'grammy/types';
 
 import { Injectable, Logger } from '@nestjs/common';
+import pRetry from 'p-retry';
 import { isNullish } from 'remeda';
 
 import type { DescribeInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
-import { BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, HTTPS_PREFIX } from '../config';
+import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, WEBHOOK } from '../config';
 import { webhookUrl } from '../lib';
 
 @Injectable()
@@ -18,7 +19,7 @@ export class TelegramProfileService {
   constructor(private readonly config: AppConfigService) {}
 
   async announce(bot: Bot): Promise<void> {
-    await bot.init();
+    await this.initialise(bot);
 
     try {
       for (const locale of BOT_LOCALES) {
@@ -32,6 +33,16 @@ export class TelegramProfileService {
     } catch (error) {
       this.logger.warn(`telegram bot could not reach the api: ${describeError(error)}`);
     }
+  }
+
+  private async initialise(bot: Bot): Promise<void> {
+    await pRetry(() => bot.init(), {
+      retries: BOT_API.initAttempts,
+      minTimeout: BOT_API.initBackoffMs,
+      onFailedAttempt: ({ attemptNumber, error }) => {
+        this.logger.warn(`telegram init attempt ${attemptNumber} failed: ${describeError(error)}`);
+      }
+    });
   }
 
   private async listen(bot: Bot): Promise<void> {
@@ -78,7 +89,7 @@ export class TelegramProfileService {
   private menuButton(): MenuButton {
     const url = this.config.get('CLIENT_URL');
 
-    if (!url.startsWith(HTTPS_PREFIX)) {
+    if (!url.startsWith(WEBHOOK.httpsPrefix)) {
       return { type: 'commands' };
     }
 

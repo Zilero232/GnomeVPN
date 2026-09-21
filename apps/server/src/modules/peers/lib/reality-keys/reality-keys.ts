@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 
 import type { RealityKeyPair } from './reality-keys.types';
 
-import { REALITY_SHORT_ID_BYTES } from '../../config';
+import { REALITY } from '../../config';
 
 export const generateRealityKeys = (): RealityKeyPair => {
   const privateKey = x25519.utils.randomSecretKey();
@@ -15,4 +15,4 @@ export const generateRealityKeys = (): RealityKeyPair => {
   };
 };
 
-export const generateRealityShortId = (): string => randomBytes(REALITY_SHORT_ID_BYTES).toString('hex');
+export const generateRealityShortId = (): string => randomBytes(REALITY.shortIdBytes).toString('hex');

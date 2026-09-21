@@ -6,7 +6,7 @@ import { match } from 'ts-pattern';
 import type { BotContext, ConsumeInput, RefusalInput, SpeakInput } from '../telegram.types';
 
 import { describeError, errorCodeOf } from '../../../common/lib';
-import { BOT_TEXT, LANGUAGE_BUTTONS, LOCALE_CALLBACK_PREFIX } from '../config';
+import { BOT_TEXT, CALLBACK_PREFIX, LANGUAGE_BUTTONS } from '../config';
 import { identityOf, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
@@ -43,7 +43,7 @@ export class TelegramAccountService {
     const keyboard = new InlineKeyboard();
 
     for (const { locale, label } of LANGUAGE_BUTTONS) {
-      keyboard.text(label, `${LOCALE_CALLBACK_PREFIX}${locale}`);
+      keyboard.text(label, `${CALLBACK_PREFIX.locale}${locale}`);
     }
 
     await ctx.reply(this.shared.textFor(ctx).chooseLanguage, { reply_markup: keyboard });
@@ -59,7 +59,7 @@ export class TelegramAccountService {
 
     await ctx.answerCallbackQuery();
 
-    const locale = resolveLocale(data.slice(LOCALE_CALLBACK_PREFIX.length));
+    const locale = resolveLocale(data.slice(CALLBACK_PREFIX.locale.length));
 
     await this.link.setLocale({ telegramId: identity.telegramId, locale });
 

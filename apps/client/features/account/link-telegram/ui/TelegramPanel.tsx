@@ -1,13 +1,14 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { isNonNullish } from 'remeda';
 import { toast } from 'sonner';
 
 import { Button, Spinner, Text } from '@/ui-kit';
 
 import { useIssueCode, useTelegramStatus, useUnlinkTelegram } from '../model/hooks';
-import { TelegramCode, TelegramInvite, TelegramLinked } from './components';
+import { TelegramCode, TelegramInvite, TelegramLinked, TelegramUnlinkDialog } from './components';
 
 import s from './TelegramPanel.module.scss';
 
@@ -18,10 +19,18 @@ export const TelegramPanel = () => {
   const { data: status, isPending, isError, refetch } = useTelegramStatus({ isAwaitingLink: isNonNullish(issue.data) });
   const unlink = useUnlinkTelegram();
 
+  const [isUnlinkOpen, setIsUnlinkOpen] = useState(false);
+
   const onError = (error: Error) => toast.error(tErrors(error.message));
 
   const onUnlink = () => {
-    unlink.mutate(undefined, { onSuccess: () => toast.success(t('unlinked')), onError });
+    unlink.mutate(undefined, {
+      onSuccess: () => {
+        setIsUnlinkOpen(false);
+        toast.success(t('unlinked'));
+      },
+      onError
+    });
   };
 
   if (isPending) {
@@ -49,7 +58,9 @@ export const TelegramPanel = () => {
   if (status.isLinked) {
     return (
       <div className={s.root}>
-        <TelegramLinked isPending={unlink.isPending} username={status.username} onUnlink={onUnlink} />
+        <TelegramLinked bot={status.botUsername} isPending={unlink.isPending} username={status.username} onUnlink={() => setIsUnlinkOpen(true)} />
+
+        <TelegramUnlinkDialog isOpen={isUnlinkOpen} isPending={unlink.isPending} onConfirm={onUnlink} onOpenChange={setIsUnlinkOpen} />
       </div>
     );
   }

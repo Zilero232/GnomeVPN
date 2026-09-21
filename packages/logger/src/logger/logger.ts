@@ -4,8 +4,8 @@ import pino from 'pino';
 
 import type { CreateLoggerInput } from './logger.types';
 
-import { CENSOR, REDACTED_PATHS } from './logger.constants';
 import { resolveLevel, resolveTransport } from './logger.helpers';
+import { CENSOR, REDACTED_PATHS } from './redaction.constants';
 
 export const createLogger = ({ service, pretty, level }: CreateLoggerInput): Logger =>
   pino({

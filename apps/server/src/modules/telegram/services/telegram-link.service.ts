@@ -8,7 +8,7 @@ import type { ConsumeLinkCodeInput, IssueLinkCodeResult, LinkedAccount, Resolved
 import { AppBadRequestException } from '../../../common/exceptions';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
-import { LINK_CODE_TTL_MINUTES } from '../config';
+import { LINK_CODE } from '../config';
 import { generateLinkCode, normaliseLinkCode, resolveLocale } from '../lib';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class TelegramLinkService {
 
   async issueCode(userId: string): Promise<IssueLinkCodeResult> {
     const code = generateLinkCode();
-    const expiresAt = addMinutes(new Date(), LINK_CODE_TTL_MINUTES);
+    const expiresAt = addMinutes(new Date(), LINK_CODE.ttlMinutes);
 
     await this.prisma.$transaction([
       this.prisma.telegramLinkCode.deleteMany({ where: { userId } }),

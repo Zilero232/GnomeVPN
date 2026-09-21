@@ -6,7 +6,7 @@ import { Text } from '@/ui-kit';
 
 import type { TelegramCodeProps } from './TelegramCode.types';
 
-import { botLink } from './TelegramCode.helpers';
+import { botLink } from '../../../lib';
 
 import s from './TelegramCode.module.scss';
 

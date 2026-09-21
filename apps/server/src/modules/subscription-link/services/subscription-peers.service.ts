@@ -17,7 +17,7 @@ import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { NO_TRAFFIC, sumTraffic } from '../../../lib';
 import { hasReality, peerClientNames, PeersService } from '../../peers';
-import { SUBSCRIPTION_PEER_NAME } from '../config';
+import { FEED } from '../config';
 
 @Injectable()
 export class SubscriptionPeersService {
@@ -50,7 +50,7 @@ export class SubscriptionPeersService {
         kind: 'config',
         protocol,
         limitIp,
-        name: SUBSCRIPTION_PEER_NAME,
+        name: FEED.peerName,
         persist: (peer) => this.persist({ userId, nodeId: node.id, protocol, nodeCredential: peer.nodeCredential })
       });
 
@@ -83,7 +83,7 @@ export class SubscriptionPeersService {
   }
 
   private identity({ userId, nodeId, protocol }: Omit<PersistPeerInput, 'nodeCredential'>) {
-    return { userId, kind: 'config', name: SUBSCRIPTION_PEER_NAME, nodeId, protocol } as const;
+    return { userId, kind: 'config', name: FEED.peerName, nodeId, protocol } as const;
   }
 
   private persist({ userId, nodeId, protocol, nodeCredential }: PersistPeerInput): Promise<void> {

@@ -10,7 +10,7 @@ import { describeError } from '../../../common/lib';
 import { CheckoutService } from '../../billing';
 import { SubscriptionService, TrialService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, PLAN_CALLBACK_PREFIX } from '../config';
+import { BOT_TEXT, CALLBACK_PREFIX } from '../config';
 import { identityOf, parsePlanId, planButtonLabel, statusText } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
@@ -70,7 +70,7 @@ export class TelegramSubscriptionService {
     }
 
     const text = BOT_TEXT[chat.locale];
-    const planId = parsePlanId(data.slice(PLAN_CALLBACK_PREFIX.length));
+    const planId = parsePlanId(data.slice(CALLBACK_PREFIX.plan.length));
 
     if (isNullish(planId)) {
       return;
@@ -105,7 +105,7 @@ export class TelegramSubscriptionService {
     const keyboard = new InlineKeyboard();
 
     for (const plan of PLANS) {
-      keyboard.text(planButtonLabel({ plan, locale }), `${PLAN_CALLBACK_PREFIX}${plan.id}`).row();
+      keyboard.text(planButtonLabel({ plan, locale }), `${CALLBACK_PREFIX.plan}${plan.id}`).row();
     }
 
     await ctx.reply(BOT_TEXT[locale].choosePlan, { reply_markup: keyboard });

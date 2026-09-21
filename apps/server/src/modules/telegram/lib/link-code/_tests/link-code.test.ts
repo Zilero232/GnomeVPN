@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
-import { LINK_CODE_ALPHABET, LINK_CODE_LENGTH } from '../../../config';
+import { LINK_CODE } from '../../../config';
 import { generateLinkCode, normaliseLinkCode } from '../link-code';
 
 describe('generateLinkCode', () => {
   it('returns a code of the agreed length', () => {
-    expect(generateLinkCode()).toHaveLength(LINK_CODE_LENGTH);
+    expect(generateLinkCode()).toHaveLength(LINK_CODE.length);
   });
 
   it('draws only from the alphabet, so nothing renders as a character the reader cannot type', () => {
     for (const character of generateLinkCode()) {
-      expect(LINK_CODE_ALPHABET).toContain(character);
+      expect(LINK_CODE.alphabet).toContain(character);
     }
   });
 
   it('leaves out the glyphs a reader confuses, which is what makes the code retypable at all', () => {
     for (const ambiguous of ['0', 'O', '1', 'I', 'L']) {
-      expect(LINK_CODE_ALPHABET).not.toContain(ambiguous);
+      expect(LINK_CODE.alphabet).not.toContain(ambiguous);
     }
   });
 
