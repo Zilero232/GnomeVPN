@@ -39,17 +39,39 @@ the same — it only pulls the images.
 
 ---
 
-## 1. Domain
+## 1. Domain and DNS
 
-Register `gnomevpn.ru` and create A records pointing at the server's IP:
+The canonical host is `gnome-vpn.com`. The old `gnomevpn.ru` is not served any
+more — a subscription URL already handed out points at it, so every subscriber
+has to add the new link once.
 
-```
-gnomevpn.ru        A    <IP>
-www.gnomevpn.ru    A    <IP>
-api.gnomevpn.ru    A    <IP>
-```
+DNS runs through Cloudflare, which hides the server's address: a visitor
+resolves a Cloudflare IP, not this VPS, so the machine cannot be blocked by
+address. The free plan covers all of it.
 
-Without them Caddy will not issue a certificate.
+**Pointing the domain at Cloudflare**
+
+1. Cloudflare → _Add a site_ → `gnome-vpn.com` → **Free**.
+2. It returns two nameservers, `x.ns.cloudflare.com`.
+3. Dynadot → the domain → _Nameservers_ → replace both with them.
+
+Propagation takes minutes to a few hours.
+
+**Records**
+
+| Type | Name | Content |
+| ---- | ---- | ------- |
+| A    | @    | `<IP>`  |
+| A    | www  | `<IP>`  |
+| A    | api  | `<IP>`  |
+
+**The orange cloud stays OFF until Caddy has its certificates.** Let's Encrypt
+validates over HTTP-01, which has to reach this server; with the proxy on,
+Cloudflare answers the challenge instead and the issue never completes. Turn it
+on for all three once the site serves HTTPS.
+
+Then SSL/TLS → **Full (strict)**. A lower mode has Cloudflare and Caddy redirect
+each other in a loop.
 
 ---
 
@@ -92,14 +114,14 @@ DATABASE_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 DIRECT_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 
 BETTER_AUTH_SECRET=<32+ random characters>
-API_URL=https://api.gnomevpn.ru
+API_URL=https://api.gnome-vpn.com
 
-CORS_ORIGINS=https://gnomevpn.ru
+CORS_ORIGINS=https://gnome-vpn.com
 
 
 YOOKASSA_SHOP_ID=<from the YooKassa dashboard>
 YOOKASSA_SECRET_KEY=<from the same place>
-YOOKASSA_RETURN_URL=https://gnomevpn.ru/account
+YOOKASSA_RETURN_URL=https://gnome-vpn.com/account
 # YooKassa enables recurring charges by hand, on request to support.
 YOOKASSA_RECURRING=false
 
@@ -109,12 +131,12 @@ YOOKASSA_RECURRING=false
 SMTP_HOST=smtp.timeweb.ru
 SMTP_PORT=465
 SMTP_SECURE=true
-SMTP_USER=noreply@gnomevpn.ru
+SMTP_USER=noreply@gnome-vpn.com
 SMTP_PASSWORD=<mailbox password>
-EMAIL_FROM=GnomeVPN <noreply@gnomevpn.ru>
+EMAIL_FROM=GnomeVPN <noreply@gnome-vpn.com>
 
 # Where the links in the emails lead.
-CLIENT_URL=https://gnomevpn.ru
+CLIENT_URL=https://gnome-vpn.com
 
 ```
 
@@ -160,6 +182,64 @@ There are no signing keys: the project ships no binaries.
 
 ---
 
+## Moving to another VPS
+
+The database is the only thing that cannot be rebuilt from the repository, so it
+moves first and everything else follows.
+
+**1. Dump it on the old server**
+
+```bash
+docker exec gnomevpn-postgres pg_dump -U gnomevpn -Fc gnomevpn > gnomevpn.dump
+```
+
+`-Fc` is the custom format: it restores in one command and does not care about
+the order the objects come back in.
+
+**2. Copy it across**
+
+```bash
+scp gnomevpn.dump root@<new IP>:/opt/gnomevpn/
+```
+
+**3. Bring up only Postgres on the new server**, so nothing writes to a half
+restored database:
+
+```bash
+docker compose up -d postgres
+```
+
+**4. Restore**
+
+```bash
+docker exec -i gnomevpn-postgres pg_restore -U gnomevpn -d gnomevpn --clean --if-exists < /opt/gnomevpn/gnomevpn.dump
+```
+
+**5. Check the rows arrived** before pointing any DNS at the new machine:
+
+```bash
+docker exec gnomevpn-postgres psql -U gnomevpn -d gnomevpn -c 'SELECT count(*) FROM "user";'
+docker exec gnomevpn-postgres psql -U gnomevpn -d gnomevpn -c 'SELECT count(*) FROM node;'
+```
+
+**6. Then the rest** — `docker compose up -d`, DNS, and the old server stays
+running until the new one answers on the domain.
+
+**`.env.nodes` travels too.** It holds one panel password and one API token per
+VPN node, it is not in git, and `bun provision` is the only thing that writes
+it. Without it the server cannot talk to any node, and every tunnel stops being
+issued.
+
+```bash
+scp root@<old IP>:/opt/gnomevpn/.env.nodes root@<new IP>:/opt/gnomevpn/
+```
+
+The nodes themselves do not move and are not reprovisioned: they hold no state
+beyond their own keys, and their addresses live in the `node` table that just
+came across with the dump.
+
+---
+
 ## 5. First run
 
 ```bash
@@ -172,8 +252,8 @@ docker compose logs -f
 Check:
 
 ```bash
-curl https://api.gnomevpn.ru/health   # {"status":"ok"}
-curl -I https://gnomevpn.ru           # 200
+curl https://api.gnome-vpn.com/health   # {"status":"ok"}
+curl -I https://gnome-vpn.com           # 200
 ```
 
 ---
@@ -235,5 +315,5 @@ ssh -L 5432:localhost:5432 user@<IP>
 
 ```bash
 docker build -f apps/server/Dockerfile -t gnomevpn-server .
-docker build -f apps/client/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://api.gnomevpn.ru -t gnomevpn-web .
+docker build -f apps/client/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://api.gnome-vpn.com -t gnomevpn-web .
 ```

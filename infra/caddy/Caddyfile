@@ -1,60 +1,10 @@
 # GnomeVPN — Caddy config (runs on the VPS).
 #
-# Two site blocks share this VPS:
-#   gnomevpn.ru      — Next.js web client (landing + account area)
-#   api.gnomevpn.ru  — NestJS API server
-#
-# The web client and the API live on different origins, so the server's CORS
-# middleware must allow https://gnomevpn.ru (see CORS_ORIGINS in the server
-# .env). The desktop app's origin (tauri://localhost) needs to be there too.
-#
-# Caddy obtains and renews a free Let's Encrypt certificate automatically.
-# For that to work:
-#   - DNS A-records for gnomevpn.ru, www.gnomevpn.ru and api.gnomevpn.ru all
-#     point at this VPS
-#   - ports 80 and 443 are open on the VPS firewall
+# Certificates come from Let's Encrypt over HTTP-01, so behind Cloudflare the
+# orange cloud stays off until they exist, then SSL mode must be Full (strict)
+# or the two redirect each other in a loop.
 
-www.gnomevpn.ru {
-	redir https://gnomevpn.ru{uri} permanent
-}
-
-api.gnomevpn.ru {
-	# The server container is not published to the host: it is reachable only
-	# inside the compose network, by service name.
-
-	# Server-Sent Events must stream unbuffered: flush every write and never
-	# compress, or the browser sees events only when the buffer fills.
-	@sse path /events*
-	reverse_proxy @sse server:4000 {
-		flush_interval -1
-	}
-
-	reverse_proxy server:4000
-
-	# Compression buffers the response, so keep it off the SSE stream.
-	@compressible not path /events*
-	encode @compressible gzip zstd
-
-	log {
-		output stdout
-		format console
-	}
-}
-
-gnomevpn.ru {
-	encode gzip zstd
-
-	# The client renders on its own Node server rather than being served off
-	# disk, so every request is proxied to it. It is not published to the host:
-	# it is reachable only inside the compose network, by service name.
-	reverse_proxy web:3000
-
-	# Hashed assets never change under the same name, so they can be cached
-	# indefinitely. Everything else is rendered per request and carries whatever
-	# Cache-Control Next.js sets for it.
-	@immutable path /_next/static/*
-	header @immutable Cache-Control "public, max-age=31536000, immutable"
-
+(proxy_headers) {
 	header {
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
@@ -62,9 +12,43 @@ gnomevpn.ru {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
 	}
+}
 
+(access_log) {
 	log {
 		output stdout
 		format console
 	}
+}
+
+www.gnome-vpn.com {
+	redir https://gnome-vpn.com{uri} permanent
+}
+
+api.gnome-vpn.com {
+	# Server-Sent Events must stream unbuffered, and compression buffers.
+	@sse path /events*
+	reverse_proxy @sse server:4000 {
+		flush_interval -1
+	}
+
+	reverse_proxy server:4000
+
+	@compressible not path /events*
+	encode @compressible gzip zstd
+
+	import access_log
+}
+
+gnome-vpn.com {
+	encode gzip zstd
+
+	reverse_proxy web:3000
+
+	# Hashed assets never change under the same name.
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	import proxy_headers
+	import access_log
 }

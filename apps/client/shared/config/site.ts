@@ -1,6 +1,6 @@
 export const SITE = {
-  url: 'https://gnomevpn.ru',
-  email: 'support@gnomevpn.ru',
+  url: 'https://gnome-vpn.com',
+  email: 'support@gnome-vpn.com',
   name: 'GnomeVPN',
   title: 'GnomeVPN',
   description: 'VPN на Hysteria2: быстрый туннель по QUIC, серверы в нескольких странах, одна ссылка на все устройства.',
