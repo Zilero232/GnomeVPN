@@ -21,6 +21,7 @@ import { TelegramSubscriptionService } from './telegram-subscription.service';
 export class TelegramBotService implements OnModuleInit {
   private readonly logger = new Logger(TelegramBotService.name);
   private readonly bot: Bot | null;
+  private ready: Promise<void> = Promise.resolve();
 
   constructor(
     private readonly config: AppConfigService,
@@ -49,7 +50,11 @@ export class TelegramBotService implements OnModuleInit {
       return;
     }
 
-    void this.profile.announce(this.bot);
+    this.ready = this.profile.announce(this.bot);
+
+    this.ready.catch((error: unknown) => {
+      this.logger.error(`telegram bot could not initialise: ${describeError(error)}`);
+    });
   }
 
   async handleUpdate(update: Update): Promise<void> {
@@ -58,6 +63,7 @@ export class TelegramBotService implements OnModuleInit {
     }
 
     try {
+      await this.ready;
       await this.bot.handleUpdate(update);
     } catch (error) {
       this.logger.error(`telegram update failed: ${describeError(error)}`);

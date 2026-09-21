@@ -274,6 +274,15 @@ delivery error and the pending count — because that is the whole of what a
 separate diagnostic command could have told anyone, and a log is where someone
 looks when the bot goes quiet.
 
+**An update can arrive before the bot has initialised, so `handleUpdate` waits
+on it.** The announcement runs detached to keep Nest booting, and grammY refuses
+to dispatch anything until `bot.init()` has told it who the bot is — a webhook
+that is already registered delivers into that gap and every update fails with
+"Bot not initialized". `init()` therefore sits outside the announcement's own
+try/catch: the rest of the announcement is best-effort, but this part is what
+`handleUpdate` awaits, so its failure has to reach the promise rather than be
+swallowed alongside a description that did not update.
+
 **An unset secret rejects everything rather than matching the absent header.**
 `TELEGRAM_WEBHOOK_SECRET` defaults to `''`, so a `!==` against it would let a
 request with no header through — a deploy that configured the token and forgot

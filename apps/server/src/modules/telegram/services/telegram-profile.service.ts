@@ -18,9 +18,9 @@ export class TelegramProfileService {
   constructor(private readonly config: AppConfigService) {}
 
   async announce(bot: Bot): Promise<void> {
-    try {
-      await bot.init();
+    await bot.init();
 
+    try {
       for (const locale of BOT_LOCALES) {
         await this.describe({ bot, locale });
       }
@@ -84,8 +84,8 @@ export class TelegramProfileService {
 
     return {
       type: 'web_app',
-      text: BOT_PROFILE[DEFAULT_BOT_LOCALE].menuButton,
-      web_app: { url }
+      web_app: { url },
+      text: BOT_PROFILE[DEFAULT_BOT_LOCALE].menuButton
     };
   }
 }
