@@ -1,5 +1,7 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
 
+import type { TlsMode } from './lib';
+
 export type SubscriptionNode = {
   id: string;
   country: string;
@@ -42,6 +44,7 @@ export type ServerUrisInput = {
   userId: string;
   nodes: SubscriptionNode[];
   limitIp: number;
+  tls: TlsMode;
 };
 
 export type EnsurePeerInput = {

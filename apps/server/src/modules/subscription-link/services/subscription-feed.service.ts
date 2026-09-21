@@ -16,7 +16,7 @@ import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { buildTunnelConfig } from '../../peers';
 import { NODE_FEED_SELECT } from '../config';
-import { announcement, clientPlatform, incyHeaders, incyServerUri } from '../lib';
+import { announcement, clientPlatform, incyHeaders, incyServerUri, tlsMode } from '../lib';
 import { SubscriptionPeersService } from './subscription-peers.service';
 
 @Injectable()
@@ -44,7 +44,12 @@ export class SubscriptionFeedService {
     const subscription = link.user.subscription;
 
     const nodes = await this.availableNodes();
-    const uris = await this.serverUris({ userId: link.userId, nodes, limitIp: activeDeviceLimit(subscription) });
+    const uris = await this.serverUris({
+      userId: link.userId,
+      nodes,
+      limitIp: activeDeviceLimit(subscription),
+      tls: tlsMode(userAgent)
+    });
 
     const traffic = await this.subscriptionPeers.traffic({ userId: link.userId, nodes });
 
@@ -83,7 +88,7 @@ export class SubscriptionFeedService {
     });
   }
 
-  private async serverUris({ userId, nodes, limitIp }: ServerUrisInput): Promise<string[]> {
+  private async serverUris({ userId, nodes, limitIp, tls }: ServerUrisInput): Promise<string[]> {
     const targets: FeedTarget[] = nodes.flatMap((node) => this.subscriptionPeers.protocolsFor(node).map((protocol) => ({ node, protocol })));
 
     const issued = await Promise.all(targets.map(({ node, protocol }) => this.subscriptionPeers.ensure({ userId, node, protocol, limitIp })));
@@ -98,7 +103,7 @@ export class SubscriptionFeedService {
 
         const config = buildTunnelConfig({ node, protocol, auth: peer.nodeCredential });
 
-        return incyServerUri({ config, country: node.country, countryCode: node.countryCode, city: node.city });
+        return incyServerUri({ config, country: node.country, countryCode: node.countryCode, city: node.city, tls });
       })
       .filter(isNonNullish);
   }

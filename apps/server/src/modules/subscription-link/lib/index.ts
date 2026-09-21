@@ -10,3 +10,5 @@ export type { IncyServerUriInput } from './incy-uri';
 export { serverName } from './server-name';
 export type { ServerNameInput } from './server-name';
 export { generateSubscriptionToken } from './subscription-token';
+export { TLS_MODE, tlsMode } from './tls-mode';
+export type { TlsMode } from './tls-mode';
