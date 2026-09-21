@@ -17,10 +17,9 @@ const OG_LOCALES: Record<string, string> = {
 export const createPageMetadata = ({ title, description, path, locale, index = false, follow = false }: PageMetadataInput): Metadata => {
   const ogTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
   const canonical = isNonNullish(path) ? localePath({ path, locale }) : undefined;
-  const images = [{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }];
 
   return {
-    title,
+    title: { absolute: ogTitle },
     description,
     ...(index && isNonNullish(path) ? { alternates: { canonical, languages: languageAlternates(path) } } : {}),
     robots: { index, follow },
@@ -29,13 +28,11 @@ export const createPageMetadata = ({ title, description, path, locale, index = f
       description,
       ...(isNonNullish(canonical) ? { url: canonical } : {}),
       type: 'website',
-      locale: OG_LOCALES[locale],
-      images
+      locale: OG_LOCALES[locale]
     },
     twitter: {
       title: ogTitle,
-      description,
-      images: [SITE.ogImage]
+      description
     }
   };
 };

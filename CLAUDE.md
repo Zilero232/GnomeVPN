@@ -271,12 +271,33 @@ pair in **both** locales. `bun run test` catches the missing translation — a
 `servers.rows.label` left as `''` failed the messages suite — and
 `bun --filter @gnomevpn/client build` catches the rest.
 
+A page also needs an entry in the sitemap's `PRIORITIES` and
+`CHANGE_FREQUENCIES`. Both fall back to a default, so a missing entry is silent:
+`/servers` shipped ranked below `/about` in our own sitemap until it was caught.
+
+**Messages live one file per namespace**, under `locales/<locale>/<namespace>.json`,
+and `messages.ts` imports each one explicitly. The import list is long on purpose
+— a dynamic import would leave Next unable to trace the files into the bundle,
+and the two locales having the same set of files is what the explicit list makes
+visible.
+
 The structured data is one graph in `shared/seo/json-ld`: `Organization`,
 `WebSite` and `SoftwareApplication` ship on every page, `Product` only on
-pricing, `FAQPage` on the FAQ and `HowTo` on `/setup`. `siteJsonLd`'s test
-asserts the graph's exact node list, so adding a node means updating it there
-too — deliberately, because a silently growing graph is how duplicate entities
-reach a crawler.
+pricing, `Service` on the landing, `FAQPage` on the FAQ, `HowTo` on `/setup` and
+`Article` on each blog post. `siteJsonLd`'s test asserts the graph's exact node
+list, so adding a node means updating it there too — deliberately, because a
+silently growing graph is how duplicate entities reach a crawler.
+
+**`FAQPage` lives on `/faq` and nowhere else**, even though the landing and
+pricing pages both render questions. The same questions marked up twice is
+duplicate structured data, and a crawler treats that as a reason to trust
+neither copy.
+
+**`createPageMetadata` names no image and sets `title.absolute`.** Both are
+deliberate: an explicit `openGraph.images` overrides the generated
+`opengraph-image` route, which is how every page ended up sharing one static
+card; and the root `title.template` would otherwise append `· GnomeVPN` to a
+title that already contains it.
 
 ## Per-app guidance
 

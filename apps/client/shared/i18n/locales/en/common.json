@@ -1,0 +1,10 @@
+{
+  "close": "Close",
+  "brand": "GnomeVPN",
+  "loading": "Loading…",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "ogTitle": "A VPN on Hysteria2",
+  "ogDescription": "A fast QUIC tunnel. Servers in several countries, one link for every device.",
+  "relatedTitle": "Read next"
+}

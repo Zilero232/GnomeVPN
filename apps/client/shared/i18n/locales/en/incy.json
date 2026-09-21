@@ -1,0 +1,71 @@
+{
+  "title": "Connect with INCY",
+  "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
+  "copyDeepLink": "INCY link",
+  "showQr": "QR code",
+  "deepLinkCopied": "Link copied",
+  "qrTitle": "Scan the code",
+  "qrHint": "Point a phone camera at it, or scan it from the app on a TV.",
+  "qrNote": "The code carries your subscription link — keep it to yourself.",
+  "rotate": "Rotate link",
+  "rotateHint": "If the link reached the wrong hands, rotate it. The old one stops working immediately.",
+  "rotated": "Link rotated",
+  "rotatedHint": "Add the new link again in every app.",
+  "platforms": {
+    "ios": "iPhone and Mac",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux",
+    "tv": "TV"
+  },
+  "downloads": {
+    "ios": "App Store",
+    "android": "Google Play",
+    "windows": ".exe installer",
+    "macos": "Apple Silicon .dmg",
+    "linux": ".deb package",
+    "tv": "Android TV and Apple TV"
+  },
+  "setupLink": "How to install the app →",
+  "rotateConfirmTitle": "Rotate the subscription link?",
+  "rotateConfirmBody": "The current link stops working the moment you confirm. Every device you have added it to loses the connection until you paste the new one.",
+  "rotateConfirmAction": "Rotate link",
+  "rotateConfirmCancel": "Keep the current one",
+  "copyDeepLinkHint": "Opens the INCY app",
+  "copyUrl": "Subscription URL",
+  "copyUrlHint": "Hiddify, v2rayNG and others",
+  "urlCopied": "Subscription URL copied",
+  "showQrHint": "For a TV",
+  "qrKindLabel": "What the code carries",
+  "qrKinds": {
+    "url": "Any app",
+    "incy": "INCY"
+  },
+  "qrKindHints": {
+    "url": "The plain subscription URL — Hiddify, v2rayNG and INCY all read it.",
+    "incy": "The INCY deep link. Only INCY understands this one."
+  },
+  "otherApps": "Use another app",
+  "otherAppsHint": "The same subscription. Add opens the app; if it is not installed, the link is already copied.",
+  "clientImport": "Add",
+  "clientCopy": "Copy URL",
+  "clients": {
+    "incy": "INCY",
+    "hiddify": "Hiddify",
+    "v2rayng": "v2rayNG",
+    "streisand": "Streisand",
+    "nekobox": "NekoBox",
+    "clashMeta": "Clash Meta"
+  },
+  "otherAppsDesktopHint": "The same subscription. Copy the link and paste it into the app — the Add button only works on a phone or tablet.",
+  "platformNames": {
+    "ios": "iOS",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux",
+    "tv": "TV"
+  },
+  "importCopied": "Link copied — opening the app"
+}

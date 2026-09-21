@@ -1,3 +1,5 @@
+export { articleJsonLd } from './article-json-ld';
+export type { ArticleJsonLdInput } from './article-json-ld';
 export { breadcrumbJsonLd } from './breadcrumb-json-ld';
 export type { BreadcrumbJsonLdInput } from './breadcrumb-json-ld';
 export { faqJsonLd } from './faq-json-ld';
@@ -9,5 +11,7 @@ export type { JsonLdProps } from './JsonLd';
 export { PageJsonLd } from './PageJsonLd';
 export type { PageJsonLdProps } from './PageJsonLd';
 export { ProductJsonLd } from './ProductJsonLd';
+export { serviceJsonLd } from './service-json-ld';
+export type { ServiceJsonLdInput } from './service-json-ld';
 export { productJsonLd, siteJsonLd } from './site-json-ld';
 export { SiteJsonLd } from './SiteJsonLd';

@@ -1,0 +1,62 @@
+{
+  "loading": "Loading…",
+  "title": "Account",
+  "backToVpn": "Back to VPN",
+  "signOut": "Sign out",
+  "active": "Subscription active",
+  "daysLeft": "{count, plural, =0 {final day} one {day left} other {days left}}",
+  "planLabel": "Plan",
+  "untilLabel": "Valid until",
+  "autoRenewOff": "Auto-renewal is off",
+  "autoRenewOn": "Auto-renewal is on",
+  "cancelAutoRenew": "Turn off auto-renewal",
+  "resumeAutoRenew": "Turn on auto-renewal",
+  "noPaymentMethod": "No card on file — auto-renewal is unavailable",
+  "bindCard": "Add a card",
+  "cardBound": "Card on file",
+  "unbindCard": "Remove",
+  "extraDevicesTitle": "Simultaneous connections",
+  "extraDevicesCount": "{limit} devices available",
+  "extraDevicesHint": "An extra device costs {price} ₽ and lasts as long as the subscription.",
+  "extraDevicesResult": "After this purchase — {total} devices",
+  "extraDevicesBuy": "Add for {price} ₽",
+  "extraDevicesMore": "One more",
+  "extraDevicesLess": "One fewer",
+  "extraDevicesMaxed": "Maximum of {limit} devices reached — no more can be added.",
+  "inactive": "No active subscription",
+  "pitch": "Access to every country, cancel in one click",
+  "plans": {
+    "monthly": "1 month",
+    "halfYearly": "6 months",
+    "yearly": "12 months",
+    "perMonth": "{price} ₽ per month",
+    "price": "{price} ₽",
+    "save": "−{percent}%",
+    "pay": "Pay {price} ₽"
+  },
+  "profile": {
+    "title": "Profile",
+    "nameLabel": "Name",
+    "saveName": "Save",
+    "nameUpdated": "Name updated",
+    "currentEmailLabel": "Current email",
+    "newEmailLabel": "New email",
+    "emailChangeHint": "We will send a link to your current address — the change applies once confirmed.",
+    "changeEmail": "Change email",
+    "emailChangeRequested": "Check your current email to confirm the change",
+    "currentPasswordLabel": "Current password",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Repeat password",
+    "passwordHint": "At least 8 characters. Other devices will be signed out.",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "security": "Security"
+  },
+  "tabs": {
+    "subscription": "Subscription"
+  },
+  "meta": {
+    "title": "Account",
+    "description": "Subscription status, payments and auto-renewal."
+  }
+}

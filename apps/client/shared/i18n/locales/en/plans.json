@@ -1,0 +1,17 @@
+{
+  "title": "Pricing",
+  "amount": "{price} ₽",
+  "period": "/ month",
+  "perMonth": "{price} ₽ per month",
+  "save": "−{percent}%",
+  "plans": {
+    "monthly": "1 month",
+    "halfYearly": "6 months",
+    "yearly": "12 months"
+  },
+  "cta": "Subscribe",
+  "feature1": "Every country, no extra fees",
+  "feature2": "Unlimited traffic",
+  "feature3": "Cancel auto-renewal in one click",
+  "feature4": "No connection logs"
+}

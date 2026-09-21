@@ -1,0 +1,148 @@
+{
+  "meta": {
+    "title": "VPN blog: protocols, setup, blocking",
+    "description": "How Hysteria2 and VLESS Reality work, what to do when a VPN will not connect in a hotel, how to set up a tunnel on a TV and why speed drops."
+  },
+  "title": "Blog",
+  "intro": "How the protocols that get around blocking actually work, why a VPN sometimes refuses to connect, and what to do about it. No marketing — only what we have tested on our own infrastructure.",
+  "back": "← All articles",
+  "cta": "GnomeVPN runs Hysteria2 and VLESS + Reality side by side: when a network blocks one, the connection goes over the other. One subscription for every device.",
+  "ctaAction": "See the plans →",
+  "posts": {
+    "hysteria2-vs-vless": {
+      "title": "Hysteria2 or VLESS + Reality: what differs and which to pick",
+      "excerpt": "Two protocols solve one problem in opposite ways. One holds its speed under packet loss, the other gets through where UDP is blocked.",
+      "intro": "Both protocols get around blocking, and they are built on opposite principles. Hysteria2 runs over UDP and wins on unstable networks. VLESS + Reality disguises itself as ordinary HTTPS and passes where UDP is dropped outright. Here is when to use which.",
+      "sections": {
+        "whatIsHysteria": {
+          "title": "What Hysteria2 is",
+          "body": "Hysteria2 is a protocol built on QUIC, the transport Google designed for HTTP/3. QUIC runs over UDP and does something TCP cannot: it recovers a lost packet without stalling the whole stream. In TCP a single lost packet holds up everything queued behind it — head-of-line blocking. On a wired connection the difference is invisible, but on a mobile network, where 2-5% loss is ordinary, it decides everything. Hysteria2 also masquerades as an ordinary HTTP/3 site: point a browser at the server and you get a normal web page rather than any sign of a VPN."
+        },
+        "whatIsReality": {
+          "title": "What VLESS + Reality is",
+          "body": "Reality is not a protocol of its own but a way of disguising VLESS. An ordinary TLS-based VPN gives itself away through its certificate: either self-signed or issued for a suspicious domain. Reality solves that outright — it presents the certificate of a real third-party site, www.bing.com for instance. From outside, the connection looks like an ordinary visit to that site: same certificate, same name in the TLS handshake. Telling them apart takes active probing, and even then the server answers as the real bing.com to anyone who does not hold the key."
+        },
+        "packetLoss": {
+          "title": "Packet loss: where Hysteria2 wins",
+          "body": "Mobile networks lose packets constantly — handing over between towers, weak signal, a congested cell. Over TCP that shows up as speed collapsing in waves, because the connection keeps waiting on retransmission. QUIC in Hysteria2 handles each stream independently, so a loss in one does not hold up the rest. In practice the difference shows wherever loss exceeds 1-2%: on the underground, on a train, on crowded Wi-Fi. That is why Hysteria2 is first in our server list."
+        },
+        "blocking": {
+          "title": "Blocking: where Reality wins",
+          "body": "Hysteria2 has one weak point — it runs over UDP, and UDP is often dropped wholesale. Corporate networks, hotel Wi-Fi and a few carriers pass only TCP on ports 80 and 443. There Hysteria2 cannot come up at all, however it is configured. Reality rides TCP on 443 and looks like ordinary HTTPS, so it gets through those filters. The other side of that: TCP connections are easier to analyse, and deep packet inspection eventually learns to recognise even Reality. We have watched sessions die a few minutes in."
+        },
+        "howToChoose": {
+          "title": "What to pick in practice",
+          "body": "Start with Hysteria2 — in the server list it is the plain entry with no marking. On most networks it is faster and steadier. If the connection will not establish, or drops immediately, switch to the entry for the same country marked TCP, which is Reality. Nothing needs configuring: both servers are already in the subscription and the app remembers your choice. If neither works, the problem is usually the network rather than the protocol — try mobile data instead of Wi-Fi."
+        }
+      }
+    },
+    "vpn-not-working-hotel-wifi": {
+      "title": "The VPN will not work in a hotel or at the office: what to do",
+      "excerpt": "Public and corporate networks filter more than you would expect. Here is each cause and the way around it.",
+      "intro": "Everything works at home, and then in a hotel or an office the VPN will not connect. The cause is almost always that the network filters traffic — but it filters in different ways, and the fix depends on which.",
+      "sections": {
+        "whyItFails": {
+          "title": "Why these networks specifically",
+          "body": "A home provider generally passes anything not forbidden by law. A corporate network works the other way round: what the administrator explicitly opened is allowed and nothing else. Hotel Wi-Fi sits closer to the corporate model — the owner wants no trouble and closes everything surplus. In both cases the filter is not aimed at VPNs in particular; the rule is simply \"leave the web working\". The side effect is that a VPN stops working alongside games, video calls and anything else that does not look like a browser."
+        },
+        "udpBlocked": {
+          "title": "The usual cause: UDP is blocked",
+          "body": "Protocols like Hysteria2 and WireGuard run over UDP. To a network administrator UDP is something that has to be allowed deliberately: browsing works without it, and it brings volume and trouble. So the filter often keeps only TCP on ports 80 and 443. The tell for this cause: the connection never establishes at all, the app keeps trying and gives up on a timeout. There is no authentication error, because the packets never reach the server."
+        },
+        "switchToTcp": {
+          "title": "The fix: switch to TCP",
+          "body": "In a GnomeVPN subscription every country appears twice. The plain entry is Hysteria2 over UDP; the one marked TCP is VLESS + Reality. The second rides TCP on port 443 — the same channel as any HTTPS site. A network that lets a browser through lets it through too. Switching takes one tap in the app and nothing has to be reconfigured. If the TCP entry connects, UDP was the cause, and that is the entry to use on this network."
+        },
+        "captivePortal": {
+          "title": "The second cause: a captive portal",
+          "body": "Many public networks demand sign-in first: open a browser, accept the terms, sometimes enter a room number. Until that is done the network intercepts everything and lets nothing out. A VPN will not connect at that point even where the protocol is allowed. It is easy to check — open any site over plain HTTP. If you land on the hotel page, sign in there first and turn the VPN on afterwards. The order matters: some apps need restarting once the portal has let you through."
+        },
+        "stillStuck": {
+          "title": "If none of that helped",
+          "body": "Two possibilities remain. The first is to tether from a phone: mobile networks almost never filter UDP, and ordinary Hysteria2 works there. The second is that the network runs deep packet inspection and blocks on content rather than on ports. That is rare and mostly confined to large companies with a serious security team. Getting around it from the client side is close to impossible, and it is more honest to accept that a VPN will not work on that network."
+        }
+      }
+    },
+    "vpn-android-tv": {
+      "title": "Setting up a VPN on Android TV and Apple TV",
+      "excerpt": "A TV has no browser and no usable keyboard. Here is how to add the subscription by QR code in about a minute.",
+      "intro": "A television is the most awkward device to configure — typing a long link with a remote is painful. The good news is that you do not have to: it all goes through a QR code shown on a phone.",
+      "sections": {
+        "whatYouNeed": {
+          "title": "What you need",
+          "body": "A television running Android TV (Sony, Philips, Xiaomi, most recent sets) or an Apple TV. A phone with your account open — it is only there to display the QR code. And an active subscription: without one the servers appear in the list but the connection fails authentication. Sets running Tizen (Samsung) or webOS (LG) will not work — there is no app for them, and neither system offers a supported way to install a VPN."
+        },
+        "installing": {
+          "title": "Installing the app",
+          "body": "On Android TV open Google Play on the television itself and search for INCY. Where Play is unavailable the app can be sideloaded from an APK, but that needs a file manager and installation from unknown sources enabled, which is considerably more work. On Apple TV the app is in the App Store, found the same way as on an iPhone. Installation takes under a minute and the app needs no account of its own — it is free and works with any subscription."
+        },
+        "addingSubscription": {
+          "title": "Adding the subscription by QR",
+          "body": "In the app on the television choose to add a subscription and pick the QR option — either the camera starts or a field for the code appears. Now open your account on your phone, press QR code, and hold the phone screen up to the television. The app reads the link and pulls in every server by itself. One detail: the QR dialog has a switch — pick the option for any app, which carries the plain link and is read everywhere."
+        },
+        "remoteControl": {
+          "title": "When there is no camera",
+          "body": "Some televisions have no camera and cannot scan a QR code at all. Then the link has to be typed with the remote — tedious, but only once. Copy it in your account with the Subscription URL button and send it to yourself by whatever opens on the television: email, a messenger, a note in the cloud. From there it can be copied and pasted into the app rather than typed. Android TV also supports keyboard apps that turn a phone into a remote with proper text entry."
+        },
+        "autoConnect": {
+          "title": "Connecting automatically",
+          "body": "Once it is set up, turn on auto-connect in the app — the tunnel then comes up by itself when the television does, with no remote involved. That matters more than it sounds: a television is usually shared, and a manual connection step becomes a source of questions. The server list refreshes itself from the subscription, so nothing has to be reconfigured when new countries appear."
+        }
+      }
+    },
+    "why-vpn-slows-down": {
+      "title": "Why a VPN slows your connection, and what to do",
+      "excerpt": "Some speed loss on a VPN is unavoidable, but how much depends on what you chose.",
+      "intro": "Every VPN slows a connection down — the traffic no longer goes directly but through an intermediate server. The question is by how much: the gap between a careful setup and a careless one runs into multiples.",
+      "sections": {
+        "distance": {
+          "title": "Distance to the server",
+          "body": "The dominant factor is physical distance. Traffic to the Netherlands and back covers a few thousand extra kilometres, and that adds latency no amount of optimisation removes. From Moscow to a European server the ping usually sits at 40-60 ms against 5-15 ms direct. Page loads barely notice; games and video calls do. The rule is simple: pick the nearest country unless a specific location is what you need for a particular service."
+        },
+        "protocol": {
+          "title": "The protocol and its overhead",
+          "body": "Every protocol adds its own share of bookkeeping. Older designs like OpenVPN over TCP give up as much as 20% of throughput: encryption, encapsulation, and TCP over TCP — the well-known problem where two retransmission mechanisms fight each other. Hysteria2 runs over UDP and avoids that entirely, with overhead closer to 5%. That, rather than its being newer, is why we made it the default."
+        },
+        "packetLoss": {
+          "title": "Packet loss, the hidden cause",
+          "body": "If speed drops in bursts rather than evenly, packet loss is almost certainly the cause. Over TCP each loss stalls the stream until retransmission, and at 2-3% loss speed falls by multiples rather than percentages. Ping will tell you: if some packets never come back, you have found it. Hysteria2 holds up considerably better in those conditions, because it recovers losses without stalling the other streams."
+        },
+        "provider": {
+          "title": "Throttling by the provider",
+          "body": "Some providers deliberately slow encrypted traffic, or traffic on unusual ports. It is not blocking but throttling, and it is hard to spot: the connection works, only slowly. The tell is that VPN speed is consistently low at any hour and on any server while direct speed is fine. Switching protocol usually gets around it: if UDP is being throttled try the TCP entry, and the other way round."
+        },
+        "whatToDo": {
+          "title": "What to check, in order",
+          "body": "Measure your speed without the VPN first — without a baseline there is nothing to compare against. Then switch to the nearest country, which is often enough on its own. Next try the other protocol for the same country: a large difference means your network treats UDP and TCP differently. And check the time of day — evening congestion on the backbone produces a dip that has nothing to do with the VPN."
+        }
+      }
+    },
+    "subscription-link-explained": {
+      "title": "What a subscription link is and how it works",
+      "excerpt": "One address instead of a config file per device. Here is what is inside it and why it is the better arrangement.",
+      "intro": "Modern VPN services hand out a single link rather than configuration files. The app downloads the server list from it and keeps that list current. Here is how that works and why it is an improvement.",
+      "sections": {
+        "whatItIs": {
+          "title": "What it is technically",
+          "body": "A subscription link is an ordinary HTTPS address holding a text list of servers. The app requests it, receives a set of addresses with their connection parameters, and shows them to you as a list of countries. The format is standardised — INCY, Hiddify, v2rayNG, Streisand and a dozen other apps all understand it. That is why one link works everywhere and you are not tied to any particular client."
+        },
+        "whyOneLink": {
+          "title": "Why it beats config files",
+          "body": "It used to be a separate configuration file per device, and adding a server meant redoing every one of them. With a link that disappears: we add a country on our side and the app picks it up on its next refresh. Setting up a new device is pasting one address rather than moving files around. And when a server has to be taken out of rotation it simply leaves the list, with nothing required from you."
+        },
+        "howItUpdates": {
+          "title": "How the refresh works",
+          "body": "The app re-fetches the link on a schedule, usually every few hours. Along with the server list come housekeeping values: how much traffic you have used, when the subscription ends, the name of the service. That is why the app shows an accurate expiry without your opening the account page. One consequence matters: add the link as a subscription rather than as a single server. Added the second way, the app remembers one address and stops refreshing."
+        },
+        "security": {
+          "title": "The link is a credential",
+          "body": "The link carries a unique token — thirty-two random bytes by which the server recognises your account. No password travels with it, but the link itself is equivalent to access: anyone holding it can connect. So do not publish it or paste it into open chats. If it does leak, your account page has a rotate button: the old link stops working immediately and you add the new one on your own devices."
+        },
+        "otherApps": {
+          "title": "It is not only for INCY",
+          "body": "We recommend INCY because we have tested it on every platform, iPhones and televisions included. But the subscription format is a common one, and the same link goes into Hiddify, v2rayNG, Streisand, NekoBox and Clash Meta. Your account page has a separate button for copying the plain link — it differs from the INCY button, which carries a scheme only that app understands. If you prefer another client, nothing stops you using it."
+        }
+      }
+    }
+  }
+}

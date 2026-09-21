@@ -1,0 +1,49 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  @include marketing-page(760px, 36px, 26px);
+}
+
+.head {
+  @include stack(12px);
+}
+
+.title {
+  @include marketing-title;
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  gap: 12px;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: inherit;
+  gap: 6px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-accent);
+  }
+}
+
+.cardTitle {
+  font-size: 17px;
+  font-weight: 600;
+}

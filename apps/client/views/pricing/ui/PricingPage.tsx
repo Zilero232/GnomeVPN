@@ -4,17 +4,18 @@ import { Check } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
+import { blogPostRoute, ROUTES } from '@/shared/constants';
 import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
-import { Accordion, Text } from '@/ui-kit';
+import { Text } from '@/ui-kit';
 import { PricingCard } from '@/widgets/billing/pricing-plans';
+import { RelatedLinks } from '@/widgets/site/related-links';
 
-import { PRICING_FAQ, PRICING_INCLUDED } from '../config';
+import { PRICING_INCLUDED, PRICING_SECTIONS } from '../config';
 
 import s from './PricingPage.module.scss';
 
 export const PricingPage = () => {
   const t = useTranslations('pricing');
-  const tFaq = useTranslations('faq.questions');
 
   return (
     <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
@@ -45,19 +46,31 @@ export const PricingPage = () => {
         </ul>
       </motion.section>
 
-      <motion.section className={s.faq} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <motion.section className={s.sections} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
         <Text as='h2' className={s.sectionTitle}>
-          {t('faqTitle')}
+          {t('sectionsTitle')}
         </Text>
 
-        <Accordion
-          items={PRICING_FAQ.map((question) => ({
-            value: question,
-            title: tFaq(`${question}.q`),
-            content: tFaq(`${question}.a`)
-          }))}
-        />
+        {PRICING_SECTIONS.map((section) => (
+          <div key={section} className={s.section}>
+            <Text as='h3' className={s.sectionHeading}>
+              {t(`sections.${section}.title`)}
+            </Text>
+
+            <Text as='p' className={s.sectionBody}>
+              {t(`sections.${section}.body`)}
+            </Text>
+          </div>
+        ))}
       </motion.section>
+
+      <RelatedLinks
+        links={[
+          { href: ROUTES.faq, label: t('related.faq') },
+          { href: ROUTES.servers, label: t('related.servers') },
+          { href: blogPostRoute('subscription-link-explained'), label: t('related.subscription') }
+        ]}
+      />
     </motion.main>
   );
 };

@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "title": "How to set up the VPN — a step-by-step guide",
+    "description": "Setting up GnomeVPN on iPhone, Android, Windows, macOS, Linux and TV: install the app and add the subscription from one link in minutes."
+  },
+  "title": "How to connect",
+  "intro": "GnomeVPN runs through INCY, a free app you install once. After that a single link from your account does the rest.",
+  "downloadTitle": "1. Install INCY",
+  "stepsTitle": "2. Add your subscription",
+  "steps": {
+    "install": {
+      "title": "Install the app"
+    },
+    "copyLink": {
+      "title": "Copy your link"
+    },
+    "import": {
+      "title": "Add it to INCY"
+    },
+    "connect": {
+      "title": "Connect"
+    }
+  },
+  "platforms": {
+    "ios": {
+      "name": "iPhone and Mac",
+      "install": "Open the App Store and install INCY. The app is free and needs no account of its own.",
+      "copyLink": "Open your account on this site, go to the App tab and press Copy INCY link.",
+      "import": "Open INCY, tap + and choose import from clipboard. The app recognises the link and adds the subscription itself.",
+      "connect": "Pick a country from the list and press connect. The first time, iOS asks permission to add a VPN configuration — allow it."
+    },
+    "android": {
+      "name": "Android",
+      "install": "Install INCY from Google Play. If Play is unavailable, the INCY releases page has an APK.",
+      "copyLink": "Open your account on this site, go to the App tab and press Copy INCY link.",
+      "import": "In INCY tap + and import from the clipboard. Easier still: tap the link on the site — it opens the app and adds the subscription for you.",
+      "connect": "Pick a country and connect. Android asks permission to set up a VPN connection — confirm it."
+    },
+    "desktop": {
+      "name": "Windows, macOS and Linux",
+      "install": "Download the installer above: exe for Windows, dmg for Mac, deb or rpm for Linux.",
+      "copyLink": "Open your account in a browser, go to the App tab and copy the link.",
+      "import": "Start INCY, press + and paste the link. Add it as a subscription rather than a single server, so the server list keeps updating itself.",
+      "connect": "Pick a country and connect. On Windows you will be asked to approve an elevation prompt — it is needed to create the network adapter."
+    },
+    "tv": {
+      "name": "TV",
+      "install": "On Android TV install INCY from Google Play; on Apple TV from the App Store.",
+      "copyLink": "Typing the link on a TV remote is no fun: open your account on your phone and show the QR code on the App tab.",
+      "import": "In INCY on the TV choose to add a subscription and scan the QR code from your phone screen.",
+      "connect": "Pick a country and connect. From then on the tunnel comes up by itself when the TV turns on."
+    }
+  },
+  "other": {
+    "title": "3. Or use another app",
+    "intro": "INCY is what we recommend, not what we require. Your subscription URL is a standard one, so any app that takes a subscription link reads it — the same servers, the same traffic counter, the same renewal date.",
+    "clients": {
+      "hiddify": {
+        "name": "Hiddify",
+        "hint": "iPhone, Android, Windows, macOS, Linux"
+      },
+      "v2rayng": {
+        "name": "v2rayNG",
+        "hint": "Android"
+      },
+      "streisand": {
+        "name": "Streisand",
+        "hint": "iPhone and Mac"
+      },
+      "nekobox": {
+        "name": "NekoBox",
+        "hint": "Android"
+      },
+      "clashMeta": {
+        "name": "Clash Meta",
+        "hint": "Android"
+      }
+    },
+    "steps": {
+      "copy": {
+        "title": "Copy the subscription URL",
+        "body": "Open your account, go to the App tab and press Copy subscription URL. This is the plain https link — not the INCY one, which only INCY understands."
+      },
+      "add": {
+        "title": "Add it as a subscription",
+        "body": "In the app choose to add a subscription or profile from a URL and paste it. Add it as a subscription rather than a single server, so the server list keeps updating itself."
+      },
+      "connect": {
+        "title": "Pick a server and connect",
+        "body": "Each country appears twice: the plain entry is Hysteria2 over UDP, the one marked TCP is VLESS + Reality. Start with the first; if the network blocks UDP, switch to TCP."
+      }
+    },
+    "note": "Whatever app you pick, the link stays yours alone. If it leaks, rotate it in your account and the old one dies at once."
+  }
+}

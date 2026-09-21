@@ -4,7 +4,7 @@ import { SITE } from '@/shared/config';
 import { LOCALES } from '@/shared/i18n';
 
 import { absoluteUrl } from '../../site-metadata';
-import { PLATFORM_LABELS } from './site-json-ld.constants';
+import { ORGANIZATION_LOGO, PLATFORM_LABELS } from './site-json-ld.constants';
 
 const priceRub = PLANS.map((plan) => plan.priceRub);
 
@@ -28,7 +28,7 @@ export const siteJsonLd = {
       '@id': `${SITE.url}/#organization`,
       name: SITE.name,
       url: SITE.url,
-      logo: absoluteUrl('/brand/logo-mark.svg'),
+      logo: absoluteUrl(ORGANIZATION_LOGO),
       email: SITE.email,
       contactPoint: {
         '@type': 'ContactPoint',

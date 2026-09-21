@@ -1,0 +1,20 @@
+{
+  "INTERNAL_ERROR": "Something went wrong. Please try again later.",
+  "VALIDATION_FAILED": "Check the fields and try again.",
+  "UNAUTHORIZED": "Sign in to continue.",
+  "FORBIDDEN": "You do not have access to this action.",
+  "NOT_FOUND": "Not found.",
+  "CONFLICT": "This action conflicts with the current state — refresh the page.",
+  "PAYMENT_REQUIRED": "An active subscription is required.",
+  "PAYMENT_FAILED": "The payment could not be created. Please try again.",
+  "PLAN_CHANGE_LOCKED": "You can switch plans once the current period ends.",
+  "RECURRING_UNAVAILABLE": "Automatic payments are temporarily unavailable.",
+  "PAYMENT_METHOD_MISSING": "No card on file — add one first.",
+  "WEBHOOK_INVALID": "Invalid request signature.",
+  "NODE_NOT_FOUND": "Country not found.",
+  "NODE_UNAVAILABLE": "The node is not responding — try another country.",
+  "CONFIG_LIMIT_REACHED": "Config limit reached — remove one first.",
+  "DEVICE_LIMIT_REACHED": "All device slots are in use — disconnect another device first.",
+  "SUBSCRIPTION_REQUIRED": "Extra devices need an active subscription.",
+  "EXTRA_DEVICES_LIMIT": "You already have the maximum number of devices."
+}

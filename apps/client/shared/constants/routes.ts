@@ -4,6 +4,7 @@ export const ROUTES = {
   faq: '/faq',
   setup: '/setup',
   servers: '/servers',
+  blog: '/blog',
   about: '/about',
   auth: '/auth',
   resetPassword: '/reset-password',
@@ -18,6 +19,7 @@ const PUBLIC_ROUTES: string[] = [
   ROUTES.faq,
   ROUTES.setup,
   ROUTES.servers,
+  ROUTES.blog,
   ROUTES.about,
   ROUTES.auth,
   ROUTES.resetPassword,
@@ -25,7 +27,18 @@ const PUBLIC_ROUTES: string[] = [
 ];
 
 const GUEST_ONLY_ROUTES: string[] = [ROUTES.auth];
-const INDEXED_ROUTES: string[] = [ROUTES.landing, ROUTES.pricing, ROUTES.faq, ROUTES.setup, ROUTES.servers, ROUTES.about, ROUTES.privacy];
+const INDEXED_ROUTES: string[] = [
+  ROUTES.landing,
+  ROUTES.pricing,
+  ROUTES.faq,
+  ROUTES.setup,
+  ROUTES.servers,
+  ROUTES.blog,
+  ROUTES.about,
+  ROUTES.privacy
+];
+
+export const blogPostRoute = (slug: string): string => `${ROUTES.blog}/${slug}`;
 
 export const isKnownRoute = (pathname: string): boolean => KNOWN_ROUTES.includes(pathname);
 

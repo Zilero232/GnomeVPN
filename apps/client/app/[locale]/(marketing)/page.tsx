@@ -3,7 +3,7 @@ import * as rootParams from 'next/root-params';
 
 import { ROUTES } from '@/shared/constants';
 import { resolveLocale } from '@/shared/i18n';
-import { createPageMetadata } from '@/shared/seo';
+import { createPageMetadata, JsonLd, serviceJsonLd } from '@/shared/seo';
 import { LandingPage } from '@/views/landing';
 
 export const generateMetadata = async () => {
@@ -20,6 +20,19 @@ export const generateMetadata = async () => {
   });
 };
 
-const Page = () => <LandingPage />;
+const Page = async () => {
+  const locale = resolveLocale(await rootParams.locale());
+  const t = await getTranslations({ locale, namespace: 'landing' });
+
+  const countries = [t('locations.netherlandsName'), t('locations.finlandName')];
+
+  return (
+    <>
+      <JsonLd data={serviceJsonLd({ name: t('meta.title'), description: t('meta.description'), countries })} />
+
+      <LandingPage />
+    </>
+  );
+};
 
 export default Page;

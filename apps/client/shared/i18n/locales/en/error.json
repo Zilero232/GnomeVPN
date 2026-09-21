@@ -1,0 +1,8 @@
+{
+  "code": "500",
+  "title": "Channel dropped",
+  "body": "Something broke on our side. Try again — if it keeps happening, let us know.",
+  "retry": "Try again",
+  "home": "Go home",
+  "details": "Error details"
+}

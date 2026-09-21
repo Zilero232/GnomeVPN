@@ -20,9 +20,15 @@ describe('createPageMetadata', () => {
   it('carries the title, description and og url through', () => {
     const metadata = createPageMetadata(input);
 
-    expect(metadata.title).toBe(input.title);
+    expect(metadata.title).toEqual({ absolute: `${input.title} · ${SITE.name}` });
     expect(metadata.description).toBe(input.description);
     expect(metadata.openGraph?.url).toBe(localePath({ path: input.path, locale: input.locale }));
+  });
+
+  it('brands the title exactly once, rather than letting the root template append a second time', () => {
+    const named = createPageMetadata({ ...input, title: `${SITE.name} — тарифы` });
+
+    expect(named.title).toEqual({ absolute: `${SITE.name} — тарифы` });
   });
 
   it('appends the site name to a title that lacks it', () => {
@@ -71,10 +77,10 @@ describe('createPageMetadata', () => {
     expect(createPageMetadata({ ...input, index: true, follow: true }).robots).toEqual({ index: true, follow: true });
   });
 
-  it('builds the og and twitter images from the site config', () => {
+  it('names no image, so the generated opengraph-image is not overridden by a static one', () => {
     const metadata = createPageMetadata(input);
 
-    expect(metadata.openGraph?.images).toEqual([{ url: SITE.ogImage, width: 1200, height: 630, alt: SITE.name }]);
-    expect(metadata.twitter?.images).toEqual([SITE.ogImage]);
+    expect(metadata.openGraph?.images).toBeUndefined();
+    expect(metadata.twitter?.images).toBeUndefined();
   });
 });
