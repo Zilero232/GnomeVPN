@@ -74,8 +74,7 @@
     "provision:nodes": "bun --env-file .env --env-file .env.nodes scripts/provision/index.ts",
     "brand:icons": "bun scripts/brand-icons/index.ts",
     "format:prisma": "bun --filter @gnomevpn/server format:prisma",
-    "secrets": "bun scripts/secrets/index.ts",
-    "telegram:webhook": "bun scripts/telegram-webhook/index.ts"
+    "secrets": "bun scripts/secrets/index.ts"
   },
   "dependencies": {
     "@gnomevpn/scripts": "workspace:*",

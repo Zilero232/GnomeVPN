@@ -46,7 +46,17 @@ export class TelegramProfileService {
 
     const current = await bot.api.getWebhookInfo();
 
+    if (current.last_error_message) {
+      this.logger.warn(`telegram could not deliver to the last webhook: ${current.last_error_message}`);
+    }
+
+    if (current.pending_update_count > 0) {
+      this.logger.warn(`${current.pending_update_count} telegram updates are waiting to be delivered`);
+    }
+
     if (current.url === url && !current.last_error_message) {
+      this.logger.log(`telegram webhook is already ${url}`);
+
       return;
     }
 
