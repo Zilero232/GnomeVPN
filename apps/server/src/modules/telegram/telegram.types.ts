@@ -44,6 +44,11 @@ export type ReplyInput = {
   chat: ResolvedChat | null;
 };
 
+export type VisibilityInput = {
+  when: ButtonVisibility;
+  state: ChatState;
+};
+
 export type KeyboardInput = {
   locale: BotLocale;
   state: ChatState;

@@ -10,7 +10,7 @@ import type { PressInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
-import { LOCALE_CALLBACK_PREFIX, PLAN_CALLBACK_PREFIX } from '../config';
+import { BOT_API, CALLBACK_PREFIX } from '../config';
 import { buttonFor, callbackPattern } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
 import { TelegramProfileService } from './telegram-profile.service';
@@ -32,7 +32,7 @@ export class TelegramBotService implements OnModuleInit {
   ) {
     const token = this.config.get('TELEGRAM_BOT_TOKEN');
 
-    this.bot = token ? new Bot(token) : null;
+    this.bot = token ? new Bot(token, { client: { timeoutSeconds: BOT_API.timeoutSeconds } }) : null;
 
     if (this.bot) {
       this.register(this.bot);
@@ -85,8 +85,8 @@ export class TelegramBotService implements OnModuleInit {
     bot.command('trial', (ctx) => this.subscription.claimTrialDay(ctx));
     bot.command('unlink', (ctx) => this.account.unlink(ctx));
 
-    bot.callbackQuery(callbackPattern(PLAN_CALLBACK_PREFIX), (ctx) => this.subscription.startCheckout(ctx));
-    bot.callbackQuery(callbackPattern(LOCALE_CALLBACK_PREFIX), (ctx) => this.account.changeLocale(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.plan), (ctx) => this.subscription.startCheckout(ctx));
+    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.locale), (ctx) => this.account.changeLocale(ctx));
 
     bot.on('message:text', (ctx) => {
       const button = buttonFor(ctx.message.text);

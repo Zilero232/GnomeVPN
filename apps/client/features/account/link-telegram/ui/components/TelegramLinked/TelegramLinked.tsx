@@ -1,13 +1,16 @@
-import { Check, Unlink } from 'lucide-react';
+import { Check, ExternalLink, Unlink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button, Text } from '@/ui-kit';
 
 import type { TelegramLinkedProps } from './TelegramLinked.types';
 
+import { botLink } from '../../../lib';
+import { ABILITIES } from './TelegramLinked.constants';
+
 import s from './TelegramLinked.module.scss';
 
-export const TelegramLinked = ({ username, isPending, onUnlink }: TelegramLinkedProps) => {
+export const TelegramLinked = ({ bot, username, isPending, onUnlink }: TelegramLinkedProps) => {
   const t = useTranslations('telegram');
 
   return (
@@ -20,14 +23,40 @@ export const TelegramLinked = ({ username, isPending, onUnlink }: TelegramLinked
         </Text>
       </div>
 
+      <div className={s.abilities}>
+        <Text className={s.abilitiesTitle} size='xs' tone='muted'>
+          {t('linkedActions')}
+        </Text>
+
+        <ul className={s.list}>
+          {ABILITIES.map((ability) => (
+            <li key={ability} className={s.ability}>
+              <Check aria-hidden className={s.abilityCheck} size={14} />
+              {t(`abilities.${ability}`)}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <a className={s.openBot} href={botLink({ bot })} rel='noopener noreferrer' target='_blank'>
+        {t('openBotLinked')}
+        <ExternalLink aria-hidden size={15} />
+      </a>
+
       <Text size='xs' tone='muted'>
         {t('linkedHint')}
       </Text>
 
-      <Button className={s.action} disabled={isPending} variant='ghost' onClick={onUnlink}>
-        <Unlink aria-hidden size={16} />
-        {t('unlink')}
-      </Button>
+      <div className={s.footer}>
+        <Button disabled={isPending} variant='ghost' onClick={onUnlink}>
+          <Unlink aria-hidden size={16} />
+          {t('unlink')}
+        </Button>
+
+        <Text size='xs' tone='muted'>
+          {t('unlinkHint')}
+        </Text>
+      </div>
     </div>
   );
 };

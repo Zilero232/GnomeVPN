@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { WEBHOOK_PATH } from '../../../config';
+import { WEBHOOK } from '../../../config';
 import { webhookUrl } from '../webhook-url';
 
 const secret = 'a-secret';
 
 describe('webhookUrl', () => {
   it('points at the path the controller serves', () => {
-    expect(webhookUrl({ apiUrl: 'https://api.gnome-vpn.com', secret })).toBe(`https://api.gnome-vpn.com/${WEBHOOK_PATH}`);
+    expect(webhookUrl({ apiUrl: 'https://api.gnome-vpn.com', secret })).toBe(`https://api.gnome-vpn.com/${WEBHOOK.path}`);
   });
 
   it('does not double the separator when the base ends in one', () => {

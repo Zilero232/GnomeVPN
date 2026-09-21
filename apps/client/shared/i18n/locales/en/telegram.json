@@ -4,10 +4,10 @@
   "tabTelegram": "Telegram",
   "intro": "GnomeVPN has a Telegram bot — a second way to manage the subscription without opening the site.",
   "abilities": {
-    "status": "Check the expiry date and device count",
-    "link": "Get your subscription URL",
-    "buy": "Pay and renew",
-    "trial": "Start the free day"
+    "status": "Expiry date and device count",
+    "link": "Your connection link",
+    "buy": "Payment and renewal",
+    "trial": "A free trial day"
   },
   "connect": "Connect Telegram",
   "openBot": "Open the bot",
@@ -15,11 +15,18 @@
   "manualHint": "If Telegram did not open: find @{bot} and send it this code",
   "linkedAs": "Linked as @{username}",
   "linkedPlain": "Telegram is linked",
-  "linkedHint": "Send the bot /status, /link or /buy — it answers for your subscription.",
+  "linkedHint": "Open the bot — manage your subscription with buttons, no commands.",
   "unlink": "Unlink",
   "unlinked": "Telegram unlinked",
   "unavailable": "Could not load the Telegram status. Check your connection.",
   "retry": "Try again",
   "title": "Telegram bot",
-  "codeCopied": "Code copied"
+  "codeCopied": "Code copied",
+  "linkedActions": "What the bot does",
+  "openBotLinked": "Open the bot",
+  "unlinkHint": "Unlinking leaves your subscription and access untouched.",
+  "unlinkConfirmTitle": "Unlink Telegram?",
+  "unlinkConfirmBody": "The bot will stop answering in this chat. Your subscription and access are untouched — you can link it again at any time.",
+  "unlinkConfirmCancel": "Cancel",
+  "unlinkConfirmAction": "Unlink"
 }

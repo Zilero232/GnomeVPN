@@ -6,10 +6,10 @@ import { isNullish } from 'remeda';
 
 import { timingSafeEqual } from '../../common/lib';
 import { AppConfigService } from '../../config';
-import { TELEGRAM_SECRET_HEADER, WEBHOOK_PATH } from './config';
+import { WEBHOOK } from './config';
 import { TelegramBotService } from './services';
 
-@Controller(WEBHOOK_PATH)
+@Controller(WEBHOOK.path)
 export class TelegramController {
   constructor(
     private readonly bot: TelegramBotService,
@@ -19,7 +19,7 @@ export class TelegramController {
   @AllowAnonymous()
   @Post()
   @HttpCode(HttpStatus.OK)
-  async receive(@Body() update: Update, @Headers(TELEGRAM_SECRET_HEADER) secret: string | undefined): Promise<void> {
+  async receive(@Body() update: Update, @Headers(WEBHOOK.secretHeader) secret: string | undefined): Promise<void> {
     if (!this.isFromTelegram(secret)) {
       return;
     }
