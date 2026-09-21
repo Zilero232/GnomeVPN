@@ -17,6 +17,7 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json bun.lock ./
 COPY apps/server/package.json ./apps/server/package.json
+COPY packages/logger/package.json ./packages/logger/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
 
@@ -41,6 +42,7 @@ ENV NODE_ENV=production
 # whole installed tree comes over to keep the resolution graph intact.
 COPY --from=deps /app /app
 
+COPY packages/logger ./packages/logger
 COPY packages/schemas ./packages/schemas
 COPY apps/server ./apps/server
 

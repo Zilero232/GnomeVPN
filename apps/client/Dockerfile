@@ -25,6 +25,7 @@ ENV NODE_ENV=production \
 COPY package.json bun.lock tsconfig.json ./
 COPY apps/client/package.json ./apps/client/package.json
 COPY apps/server/package.json ./apps/server/package.json
+COPY packages/logger/package.json ./packages/logger/package.json
 COPY packages/schemas/package.json ./packages/schemas/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
 
@@ -38,6 +39,7 @@ RUN for attempt in 1 2 3; do \
       rm -rf /root/.bun/install/cache ~/.bun/install/cache; \
     done
 
+COPY packages/logger ./packages/logger
 COPY packages/schemas ./packages/schemas
 COPY apps/client ./apps/client
 
