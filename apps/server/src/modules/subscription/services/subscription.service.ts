@@ -7,6 +7,7 @@ import { isNonNullish } from 'remeda';
 import { isPeriodActive, resolveStatus } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
+import { trialState } from '../lib';
 
 @Injectable()
 export class SubscriptionService {
@@ -44,7 +45,8 @@ export class SubscriptionService {
         cancelAtPeriodEnd: true,
         savedCardId: true,
         savedCardTitle: true,
-        extraDevices: true
+        extraDevices: true,
+        trialStartedAt: true
       }
     });
 
@@ -57,9 +59,13 @@ export class SubscriptionService {
         hasPaymentMethod: false,
         savedCardTitle: null,
         isRecurringAvailable,
+        isTrial: false,
+        isTrialAvailable: true,
         limits: resolveLimits(0)
       };
     }
+
+    const trial = trialState(row);
 
     return {
       status: resolveStatus(row.currentPeriodEnd),
@@ -69,6 +75,7 @@ export class SubscriptionService {
       hasPaymentMethod: isNonNullish(row.savedCardId),
       savedCardTitle: row.savedCardTitle,
       isRecurringAvailable,
+      ...trial,
       limits: resolveLimits(isPeriodActive(row.currentPeriodEnd) ? row.extraDevices : 0)
     };
   }

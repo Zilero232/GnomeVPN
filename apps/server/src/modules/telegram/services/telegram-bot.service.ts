@@ -1,0 +1,84 @@
+import type { OnModuleInit } from '@nestjs/common';
+import type { Update } from 'grammy/types';
+
+import { Injectable, Logger } from '@nestjs/common';
+import { Bot } from 'grammy';
+import { isNullish } from 'remeda';
+
+import { describeError } from '../../../common/lib';
+import { AppConfigService } from '../../../config';
+import { LOCALE_CALLBACK_PREFIX, PLAN_CALLBACK_PREFIX } from '../config';
+import { callbackPattern } from '../lib';
+import { TelegramAccountService } from './telegram-account.service';
+import { TelegramProfileService } from './telegram-profile.service';
+import { TelegramSharedService } from './telegram-shared.service';
+import { TelegramSubscriptionService } from './telegram-subscription.service';
+
+@Injectable()
+export class TelegramBotService implements OnModuleInit {
+  private readonly logger = new Logger(TelegramBotService.name);
+  private readonly bot: Bot | null;
+
+  constructor(
+    private readonly config: AppConfigService,
+    private readonly shared: TelegramSharedService,
+    private readonly account: TelegramAccountService,
+    private readonly subscription: TelegramSubscriptionService,
+    private readonly profile: TelegramProfileService
+  ) {
+    const token = this.config.get('TELEGRAM_BOT_TOKEN');
+
+    this.bot = token ? new Bot(token) : null;
+
+    if (this.bot) {
+      this.register(this.bot);
+    }
+  }
+
+  get isEnabled(): boolean {
+    return !isNullish(this.bot);
+  }
+
+  onModuleInit(): void {
+    if (!this.bot) {
+      this.logger.log('telegram bot is disabled: no token configured');
+
+      return;
+    }
+
+    void this.profile.announce(this.bot);
+  }
+
+  async handleUpdate(update: Update): Promise<void> {
+    if (!this.bot) {
+      return;
+    }
+
+    try {
+      await this.bot.handleUpdate(update);
+    } catch (error) {
+      this.logger.error(`telegram update failed: ${describeError(error)}`);
+    }
+  }
+
+  private register(bot: Bot): void {
+    bot.command('start', (ctx) => {
+      const code = ctx.match;
+
+      return code ? this.account.consume({ ctx, text: code }) : ctx.reply(this.shared.textFor(ctx).start);
+    });
+
+    bot.command('help', (ctx) => ctx.reply(this.shared.textFor(ctx).help));
+    bot.command('language', (ctx) => this.account.chooseLanguage(ctx));
+    bot.command('status', (ctx) => this.subscription.status(ctx));
+    bot.command('link', (ctx) => this.subscription.sendLink(ctx));
+    bot.command('buy', (ctx) => this.subscription.buy(ctx));
+    bot.command('trial', (ctx) => this.subscription.claimTrialDay(ctx));
+    bot.command('unlink', (ctx) => this.account.unlink(ctx));
+
+    bot.callbackQuery(callbackPattern(PLAN_CALLBACK_PREFIX), (ctx) => this.subscription.startCheckout(ctx));
+    bot.callbackQuery(callbackPattern(LOCALE_CALLBACK_PREFIX), (ctx) => this.account.changeLocale(ctx));
+
+    bot.on('message:text', (ctx) => this.account.consume({ ctx, text: ctx.message.text }));
+  }
+}

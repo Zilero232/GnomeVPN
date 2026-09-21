@@ -31,7 +31,11 @@ export const envSchema = z.object({
   DEV_EMAIL_OVERRIDE: z.email().optional(),
 
   CLIENT_URL: z.url().default('http://localhost:3000'),
-  SUPPORT_URL: z.string().default('')
+  SUPPORT_URL: z.string().default(''),
+
+  TELEGRAM_BOT_TOKEN: z.string().default(''),
+  TELEGRAM_BOT_USERNAME: z.string().default(''),
+  TELEGRAM_WEBHOOK_SECRET: z.string().default('')
 });
 
 export type Env = z.infer<typeof envSchema>;

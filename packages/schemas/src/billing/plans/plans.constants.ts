@@ -9,3 +9,5 @@ export const PLANS = [
 export const DEFAULT_PLAN_ID = 'monthly' as const;
 
 export const LOWEST_MONTHLY_RUB = Math.round(Math.min(...PLANS.map((plan) => plan.priceRub / plan.months)));
+
+export const TRIAL_DAYS = 1;

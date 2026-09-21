@@ -5,5 +5,6 @@ export { unwrapAuth } from './auth/unwrap-auth';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
 export { api, ApiError, apiErrorCode, toApiError } from './http';
 export { queryClient } from './query-client';
-export { getSubscriptionStatus } from './subscription';
+export { claimTrial, getSubscriptionStatus } from './subscription';
 export { getSubscriptionLink, rotateSubscriptionLink } from './subscription-link';
+export { getTelegramStatus, issueTelegramCode, unlinkTelegram } from './telegram';

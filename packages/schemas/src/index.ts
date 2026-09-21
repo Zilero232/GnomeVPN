@@ -5,4 +5,5 @@ export * from './errors';
 export * from './platforms';
 export * from './subscription';
 export * from './subscription-link';
+export * from './telegram';
 export * from './tunnel';

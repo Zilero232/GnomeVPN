@@ -1,0 +1,44 @@
+{
+  "text": {
+    "start": "GnomeVPN — a VPN on Hysteria2.\n\nTo link this chat to your subscription, open the App tab on the site and press Link Telegram. A code appears — send it here.\n\nNo account yet? Sign up on the site and the subscription shows up here by itself.",
+    "linked": "Done — this chat is linked to your subscription.",
+    "alreadyLinked": "This chat is already linked to a subscription.",
+    "codeInvalid": "That code did not work: it is unknown, already used or expired. Get a new one on the site.",
+    "notLinked": "This chat is not linked to a subscription. Send the code from the site — the App tab.",
+    "unlinked": "Chat unlinked. Your subscription and access are untouched.",
+    "noSubscription": "No subscription yet. Get one with /buy",
+    "linkIntro": "Your subscription URL — add it to the app as a subscription:",
+    "linkWarning": "Do not forward it: the link is the credential. If it leaks, rotate it on the site.",
+    "choosePlan": "Pick a term:",
+    "trialGranted": "Your trial day is active. Your subscription URL — /link",
+    "trialUnavailable": "The trial has already been used, or a subscription is running.",
+    "trialNeedsEmail": "Confirm your email address on the site first — the message goes to the address on the account.",
+    "checkoutIntro": "Pay at the link below. Access opens the moment the payment clears.",
+    "languageChanged": "Language switched to English.",
+    "chooseLanguage": "Choose a language:",
+    "inactive": "No active subscription. Get one with /buy",
+    "activeUntil": "Active until {date}.",
+    "planLine": "Plan: {plan}.",
+    "devicesLine": "Devices at once: {count}.",
+    "willRenew": "Renews automatically.",
+    "willNotRenew": "Auto-renewal is off.",
+    "help": "/status — expiry and devices\n/link — your subscription URL\n/trial — a free day\n/buy — subscribe or renew\n/language — change language\n/unlink — unlink this chat\n/help — this list",
+    "failed": "Something went wrong. Try again later, or write to support.",
+    "monthShort": "mo"
+  },
+  "profile": {
+    "name": "GnomeVPN",
+    "description": "Manage your GnomeVPN subscription — a VPN on Hysteria2.\n\n• Expiry date and device count\n• A subscription URL for any app\n• Payment and renewal\n• A free trial day\n\nPress Start to begin.",
+    "shortDescription": "GnomeVPN subscription: status, link, payment",
+    "menuButton": "Account"
+  },
+  "commands": {
+    "status": "Subscription expiry",
+    "link": "Subscription URL",
+    "trial": "Free day",
+    "buy": "Subscribe or renew",
+    "language": "Change language",
+    "unlink": "Unlink this chat",
+    "help": "Help"
+  }
+}

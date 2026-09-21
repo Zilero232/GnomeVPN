@@ -1,0 +1,25 @@
+{
+  "tabIncy": "INCY",
+  "tabOther": "Другие приложения",
+  "tabTelegram": "Telegram",
+  "intro": "У GnomeVPN есть бот в Telegram — второй способ управлять подпиской, без захода на сайт.",
+  "abilities": {
+    "status": "Смотреть срок подписки и число устройств",
+    "link": "Получать ссылку на подписку",
+    "buy": "Оплачивать и продлевать",
+    "trial": "Активировать пробный день"
+  },
+  "connect": "Подключить Telegram",
+  "openBot": "Открыть бота",
+  "waiting": "Откроется Telegram — нажмите «Запустить». Эта страница обновится сама.",
+  "manualHint": "Если Telegram не открылся: найдите @{bot} и отправьте ему код",
+  "linkedAs": "Привязан: @{username}",
+  "linkedPlain": "Telegram привязан",
+  "linkedHint": "Отправьте боту /status, /link или /buy — он ответит по вашей подписке.",
+  "unlink": "Отвязать",
+  "unlinked": "Telegram отвязан",
+  "unavailable": "Не удалось загрузить статус Telegram. Проверьте соединение.",
+  "retry": "Повторить",
+  "title": "Бот в Telegram",
+  "codeCopied": "Код скопирован"
+}

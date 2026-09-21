@@ -53,7 +53,9 @@
     "security": "Безопасность"
   },
   "tabs": {
-    "subscription": "Подписка"
+    "subscription": "Подписка",
+    "app": "Приложение",
+    "telegram": "Telegram"
   },
   "meta": {
     "title": "Личный кабинет",

@@ -1,3 +1,3 @@
 export { SubscriptionGuard } from './guards';
-export { SubscriptionService } from './services';
+export { SubscriptionService, TrialService } from './services';
 export { SubscriptionModule } from './subscription.module';
