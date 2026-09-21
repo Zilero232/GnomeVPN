@@ -31,10 +31,10 @@ export class TelegramSubscriptionService {
   async status(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
-      act: async ({ userId, locale }) => {
-        const status = await this.subscription.getStatus(userId);
+      act: async (chat) => {
+        const status = await this.subscription.getStatus(chat.userId);
 
-        return ctx.reply(statusText({ ...status, locale }));
+        return this.shared.reply({ ctx, chat, text: statusText({ ...status, locale: chat.locale }) });
       }
     });
   }
@@ -121,12 +121,13 @@ export class TelegramSubscriptionService {
       .otherwise(() => null);
 
     if (isNonNullish(refusal)) {
-      await ctx.reply(refusal);
+      await this.shared.reply({ ctx, chat: { userId, locale }, text: refusal });
 
       return;
     }
 
     await this.trial.claim(userId);
-    await ctx.reply(text.trialGranted);
+
+    await this.shared.reply({ ctx, chat: { userId, locale }, text: text.trialGranted });
   }
 }

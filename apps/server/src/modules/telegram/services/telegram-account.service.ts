@@ -3,7 +3,7 @@ import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
-import type { BotContext, ConsumeInput, RefusalInput } from '../telegram.types';
+import type { BotContext, ConsumeInput, RefusalInput, SpeakInput } from '../telegram.types';
 
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { BOT_TEXT, LANGUAGE_BUTTONS, LOCALE_CALLBACK_PREFIX } from '../config';
@@ -20,13 +20,21 @@ export class TelegramAccountService {
     private readonly link: TelegramLinkService
   ) {}
 
+  async welcome(ctx: BotContext): Promise<void> {
+    await this.speak({ ctx, pick: (copy) => copy.start });
+  }
+
+  async help(ctx: BotContext): Promise<void> {
+    await this.speak({ ctx, pick: (copy) => copy.help });
+  }
+
   async unlink(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
       act: async ({ userId, locale }) => {
         await this.link.unlink(userId);
 
-        return ctx.reply(BOT_TEXT[locale].unlinked);
+        return ctx.reply(BOT_TEXT[locale].unlinked, { reply_markup: { remove_keyboard: true } });
       }
     });
   }
@@ -54,7 +62,10 @@ export class TelegramAccountService {
     const locale = resolveLocale(data.slice(LOCALE_CALLBACK_PREFIX.length));
 
     await this.link.setLocale({ telegramId: identity.telegramId, locale });
-    await ctx.reply(BOT_TEXT[locale].languageChanged);
+
+    const chat = await this.link.findChat(identity.telegramId);
+
+    await this.shared.reply({ ctx, chat, text: BOT_TEXT[locale].languageChanged });
   }
 
   async consume({ ctx, text }: ConsumeInput): Promise<void> {
@@ -75,10 +86,20 @@ export class TelegramAccountService {
     try {
       await this.link.consumeCode({ code: text, ...identity });
 
-      await ctx.reply(copy.linked);
+      const chat = await this.link.findChat(identity.telegramId);
+
+      await this.shared.reply({ ctx, chat, text: chat ? BOT_TEXT[chat.locale].linked : copy.linked });
     } catch (error) {
       await ctx.reply(this.refusalFor({ error, copy }));
     }
+  }
+
+  private async speak({ ctx, pick }: SpeakInput): Promise<void> {
+    const identity = identityOf(ctx.from);
+    const chat = isNullish(identity) ? null : await this.link.findChat(identity.telegramId);
+    const copy = chat ? BOT_TEXT[chat.locale] : this.shared.textFor(ctx);
+
+    await this.shared.reply({ ctx, chat, text: pick(copy) });
   }
 
   private refusalFor({ error, copy }: RefusalInput): string {

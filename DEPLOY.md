@@ -212,9 +212,10 @@ something a domain change or a rotated secret would silently invalidate.
 
 The webhook needs `API_URL` to be https and `TELEGRAM_WEBHOOK_SECRET` to be set;
 without either, the server logs that it skipped it and the rest still applies.
-`bun run telegram:webhook --info` prints what Telegram currently thinks the
-webhook is — it needs a network that reaches `api.telegram.org`, so run it
-behind a VPN.
+
+`docker compose logs server | grep telegram` is where to look when the bot goes
+quiet: the boot reports the webhook it found, whatever Telegram last failed to
+deliver to it, and how many updates are waiting.
 
 BotFather holds exactly one thing the API cannot set: the bot's photo. Send him
 `/setuserpic` once. Everything else edited there is overwritten on the next

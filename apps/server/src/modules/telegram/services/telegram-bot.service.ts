@@ -4,11 +4,14 @@ import type { Update } from 'grammy/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { Bot } from 'grammy';
 import { isNullish } from 'remeda';
+import { match } from 'ts-pattern';
+
+import type { PressInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { LOCALE_CALLBACK_PREFIX, PLAN_CALLBACK_PREFIX } from '../config';
-import { callbackPattern } from '../lib';
+import { buttonFor, callbackPattern } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
 import { TelegramProfileService } from './telegram-profile.service';
 import { TelegramSharedService } from './telegram-shared.service';
@@ -65,10 +68,10 @@ export class TelegramBotService implements OnModuleInit {
     bot.command('start', (ctx) => {
       const code = ctx.match;
 
-      return code ? this.account.consume({ ctx, text: code }) : ctx.reply(this.shared.textFor(ctx).start);
+      return code ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
     });
 
-    bot.command('help', (ctx) => ctx.reply(this.shared.textFor(ctx).help));
+    bot.command('help', (ctx) => this.account.help(ctx));
     bot.command('language', (ctx) => this.account.chooseLanguage(ctx));
     bot.command('status', (ctx) => this.subscription.status(ctx));
     bot.command('link', (ctx) => this.subscription.sendLink(ctx));
@@ -79,6 +82,21 @@ export class TelegramBotService implements OnModuleInit {
     bot.callbackQuery(callbackPattern(PLAN_CALLBACK_PREFIX), (ctx) => this.subscription.startCheckout(ctx));
     bot.callbackQuery(callbackPattern(LOCALE_CALLBACK_PREFIX), (ctx) => this.account.changeLocale(ctx));
 
-    bot.on('message:text', (ctx) => this.account.consume({ ctx, text: ctx.message.text }));
+    bot.on('message:text', (ctx) => {
+      const button = buttonFor(ctx.message.text);
+
+      return isNullish(button) ? this.account.consume({ ctx, text: ctx.message.text }) : this.press({ ctx, button });
+    });
+  }
+
+  private press({ ctx, button }: PressInput): Promise<void> {
+    return match(button)
+      .with('connect', () => this.subscription.sendLink(ctx))
+      .with('status', () => this.subscription.status(ctx))
+      .with('trial', () => this.subscription.claimTrialDay(ctx))
+      .with('buy', () => this.subscription.buy(ctx))
+      .with('language', () => this.account.chooseLanguage(ctx))
+      .with('help', () => this.account.help(ctx))
+      .exhaustive();
   }
 }
