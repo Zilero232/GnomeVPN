@@ -269,6 +269,11 @@ A webhook is only registered when `API_URL` is https and a secret is set. Both
 are Telegram's own requirements, and calling `setWebhook` without them fails the
 whole announcement, taking the command list with it.
 
+The boot logs what `getWebhookInfo` answered — the registered URL, the last
+delivery error and the pending count — because that is the whole of what a
+separate diagnostic command could have told anyone, and a log is where someone
+looks when the bot goes quiet.
+
 **An unset secret rejects everything rather than matching the absent header.**
 `TELEGRAM_WEBHOOK_SECRET` defaults to `''`, so a `!==` against it would let a
 request with no header through — a deploy that configured the token and forgot
@@ -286,6 +291,18 @@ out of the app exception's body, which is where the app exceptions carry it.
 **The bot speaks both languages.** It reads Telegram's own `language_code` for
 the first message and stores what `/language` chose, which then wins — someone
 who set it did so because the client was reporting the wrong thing.
+
+**The keyboard is the interface; the commands are the fallback.** A reply
+keyboard sits under the message box and changes with the chat: the link and the
+status only appear once there is a subscription to use, and the trial only while
+it can still be taken. `KEYBOARD_ROWS` is the whole layout — a button names the
+state it belongs to and a row that empties out is dropped rather than shipped
+blank. Adding a button is a row entry plus a label in both locale files.
+
+A press arrives as a plain text message, so `buttonFor` maps a label back to its
+key across both languages before the text is read as a link code. The labels
+therefore have to stay unique, including between languages — a test asserts it,
+because two identical labels would make a press ambiguous.
 
 **Its copy lives in JSON, not in TypeScript.** `config/locales/{ru,en}.json`
 hold every string the bot sends, mirroring the client's per-namespace files, and

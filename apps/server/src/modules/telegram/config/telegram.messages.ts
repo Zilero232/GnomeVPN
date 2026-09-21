@@ -1,6 +1,6 @@
 import { entries } from 'remeda';
 
-import type { BotCommand, BotLocale, BotMessages, BotProfile, BotText } from '../telegram.types';
+import type { BotButtons, BotCommand, BotLocale, BotMessages, BotProfile, BotText } from '../telegram.types';
 
 import en from './locales/en.json';
 import ru from './locales/ru.json';
@@ -14,6 +14,11 @@ const MESSAGES: Record<BotLocale, BotMessages> = { ru, en };
 export const BOT_TEXT: Record<BotLocale, BotText> = {
   ru: MESSAGES.ru.text,
   en: MESSAGES.en.text
+};
+
+export const BOT_BUTTONS: Record<BotLocale, BotButtons> = {
+  ru: MESSAGES.ru.buttons,
+  en: MESSAGES.en.buttons
 };
 
 export const BOT_PROFILE: Record<BotLocale, BotProfile> = {

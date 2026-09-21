@@ -10,6 +10,45 @@ export type BotMessages = typeof import('./config/locales/ru.json');
 
 export type BotText = BotMessages['text'];
 
+export type BotButtons = BotMessages['buttons'];
+
+export type ButtonKey = keyof BotButtons;
+
+export type ButtonVisibility = 'always' | 'subscribed' | 'trialAvailable' | 'unsubscribed';
+
+export type KeyboardSlot = {
+  key: ButtonKey;
+  when: ButtonVisibility;
+};
+
+export type KeyboardRow = KeyboardSlot[];
+
+export type ChatState = {
+  isSubscribed: boolean;
+  isTrialAvailable: boolean;
+};
+
+export type SpeakInput = {
+  ctx: BotContext;
+  pick: (copy: BotText) => string;
+};
+
+export type PressInput = {
+  ctx: BotContext;
+  button: ButtonKey;
+};
+
+export type ReplyInput = {
+  ctx: BotContext;
+  text: string;
+  chat: ResolvedChat | null;
+};
+
+export type KeyboardInput = {
+  locale: BotLocale;
+  state: ChatState;
+};
+
 export type BotProfile = BotMessages['profile'];
 
 export type BotCommand = {
