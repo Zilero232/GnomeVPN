@@ -2,12 +2,14 @@ import type { Bot } from 'grammy';
 import type { MenuButton } from 'grammy/types';
 
 import { Injectable, Logger } from '@nestjs/common';
+import { isNullish } from 'remeda';
 
 import type { DescribeInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, HTTPS_PREFIX } from '../config';
+import { webhookUrl } from '../lib';
 
 @Injectable()
 export class TelegramProfileService {
@@ -24,11 +26,33 @@ export class TelegramProfileService {
       }
 
       await bot.api.setChatMenuButton({ menu_button: this.menuButton() });
+      await this.listen(bot);
 
       this.logger.log('telegram bot is ready');
     } catch (error) {
       this.logger.warn(`telegram bot could not reach the api: ${describeError(error)}`);
     }
+  }
+
+  private async listen(bot: Bot): Promise<void> {
+    const secret = this.config.get('TELEGRAM_WEBHOOK_SECRET');
+    const url = webhookUrl({ apiUrl: this.config.get('API_URL'), secret });
+
+    if (isNullish(url)) {
+      this.logger.log('telegram webhook not registered: needs an https API_URL and a webhook secret');
+
+      return;
+    }
+
+    const current = await bot.api.getWebhookInfo();
+
+    if (current.url === url && !current.last_error_message) {
+      return;
+    }
+
+    await bot.api.setWebhook(url, { secret_token: secret });
+
+    this.logger.log(`telegram webhook set to ${url}`);
   }
 
   private async describe({ bot, locale }: DescribeInput): Promise<void> {

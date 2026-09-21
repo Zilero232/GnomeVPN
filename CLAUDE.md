@@ -256,6 +256,19 @@ Telegram retry, and telling a prober it guessed wrong invites it to keep
 guessing — so a bad secret is dropped silently. For the same reason
 `handleUpdate` never throws: Telegram replays any update it gets no 200 for.
 
+**The server registers its own webhook on boot, so nothing is run by hand.**
+`api.telegram.org` is blocked by most Russian ISPs, which makes a manual
+registration step something only the production host can do — and something a
+domain change or a rotated secret silently invalidates. `listen` sets it
+alongside the descriptions, skipping the call when `getWebhookInfo` already
+names the same URL and reports no delivery error. That error is what catches a
+rotated secret: the URL still matches, so nothing else would notice that
+Telegram is being turned away by the header check.
+
+A webhook is only registered when `API_URL` is https and a secret is set. Both
+are Telegram's own requirements, and calling `setWebhook` without them fails the
+whole announcement, taking the command list with it.
+
 **An unset secret rejects everything rather than matching the absent header.**
 `TELEGRAM_WEBHOOK_SECRET` defaults to `''`, so a `!==` against it would let a
 request with no header through — a deploy that configured the token and forgot

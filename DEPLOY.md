@@ -201,27 +201,20 @@ for `BETTER_AUTH_SECRET` signs every live session out.
 `t.me/<username>?start=<code>` out of it, and a wrong value makes the connect
 button lead nowhere.
 
-**3. Point Telegram at the API.** This is done once, against the deployed host:
+**3. Restart the server.** Everything else happens on boot, in both languages:
+the bot's name, its description, its short description, its command list, the
+menu button — and the webhook, pointed at `API_URL`. The bot answers `/start`
+from then on.
 
-```bash
-bun run telegram:webhook
-```
+Nothing is registered by hand. `api.telegram.org` is blocked by most Russian
+ISPs, so a manual step would be something only the production host could do, and
+something a domain change or a rotated secret would silently invalidate.
 
-The script reads `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` and `API_URL`
-out of `.env` and registers the webhook. `--info` prints what Telegram currently
-thinks it is, `--delete` removes it, and a URL passed as an argument overrides
-`API_URL` — which is how a tunnel is pointed at a local run.
-
-`api.telegram.org` is blocked by most Russian ISPs, so a timeout here says the
-request never left the country rather than anything about the bot.
-
-`pending_update_count` climbing and `last_error_message` filling in means the
-calls are not reaching the server — usually the wrong URL or a secret that does
-not match the one in `.env`.
-
-**4. Restart the server.** On boot it sets, for both languages, the bot's name,
-its description, its short description and its command list, and it points the
-menu button at `CLIENT_URL`. The bot answers `/start` from then on.
+The webhook needs `API_URL` to be https and `TELEGRAM_WEBHOOK_SECRET` to be set;
+without either, the server logs that it skipped it and the rest still applies.
+`bun run telegram:webhook --info` prints what Telegram currently thinks the
+webhook is — it needs a network that reaches `api.telegram.org`, so run it
+behind a VPN.
 
 BotFather holds exactly one thing the API cannot set: the bot's photo. Send him
 `/setuserpic` once. Everything else edited there is overwritten on the next
