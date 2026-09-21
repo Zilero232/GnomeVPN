@@ -4,10 +4,79 @@
   min-height: 100dvh;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted);
 }
 
-.spinner {
-  width: 22px;
-  height: 22px;
+.card {
+  display: flex;
+  min-width: 280px;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  gap: 20px;
+}
+
+.mark {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+// A determinate-looking bar would be a lie: nothing here reports progress.
+// It sweeps instead, which reads as "working" without claiming a percentage.
+.bar {
+  position: relative;
+  overflow: hidden;
+  width: 180px;
+  height: 3px;
+  border-radius: 2px;
+  background-color: var(--color-border);
+}
+
+.fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  border-radius: 2px;
+  animation: sweep 1.4s ease-in-out infinite;
+  background-color: var(--color-accent);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+@keyframes sweep {
+  0% {
+    left: -40%;
+  }
+
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark,
+  .fill {
+    animation: none;
+  }
+
+  .fill {
+    left: 0;
+    width: 100%;
+  }
 }

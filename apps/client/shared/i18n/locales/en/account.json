@@ -53,7 +53,9 @@
     "security": "Security"
   },
   "tabs": {
-    "subscription": "Subscription"
+    "subscription": "Subscription",
+    "app": "App",
+    "telegram": "Telegram"
   },
   "meta": {
     "title": "Account",

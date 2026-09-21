@@ -1,6 +1,6 @@
 'use client';
 
-import { CreditCard, LogOut, UserRound } from 'lucide-react';
+import { CreditCard, LogOut, Send, Smartphone, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
@@ -13,7 +13,7 @@ import { Avatar, Text } from '@/ui-kit';
 import type { AccountTab } from './components';
 
 import { BLOCK_MOTION, HEADER_MOTION, PAGE_MOTION } from './AccountPage.motion';
-import { AccountAura, AccountNav, AccountTabs, ProfileCard, SubscriptionCard } from './components';
+import { AccountAura, AccountNav, AccountTabs, AppCard, ProfileCard, SubscriptionCard, TelegramCard } from './components';
 
 import s from './AccountPage.module.scss';
 
@@ -39,6 +39,18 @@ export const AccountPage = () => {
       label: t('tabs.subscription'),
       icon: CreditCard,
       render: () => <SubscriptionCard isLoading={isLoading} subscription={subscription} />
+    },
+    {
+      value: 'app',
+      label: t('tabs.app'),
+      icon: Smartphone,
+      render: () => <AppCard />
+    },
+    {
+      value: 'telegram',
+      label: t('tabs.telegram'),
+      icon: Send,
+      render: () => <TelegramCard />
     }
   ];
 

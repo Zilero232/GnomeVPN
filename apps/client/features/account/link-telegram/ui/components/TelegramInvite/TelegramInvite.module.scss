@@ -1,0 +1,49 @@
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.headIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.headBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.abilities {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+  list-style: none;
+}
+
+.ability {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.abilityCheck {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.action {
+  align-self: flex-start;
+}

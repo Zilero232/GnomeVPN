@@ -7,3 +7,9 @@ export const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
 
   return data;
 };
+
+export const claimTrial = async (): Promise<SubscriptionStatus> => {
+  const { data } = await api.post('/subscription/trial');
+
+  return data;
+};

@@ -27,6 +27,7 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "typecheck": "tsc --noEmit",
+    "format:prisma": "prisma format",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "cache-manager": "^7.2.9",
     "date-fns": "catalog:",
     "express": "^5.2.1",
+    "grammy": "^1.46.0",
     "helmet": "^8.0.0",
     "keyv": "^5.6.0",
     "nestjs-zod": "^5.5.0",

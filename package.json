@@ -70,9 +70,12 @@
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
     "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/scripts typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck && tsc -p scripts --noEmit",
     "verify": "bun run typecheck && bun run lint && bun run format:check && bun run lint:css",
-    "fix": "bun run lint:fix && bun run format && bun run lint:css:fix",
+    "fix": "bun run lint:fix && bun run format && bun run lint:css:fix && bun run format:prisma",
     "provision:nodes": "bun --env-file .env --env-file .env.nodes scripts/provision/index.ts",
-    "brand:icons": "bun scripts/brand-icons/index.ts"
+    "brand:icons": "bun scripts/brand-icons/index.ts",
+    "format:prisma": "bun --filter @gnomevpn/server format:prisma",
+    "secrets": "bun scripts/secrets/index.ts",
+    "telegram:webhook": "bun scripts/telegram-webhook/index.ts"
   },
   "dependencies": {
     "@gnomevpn/scripts": "workspace:*",

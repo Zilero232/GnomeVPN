@@ -14,6 +14,7 @@ import { PlatformsModule } from './modules/platforms';
 import { SchedulerModule } from './modules/scheduler';
 import { SubscriptionModule } from './modules/subscription';
 import { SubscriptionLinkModule } from './modules/subscription-link';
+import { TelegramModule } from './modules/telegram';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SubscriptionLinkModule } from './modules/subscription-link';
     PeersModule,
     PlatformsModule,
     SubscriptionLinkModule,
+    TelegramModule,
     SchedulerModule
   ],
   providers: [

@@ -1,0 +1,20 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.linked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.action {
+  align-self: flex-start;
+}

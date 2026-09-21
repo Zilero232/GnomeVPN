@@ -7,7 +7,7 @@ import { clamp, isNonNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
-import { IncyCard } from '@/features/vpn/connect-incy';
+import { TrialBanner } from '@/features/billing/claim-trial';
 import { DATE_FORMAT } from '@/shared/i18n';
 import { Text } from '@/ui-kit';
 
@@ -62,10 +62,6 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
           </dl>
         </div>
 
-        <div className={s.connect}>
-          <IncyCard />
-        </div>
-
         {subscription && (
           <>
             <ExtraDevicesControl limits={subscription.limits} />
@@ -85,6 +81,8 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
             {t('pitch')}
           </Text>
         </div>
+
+        {subscription?.isTrialAvailable && <TrialBanner />}
 
         <div className={s.picker}>
           <PlanPicker />

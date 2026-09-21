@@ -1,1 +1,1 @@
-export { getSubscriptionStatus } from './subscription';
+export { claimTrial, getSubscriptionStatus } from './subscription';

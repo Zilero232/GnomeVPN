@@ -217,6 +217,83 @@ client parsing the list hit a blank entry.
 The docs are at https://incy.gitbook.io/docs/docs-en — `subscription-format`
 and `share-links` are the two pages that matter.
 
+## Telegram is a second door to the same account
+
+`apps/server/src/modules/telegram/` is a bot and nothing more: it reads the
+subscription, the link and the checkout through the services that already own
+them. Nothing about billing or peers is reimplemented there, and a command that
+needs a user calls `TelegramLinkService.findChat` rather than trusting the chat.
+
+**It is five services, not one.** `TelegramBotService` owns the grammY instance
+and the routing table and nothing else; `TelegramSubscriptionService` answers
+`/status`, `/link`, `/buy` and `/trial`; `TelegramAccountService` owns linking
+and `/language`; `TelegramProfileService` announces the bot to Telegram; and
+`TelegramSharedService` holds the two things every command needs — resolving the
+chat and picking the locale — rather than each of them repeating it.
+
+**The link is a code, not an OAuth flow.** The account page issues a short code,
+the reader retypes it into the bot, and the bot exchanges it for the user id.
+Issuing a second code invalidates the first, the code lives fifteen minutes, and
+its alphabet leaves out `0/O` and `1/I/l` because a person reads it off a screen.
+
+**A Telegram id already linked elsewhere is a conflict, not a move.** Silently
+repointing it would take the subscription away from whoever holds the other
+account, so `consumeCode` refuses — inside the transaction, so the refusal rolls
+the claim back and the code still works from the right chat.
+
+**A second chat for the same account is the opposite case, and is a move.**
+`telegram_account.user_id` is unique, so the row cannot simply be added: the
+previous chat is unlinked first. Without that the `create` collides on
+`user_id` and someone linking their new phone is told "something went wrong".
+
+**An empty `TELEGRAM_BOT_TOKEN` switches the bot off.** The module still loads
+and the routes still exist; they simply do nothing. A deploy that has not
+configured Telegram is not a failed deploy.
+
+**The webhook is verified by header, and a mismatch answers 200.** Telegram
+signs every call with `TELEGRAM_WEBHOOK_SECRET`. Answering an error would have
+Telegram retry, and telling a prober it guessed wrong invites it to keep
+guessing — so a bad secret is dropped silently. For the same reason
+`handleUpdate` never throws: Telegram replays any update it gets no 200 for.
+
+**An unset secret rejects everything rather than matching the absent header.**
+`TELEGRAM_WEBHOOK_SECRET` defaults to `''`, so a `!==` against it would let a
+request with no header through — a deploy that configured the token and forgot
+the secret would hand the bot to whoever finds the route. The comparison is
+`timingSafeEqual`, whose length check returns early because the length of a
+secret is not itself a secret.
+
+**The two refusals a command can give are different answers.** A code that did
+not work and a chat that belongs to someone else's account send a reader to
+different places, so `refusalFor` branches on the error code rather than
+catching everything as an invalid code; the same is true of the trial, where an
+unconfirmed address is not a used-up trial. `errorCodeOf` reads the code back
+out of the app exception's body, which is where the app exceptions carry it.
+
+**The bot speaks both languages.** It reads Telegram's own `language_code` for
+the first message and stores what `/language` chose, which then wins — someone
+who set it did so because the client was reporting the wrong thing.
+
+**Its copy lives in JSON, not in TypeScript.** `config/locales/{ru,en}.json`
+hold every string the bot sends, mirroring the client's per-namespace files, and
+`BotMessages` is derived from the Russian one — so a key present in one language
+and missing from the other fails to typecheck rather than reaching a reader. The
+command menu is built from the `commands` block rather than listed a second time
+beside it.
+
+**Announcing the bot never blocks the boot.** Nest does not finish starting
+until `onModuleInit` returns, and `api.telegram.org` is unreachable from some
+networks, so the announcement runs detached and a failure is logged rather than
+raised. The same is why a command list that failed to update is not an error.
+
+**Everything BotFather can set, the server sets on boot** — name, description,
+short description, command list, and the menu button pointed at `CLIENT_URL`.
+The one exception is the photo, which has no API method and stays a one-off
+`/setuserpic`. Editing any of the rest in BotFather is overwritten on the next
+restart. The menu button falls back to `type: 'commands'` when `CLIENT_URL` is
+not https, because Telegram rejects a `web_app` over plain http and the whole
+`announce` call would fail with it.
+
 ## What the workflows assume
 
 **`checks.yml`** — runs on pushes to master, on pull requests and on a `v*` tag.
@@ -256,6 +333,29 @@ Output is pretty by default and JSON in production; `LOG_FORMAT=json` forces it
 either way, which is what the reporter's tests read. A script keeps its
 `[scope] message` shape through `pretty.messageFormat` rather than by writing to
 `console` — the shape is a display concern, the fields are the data.
+
+**`trialStartedAt` outlives the period it granted.** A trial is given once and
+never again, so clearing the flag when the period expires would hand out a
+second one; `trialState` reads the flag, not the period.
+
+**One chat row per account, and the id is the identity.**
+`telegram_account.telegram_id` is what never changes — a username does, which is
+why the username is stored for display only. The row points at a `User`, so a
+Telegram account is a second door to one subscription rather than a second
+subscription.
+
+**The trial is a day, not an hour or a week.** A day is long enough to install
+the app, connect and judge the speed on the reader's own network, which is the
+only way a VPN can be judged at all.
+
+**A callback payload is matched on an escaped prefix.** `callbackPattern` builds
+the regular expression rather than interpolating the prefix by hand, so a prefix
+carrying a metacharacter cannot widen the match, and a fresh pattern per call is
+what keeps a global flag from carrying `lastIndex` between updates.
+
+**A Telegram id is a bigint from the edge inwards.** It exceeds what a JS number
+holds safely, so `identityOf` converts once at the boundary rather than leaving
+each call site to remember.
 
 ## Indexed pages are a set, not a page
 

@@ -1,0 +1,25 @@
+{
+  "tabIncy": "INCY",
+  "tabOther": "Other apps",
+  "tabTelegram": "Telegram",
+  "intro": "GnomeVPN has a Telegram bot — a second way to manage the subscription without opening the site.",
+  "abilities": {
+    "status": "Check the expiry date and device count",
+    "link": "Get your subscription URL",
+    "buy": "Pay and renew",
+    "trial": "Start the free day"
+  },
+  "connect": "Connect Telegram",
+  "openBot": "Open the bot",
+  "waiting": "Telegram opens — press Start. This page updates by itself.",
+  "manualHint": "If Telegram did not open: find @{bot} and send it this code",
+  "linkedAs": "Linked as @{username}",
+  "linkedPlain": "Telegram is linked",
+  "linkedHint": "Send the bot /status, /link or /buy — it answers for your subscription.",
+  "unlink": "Unlink",
+  "unlinked": "Telegram unlinked",
+  "unavailable": "Could not load the Telegram status. Check your connection.",
+  "retry": "Try again",
+  "title": "Telegram bot",
+  "codeCopied": "Code copied"
+}

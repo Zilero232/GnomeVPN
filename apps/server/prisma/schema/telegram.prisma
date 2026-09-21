@@ -1,0 +1,33 @@
+model TelegramAccount {
+  id String @id @default(dbgenerated("gen_random_uuid()"))
+
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  telegramId BigInt  @unique @map("telegram_id")
+  username   String?
+
+  languageCode String? @map("language_code")
+
+  locale String?
+
+  linkedAt   DateTime  @default(now()) @map("linked_at") @db.Timestamptz(3)
+  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(3)
+
+  @@map("telegram_account")
+}
+
+model TelegramLinkCode {
+  code String @id
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("telegram_link_code")
+}

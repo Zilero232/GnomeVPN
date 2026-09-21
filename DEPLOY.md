@@ -138,6 +138,13 @@ EMAIL_FROM=GnomeVPN <noreply@gnome-vpn.com>
 # Where the links in the emails lead.
 CLIENT_URL=https://gnome-vpn.com
 
+# Telegram bot — optional. Leave the token empty and the bot never starts.
+# The webhook is registered by hand once, against the deployed API:
+#   curl -F "url=https://api.gnome-vpn.com/telegram/webhook" #        -F "secret_token=<TELEGRAM_WEBHOOK_SECRET>" #        https://api.telegram.org/bot<TOKEN>/setWebhook
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_USERNAME=
+TELEGRAM_WEBHOOK_SECRET=
+
 ```
 
 Node keys are not written here. `bun provision` puts them in a separate
@@ -166,6 +173,60 @@ openssl rand -base64 32
 ```
 
 **`CORS_ORIGINS` is the site's origin and nothing else.** The browser is the only caller; anything extra widens the surface for no gain.
+
+---
+
+## Creating the Telegram bot
+
+The bot is optional — an empty `TELEGRAM_BOT_TOKEN` switches it off and the
+deploy still works. To turn it on:
+
+**1. Create it.** Message [@BotFather](https://t.me/BotFather), send `/newbot`,
+give it a display name and then a username ending in `bot`
+(`gnomevpn_bot`). He answers with the token.
+
+**2. Fill in the three variables** in `/opt/gnomevpn/.env`:
+
+```env
+TELEGRAM_BOT_TOKEN=<what BotFather sent>
+TELEGRAM_BOT_USERNAME=gnomevpn_bot
+TELEGRAM_WEBHOOK_SECRET=<generated>
+```
+
+`bun run secrets` fills in the secrets that are still empty — locally into
+`.env`, and it leaves anything already set alone. `--force` overwrites, which
+for `BETTER_AUTH_SECRET` signs every live session out.
+
+`TELEGRAM_BOT_USERNAME` carries no `@`: the account page builds
+`t.me/<username>?start=<code>` out of it, and a wrong value makes the connect
+button lead nowhere.
+
+**3. Point Telegram at the API.** This is done once, against the deployed host:
+
+```bash
+bun run telegram:webhook
+```
+
+The script reads `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` and `API_URL`
+out of `.env` and registers the webhook. `--info` prints what Telegram currently
+thinks it is, `--delete` removes it, and a URL passed as an argument overrides
+`API_URL` — which is how a tunnel is pointed at a local run.
+
+`api.telegram.org` is blocked by most Russian ISPs, so a timeout here says the
+request never left the country rather than anything about the bot.
+
+`pending_update_count` climbing and `last_error_message` filling in means the
+calls are not reaching the server — usually the wrong URL or a secret that does
+not match the one in `.env`.
+
+**4. Restart the server.** On boot it sets, for both languages, the bot's name,
+its description, its short description and its command list, and it points the
+menu button at `CLIENT_URL`. The bot answers `/start` from then on.
+
+BotFather holds exactly one thing the API cannot set: the bot's photo. Send him
+`/setuserpic` once. Everything else edited there is overwritten on the next
+restart, because the locale files under
+`apps/server/src/modules/telegram/config/locales/` are the source.
 
 ---
 
