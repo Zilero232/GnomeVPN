@@ -1,1 +1,1 @@
-export { PRICING_FAQ, PRICING_INCLUDED } from './pricing';
+export { PRICING_INCLUDED, PRICING_SECTIONS } from './pricing';

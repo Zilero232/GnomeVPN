@@ -14,5 +14,32 @@
     "support": "Email support",
     "platforms": "iPhone, Android, Windows, Linux, TV"
   },
-  "faqTitle": "Questions about billing"
+  "sectionsTitle": "How the subscription works",
+  "sections": {
+    "oneplan": {
+      "title": "One plan rather than several",
+      "body": "We do not split access into tiers: there is no separate price for \"fast\" servers or for particular countries. Any subscription opens every location and both protocols — Hysteria2 and VLESS + Reality. Only the term differs, and a longer one costs less per month. It is built that way because tiering usually serves the sales funnel rather than the user: the entry plan is made deliberately awkward to push you towards the expensive one."
+    },
+    "devices": {
+      "title": "How many devices",
+      "body": "Two simultaneous connections by default. There is one subscription link — add it to a phone, a laptop and a television, and two of them run at a time. If you need more, extra devices are bought in your account without changing plan. What counts is active connections rather than installations: the app sitting on a fourth device costs you nothing until you use it."
+    },
+    "payment": {
+      "title": "Paying and renewing",
+      "body": "By card on the site, through YooKassa. Access opens the moment the payment clears — the app sees the new expiry on its next subscription refresh, usually within a few minutes. Auto-renewal is one switch in your account: access stays until the end of the period you paid for, and nothing is charged after that."
+    },
+    "refund": {
+      "title": "A refund within fourteen days",
+      "body": "If the service does not suit you, email us within two weeks of paying and we refund the unused period — no interrogation, no request to explain yourself. That is not a marketing line: a VPN cannot be judged from a description, because it behaves differently on different networks, and the only way to know is to try it on your own connection."
+    },
+    "expiry": {
+      "title": "What happens when it ends",
+      "body": "The subscription does not renew itself once you have turned auto-renewal off. When the term expires, connections stop passing authentication — usually within a few hours of the period ending. Your account and your link survive: to come back you only pay again, and nothing has to be set up on your devices a second time."
+    }
+  },
+  "related": {
+    "faq": "Common questions about the service",
+    "servers": "Servers and protocols: which to pick",
+    "subscription": "What a subscription link is"
+  }
 }

@@ -14,7 +14,9 @@ const manifest = (): MetadataRoute.Manifest => ({
   lang: SITE.lang,
   icons: [
     { src: '/brand/favicon.svg', type: 'image/svg+xml', sizes: 'any', purpose: 'any' },
-    { src: '/brand/logo-mark.svg', type: 'image/svg+xml', sizes: 'any', purpose: 'maskable' }
+    { src: '/brand/icon-192.png', type: 'image/png', sizes: '192x192', purpose: 'any' },
+    { src: '/brand/icon-512.png', type: 'image/png', sizes: '512x512', purpose: 'any' },
+    { src: '/brand/icon-512.png', type: 'image/png', sizes: '512x512', purpose: 'maskable' }
   ]
 });
 

@@ -58,3 +58,25 @@
   flex-shrink: 0;
   color: var(--color-accent);
 }
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionHeading {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sectionBody {
+  font-size: 15px;
+  line-height: 1.7;
+}

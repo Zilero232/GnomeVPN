@@ -18,7 +18,7 @@ export const defaultMetadata: Metadata = {
   icons: {
     icon: [{ url: '/brand/favicon.svg', type: 'image/svg+xml' }],
     shortcut: '/brand/favicon.svg',
-    apple: [{ url: '/brand/logo-mark.svg', type: 'image/svg+xml' }]
+    apple: [{ url: '/brand/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }]
   },
   manifest: '/manifest.webmanifest',
   alternates: {
