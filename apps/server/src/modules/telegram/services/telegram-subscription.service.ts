@@ -10,9 +10,8 @@ import { describeError } from '../../../common/lib';
 import { CheckoutService } from '../../billing';
 import { SubscriptionService, TrialService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, CALLBACK_PREFIX } from '../config';
-import { identityOf, parsePlanId, planButtonLabel, statusText } from '../lib';
-import { TelegramLinkService } from './telegram-link.service';
+import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE } from '../config';
+import { parsePlanId, planButtonLabel, statusText } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -21,7 +20,6 @@ export class TelegramSubscriptionService {
 
   constructor(
     private readonly shared: TelegramSharedService,
-    private readonly link: TelegramLinkService,
     private readonly subscription: SubscriptionService,
     private readonly subscriptionLink: SubscriptionLinkService,
     private readonly checkout: CheckoutService,
@@ -52,39 +50,29 @@ export class TelegramSubscriptionService {
   }
 
   async startCheckout(ctx: BotContext): Promise<void> {
-    const identity = identityOf(ctx.from);
-    const data = ctx.callbackQuery?.data;
+    await this.shared.answered({
+      ctx,
+      prefix: CALLBACK_PREFIX.plan,
+      tellUnlinked: true,
+      act: async ({ chat, value }) => {
+        const text = BOT_TEXT[chat.locale];
+        const planId = parsePlanId(value);
 
-    if (isNullish(identity) || isNullish(data)) {
-      return;
-    }
+        if (isNullish(planId)) {
+          return;
+        }
 
-    await ctx.answerCallbackQuery();
+        try {
+          const { confirmationUrl } = await this.checkout.createCheckout({ userId: chat.userId, planId });
 
-    const chat = await this.link.findChat(identity.telegramId);
+          await ctx.reply([text.checkoutIntro, '', confirmationUrl].join(NEW_LINE));
+        } catch (error) {
+          this.logger.warn(`telegram checkout failed: ${describeError(error)}`);
 
-    if (isNullish(chat)) {
-      await ctx.reply(this.shared.textFor(ctx).notLinked);
-
-      return;
-    }
-
-    const text = BOT_TEXT[chat.locale];
-    const planId = parsePlanId(data.slice(CALLBACK_PREFIX.plan.length));
-
-    if (isNullish(planId)) {
-      return;
-    }
-
-    try {
-      const { confirmationUrl } = await this.checkout.createCheckout({ userId: chat.userId, planId });
-
-      await ctx.reply([text.checkoutIntro, '', confirmationUrl].join('\n'));
-    } catch (error) {
-      this.logger.warn(`telegram checkout failed: ${describeError(error)}`);
-
-      await ctx.reply(text.failed);
-    }
+          await ctx.reply(text.failed);
+        }
+      }
+    });
   }
 
   private async replyWithLink({ ctx, chat }: ReplyWithLinkInput): Promise<void> {

@@ -5,6 +5,8 @@ import { SubscriptionModule } from '../subscription';
 import { SubscriptionLinkModule } from '../subscription-link';
 import {
   TelegramAccountService,
+  TelegramAppsService,
+  TelegramBillingService,
   TelegramBotService,
   TelegramLinkService,
   TelegramProfileService,
@@ -19,6 +21,8 @@ import { TelegramController } from './telegram.controller';
   controllers: [TelegramController, TelegramLinkController],
   providers: [
     TelegramAccountService,
+    TelegramAppsService,
+    TelegramBillingService,
     TelegramBotService,
     TelegramLinkService,
     TelegramProfileService,

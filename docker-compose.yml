@@ -131,6 +131,20 @@ volumes:
   caddy_config:
   pgdata:
 
+# api.telegram.org is reachable from this host over IPv6 and not over IPv4: the
+# TCP handshake to its A records completes and the TLS one never does, which is
+# what an SNI-based block looks like. The AAAA route is untouched, so the bot
+# needs the network to carry IPv6 — without it the container resolves only the
+# AAAA record and has nowhere to send it.
 networks:
   gnomevpn:
     driver: bridge
+    enable_ipv6: true
+    driver_opts:
+      # The subnet is private, so it needs masquerading the way IPv4 already
+      # gets it — without this the container holds an address it cannot route
+      # from, and every call to Telegram times out instead of failing.
+      com.docker.network.bridge.gateway_mode_ipv6: nat
+    ipam:
+      config:
+        - subnet: fd00:d0c:e12::/64

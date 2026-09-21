@@ -1,6 +1,7 @@
+import type { ClientId } from '@gnomevpn/schemas';
 import type { Bot, Context } from 'grammy';
 
-import type { BOT_LOCALES } from './config';
+import type { AUTO_RENEW_CHOICE, BOT_LOCALES } from './config';
 
 export type BotLocale = (typeof BOT_LOCALES)[number];
 
@@ -31,6 +32,26 @@ export type ChatState = {
 export type SpeakInput = {
   ctx: BotContext;
   pick: (copy: BotText) => string;
+};
+
+export type ShowClientInput = {
+  ctx: BotContext;
+  chat: ResolvedChat;
+  id: ClientId;
+};
+
+export type AutoRenewChoice = (typeof AUTO_RENEW_CHOICE)[keyof typeof AUTO_RENEW_CHOICE];
+
+export type Answer = {
+  chat: ResolvedChat;
+  value: string;
+};
+
+export type AnsweredInput = {
+  ctx: BotContext;
+  prefix: string;
+  act: (answer: Answer) => Promise<unknown>;
+  tellUnlinked?: boolean;
 };
 
 export type PressInput = {
@@ -104,6 +125,7 @@ export type ConsumeInput = {
 export type DescribeInput = {
   bot: Bot;
   locale: BotLocale;
+  isFallback?: boolean;
 };
 
 export type RefusalInput = {

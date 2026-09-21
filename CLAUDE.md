@@ -387,6 +387,19 @@ subscription.
 the app, connect and judge the speed on the reader's own network, which is the
 only way a VPN can be judged at all.
 
+**A callback payload is untrusted input, whatever button rendered it.**
+`countFrom` checks the shape before the value because `Number()` reads `" 2"`
+and `"0x2"` as two, and `autoRenewChoice` returns null rather than treating an
+unrecognised payload as "off" — a ternary there would let a crafted press turn a
+paying reader's renewal off. `parseClientId` matches against `CLIENT_IDS` rather
+than asking `in`, which also answers for `__proto__`.
+
+**Every callback handler unwraps the press the same way**, so
+`TelegramSharedService.answered` does it once: read the sender, acknowledge the
+press so the client stops spinning, resolve the chat, hand the handler the
+value. `tellUnlinked` is for the one caller that would rather say why nothing
+happened than stay silent.
+
 **A callback payload is matched on an escaped prefix.** `callbackPattern` builds
 the regular expression rather than interpolating the prefix by hand, so a prefix
 carrying a metacharacter cannot widen the match, and a fresh pattern per call is
