@@ -17,13 +17,21 @@
 }
 
 .item {
-  display: flex;
+  display: grid;
   align-items: center;
   padding: 10px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background-color: var(--color-surface-raised);
-  gap: 12px;
+  gap: 4px 12px;
+  grid-template-columns: auto 1fr auto;
+
+  // The action drops under the name rather than squeezing it: at this width the
+  // two side by side wrap the platform list onto a ragged second line.
+  @include below(md) {
+    grid-template-columns: auto 1fr;
+    row-gap: 10px;
+  }
 }
 
 .icon {
@@ -34,7 +42,6 @@
 .body {
   display: flex;
   min-width: 0;
-  flex: 1 1 auto;
   flex-direction: column;
   gap: 2px;
 }
@@ -43,30 +50,18 @@
   font-weight: 500;
 }
 
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.download {
-  display: inline-flex;
-  align-items: center;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  gap: 4px;
-  text-decoration: none;
-
-  &:hover {
-    color: var(--color-accent);
-  }
+.platforms {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .import {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
+  justify-content: center;
   padding: 6px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -81,5 +76,10 @@
   &:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
+  }
+
+  @include below(md) {
+    padding: 9px 10px;
+    grid-column: 1 / -1;
   }
 }

@@ -286,8 +286,7 @@
       "incy": "The INCY deep link. Only INCY understands this one."
     },
     "otherApps": "Use another app",
-    "otherAppsHint": "The same subscription — pick the app you already have.",
-    "clientDownload": "Download",
+    "otherAppsHint": "The same subscription. Add opens the app; if it is not installed, the link is already copied.",
     "clientImport": "Add",
     "clientCopy": "Copy URL",
     "clients": {
@@ -306,7 +305,8 @@
       "macos": "macOS",
       "linux": "Linux",
       "tv": "TV"
-    }
+    },
+    "importCopied": "Link copied — opening the app"
   },
   "tray": {
     "tooltip": "GnomeVPN",

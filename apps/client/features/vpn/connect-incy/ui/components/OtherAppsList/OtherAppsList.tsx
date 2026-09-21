@@ -1,14 +1,14 @@
 'use client';
 
 import { useMediaQuery } from '@siberiacancode/reactuse';
-import { Copy, Download, ExternalLink } from 'lucide-react';
+import { Copy, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { isNonNullish } from 'remeda';
 
 import { CLIENT_ICONS } from '@/entities/app/incy';
 import { Text } from '@/ui-kit';
 
-import type { OtherAppsListProps } from './OtherAppsList.types';
+import type { ImportInput, OtherAppsListProps } from './OtherAppsList.types';
 
 import { TOUCH_DEVICE_QUERY } from './OtherAppsList.constants';
 
@@ -20,6 +20,12 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
 
   const others = clients.filter((client) => !client.isRecommended);
 
+  const onImport = async ({ importUrl, id }: ImportInput) => {
+    await onCopy({ value: url, message: t('importCopied'), id });
+
+    window.location.href = importUrl;
+  };
+
   return (
     <div className={s.root}>
       <Text size='xs' tone='muted'>
@@ -27,7 +33,7 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
       </Text>
 
       <ul className={s.list}>
-        {others.map(({ id, importUrl, downloadUrl, platforms }) => {
+        {others.map(({ id, importUrl, platforms }) => {
           const Icon = CLIENT_ICONS[id];
           const canImport = isTouchDevice && isNonNullish(importUrl);
 
@@ -40,25 +46,18 @@ export const OtherAppsList = ({ clients, url, onCopy }: OtherAppsListProps) => {
                   {t(`clients.${id}`)}
                 </Text>
 
-                <span className={s.meta}>
-                  <Text as='span' size='xs' tone='muted'>
-                    {platforms.map((platform) => t(`platformNames.${platform}`)).join(' · ')}
-                  </Text>
-
-                  <a className={s.download} href={downloadUrl} rel='noopener noreferrer' target='_blank'>
-                    <Download aria-hidden size={12} />
-                    {t('clientDownload')}
-                  </a>
-                </span>
+                <Text as='span' className={s.platforms} size='xs' tone='muted'>
+                  {platforms.map((platform) => t(`platformNames.${platform}`)).join(' · ')}
+                </Text>
               </span>
 
               {canImport ? (
-                <a className={s.import} href={importUrl}>
+                <button className={s.import} type='button' onClick={() => void onImport({ importUrl, id })}>
                   <ExternalLink aria-hidden size={14} />
                   {t('clientImport')}
-                </a>
+                </button>
               ) : (
-                <button className={s.import} type='button' onClick={() => onCopy({ value: url, message: t('urlCopied'), id })}>
+                <button className={s.import} type='button' onClick={() => void onCopy({ value: url, message: t('urlCopied'), id })}>
                   <Copy aria-hidden size={14} />
                   {t('clientCopy')}
                 </button>

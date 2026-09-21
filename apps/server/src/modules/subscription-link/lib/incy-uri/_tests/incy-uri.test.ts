@@ -5,6 +5,7 @@ import { isNullish } from 'remeda';
 import { describe, expect, it } from 'vitest';
 
 import { serverName } from '../../server-name';
+import { TLS_MODE } from '../../tls-mode';
 import { HYSTERIA2_SCHEME } from '../hysteria2/hysteria2.constants';
 import { incyServerUri } from '../incy-uri';
 import { VLESS_NETWORK } from '../vless/vless.constants';
@@ -32,37 +33,37 @@ const uriOf = (input: Parameters<typeof incyServerUri>[0]): string => {
 
 describe('incyServerUri', () => {
   it('builds a hysteria2 link INCY can parse', () => {
-    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' });
+    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam', tls: TLS_MODE.pin });
 
     expect(uri.startsWith(`${HYSTERIA2_SCHEME}://secret-auth@203.0.113.10:443/`)).toBe(true);
   });
 
   it('carries the sni the node presents', () => {
-    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null });
+    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(new URL(uri).searchParams.get('sni')).toBe(config.serverName);
   });
 
   it('marks a self-signed node insecure so the client accepts it', () => {
-    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null });
+    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(new URL(uri).searchParams.get('insecure')).toBe('1');
   });
 
   it('omits insecure when the node presents a trusted certificate', () => {
-    const uri = uriOf({ config: { ...config, insecure: false }, country: 'Netherlands', countryCode: 'NL', city: null });
+    const uri = uriOf({ config: { ...config, insecure: false }, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(new URL(uri).searchParams.has('insecure')).toBe(false);
   });
 
   it('round-trips a credential that contains url metacharacters', () => {
-    const uri = uriOf({ config: { ...config, auth: 'p@ss:word/x' }, country: 'Netherlands', countryCode: 'NL', city: null });
+    const uri = uriOf({ config: { ...config, auth: 'p@ss:word/x' }, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(decodeURIComponent(new URL(uri).username)).toBe('p@ss:word/x');
   });
 
   it('names the server in the fragment', () => {
-    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' });
+    const uri = uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam', tls: TLS_MODE.pin });
 
     expect(decodeURIComponent(new URL(uri).hash)).toBe(`#${serverName({ country: 'Netherlands', countryCode: 'NL', city: 'Amsterdam' })}`);
   });
@@ -90,13 +91,13 @@ const vlessParams = (uri: string) => new URL(uri).searchParams;
 
 describe('incyServerUri over vless', () => {
   it('builds a vless link rather than a hysteria2 one', () => {
-    const uri = uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null });
+    const uri = uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(uri.startsWith('vless://')).toBe(true);
   });
 
   it('carries the reality handshake the client cannot derive on its own', () => {
-    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin }));
 
     expect(params.get('security')).toBe('reality');
     expect(params.get('pbk')).toBe(vlessConfig.reality?.publicKey);
@@ -105,31 +106,31 @@ describe('incyServerUri over vless', () => {
   });
 
   it('rides tcp, which is the whole point of offering it beside hysteria2', () => {
-    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin }));
 
     expect(params.get('type')).toBe(VLESS_NETWORK);
   });
 
   it('names the grpc service, without which the client reaches no inbound', () => {
-    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin }));
 
     expect(params.get('serviceName')).toBe(vlessConfig.reality?.serviceName);
   });
 
   it('carries no flow: a raw-tcp flow on a grpc stream is refused by the core', () => {
-    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin }));
 
     expect(params.has('flow')).toBe(false);
   });
 
   it('never marks a reality server insecure — it presents a real certificate', () => {
-    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null }));
+    const params = vlessParams(uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin }));
 
     expect(params.has('insecure')).toBe(false);
   });
 
   it('leaves the name free of transport labels, which the client renders from the uri itself', () => {
-    const vless = uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null });
+    const vless = uriOf({ config: vlessConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin });
 
     expect(decodeURIComponent(new URL(vless).hash)).toBe(`#${serverName({ country: 'Netherlands', countryCode: 'NL', city: null })}`);
   });
@@ -137,7 +138,9 @@ describe('incyServerUri over vless', () => {
   it('refuses to advertise a server whose node was never given reality keys', () => {
     const { reality, ...withoutReality } = vlessConfig;
 
-    expect(incyServerUri({ config: withoutReality as TunnelConfig, country: 'Netherlands', countryCode: 'NL', city: null })).toBeNull();
+    expect(
+      incyServerUri({ config: withoutReality as TunnelConfig, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin })
+    ).toBeNull();
   });
 });
 
@@ -147,29 +150,56 @@ describe('incyServerUri certificate pinning', () => {
   const pinned = { ...config, certFingerprint: opensslFormat };
 
   it('pins the node certificate rather than turning verification off', () => {
-    const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+    const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin })).searchParams;
 
     expect(params.get('pinSHA256')).toBe(digest);
     expect(params.has('insecure')).toBe(false);
   });
 
   it('normalises what openssl prints, which a core comparing the pin as a string cannot match', () => {
-    const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+    const params = new URL(uriOf({ config: pinned, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin })).searchParams;
 
     expect(params.get('pinSHA256')).not.toBe(opensslFormat);
   });
 
   it('falls back to the insecure flag when the stored fingerprint is not a sha-256', () => {
     const malformed = { ...config, certFingerprint: 'AA:BB:CC' };
-    const params = new URL(uriOf({ config: malformed, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+    const params = new URL(uriOf({ config: malformed, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin })).searchParams;
 
     expect(params.has('pinSHA256')).toBe(false);
     expect(params.get('insecure')).toBe('1');
   });
 
   it('falls back to insecure only where no fingerprint was captured', () => {
-    const params = new URL(uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null })).searchParams;
+    const params = new URL(uriOf({ config, country: 'Netherlands', countryCode: 'NL', city: null, tls: TLS_MODE.pin })).searchParams;
 
     expect(params.get('insecure')).toBe('1');
+  });
+});
+
+describe('incyServerUri for a client that cannot pin', () => {
+  const pinned = { ...config, certFingerprint: 'a'.repeat(64) };
+  const netherlands = { country: 'Netherlands', countryCode: 'NL', city: null };
+
+  it('skips verification rather than pinning, because sing-box ignores the pin and then rejects the certificate', () => {
+    const params = new URL(uriOf({ ...netherlands, config: pinned, tls: TLS_MODE.skipVerify })).searchParams;
+
+    expect(params.get('insecure')).toBe('1');
+    expect(params.has('pinSHA256')).toBe(false);
+  });
+
+  it('still pins for every other client, which is what an xray core needs to start at all', () => {
+    const params = new URL(uriOf({ ...netherlands, config: pinned, tls: TLS_MODE.pin })).searchParams;
+
+    expect(params.get('pinSHA256')).toBe(pinned.certFingerprint);
+    expect(params.has('insecure')).toBe(false);
+  });
+
+  it('never sends both, which is the combination that stops an xray core booting', () => {
+    for (const tls of [TLS_MODE.pin, TLS_MODE.skipVerify]) {
+      const params = new URL(uriOf({ ...netherlands, config: pinned, tls })).searchParams;
+
+      expect(params.has('pinSHA256') && params.has('insecure')).toBe(false);
+    }
   });
 });

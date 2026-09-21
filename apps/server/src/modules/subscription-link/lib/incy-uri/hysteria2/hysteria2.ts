@@ -3,21 +3,23 @@ import { isNonNullish } from 'remeda';
 import type { IncyServerUriInput } from '../incy-uri.types';
 
 import { serverName } from '../../server-name';
+import { TLS_MODE } from '../../tls-mode';
 import { HYSTERIA2_SCHEME, INSECURE } from './hysteria2.constants';
 import { pinnedFingerprint } from './hysteria2.helpers';
 
-export const hysteria2Uri = ({ config, country, countryCode, city }: IncyServerUriInput): string => {
+export const hysteria2Uri = ({ config, country, countryCode, city, tls }: IncyServerUriInput): string => {
   const url = new URL(`${HYSTERIA2_SCHEME}://${config.server}`);
   const pinned = config.certFingerprint ? pinnedFingerprint(config.certFingerprint) : null;
+  const canPin = tls === TLS_MODE.pin && isNonNullish(pinned);
 
   url.username = config.auth;
   url.port = String(config.port);
   url.pathname = '/';
   url.searchParams.set('sni', config.serverName);
 
-  if (isNonNullish(pinned)) {
+  if (canPin) {
     url.searchParams.set('pinSHA256', pinned);
-  } else if (config.insecure) {
+  } else if (tls === TLS_MODE.skipVerify || config.insecure) {
     url.searchParams.set('insecure', INSECURE);
   }
 

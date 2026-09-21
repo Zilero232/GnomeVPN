@@ -92,9 +92,15 @@ apps/
 └── server/          # NestJS API — modules/, lib/, core/, common/ (CLAUDE.md)
 packages/
 ├── schemas/         # Zod schemas, imported by client and server
+├── logger/          # one pino config: levels, redaction, pretty vs json
 └── scripts/         # shared script layer: reporter, ssh, shell
 scripts/
 └── provision/       # VPN node setup over SSH — the only local pipeline left
+    ├── config/      # paths, ports, the masquerade host
+    ├── remote/      # anything that runs over SSH on the node
+    ├── inbound/     # protocol inbound definitions
+    ├── node/        # the node model, its database row and credentials
+    └── pipeline/    # orchestration and the run report
 .github/workflows/
 ├── checks.yml       # push/PR → typecheck, lint, tests, prerender
 └── deploy.yml       # manual → images to ghcr → pull on the VPS
@@ -187,6 +193,22 @@ refuses the node's self-signed certificate. A pinned entry therefore connects in
 INCY and fails in Hiddify — the fix for that is a certificate Hiddify already
 trusts, not a wider `insecure`.
 
+**The two cores cannot be served the same URI, so the feed picks per client.**
+`tlsMode` reads the `user-agent`: a sing-box client (Hiddify, NekoBox, Clash,
+Streisand, Shadowrocket…) gets `insecure=1`, everything else gets `pinSHA256`.
+Never both — an xray core refuses to start when `insecure` appears, which is the
+regression that introduced pinning in the first place.
+
+This costs the sing-box clients their protection against a substituted server:
+they verify nothing. It is the same position the subscription was in before
+2026-09-17, and it holds only until the nodes have real certificates. The real
+fix is a domain per node plus Let's Encrypt — then nobody pins and nobody skips
+verification — and it needs DNS records that do not exist yet.
+
+An unknown or absent `user-agent` pins. A client we have not heard of is more
+likely to be an xray core than not, and a pin that a client ignores is a failed
+connection, while an `insecure` it ignores is a core that will not boot.
+
 **A builder that cannot produce a URI returns `null`, never `''`.** `vlessUri`
 returned an empty string for a node without reality keys, and `serverUris`
 filters on `isNonNullish` — so the empty string survived into the feed and a
@@ -218,6 +240,22 @@ Both files pin every action to a commit SHA rather than a tag — a tag can be
 moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
 placeholders because the server postinstall runs `prisma generate`, which
 resolves `DIRECT_URL` through `env()` but never connects.
+
+## One logger, one list of secrets
+
+`@gnomevpn/logger` holds the only `pino()` call in the repo. The server, the web
+app and the provision scripts each pass a service name and get a child logger —
+nobody configures levels, redaction or transport a second time.
+
+That matters because of `REDACTED_PATHS`. A panel password, a subscription
+token and a peer's tunnel credential all pass through this monorepo, and a
+second logger configured elsewhere is a second list to keep in sync — which is
+how one of them ends up in a log that gets pasted into an issue.
+
+Output is pretty by default and JSON in production; `LOG_FORMAT=json` forces it
+either way, which is what the reporter's tests read. A script keeps its
+`[scope] message` shape through `pretty.messageFormat` rather than by writing to
+`console` — the shape is a display concern, the fields are the data.
 
 ## Indexed pages are a set, not a page
 
@@ -280,7 +318,7 @@ Before writing a helper by hand, check whether an installed library already cove
 5. Animation → **`motion`**, presets in `shared/lib/motion`
 6. Retries with backoff → **`p-retry`**
 7. Unstyled primitives → **`@base-ui/react`** — every `ui-kit` molecule wraps one
-8. Server-side logs → **`pino`** via `shared/lib/server-logger`
+8. Logs → **`@gnomevpn/logger`** — one `createLogger`, never a second `pino()` call
 
 ## Style
 

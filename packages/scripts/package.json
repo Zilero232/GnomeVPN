@@ -24,6 +24,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gnomevpn/logger": "workspace:*",
     "node-ssh": "^13.2.1",
     "p-retry": "catalog:",
     "shell-quote": "^1.10.0"
