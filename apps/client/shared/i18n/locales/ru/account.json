@@ -1,0 +1,62 @@
+{
+  "loading": "Загрузка…",
+  "title": "Личный кабинет",
+  "backToVpn": "К подключению",
+  "signOut": "Выйти",
+  "active": "Подписка активна",
+  "daysLeft": "{count, plural, =0 {последний день} one {день остался} few {дня осталось} many {дней осталось} other {дней осталось}}",
+  "planLabel": "Тариф",
+  "untilLabel": "Действует до",
+  "autoRenewOff": "Автопродление отключено",
+  "autoRenewOn": "Автопродление включено",
+  "cancelAutoRenew": "Отключить автопродление",
+  "resumeAutoRenew": "Включить автопродление",
+  "noPaymentMethod": "Карта не привязана — автопродление недоступно",
+  "bindCard": "Привязать карту",
+  "cardBound": "Карта привязана",
+  "unbindCard": "Отвязать",
+  "extraDevicesTitle": "Одновременные подключения",
+  "extraDevicesCount": "{limit} устройств доступно",
+  "extraDevicesHint": "Дополнительное устройство — {price} ₽. Работает, пока активна подписка.",
+  "extraDevicesResult": "После покупки — {total} устройств",
+  "extraDevicesBuy": "Добавить за {price} ₽",
+  "extraDevicesMore": "Ещё одно",
+  "extraDevicesLess": "На одно меньше",
+  "extraDevicesMaxed": "Максимум — {limit} устройств. Больше добавить нельзя.",
+  "inactive": "Подписка не активна",
+  "pitch": "Доступ ко всем странам, отмена в один клик",
+  "plans": {
+    "monthly": "1 месяц",
+    "halfYearly": "6 месяцев",
+    "yearly": "12 месяцев",
+    "perMonth": "{price} ₽ в месяц",
+    "price": "{price} ₽",
+    "save": "−{percent}%",
+    "pay": "Оплатить {price} ₽"
+  },
+  "profile": {
+    "title": "Профиль",
+    "nameLabel": "Имя",
+    "saveName": "Сохранить",
+    "nameUpdated": "Имя обновлено",
+    "currentEmailLabel": "Текущая почта",
+    "newEmailLabel": "Новая почта",
+    "emailChangeHint": "Мы отправим ссылку на текущий адрес — смена вступит в силу после подтверждения.",
+    "changeEmail": "Сменить почту",
+    "emailChangeRequested": "Проверьте текущую почту и подтвердите смену",
+    "currentPasswordLabel": "Текущий пароль",
+    "newPasswordLabel": "Новый пароль",
+    "confirmPasswordLabel": "Повторите пароль",
+    "passwordHint": "Минимум 8 символов. Остальные устройства выйдут из аккаунта.",
+    "changePassword": "Сменить пароль",
+    "passwordChanged": "Пароль изменён",
+    "security": "Безопасность"
+  },
+  "tabs": {
+    "subscription": "Подписка"
+  },
+  "meta": {
+    "title": "Личный кабинет",
+    "description": "Статус подписки, оплата и управление автопродлением."
+  }
+}

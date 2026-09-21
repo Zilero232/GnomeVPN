@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "title": "Servers and protocols: Hysteria2 and VLESS Reality",
+    "description": "How Hysteria2 differs from VLESS + Reality, which protocol to pick when a network blocks UDP, and how the server list keeps itself current."
+  },
+  "title": "Servers and protocols",
+  "intro": "Every country in your subscription appears twice: once over Hysteria2 and once over VLESS + Reality. They share port 443 because one is UDP and the other TCP, and you switch between them in the app without changing anything else.",
+  "tableTitle": "The two side by side",
+  "rows": {
+    "label": "Property",
+    "transport": "Transport",
+    "port": "Port",
+    "lossBehaviour": "Under packet loss",
+    "blocking": "When blocked",
+    "bestFor": "Best for"
+  },
+  "protocols": {
+    "hysteria2": {
+      "name": "Hysteria2",
+      "transport": "QUIC over UDP",
+      "port": "443/UDP",
+      "lossBehaviour": "Holds its speed. QUIC recovers a lost packet without stalling the whole stream, which is what TCP cannot do.",
+      "blocking": "Fails where a network drops UDP outright — corporate Wi-Fi, some carriers, most hotels.",
+      "bestFor": "Mobile networks, poor Wi-Fi, anything that loses packets."
+    },
+    "vless": {
+      "name": "VLESS + Reality",
+      "transport": "TCP with a real TLS handshake",
+      "port": "443/TCP",
+      "lossBehaviour": "Slows down like any TCP connection: one lost packet stalls everything behind it.",
+      "blocking": "Passes where UDP is dropped, because it looks like an ordinary HTTPS connection to a real site.",
+      "bestFor": "Networks that allow only TCP."
+    }
+  },
+  "sections": {
+    "whyTwo": {
+      "title": "Why two and not one",
+      "body": "Hysteria2 is the better tunnel almost everywhere: QUIC keeps its speed on a network that loses packets, which is exactly what a phone on mobile data does. But QUIC is UDP, and some networks drop UDP wholesale — there the tunnel cannot come up at all. VLESS + Reality is the way through those: it is plain TCP on 443 wearing the TLS handshake of a real third-party site, so a network that allows HTTPS allows it too."
+    },
+    "whichToPick": {
+      "title": "Which one to pick",
+      "body": "Start with the plain entry — that is Hysteria2, and on most networks it is the faster of the two. If it will not connect, switch to the entry marked TCP for the same country. Nothing needs configuring either way: both are already in your subscription, and the app remembers which one worked."
+    },
+    "howMany": {
+      "title": "How many devices",
+      "body": "One subscription covers several devices at once, and the app on each of them fetches the same link. You do not get a separate config per device: the link is the credential, so adding a phone means pasting the same URL into it."
+    },
+    "addingMore": {
+      "title": "When a country appears or disappears",
+      "body": "The server list lives in the subscription, not in the app, so a node we add shows up on the next refresh without you doing anything. The same is true in reverse: a node taken out of rotation stops being offered. That is the reason to add the link as a subscription rather than as a single server."
+    }
+  }
+}

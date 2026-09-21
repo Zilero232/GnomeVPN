@@ -1,0 +1,87 @@
+{
+  "eyebrow": "No traffic logs",
+  "titleLine1": "A connection",
+  "titleLine2": "that stays",
+  "titleAccent": "yours",
+  "lead": "GnomeVPN builds a tunnel to a node in another country. From the outside it looks like ordinary HTTPS. No logs, no ads, no traffic caps.",
+  "cta": "Start at {price} ₽",
+  "ctaSecondary": "How it works",
+  "account": "Account",
+  "metrics": {
+    "protocol": "protocol",
+    "price": "per month",
+    "devices": "devices"
+  },
+  "how": {
+    "title": "How it works",
+    "step1Title": "Subscribe",
+    "step1Body": "Pay by card through YooKassa. From {price} ₽ a month, cancel in one click, no hidden charges.",
+    "step2Title": "Install INCY",
+    "step2Body": "A free app from your own store: iPhone, Android, Windows, Linux, TV. We neither build it nor charge for it.",
+    "step3Title": "Paste the link",
+    "step3Body": "One link from your account and the app fills up with every server in two flavours: the fast UDP one and a TCP fallback. The list keeps itself up to date."
+  },
+  "faq": {
+    "title": "Questions",
+    "more": "All questions"
+  },
+  "nav": {
+    "ariaLabel": "Page sections",
+    "how": "How it works",
+    "pricing": "Pricing",
+    "faq": "Questions",
+    "features": "Features"
+  },
+  "features": {
+    "title": "What you get",
+    "protocolTitle": "Two protocols",
+    "protocolBody": "Hysteria2 over QUIC leads, because it holds up better on mobile networks. Where UDP is blocked outright the list also carries a TCP fallback — one tap away.",
+    "devicesTitle": "Two devices",
+    "devicesBody": "Phone and computer at the same time on one subscription. Need more? Add them in your account.",
+    "platformsTitle": "Every platform",
+    "platformsBody": "iPhone, Android, Windows, Linux, Android TV and Apple TV. The same link works on all of them.",
+    "locationsTitle": "Several countries",
+    "locationsBody": "Switch country in one tap at no extra cost. New nodes appear in the app on their own.",
+    "noLogsTitle": "No logs",
+    "noLogsBody": "The server sees only how many bytes moved — enough to tell whether a node is alive. It is not tied to what you were doing.",
+    "openFormatTitle": "The link stays yours",
+    "openFormatBody": "The subscription format is standard: paste it into Hiddify, Streisand or v2rayNG. You are locked into neither the app nor us."
+  },
+  "platforms": {
+    "title": "Where it runs",
+    "iosBody": "INCY from the App Store. The same subscription works on Mac and Apple TV.",
+    "androidBody": "INCY from Google Play, or the APK from the releases page where Play is unavailable.",
+    "windowsBody": "An .exe installer. It only asks for admin rights while installing.",
+    "macosBody": "The Apple Silicon build. There is a separate installer for Intel.",
+    "linuxBody": "deb and rpm packages, plus an archive for installing by hand.",
+    "tvBody": "The subscription is added by scanning a QR code from your phone — no typing with a remote."
+  },
+  "locations": {
+    "title": "Where the servers are",
+    "netherlandsName": "Netherlands",
+    "netherlandsCity": "Amsterdam",
+    "finlandName": "Finland",
+    "finlandCity": "Helsinki"
+  },
+  "comparison": {
+    "title": "Why not a free VPN",
+    "free": "Free ones",
+    "speedLabel": "Line speed",
+    "speedHint": "A node is not shared with thousands of people at once",
+    "adsLabel": "No ads or trackers",
+    "adsHint": "Free services have to earn from something",
+    "blockingLabel": "Works where VPNs are blocked",
+    "blockingHint": "Hysteria2 hides as ordinary HTTPS traffic",
+    "limitsLabel": "No traffic cap",
+    "limitsHint": "No gigabyte limits and no evening slowdown"
+  },
+  "guarantee": {
+    "title": "Cancel in one click",
+    "body": "Turn renewal off whenever you like — access stays until the end of the paid period. No phone calls, no emails to support.",
+    "cta": "Try it"
+  },
+  "meta": {
+    "title": "GnomeVPN — a fast Hysteria2 VPN",
+    "description": "A VPN on the Hysteria2 protocol: it works where the others are blocked. Servers in several countries, one link for every device."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "nameRequired": "Enter a device name",
+  "nameMin": "At least 2 characters",
+  "nameMax": "Keep it under 32 characters",
+  "nameTaken": "A config with this name, country and connection type already exists",
+  "emailInvalid": "Enter a valid email",
+  "passwordMin": "At least 8 characters",
+  "passwordsMismatch": "Passwords do not match",
+  "required": "This field is required"
+}

@@ -1,0 +1,71 @@
+{
+  "title": "Подключение через INCY",
+  "hint": "Ссылка ниже добавляет все серверы в приложение INCY. Приложение ставится один раз — инструкция по установке есть на отдельной странице.",
+  "copyDeepLink": "Ссылка для INCY",
+  "showQr": "QR-код",
+  "deepLinkCopied": "Ссылка скопирована",
+  "qrTitle": "Отсканируйте код",
+  "qrHint": "Наведите камеру телефона или отсканируйте код в приложении на телевизоре.",
+  "qrNote": "Код содержит ссылку на вашу подписку — не показывайте его посторонним.",
+  "rotate": "Обновить ссылку",
+  "rotateHint": "Если ссылка попала не в те руки — обновите её. Старая перестанет работать сразу.",
+  "rotated": "Ссылка обновлена",
+  "rotatedHint": "Добавьте новую ссылку во всех приложениях заново.",
+  "platforms": {
+    "ios": "iPhone и Mac",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux",
+    "tv": "Телевизор"
+  },
+  "downloads": {
+    "ios": "App Store",
+    "android": "Google Play",
+    "windows": "Установщик .exe",
+    "macos": "Apple Silicon .dmg",
+    "linux": "Пакет .deb",
+    "tv": "Android TV и Apple TV"
+  },
+  "setupLink": "Как установить приложение →",
+  "rotateConfirmTitle": "Обновить ссылку на подписку?",
+  "rotateConfirmBody": "Текущая ссылка перестанет работать сразу после подтверждения. На всех устройствах, где она добавлена, связь пропадёт, пока вы не вставите новую.",
+  "rotateConfirmAction": "Обновить ссылку",
+  "rotateConfirmCancel": "Оставить текущую",
+  "copyDeepLinkHint": "Откроет приложение INCY",
+  "copyUrl": "Ссылка на подписку",
+  "copyUrlHint": "Hiddify, v2rayNG и другие",
+  "urlCopied": "Ссылка на подписку скопирована",
+  "showQrHint": "Для телевизора",
+  "qrKindLabel": "Что содержит код",
+  "qrKinds": {
+    "url": "Любое приложение",
+    "incy": "INCY"
+  },
+  "qrKindHints": {
+    "url": "Обычная ссылка на подписку — её читают и Hiddify, и v2rayNG, и INCY.",
+    "incy": "Ссылка для INCY. Её понимает только INCY."
+  },
+  "otherApps": "Другое приложение",
+  "otherAppsHint": "Та же подписка. «Добавить» откроет приложение; если его нет, ссылка уже скопирована.",
+  "clientImport": "Добавить",
+  "clientCopy": "Копировать ссылку",
+  "clients": {
+    "incy": "INCY",
+    "hiddify": "Hiddify",
+    "v2rayng": "v2rayNG",
+    "streisand": "Streisand",
+    "nekobox": "NekoBox",
+    "clashMeta": "Clash Meta"
+  },
+  "otherAppsDesktopHint": "Та же подписка. Скопируйте ссылку и вставьте её в приложение — кнопка «Добавить» работает только на телефоне и планшете.",
+  "platformNames": {
+    "ios": "iOS",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "macOS",
+    "linux": "Linux",
+    "tv": "ТВ"
+  },
+  "importCopied": "Ссылка скопирована — открываем приложение"
+}

@@ -1,0 +1,12 @@
+{
+  "copy": "© {year} {name}",
+  "pricing": "Pricing",
+  "setup": "Setup",
+  "faq": "FAQ",
+  "about": "About",
+  "privacy": "Privacy",
+  "support": "Support",
+  "servers": "Servers",
+  "ariaLabel": "Footer navigation",
+  "blog": "Blog"
+}

@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "About GnomeVPN",
+    "description": "Why GnomeVPN runs on Hysteria2, how the infrastructure is built, what we do not log, and why the tunnel is delivered through INCY."
+  },
+  "title": "About the service",
+  "intro": "Short and without the marketing: how this works inside and why we made these choices.",
+  "facts": {
+    "protocol": {
+      "label": "Protocol",
+      "value": "Hysteria2 + VLESS"
+    },
+    "transport": {
+      "label": "Transport",
+      "value": "QUIC/UDP and TCP"
+    },
+    "clientApp": {
+      "label": "App",
+      "value": "INCY"
+    },
+    "logs": {
+      "label": "Logs",
+      "value": "Not kept"
+    }
+  },
+  "sections": {
+    "problem": {
+      "title": "The problem we set out to solve",
+      "body": "Classic TCP-based VPN protocols stopped working reliably in Russia. Carrier equipment learned to recognise the characteristic start of a connection and cut it a few minutes into real traffic. Changing port or server helps only briefly."
+    },
+    "protocol": {
+      "title": "Why Hysteria2",
+      "body": "Hysteria2 runs over QUIC, which means UDP, and from the outside it looks like an ordinary HTTP/3 website. UDP traffic is inspected differently from TCP, and in practice such a tunnel survives noticeably longer. QUIC also handles packet loss better, so speed holds up on mobile networks."
+    },
+    "noLogs": {
+      "title": "What we do not store",
+      "body": "We keep no record of your connections: which sites you opened, which address you connected from, or when. Servers see how many bytes moved — that is how we tell whether a node is alive, and it is not tied to what you were doing."
+    },
+    "infrastructure": {
+      "title": "Infrastructure",
+      "body": "Nodes are rented from several providers in different countries, each set up automatically from the same script. When a node stops answering it drops out of the list in the app on its own, with nothing for you to do."
+    },
+    "client": {
+      "title": "About the app",
+      "body": "The client is INCY — a free third-party app that we do not develop. That is the honest arrangement: rather than spend years chasing someone else's feature set on five platforms, we hand you a standard subscription link. It works in other compatible clients too — you are not locked in."
+    },
+    "honesty": {
+      "title": "What we do not promise",
+      "body": "We do not promise it will work everywhere forever: blocking changes, and sometimes nodes have to change with it. We do not promise anonymity — a VPN hides traffic from your ISP, it does not make you invisible. If the service is not for you, we refund within 14 days."
+    }
+  }
+}

@@ -1,3 +1,5 @@
+export { articleJsonLd } from './article-json-ld';
+export type { ArticleJsonLdInput } from './article-json-ld';
 export { breadcrumbJsonLd } from './breadcrumb-json-ld';
 export type { BreadcrumbJsonLdInput } from './breadcrumb-json-ld';
 export { faqJsonLd } from './faq-json-ld';

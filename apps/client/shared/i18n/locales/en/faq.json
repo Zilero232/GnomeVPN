@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "title": "VPN questions and answers",
+    "description": "How to connect, how many devices a subscription covers, which protocol to pick and how refunds work — the common questions about GnomeVPN."
+  },
+  "title": "Frequently asked questions",
+  "intro": "The short answers to what people ask most. If yours is missing, email us.",
+  "groups": {
+    "start": "Getting started",
+    "usage": "Everyday use",
+    "trouble": "When something breaks",
+    "billing": "Billing and subscription"
+  },
+  "questions": {
+    "whatIsIncy": {
+      "q": "What is INCY, and why that app?",
+      "a": "INCY is a free client app that GnomeVPN runs through. It has no servers of its own: you paste a link from your account and the app fills up with our servers, your remaining traffic and your renewal date. We picked it because it exists on every platform, including iPhone and TVs, and has been debugged for years."
+    },
+    "whyNotOwnApp": {
+      "q": "Why don't you ship your own app?",
+      "a": "The honest answer: an app for five platforms means years of maintenance and a constant fight with app stores. INCY has already done that work. We put our effort into servers and speed instead of rewriting what already works. The subscription link stays yours — it works in other compatible clients too."
+    },
+    "howToConnect": {
+      "q": "How do I connect?",
+      "a": "Three steps: install INCY from your store, copy the link from the App tab in your account, paste it into INCY. From there the app pulls the server list and keeps it up to date on its own."
+    },
+    "whichProtocol": {
+      "q": "There are two servers per country — which one do I pick?",
+      "a": "Take the one without a tag: that is Hysteria2, faster and steadier on mobile. The entry marked \"TCP\" is for networks that block UDP — usually office Wi-Fi, hotels and some corporate networks. If the main one will not connect, switch to it."
+    },
+    "howManyDevices": {
+      "q": "How many devices can I use?",
+      "a": "Two at once by default. There is one link per account — paste it on your phone, your laptop and your TV, but two connections run at a time. If you need more, buy extra devices in your account."
+    },
+    "whichCountries": {
+      "q": "Which countries do you have servers in?",
+      "a": "The list shows up in the app as soon as you add the link, and refreshes itself whenever we add a node. Switching country is one tap and costs nothing extra."
+    },
+    "speed": {
+      "q": "How fast is it?",
+      "a": "We set no speed or traffic limits. Real speed depends on your own connection and how far the server is — the nearest one usually gives you close to your full line speed."
+    },
+    "torrents": {
+      "q": "Can I use torrents?",
+      "a": "The tunnel passes them technically. Bear in mind that what you download stays your responsibility, and on some servers the hosting provider may send us a complaint — then we will ask you to switch location."
+    },
+    "streaming": {
+      "q": "Do streaming services work?",
+      "a": "Usually yes, but we cannot promise it: streaming platforms block server addresses constantly. If one service refuses to open, try another country — that often fixes it."
+    },
+    "notConnecting": {
+      "q": "The app will not connect. What now?",
+      "a": "In order: check the subscription is active (INCY shows it), pull down to refresh the server list, try a different country. Still stuck? Rotate the link in your account and paste the new one. If that fails too, email us with a screenshot."
+    },
+    "slowSpeed": {
+      "q": "It used to be fast and now it is slow",
+      "a": "Usually it is the server — try a neighbouring country. If every country is slow, test your speed without the VPN; sometimes it is the line itself. If it is fast without us and slow with us, write in and we will look at the node."
+    },
+    "linkLeaked": {
+      "q": "My link reached the wrong hands",
+      "a": "Open your account, go to the App tab and press Rotate link. The old one stops working immediately. Then paste the new link again on each of your devices."
+    },
+    "changePhone": {
+      "q": "I got a new phone — how do I move it over?",
+      "a": "Nothing to move. Install INCY on the new device and paste the same link from your account. If you are done with the old device, just delete the app there."
+    },
+    "howToPay": {
+      "q": "How do I pay?",
+      "a": "By card on the site, through YooKassa. Access starts the moment the payment goes through, and the app picks up the new expiry date."
+    },
+    "refund": {
+      "q": "Can I get a refund?",
+      "a": "Yes. If the service is not for you, email us within 14 days of paying and we will refund the unused period without an interrogation."
+    },
+    "autoRenew": {
+      "q": "How do I turn off auto-renewal?",
+      "a": "In your account, in the subscription block, with the Auto-renewal switch. Access stays until the end of the period you paid for; after that nothing is charged."
+    },
+    "trial": {
+      "q": "Is there a free trial?",
+      "a": "There is no separate trial, but there is a 14-day refund — much the same thing, except you get full access from the start."
+    },
+    "otherApps": {
+      "q": "Can I use Hiddify or another app instead of INCY?",
+      "a": "Yes. Your subscription URL is a standard one, so Hiddify, v2rayNG, Streisand, NekoBox and Clash Meta all read it — the same servers, the same traffic counter, the same renewal date. Copy the subscription URL on the App tab (not the INCY link, which only INCY understands) and add it in the app as a subscription. We recommend INCY because we have tested it on every platform, but nothing binds you to it."
+    }
+  },
+  "stillStuck": "Still stuck? Email us — we answer within a day."
+}

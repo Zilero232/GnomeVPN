@@ -8,7 +8,7 @@ describe('isKnownRoute', () => {
   });
 
   it('rejects anything undeclared', () => {
-    expect(isKnownRoute('/blog')).toBe(false);
+    expect(isKnownRoute('/nothing-here')).toBe(false);
     expect(isKnownRoute('')).toBe(false);
   });
 

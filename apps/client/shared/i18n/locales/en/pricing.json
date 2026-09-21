@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "VPN pricing and plans",
+    "description": "What a GnomeVPN subscription costs: monthly or discounted over a longer period. Paid by card, with a refund within fourteen days."
+  },
+  "title": "Pricing",
+  "intro": "One plan, every server. The longer the term, the cheaper the month. Pay by card and turn auto-renewal off whenever you like.",
+  "includedTitle": "Included in every plan",
+  "included": {
+    "servers": "Every server in every country",
+    "devices": "Two devices at once",
+    "protocol": "Hysteria2 over QUIC",
+    "noLogs": "No connection logs",
+    "support": "Email support",
+    "platforms": "iPhone, Android, Windows, Linux, TV"
+  },
+  "faqTitle": "Questions about billing"
+}
