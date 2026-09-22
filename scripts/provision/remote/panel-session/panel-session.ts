@@ -2,8 +2,8 @@ import pWaitFor from 'p-wait-for';
 
 import type { PanelSession, PanelUrlInput, StartPanelInput, WaitForPanelInput } from './panel-session.types';
 
-import { PANEL_PORT } from '../../config';
-import { configurePanel } from '../remote-setup';
+import { log, PANEL_PORT } from '../../config';
+import { configurePanel } from '../panel-config';
 import { isPanelReachable } from '../xray-panel';
 import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './panel-session.constants';
 
@@ -26,9 +26,13 @@ export const startPanel = async ({ ssh, host, password, panelPath }: StartPanelI
   const token = await configurePanel({ ssh, password, panelPath });
   const baseUrl = panelUrl({ host, panelPath });
 
+  log.step('waiting for the panel api');
+
   if (!(await waitForPanel({ baseUrl, token }))) {
     throw new Error('the panel never answered the api');
   }
+
+  log.done('the panel api is reachable');
 
   return { baseUrl, token };
 };

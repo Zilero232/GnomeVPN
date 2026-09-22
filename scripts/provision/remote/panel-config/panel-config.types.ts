@@ -1,10 +1,5 @@
 import type { SshClient } from '@gnomevpn/scripts/ssh';
 
-export type ShipStackInput = {
-  ssh: SshClient;
-  composeContent: string;
-};
-
 export type ConfigurePanelInput = {
   ssh: SshClient;
   password: string;
@@ -14,13 +9,6 @@ export type ConfigurePanelInput = {
 export type WaitForPanelInput = {
   ssh: SshClient;
   panelPath: string;
-};
-
-export type EnsuredRealityKeys = {
-  privateKey: string;
-  publicKey: string;
-  shortId: string;
-  wasGenerated: boolean;
 };
 
 export type KeepCoreRunningInput = {

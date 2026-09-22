@@ -1,0 +1,3 @@
+export const PANEL_BOOT_TIMEOUT_MS = 90_000;
+
+export const PANEL_BOOT_INTERVAL_MS = 3_000;
