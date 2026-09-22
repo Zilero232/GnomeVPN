@@ -375,7 +375,9 @@ the first message and stores what `/language` chose, which then wins — someone
 who set it did so because the client was reporting the wrong thing.
 
 **The keyboard is the interface; the commands are the fallback.** A reply
-keyboard sits under the message box and changes with the chat: the link and the
+keyboard collapses into an icon beside the message box rather than holding the
+screen open — it is not `persistent()`, because eight buttons standing over the
+chat cost more than one tap costs. It changes with the chat: the link and the
 status only appear once there is a subscription to use, and the trial only while
 it can still be taken. `KEYBOARD_ROWS` is the whole layout — a button names the
 state it belongs to and a row that empties out is dropped rather than shipped

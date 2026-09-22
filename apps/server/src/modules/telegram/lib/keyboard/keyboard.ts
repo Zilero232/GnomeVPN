@@ -21,5 +21,5 @@ export const mainKeyboard = ({ locale, state }: KeyboardInput): Keyboard => {
   const labels = BOT_BUTTONS[locale];
   const rows = visibleRows(state).map((row) => row.map(({ key }) => Keyboard.text(labels[key])));
 
-  return Keyboard.from(rows).resized().persistent();
+  return Keyboard.from(rows).resized();
 };
