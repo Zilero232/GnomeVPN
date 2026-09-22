@@ -1,3 +1,4 @@
+import { apiErrorCodeSchema } from '@gnomevpn/schemas';
 import { describe, expect, it } from 'vitest';
 
 import { LOCALES } from '../locale';
@@ -21,6 +22,12 @@ describe('messages', () => {
 
     for (const keys of rest) {
       expect(keys).toEqual(reference);
+    }
+  });
+
+  it('names every error code the API can answer with, and invents none', () => {
+    for (const locale of LOCALES) {
+      expect(Object.keys(messages[locale].errors).sort()).toEqual([...apiErrorCodeSchema.options].sort());
     }
   });
 

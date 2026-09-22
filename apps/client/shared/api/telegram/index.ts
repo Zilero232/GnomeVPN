@@ -1,1 +1,1 @@
-export { getTelegramStatus, issueTelegramCode, unlinkTelegram } from './telegram';
+export { getTelegramStatus, getTelegramWidget, issueTelegramCode, redeemTelegramLogin, signInWithTelegram, unlinkTelegram } from './telegram';

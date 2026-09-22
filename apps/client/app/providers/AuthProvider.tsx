@@ -2,17 +2,14 @@
 
 import type { ReactNode } from 'react';
 
-import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 import { match } from 'ts-pattern';
 
 import { useCurrentUser } from '@/entities/auth/user';
 import { isGuestOnlyRoute, isKnownRoute, isPublicRoute, ROUTES } from '@/shared/constants';
 import { usePathname, useRouter } from '@/shared/i18n/navigation';
-import { AppSplash } from '@/ui-kit';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const t = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();
 
@@ -32,10 +29,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       router.replace(target);
     }
   }, [target, router]);
-
-  if (!isOpen && (isLoading || target)) {
-    return <AppSplash label={t('loading')} />;
-  }
 
   return children;
 };

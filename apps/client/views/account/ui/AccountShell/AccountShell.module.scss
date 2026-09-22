@@ -1,0 +1,20 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  max-width: var(--shell-width);
+  flex-direction: column;
+  margin: 0 auto;
+  gap: var(--gap-lg);
+
+  @include safe-screen(clamp(24px, 3vw, 48px), clamp(16px, 3vw, 40px), clamp(24px, 3vw, 40px));
+}
+
+.overlay {
+  position: fixed;
+  z-index: 40;
+  background-color: var(--color-bg);
+  inset: 0;
+}

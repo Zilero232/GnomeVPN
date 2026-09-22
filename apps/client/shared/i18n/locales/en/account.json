@@ -50,7 +50,12 @@
     "passwordHint": "At least 8 characters. Other devices will be signed out.",
     "changePassword": "Change password",
     "passwordChanged": "Password changed",
-    "security": "Security"
+    "security": "Security",
+    "noEmail": "No email yet",
+    "addEmailTitle": "Add an email",
+    "addEmailHint": "Right now Telegram is the only way into this account. Add an email and it becomes your fallback if you ever lose Telegram.",
+    "addEmail": "Add email",
+    "emailAdded": "Check your inbox and confirm the address"
   },
   "tabs": {
     "subscription": "Subscription",
@@ -60,5 +65,14 @@
   "meta": {
     "title": "Account",
     "description": "Subscription status, payments and auto-renewal."
+  },
+  "danger": {
+    "title": "Delete account",
+    "body": "Your subscription, devices and link stop working immediately. This cannot be undone.",
+    "action": "Delete",
+    "confirmTitle": "Delete this account?",
+    "confirmBody": "The subscription ends with no refund for the remaining period, every device disconnects and the link stops working. We cannot bring the account back.",
+    "confirmCancel": "Cancel",
+    "confirmAction": "Delete permanently"
   }
 }

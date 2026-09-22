@@ -32,14 +32,15 @@ const absoluteLanguages = (path: string) =>
 
 const POST_PRIORITY = 0.6;
 
+const BUILT_AT = new Date();
+
 const sitemap = (): MetadataRoute.Sitemap => {
-  const lastModified = new Date();
   const paths = [...indexedRoutes(), ...BLOG_SLUGS.map(blogPostRoute)];
 
   return paths.flatMap((path) =>
     LOCALES.map((locale) => ({
       url: absoluteUrl(localePath({ path, locale })),
-      lastModified,
+      lastModified: BUILT_AT,
       changeFrequency: CHANGE_FREQUENCIES[path] ?? 'monthly',
       priority: PRIORITIES[path] ?? POST_PRIORITY,
       alternates: { languages: absoluteLanguages(path) }

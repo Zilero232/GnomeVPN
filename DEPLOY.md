@@ -14,8 +14,6 @@
 Everything but node provisioning is built in GitHub Actions. Images are pushed
 to ghcr.io; **the VPS builds nothing** — it only pulls ready-made images.
 
----
-
 ## Secrets
 
 Settings → Secrets and variables → Actions:
@@ -27,23 +25,24 @@ Settings → Secrets and variables → Actions:
 | `DEPLOY_SSH_KEY`                          | private key, preferred over the password                      |
 | `DEPLOY_PATH`                             | directory holding docker-compose.yml, usually `/opt/gnomevpn` |
 
-There are no signing keys any more: nothing in this repository ships a binary to
-a user. The VPN client is INCY, installed from the user's own app store.
+No signing keys: nothing here ships a binary. The VPN client is INCY, installed
+from the user's own app store.
 
-## Deploying web + API
-
-`deploy.yml` fires on a push to master (or manually). It builds the web and
-server images, pushes them to ghcr.io, SSHes into the VPS, copies
-`docker-compose.yml`, runs `pull && up -d` and applies migrations. The VPS stays
-the same — it only pulls the images.
+`deploy.yml` fires on a push to master or by hand. It builds both images, pushes
+them to ghcr.io, SSHes in, copies `docker-compose.yml`, then runs migrations and
+`pull && up -d`.
 
 ---
 
 ## 1. Domain and DNS
 
-The canonical host is `gnome-vpn.com`. The old `gnomevpn.ru` is not served any
-more — a subscription URL already handed out points at it, so every subscriber
-has to add the new link once.
+`example.com` stands in for the real domain everywhere in this file. The real
+one is written down in exactly two places, both outside the docs:
+`infra/caddy/Caddyfile`, where Caddy needs it to issue certificates, and the
+`.env` on the VPS.
+
+Changing the canonical host means every subscription URL already handed out
+points at the old one, so every subscriber has to add the new link once.
 
 DNS runs through Cloudflare, which hides the server's address: a visitor
 resolves a Cloudflare IP, not this VPS, so the machine cannot be blocked by
@@ -51,27 +50,21 @@ address. The free plan covers all of it.
 
 **Pointing the domain at Cloudflare**
 
-1. Cloudflare → _Add a site_ → `gnome-vpn.com` → **Free**.
+1. Cloudflare → _Add a site_ → `example.com` → **Free**.
 2. It returns two nameservers, `x.ns.cloudflare.com`.
 3. Dynadot → the domain → _Nameservers_ → replace both with them.
 
 Propagation takes minutes to a few hours.
 
-**Records**
-
-| Type | Name | Content |
-| ---- | ---- | ------- |
-| A    | @    | `<IP>`  |
-| A    | www  | `<IP>`  |
-| A    | api  | `<IP>`  |
+**Records** — four `A` records at the VPS: `@`, `www`, `api`, `bot`.
 
 **The orange cloud stays OFF until Caddy has its certificates.** Let's Encrypt
 validates over HTTP-01, which has to reach this server; with the proxy on,
-Cloudflare answers the challenge instead and the issue never completes. Turn it
-on for all three once the site serves HTTPS.
+Cloudflare answers the challenge instead and the issue never completes.
 
-Then SSL/TLS → **Full (strict)**. A lower mode has Cloudflare and Caddy redirect
-each other in a loop.
+Once the site serves HTTPS, turn the cloud on for `bot` only (see the Telegram
+section for why) and set SSL/TLS to **Full (strict)** — a lower mode has
+Cloudflare and Caddy redirect each other in a loop.
 
 ---
 
@@ -114,14 +107,14 @@ DATABASE_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 DIRECT_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
 
 BETTER_AUTH_SECRET=<32+ random characters>
-API_URL=https://api.gnome-vpn.com
+API_URL=https://api.example.com
 
-CORS_ORIGINS=https://gnome-vpn.com
+CORS_ORIGINS=https://example.com
 
 
 YOOKASSA_SHOP_ID=<from the YooKassa dashboard>
 YOOKASSA_SECRET_KEY=<from the same place>
-YOOKASSA_RETURN_URL=https://gnome-vpn.com/account
+YOOKASSA_RETURN_URL=https://example.com/account
 # YooKassa enables recurring charges by hand, on request to support.
 YOOKASSA_RECURRING=false
 
@@ -131,18 +124,18 @@ YOOKASSA_RECURRING=false
 SMTP_HOST=smtp.timeweb.ru
 SMTP_PORT=465
 SMTP_SECURE=true
-SMTP_USER=noreply@gnome-vpn.com
+SMTP_USER=noreply@example.com
 SMTP_PASSWORD=<mailbox password>
-EMAIL_FROM=GnomeVPN <noreply@gnome-vpn.com>
+EMAIL_FROM=GnomeVPN <noreply@example.com>
 
 # Where the links in the emails lead.
-CLIENT_URL=https://gnome-vpn.com
+CLIENT_URL=https://example.com
 
 # Telegram bot — optional. Leave the token empty and the bot never starts.
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_USERNAME=
 TELEGRAM_WEBHOOK_SECRET=
-TELEGRAM_WEBHOOK_URL=https://bot.gnome-vpn.com
+TELEGRAM_WEBHOOK_URL=https://bot.example.com
 
 ```
 
@@ -190,13 +183,21 @@ give it a display name and then a username ending in `bot`
 TELEGRAM_BOT_TOKEN=<what BotFather sent>
 TELEGRAM_BOT_USERNAME=gnomevpn_bot
 TELEGRAM_WEBHOOK_SECRET=<generated>
-TELEGRAM_WEBHOOK_URL=https://bot.gnome-vpn.com
+TELEGRAM_WEBHOOK_URL=https://bot.example.com
 ```
 
-**`bot.gnome-vpn.com` needs one DNS record: `AAAA`, and no `A`.** Telegram takes
-the `A` record whenever a name has one, and IPv4 to this host is blocked — with
-no `A` there is nothing else for it to take. The site and the API keep their
-`A` records, because that is how everyone else reaches them.
+**`bot.example.com` is the one name that goes through Cloudflare.** Point an
+`A` record at the VPS and turn the orange cloud **on**; an `AAAA` beside it is
+fine. Our own IPv4 cannot reach Telegram and Telegram refuses an AAAA-only host
+(`IPv6-only addresses are not allowed`), so the callback needs IPv4 that is not
+ours.
+
+Leave the site and `api` on grey clouds. Russian ISPs have throttled Cloudflare
+since June 2025, and only the callback host should pay that cost.
+
+After a DNS change Telegram keeps answering for the old address for a few
+minutes. `setWebhook` failing right afterwards usually means its cache, not the
+records — wait and let the boot retry.
 
 `bun run secrets` fills in the secrets that are still empty — locally into
 `.env`, and it leaves anything already set alone. `--force` overwrites, which
@@ -238,8 +239,6 @@ secrets. Only provisioning stays on a workstation:
 - **SSH to the nodes** — `PROVISION_SSH_*` in the root `.env` (see section 3).
 - **`.env.nodes`** — one `XRAY_KEY_<CC>` / `XRAY_PANEL_<CC>` pair per node,
   written by `bun run provision:nodes` and shipped to the VPS over SSH.
-
-There are no signing keys: the project ships no binaries.
 
 ---
 
@@ -313,8 +312,8 @@ docker compose logs -f
 Check:
 
 ```bash
-curl https://api.gnome-vpn.com/health   # {"status":"ok"}
-curl -I https://gnome-vpn.com           # 200
+curl https://api.example.com/health   # {"status":"ok"}
+curl -I https://example.com           # 200
 ```
 
 ---
@@ -381,5 +380,5 @@ docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
 
 ```bash
 docker build -f apps/server/Dockerfile -t gnomevpn-server .
-docker build -f apps/client/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://api.gnome-vpn.com -t gnomevpn-web .
+docker build -f apps/client/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t gnomevpn-web .
 ```

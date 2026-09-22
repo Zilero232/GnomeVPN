@@ -4,9 +4,8 @@ import type { Update } from 'grammy/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { Bot } from 'grammy';
 import { isNonNullish, isNullish } from 'remeda';
-import { match } from 'ts-pattern';
 
-import type { PressInput } from '../telegram.types';
+import type { BotAction, BotCallback, BotContext } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
@@ -74,57 +73,70 @@ export class TelegramBotService implements OnModuleInit {
     }
   }
 
-  private register(bot: Bot): void {
-    bot.command('start', (ctx) => {
-      const code = ctx.match;
-
-      return looksLikeLinkCode(code) ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
-    });
-
-    bot.command('help', (ctx) => this.account.help(ctx));
-    bot.command('language', (ctx) => this.account.chooseLanguage(ctx));
-    bot.command('status', (ctx) => this.subscription.status(ctx));
-    bot.command('link', (ctx) => this.subscription.sendLink(ctx));
-    bot.command('buy', (ctx) => this.subscription.buy(ctx));
-    bot.command('trial', (ctx) => this.subscription.claimTrialDay(ctx));
-    bot.command('unlink', (ctx) => this.account.askUnlink(ctx));
-    bot.command('apps', (ctx) => this.apps.list(ctx));
-    bot.command('rotate', (ctx) => this.billing.askRotate(ctx));
-    bot.command('devices', (ctx) => this.billing.devices(ctx));
-
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.plan), (ctx) => this.subscription.startCheckout(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.locale), (ctx) => this.account.changeLocale(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.client), (ctx) => this.apps.show(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.unlink), (ctx) => this.account.confirmUnlink(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.rotate), (ctx) => this.billing.confirmRotate(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.autoRenew), (ctx) => this.billing.changeAutoRenew(ctx));
-    bot.callbackQuery(callbackPattern(CALLBACK_PREFIX.devices), (ctx) => this.billing.buyDevices(ctx));
-
-    bot.on('message:text', (ctx) => {
-      const { text } = ctx.message;
-      const button = buttonFor(text);
-
-      if (isNonNullish(button)) {
-        return this.press({ ctx, button });
-      }
-
-      return looksLikeLinkCode(text) ? this.account.consume({ ctx, text }) : this.account.help(ctx);
-    });
+  get actions(): BotAction[] {
+    return [
+      { command: 'connect', button: 'connect', run: (ctx) => this.subscription.sendLink(ctx) },
+      { command: 'link', run: (ctx) => this.subscription.sendLink(ctx) },
+      { command: 'status', button: 'status', run: (ctx) => this.subscription.status(ctx) },
+      { command: 'buy', button: 'buy', run: (ctx) => this.subscription.buy(ctx) },
+      { button: 'renew', run: (ctx) => this.subscription.buy(ctx) },
+      { command: 'trial', button: 'trial', run: (ctx) => this.subscription.claimTrialDay(ctx) },
+      { command: 'apps', button: 'apps', run: (ctx) => this.apps.list(ctx) },
+      { command: 'devices', button: 'devices', run: (ctx) => this.billing.devices(ctx) },
+      { command: 'rotate', button: 'rotate', run: (ctx) => this.billing.askRotate(ctx) },
+      { button: 'autoRenew', run: (ctx) => this.billing.autoRenew(ctx) },
+      { command: 'website', run: (ctx) => this.account.openWebsite(ctx) },
+      { command: 'language', button: 'language', run: (ctx) => this.account.chooseLanguage(ctx) },
+      { command: 'help', button: 'help', run: (ctx) => this.account.help(ctx) },
+      { command: 'unlink', button: 'unlink', run: (ctx) => this.account.askUnlink(ctx) },
+      { command: 'delete', run: (ctx) => this.account.askDelete(ctx) }
+    ];
   }
 
-  private press({ ctx, button }: PressInput): Promise<void> {
-    return match(button)
-      .with('connect', () => this.subscription.sendLink(ctx))
-      .with('status', () => this.subscription.status(ctx))
-      .with('trial', () => this.subscription.claimTrialDay(ctx))
-      .with('buy', 'renew', () => this.subscription.buy(ctx))
-      .with('apps', () => this.apps.list(ctx))
-      .with('unlink', () => this.account.askUnlink(ctx))
-      .with('rotate', () => this.billing.askRotate(ctx))
-      .with('autoRenew', () => this.billing.autoRenew(ctx))
-      .with('devices', () => this.billing.devices(ctx))
-      .with('language', () => this.account.chooseLanguage(ctx))
-      .with('help', () => this.account.help(ctx))
-      .exhaustive();
+  private get callbacks(): BotCallback[] {
+    return [
+      { prefix: CALLBACK_PREFIX.plan, run: (ctx) => this.subscription.startCheckout(ctx) },
+      { prefix: CALLBACK_PREFIX.locale, run: (ctx) => this.account.changeLocale(ctx) },
+      { prefix: CALLBACK_PREFIX.client, run: (ctx) => this.apps.show(ctx) },
+      { prefix: CALLBACK_PREFIX.unlink, run: (ctx) => this.account.confirmUnlink(ctx) },
+      { prefix: CALLBACK_PREFIX.deleteAccount, run: (ctx) => this.account.confirmDelete(ctx) },
+      { prefix: CALLBACK_PREFIX.rotate, run: (ctx) => this.billing.confirmRotate(ctx) },
+      { prefix: CALLBACK_PREFIX.autoRenew, run: (ctx) => this.billing.changeAutoRenew(ctx) },
+      { prefix: CALLBACK_PREFIX.devices, run: (ctx) => this.billing.buyDevices(ctx) }
+    ];
+  }
+
+  private register(bot: Bot): void {
+    bot.command('start', (ctx) => this.start(ctx));
+
+    for (const { command, run } of this.actions) {
+      if (command) {
+        bot.command(command, run);
+      }
+    }
+
+    for (const { prefix, run } of this.callbacks) {
+      bot.callbackQuery(callbackPattern(prefix), run);
+    }
+
+    bot.on('message:text', (ctx) => this.read(ctx));
+  }
+
+  private start(ctx: BotContext): Promise<void> {
+    const code = typeof ctx.match === 'string' ? ctx.match : '';
+
+    return looksLikeLinkCode(code) ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
+  }
+
+  private read(ctx: BotContext): Promise<void> {
+    const text = ctx.message?.text ?? '';
+    const button = buttonFor(text);
+    const pressed = this.actions.find((action) => action.button === button);
+
+    if (isNonNullish(pressed)) {
+      return pressed.run(ctx);
+    }
+
+    return looksLikeLinkCode(text) ? this.account.consume({ ctx, text }) : this.account.help(ctx);
   }
 }

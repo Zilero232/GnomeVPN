@@ -17,3 +17,5 @@ export type {
   SignUpValues,
   UpdateNameValues
 } from './auth.types';
+
+export { isPlaceholderEmail, PLACEHOLDER_EMAIL, telegramPlaceholderEmail } from './placeholder-email';

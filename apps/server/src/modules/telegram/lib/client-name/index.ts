@@ -1,1 +1,1 @@
-export { clientName, parseClientId } from './client-name';
+export { clientName, parseClientId, platformNames } from './client-name';

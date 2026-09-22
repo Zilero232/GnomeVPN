@@ -11,3 +11,11 @@ export const telegramStatusSchema = z.object({
   username: z.string().nullable(),
   botUsername: z.string()
 });
+
+export const telegramWebLoginSchema = z.object({
+  token: z.string()
+});
+
+export const telegramWidgetSchema = z.object({
+  clientId: z.string().nullable()
+});

@@ -11,8 +11,9 @@ paths:
 ## No comments
 
 The code is expected to read on its own. `apps/client` has zero comments and
-stays that way; the reasoning belongs in CLAUDE.md or the commit message. Build scripts under `scripts/` and YAML in `.github/` are the exception —
-they already carry comments.
+stays that way; the reasoning belongs in CLAUDE.md or the commit message.
+Build scripts under `scripts/` and YAML in `.github/` are the exception — they
+already carry comments.
 
 ## Two or more parameters → one object
 
@@ -125,6 +126,12 @@ by hand on every repricing.
 A test whose two sides both come from the code under test cannot fail. Comparing
 a component's default render to the same component rendered with the default
 value proves nothing.
+
+`isolate: false` lives in each project's own `vitest.config.ts`, never in the
+root one — projects listed by file path do not inherit the root `test` block, so
+a setting put there is silently ignored. It is safe because the client's
+`vitest.setup.ts` calls `cleanup()` in `afterEach`; a suite that starts leaking
+state between files fails under `--sequence.shuffle` before it fails in CI.
 
 ## Verify before claiming anything works
 

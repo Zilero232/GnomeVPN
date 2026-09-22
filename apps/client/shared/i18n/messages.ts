@@ -19,7 +19,6 @@ import enPrivacy from './locales/en/privacy.json';
 import enServers from './locales/en/servers.json';
 import enSetup from './locales/en/setup.json';
 import enTelegram from './locales/en/telegram.json';
-import enTray from './locales/en/tray.json';
 import enTrial from './locales/en/trial.json';
 import enValidation from './locales/en/validation.json';
 import ruAbout from './locales/ru/about.json';
@@ -41,7 +40,6 @@ import ruPrivacy from './locales/ru/privacy.json';
 import ruServers from './locales/ru/servers.json';
 import ruSetup from './locales/ru/setup.json';
 import ruTelegram from './locales/ru/telegram.json';
-import ruTray from './locales/ru/tray.json';
 import ruTrial from './locales/ru/trial.json';
 import ruValidation from './locales/ru/validation.json';
 
@@ -65,7 +63,6 @@ const ru = {
   servers: ruServers,
   setup: ruSetup,
   telegram: ruTelegram,
-  tray: ruTray,
   trial: ruTrial,
   validation: ruValidation
 };
@@ -90,7 +87,6 @@ const en = {
   servers: enServers,
   setup: enSetup,
   telegram: enTelegram,
-  tray: enTray,
   trial: enTrial,
   validation: enValidation
 };

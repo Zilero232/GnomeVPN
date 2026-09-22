@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AuthModule } from '../auth';
 import { BillingModule } from '../billing';
 import { SubscriptionModule } from '../subscription';
 import { SubscriptionLinkModule } from '../subscription-link';
@@ -11,14 +12,16 @@ import {
   TelegramLinkService,
   TelegramProfileService,
   TelegramSharedService,
-  TelegramSubscriptionService
+  TelegramSubscriptionService,
+  TelegramWebLoginService
 } from './services';
 import { TelegramLinkController } from './telegram-link.controller';
+import { TelegramWebLoginController } from './telegram-web-login.controller';
 import { TelegramController } from './telegram.controller';
 
 @Module({
-  imports: [BillingModule, SubscriptionModule, SubscriptionLinkModule],
-  controllers: [TelegramController, TelegramLinkController],
+  imports: [AuthModule, BillingModule, SubscriptionModule, SubscriptionLinkModule],
+  controllers: [TelegramController, TelegramLinkController, TelegramWebLoginController],
   providers: [
     TelegramAccountService,
     TelegramAppsService,
@@ -27,7 +30,8 @@ import { TelegramController } from './telegram.controller';
     TelegramLinkService,
     TelegramProfileService,
     TelegramSharedService,
-    TelegramSubscriptionService
+    TelegramSubscriptionService,
+    TelegramWebLoginService
   ],
   exports: [TelegramLinkService]
 })

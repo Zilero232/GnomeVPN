@@ -18,48 +18,37 @@
 
 <br/>
 
-## Why this exists
+## Why Hysteria2
 
-Most VPN protocols announce themselves. WireGuard's handshake is a fixed-size UDP
-packet; OpenVPN has a recognisable header. Where traffic is inspected, that is
-enough to drop the connection.
+Most VPN protocols announce themselves — WireGuard's handshake is a fixed-size
+UDP packet, OpenVPN has a recognisable header. Where traffic is inspected, that
+is enough to drop the connection.
 
-GnomeVPN leads with **Hysteria2** — QUIC over UDP, masquerading as an HTTP/3
-site. The choice was measured, not assumed: this repository first shipped VLESS +
-XTLS-Reality, and Russian DPI equipment fingerprinted the REALITY handshake over
-_any_ TCP port, killing sessions within minutes of real traffic. Plain WireGuard
-on UDP/51820 passed on the same network. UDP is policed differently, so the
-tunnel moved.
+The choice here was measured, not assumed. This repository first shipped
+VLESS + XTLS-Reality; Russian DPI fingerprinted the REALITY handshake over _any_
+TCP port and killed sessions within minutes. Plain WireGuard on UDP passed on the
+same network, so the tunnel moved to **Hysteria2** — QUIC over UDP, masquerading
+as an HTTP/3 site.
 
-QUIC is still UDP, though, and some networks drop UDP wholesale — office Wi-Fi,
-hotels, a few carriers. So every node also serves **VLESS + Reality** on TCP/443,
-and the subscription lists both. The two share the port because one is UDP and
-the other TCP.
+QUIC is still UDP, and some networks drop UDP wholesale. So every node also
+serves **VLESS + Reality** on TCP/443 and the subscription lists both; the two
+share the port because one is UDP and the other TCP. The user picks whichever
+connects.
 
 ## One link, every platform
 
-There is no GnomeVPN app to install. The client is
-**[INCY](https://incy.cc/)** — a free third-party app that exists on iOS,
-Android, Windows, Linux, Android TV and Apple TV.
+There is no GnomeVPN app. The client is **[INCY](https://incy.cc/)** — a free
+third-party app on iOS, Android, Windows, Linux, Android TV and Apple TV. You
+paste one URL into it and it keeps the server list, traffic counters and renewal
+date up to date on its own.
 
-You copy one URL from your account and paste it into INCY. The app fetches the
-server list, the traffic counters and the renewal date from that URL, and keeps
-them up to date on its own.
+That URL is a standard subscription format, so Hiddify, v2rayNG, Streisand and
+others read it too — deliberately, so nobody is stuck with INCY.
 
-This repository used to carry a Tauri desktop shell, a privileged Rust service
-for three operating systems and an Android tunnel — roughly 2,500 files of
-platform-specific code. All of it was deleted in favour of a subscription
-endpoint that fits in one NestJS module.
-
-**What that bought.** iOS and TV support, which never existed and could not have
-been shipped cheaply. Years of somebody else's bug reports on five platforms.
-
-**What it cost.** The app is not ours and carries someone else's name in the
-store. The site says so plainly rather than hiding it.
-
-The subscription URL is a standard format, so it also works in Hiddify, v2rayNG,
-Streisand and others. That is deliberate — a user who dislikes INCY is not stuck
-with it.
+This bought iOS and TV support, which never existed here and could not have been
+shipped cheaply; it cost ~2,500 files of Tauri, Rust and Android code, and the
+app now carries someone else's name. The site says so plainly rather than hiding
+it.
 
 ## How a connection happens
 
@@ -85,9 +74,8 @@ with it.
      ├──────────────────────────────────────────────────────►│
 ```
 
-The token in the URL is the credential — INCY cannot log in, so 32 random bytes
-are all the authentication there is. Rotating it in the account kills every copy
-of the old link at once.
+The token is the credential — INCY cannot log in, so 32 random bytes are the
+whole of the authentication. Rotating it kills every copy of the old link at once.
 
 ## Architecture
 
@@ -97,6 +85,7 @@ apps/
 └── server/          # NestJS on Bun, Prisma, Postgres, better-auth
 packages/
 ├── schemas/         # Zod schemas shared by both
+├── logger/          # one pino config: levels, redaction, transport
 └── scripts/         # reporter, ssh, shell — used by provisioning
 scripts/provision/   # node setup over SSH
 infra/caddy/         # TLS termination and reverse proxy
@@ -108,12 +97,15 @@ infra/caddy/         # TLS termination and reverse proxy
 | API        | NestJS 11 on Bun, Prisma 7, Postgres 17         |
 | Auth       | better-auth, bearer tokens                      |
 | Payments   | YooKassa, recurring by saved card               |
-| Tunnel     | Hysteria2 via the 3x-ui panel                   |
+| Tunnel     | Hysteria2 and VLESS + Reality via 3x-ui         |
 | Client app | INCY (third party)                              |
+| Bot        | grammY on a webhook, Russian and English        |
 | Delivery   | Caddy, Docker Compose, ghcr.io                  |
 
 The site is localised into Russian and English, with the locale in the URL
-(`/faq`, `/en/faq`) and server-rendered metadata for both.
+(`/faq`, `/en/faq`) and server-rendered metadata for both. The Telegram bot is a
+second door to the same account: it reads the subscription, the link and the
+checkout through the services that already own them.
 
 ## Running it locally
 
@@ -144,9 +136,9 @@ Two GitHub Actions, no local build steps:
 
 - **`checks.yml`** runs on every push and pull request: typecheck, lint, tests,
   then a client build.
-- **`deploy.yml`** is manual. It pushes the web and server images to ghcr.io,
-  copies `docker-compose.yml` and the Caddyfile to the VPS, runs migrations
-  **before** bringing the new containers up, and waits on both healthchecks.
+- **`deploy.yml`** is manual. It pushes both images to ghcr.io, copies
+  `docker-compose.yml` and the Caddyfile to the VPS, runs migrations **before**
+  bringing the new containers up, and waits on both healthchecks.
 
 Adding a VPN node stays a local command: it talks to the machine over SSH with
 credentials that never enter CI, and it is a decision a human makes, not a commit.
@@ -155,11 +147,13 @@ See [DEPLOY.md](DEPLOY.md) for the VPS side.
 
 ## Status
 
-Working: the subscription feed, billing with recurring payments, device limits,
-node provisioning, the localised site.
+Working: the subscription feed, billing with recurring payments, a free trial
+day, device limits, node provisioning, the localised site, and a Telegram bot
+that covers everything the account page does except card management.
 
-Not done: per-app routing (INCY has it on Android; we do not drive it from the
-subscription yet), a Telegram bot, referral codes.
+Not done: per-app routing (INCY has it on Android; the subscription does not
+drive it yet), referral codes, and real certificates on the nodes — until those
+exist, sing-box clients skip verification where xray clients pin.
 
 ## License
 

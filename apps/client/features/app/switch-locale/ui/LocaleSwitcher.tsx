@@ -7,7 +7,7 @@ import { LOCALE_LABELS, LOCALES } from '@/shared/i18n';
 import { Segmented } from '@/ui-kit';
 
 export const LocaleSwitcher = () => {
-  const t = useTranslations('tray');
+  const t = useTranslations('common');
   const { locale, setLocale } = useLocale();
 
   return (

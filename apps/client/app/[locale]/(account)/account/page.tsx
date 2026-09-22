@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import * as rootParams from 'next/root-params';
+import { Suspense } from 'react';
 
 import { ROUTES } from '@/shared/constants';
 import { resolveLocale } from '@/shared/i18n';
@@ -18,6 +19,10 @@ export const generateMetadata = async () => {
   });
 };
 
-const Page = () => <AccountPage />;
+const Page = () => (
+  <Suspense>
+    <AccountPage />
+  </Suspense>
+);
 
 export default Page;

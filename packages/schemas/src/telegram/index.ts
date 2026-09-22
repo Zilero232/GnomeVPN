@@ -1,3 +1,3 @@
-export { telegramLinkCodeSchema, telegramStatusSchema } from './telegram.schemas';
+export { telegramLinkCodeSchema, telegramStatusSchema, telegramWebLoginSchema, telegramWidgetSchema } from './telegram.schemas';
 
-export type { TelegramLinkCode, TelegramStatus } from './telegram.types';
+export type { TelegramLinkCode, TelegramStatus, TelegramWebLogin, TelegramWidget } from './telegram.types';

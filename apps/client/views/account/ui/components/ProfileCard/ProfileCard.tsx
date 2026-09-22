@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
+import { DeleteAccountCard } from '@/features/account/delete-account';
 import { ChangeEmailForm } from '@/features/auth/change-email';
 import { ChangePasswordForm } from '@/features/auth/change-password';
 import { UpdateNameForm } from '@/features/auth/update-name';
@@ -33,6 +34,8 @@ export const ProfileCard = () => {
 
         <ChangePasswordForm />
       </div>
+
+      <DeleteAccountCard />
     </div>
   );
 };

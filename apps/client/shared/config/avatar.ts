@@ -1,5 +1,5 @@
-export const AVATAR_SIZE = 56;
-
-export const AVATAR_BACKGROUNDS = ['1a8f5e', '35f0a0', '0d1413', '2a3d38'];
-
-export const AVATAR_RADIUS = 22;
+export const AVATAR = {
+  size: 56,
+  radius: 22,
+  backgrounds: ['1a8f5e', '35f0a0', '2fd48c', '5ef2b4']
+} as const;

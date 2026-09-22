@@ -28,8 +28,13 @@ during render breaks the prerender, not just a test.
 
 - **Guard browser APIs with `isBrowser()`/`isServer()` from `@/shared/lib`**,
   never a raw `typeof window` check, or read them inside `useEffect`.
-- **Never return `null` while loading in a provider that wraps a public page** —
-  it ships an empty `<body>` to crawlers.
+- **A provider that wraps every page never swaps `children` for a placeholder.**
+  Returning a splash instead ships an empty `<body>` to crawlers on the public
+  pages, and on a private one it drops the page segment from rendering
+  altogether — which is what Next 16 reports as "could not validate that a
+  segment has instant navigation". `AuthProvider` only redirects; the account
+  group paints its own shell and lays a splash *over* the children while the
+  session resolves, so the segment always renders.
 - **A `useState` initialiser that reads browser state is a hydration mismatch.**
   Read it in an effect instead.
 - **Server-only modules stay out of shared barrels.** `shared/lib/server-logger`

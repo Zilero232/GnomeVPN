@@ -1,1 +1,1 @@
-export { parsePlanId, planButtonLabel } from './plan-label';
+export { parsePlanId, planButtonLabel, planLabel } from './plan-label';

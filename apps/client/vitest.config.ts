@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     name: 'client',
+    isolate: false,
     environment: 'jsdom',
     globals: true,
     env: {

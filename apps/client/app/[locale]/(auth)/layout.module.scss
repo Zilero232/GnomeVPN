@@ -1,0 +1,41 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  display: flex;
+  min-height: var(--viewport-height);
+  flex-direction: column;
+
+  @include safe-padding(24px);
+}
+
+.header {
+  display: flex;
+  width: 100%;
+  max-width: 1080px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 auto;
+  gap: 16px;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.panel {
+  display: flex;
+  width: 100%;
+  max-width: 400px;
+  flex-direction: column;
+  padding: 34px;
+
+  @include surface-card;
+  @include rise(0.5s);
+
+  box-shadow: 0 30px 80px -40px rgb(0 0 0 / 80%);
+  gap: 22px;
+}

@@ -11,8 +11,6 @@ import s from './SiteFooter.module.scss';
 export const SiteFooter = () => {
   const t = useTranslations('footer');
 
-  const buildYear = new Date().getFullYear();
-
   return (
     <footer className={s.root}>
       <div className={s.inner}>
@@ -25,7 +23,7 @@ export const SiteFooter = () => {
         </nav>
 
         <div className={s.meta}>
-          <FooterCopy buildYear={buildYear} className={s.copy} />
+          <FooterCopy className={s.copy} />
 
           <a className={s.link} href={`mailto:${SITE.email}`}>
             {t('support')}

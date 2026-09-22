@@ -19,5 +19,7 @@ export { Spinner } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { Stack } from './Stack';
 export type { StackProps } from './Stack';
+export { StatusIcon } from './StatusIcon';
+export type { StatusIconProps } from './StatusIcon';
 export { Text } from './Text';
 export type { TextProps } from './Text';

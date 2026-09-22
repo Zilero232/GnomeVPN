@@ -3,7 +3,8 @@ export const TEXT_TOKEN = {
   count: '{count}',
   price: '{price}',
   date: '{date}',
-  plan: '{plan}'
+  plan: '{plan}',
+  site: '{site}'
 } as const;
 
 export const AUTO_RENEW_CHOICE = {

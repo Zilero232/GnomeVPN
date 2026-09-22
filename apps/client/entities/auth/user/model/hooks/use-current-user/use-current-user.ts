@@ -1,5 +1,7 @@
 'use client';
 
+import { isPlaceholderEmail } from '@gnomevpn/schemas';
+
 import { authClient, getAuthToken } from '@/shared/api';
 
 export const useCurrentUser = () => {
@@ -7,12 +9,15 @@ export const useCurrentUser = () => {
 
   const user = session?.user ?? null;
   const hasToken = Boolean(getAuthToken());
+  const email = user?.email ?? '';
+  const hasRealEmail = Boolean(email) && !isPlaceholderEmail(email);
 
   return {
     user,
     isLoading: isPending,
     isAuthenticated: Boolean(user) || hasToken,
-    email: user?.email ?? '',
+    email: hasRealEmail ? email : '',
+    hasRealEmail,
     name: user?.name ?? ''
   };
 };

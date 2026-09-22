@@ -17,6 +17,7 @@ model User {
   subscriptionLink SubscriptionLink?
   telegramAccount  TelegramAccount?
   telegramCodes    TelegramLinkCode[]
+  telegramLogins   TelegramWebLogin[]
 
   @@map("user")
 }

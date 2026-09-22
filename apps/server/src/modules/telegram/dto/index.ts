@@ -1,1 +1,1 @@
-export { TelegramLinkCodeDto, TelegramStatusDto } from './telegram.dto';
+export { TelegramLinkCodeDto, TelegramStatusDto, TelegramWebLoginDto, TelegramWidgetDto } from './telegram.dto';

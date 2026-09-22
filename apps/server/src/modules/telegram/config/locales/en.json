@@ -1,6 +1,6 @@
 {
   "text": {
-    "start": "GnomeVPN — a fast VPN with no speed limits.\n\nYouTube in 4K, social media, games. Works on iPhone, Android, Windows, macOS and TVs.\n\nTo link this chat to your account, open the Telegram tab on the site and press Connect Telegram. A code appears — send it here.\n\nNo account yet? Sign up on the site: the first day is free.",
+    "start": "GnomeVPN — a fast VPN with no speed limits.\n\nYouTube in 4K, social media, games. Works on iPhone, Android, Windows, macOS and TVs.\n\nYour account already exists — there is nothing to sign up for. Start with the free day or subscribe using the buttons below.\n\nWebsite: {site}\nTo open your account there, send /website — you will get a one-time link that signs you in.",
     "linked": "Done — this chat is linked to your account.\n\nEverything is here now, on the buttons below.",
     "alreadyLinked": "This chat is already linked to an account.",
     "codeInvalid": "That code did not work — it is unknown, already used or expired.\n\nGet a new one on the site: the Telegram tab.",
@@ -31,7 +31,7 @@
     "appsImport": "Add subscription",
     "appsManual": "This app cannot add a subscription by itself — copy the link and paste it in:",
     "appsPlatforms": "Platforms: {platforms}",
-    "unlinkAsk": "Unlink this chat? Your subscription and access are untouched — you can link it again at any time.",
+    "unlinkAsk": "Unlink this chat? Your subscription and access stay — you will still be able to sign in with your email.",
     "unlinkYes": "Yes, unlink",
     "unlinkNo": "Cancel",
     "unlinkCancelled": "Unlinking cancelled.",
@@ -48,7 +48,14 @@
     "devicesNow": "Devices now: {count}. Each extra one is a one-off {price} RUB.",
     "devicesChoose": "How many to add?",
     "devicesMax": "You are at the limit — no more devices can be added.",
-    "devicesIntro": "Pay at the link below. The limit rises the moment it clears:"
+    "devicesIntro": "Pay at the link below. The limit rises the moment it clears:",
+    "websiteIntro": "Here is your sign-in link. It works once and lasts 10 minutes — do not forward it to anyone.",
+    "unlinkNoEmail": "This account was created in Telegram and there is no other way into it yet. Unlink now and the subscription stays, but nothing can open it.\n\nAdd an email in your account first — after that, unlinking is safe.",
+    "deleteAsk": "Delete this account? The subscription ends with no refund for the remaining period, every device disconnects and the link stops working. We cannot bring it back.",
+    "deleteYes": "Delete permanently",
+    "deleteNo": "Cancel",
+    "deleteCancelled": "Kept the account.",
+    "deleted": "The account is gone. Thanks for being with us."
   },
   "buttons": {
     "connect": "🚀 Connect",
@@ -64,6 +71,14 @@
     "language": "🌍 Language",
     "unlink": "🔌 Unlink"
   },
+  "platforms": {
+    "ios": "iPhone",
+    "android": "Android",
+    "windows": "Windows",
+    "macos": "Mac",
+    "linux": "Linux",
+    "tv": "TV"
+  },
   "profile": {
     "name": "GnomeVPN",
     "description": "GnomeVPN — a fast VPN with no speed limits.\n\n🎬 YouTube in 4K, social media, games\n📱 iPhone, Android, Windows, macOS, TVs\n💳 From {price} RUB a month\n🎁 The first day is free\n\nPress Start to begin.",
@@ -77,6 +92,7 @@
     "buy": "Subscribe or renew",
     "language": "Change language",
     "unlink": "Unlink this chat",
-    "help": "Help"
+    "help": "Help",
+    "delete": "Delete the account"
   }
 }

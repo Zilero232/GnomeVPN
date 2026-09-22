@@ -3,8 +3,6 @@ import { DEFAULT_LOCALE, localePath, messages } from '@/shared/i18n';
 
 import { LLMS_CONTENT_TYPE, LLMS_PAGES } from './llms.constants';
 
-export const dynamic = 'force-static';
-
 const absolute = (path: string) => new URL(localePath({ path, locale: DEFAULT_LOCALE }), SITE.url).toString();
 
 export const GET = () => {

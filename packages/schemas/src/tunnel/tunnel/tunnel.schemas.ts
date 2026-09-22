@@ -32,5 +32,5 @@ export const tunnelConfigSchema = z
 
       return config.auth.length > 0 && config.serverName.length > 0;
     },
-    { message: 'validation.tunnelProtocolFields' }
+    { message: 'a tunnel config needs auth and serverName, and a vless one needs reality' }
   );

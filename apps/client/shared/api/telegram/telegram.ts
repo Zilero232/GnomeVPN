@@ -1,4 +1,4 @@
-import type { TelegramLinkCode, TelegramStatus } from '@gnomevpn/schemas';
+import type { TelegramLinkCode, TelegramStatus, TelegramWebLogin, TelegramWidget } from '@gnomevpn/schemas';
 
 import { api } from '../http';
 
@@ -16,4 +16,22 @@ export const issueTelegramCode = async (): Promise<TelegramLinkCode> => {
 
 export const unlinkTelegram = async (): Promise<void> => {
   await api.delete('/telegram');
+};
+
+export const redeemTelegramLogin = async (code: string): Promise<TelegramWebLogin> => {
+  const { data } = await api.post('/telegram/web-login', { code });
+
+  return data;
+};
+
+export const getTelegramWidget = async (): Promise<TelegramWidget> => {
+  const { data } = await api.get('/telegram/web-login');
+
+  return data;
+};
+
+export const signInWithTelegram = async (idToken: string): Promise<TelegramWebLogin> => {
+  const { data } = await api.post('/telegram/web-login/widget', { idToken });
+
+  return data;
 };

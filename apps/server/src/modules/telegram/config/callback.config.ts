@@ -5,7 +5,8 @@ export const CALLBACK_PREFIX = {
   unlink: 'unlink:',
   rotate: 'rotate:',
   autoRenew: 'renew:',
-  devices: 'devices:'
+  devices: 'devices:',
+  deleteAccount: 'delete:'
 } as const;
 
 export const CONFIRMED = 'yes';

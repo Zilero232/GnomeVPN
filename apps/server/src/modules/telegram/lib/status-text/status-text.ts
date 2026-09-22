@@ -4,6 +4,7 @@ import { enGB, ru } from 'date-fns/locale';
 import type { StatusTextInput } from './status-text.types';
 
 import { BOT_TEXT, TEXT_TOKEN } from '../../config';
+import { planLabel } from '../plan-label';
 import { DATE_FORMAT } from './status-text.constants';
 
 const DATE_LOCALES = { ru, en: enGB };
@@ -19,7 +20,7 @@ export const statusText = ({ status, plan, currentPeriodEnd, cancelAtPeriodEnd, 
 
   return [
     text.activeUntil.replace(TEXT_TOKEN.date, until),
-    text.planLine.replace(TEXT_TOKEN.plan, plan),
+    text.planLine.replace(TEXT_TOKEN.plan, planLabel({ planId: plan, locale })),
     text.devicesLine.replace(TEXT_TOKEN.count, String(limits.deviceLimit)),
     cancelAtPeriodEnd ? text.willNotRenew : text.willRenew
   ].join('\n');

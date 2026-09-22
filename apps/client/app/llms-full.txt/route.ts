@@ -5,8 +5,6 @@ import { DEFAULT_LOCALE, messages } from '@/shared/i18n';
 
 import { LLMS_CONTENT_TYPE } from '../llms.txt/llms.constants';
 
-export const dynamic = 'force-static';
-
 export const GET = () => {
   const { about, faq } = messages[DEFAULT_LOCALE];
 

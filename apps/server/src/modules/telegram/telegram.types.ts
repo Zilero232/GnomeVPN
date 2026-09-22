@@ -1,6 +1,7 @@
 import type { ClientId } from '@gnomevpn/schemas';
 import type { Bot, Context } from 'grammy';
 
+import type { Prisma } from '../../../generated';
 import type { AUTO_RENEW_CHOICE, BOT_LOCALES } from './config';
 
 export type BotLocale = (typeof BOT_LOCALES)[number];
@@ -12,6 +13,8 @@ export type BotMessages = typeof import('./config/locales/ru.json');
 export type BotText = BotMessages['text'];
 
 export type BotButtons = BotMessages['buttons'];
+
+export type BotPlatforms = BotMessages['platforms'];
 
 export type ButtonKey = keyof BotButtons;
 
@@ -34,6 +37,11 @@ export type SpeakInput = {
   pick: (copy: BotText) => string;
 };
 
+export type ChatCopy = {
+  chat: ResolvedChat | null;
+  copy: BotText;
+};
+
 export type ShowClientInput = {
   ctx: BotContext;
   chat: ResolvedChat;
@@ -51,12 +59,25 @@ export type AnsweredInput = {
   ctx: BotContext;
   prefix: string;
   act: (answer: Answer) => Promise<unknown>;
-  tellUnlinked?: boolean;
 };
 
-export type PressInput = {
+export type AttemptInput = {
   ctx: BotContext;
-  button: ButtonKey;
+  chat: ResolvedChat;
+  act: () => Promise<unknown>;
+};
+
+export type BotHandler = (ctx: BotContext) => Promise<void>;
+
+export type BotAction = {
+  command?: string;
+  button?: ButtonKey;
+  run: BotHandler;
+};
+
+export type BotCallback = {
+  prefix: string;
+  run: BotHandler;
 };
 
 export type ReplyInput = {
@@ -152,4 +173,9 @@ export type SetLocaleInput = {
 export type ClaimTrialInput = {
   ctx: BotContext;
   chat: ResolvedChat;
+};
+
+export type UntouchedUserInput = {
+  tx: Prisma.TransactionClient;
+  userId: string;
 };

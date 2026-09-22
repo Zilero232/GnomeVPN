@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isNullish } from 'remeda';
 
-import type { AnsweredInput, BotContext, BotText, ChatState, ReplyInput, WithUserInput } from '../telegram.types';
+import type { AnsweredInput, AttemptInput, BotContext, BotText, ChatState, ReplyInput, WithUserInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { SubscriptionService, TrialService } from '../../subscription';
@@ -41,7 +41,7 @@ export class TelegramSharedService {
     return { isSubscribed, isTrialAvailable: eligibility === 'available' };
   }
 
-  async answered({ ctx, prefix, act, tellUnlinked }: AnsweredInput): Promise<void> {
+  async answered({ ctx, prefix, act }: AnsweredInput): Promise<void> {
     const identity = identityOf(ctx.from);
     const data = ctx.callbackQuery?.data;
 
@@ -51,17 +51,9 @@ export class TelegramSharedService {
 
     await ctx.answerCallbackQuery();
 
-    const chat = await this.link.findChat(identity.telegramId);
+    const chat = await this.link.ensureChat(identity);
 
-    if (isNullish(chat)) {
-      if (tellUnlinked) {
-        await ctx.reply(this.textFor(ctx).notLinked);
-      }
-
-      return;
-    }
-
-    await act({ chat, value: data.slice(prefix.length) });
+    await this.attempt({ ctx, chat, act: () => act({ chat, value: data.slice(prefix.length) }) });
   }
 
   async withUser({ ctx, act }: WithUserInput): Promise<void> {
@@ -71,20 +63,18 @@ export class TelegramSharedService {
       return;
     }
 
-    const chat = await this.link.findChat(identity.telegramId);
-
-    if (isNullish(chat)) {
-      await ctx.reply(this.textFor(ctx).notLinked);
-
-      return;
-    }
+    const chat = await this.link.ensureChat(identity);
 
     void this.link.touch(identity);
 
+    await this.attempt({ ctx, chat, act: () => act(chat) });
+  }
+
+  private async attempt({ ctx, chat, act }: AttemptInput): Promise<void> {
     try {
-      await act(chat);
+      await act();
     } catch (error) {
-      this.logger.warn(`telegram command failed: ${describeError(error)}`);
+      this.logger.warn(`telegram handler failed: ${describeError(error)}`);
 
       await ctx.reply(BOT_TEXT[chat.locale].failed);
     }

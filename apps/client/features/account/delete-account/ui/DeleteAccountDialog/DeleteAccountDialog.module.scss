@@ -1,0 +1,20 @@
+@use '@/shared/styles/mixins' as *;
+
+.content {
+  max-width: 560px;
+  gap: 18px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  @include below(sm) {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}

@@ -8,7 +8,7 @@ import type { BotContext, ShowClientInput } from '../telegram.types';
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
 import { BOT_TEXT, CALLBACK_PREFIX, TEXT_TOKEN } from '../config';
-import { clientName, parseClientId } from '../lib';
+import { clientName, parseClientId, platformNames } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -58,14 +58,14 @@ export class TelegramAppsService {
 
   private async describe({ ctx, chat, id }: ShowClientInput): Promise<void> {
     const text = BOT_TEXT[chat.locale];
-    const { clients } = await this.subscriptionLink.get(chat.userId);
+    const { clients, url } = await this.subscriptionLink.get(chat.userId);
     const client = clients.find((entry) => entry.id === id);
 
     if (isNullish(client)) {
       return;
     }
 
-    const platforms = client.platforms.join(', ');
+    const platforms = platformNames({ platforms: client.platforms, locale: chat.locale });
     const lines = [
       clientName({ id, locale: chat.locale }),
       '',
@@ -77,8 +77,6 @@ export class TelegramAppsService {
     if (isNonNullish(client.importUrl)) {
       lines.push('', `${text.appsImport}: ${client.importUrl}`);
     } else {
-      const { url } = await this.subscriptionLink.get(chat.userId);
-
       lines.push('', text.appsManual, '', url);
     }
 

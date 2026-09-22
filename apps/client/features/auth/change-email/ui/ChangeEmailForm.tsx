@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useFieldError, useToastError } from '@/entities/app/locale';
-import { useChangeEmail, useCurrentUser } from '@/entities/auth/user';
+import { useAccountIdentity, useChangeEmail } from '@/entities/auth/user';
 import { FormField, Input, SubmitButton, Text } from '@/ui-kit';
 
 import s from './ChangeEmailForm.module.scss';
@@ -21,7 +21,7 @@ export const ChangeEmailForm = () => {
   const fieldError = useFieldError();
   const toastError = useToastError();
 
-  const { email } = useCurrentUser();
+  const { email, hasEmail } = useAccountIdentity();
   const { isPending, mutate } = useChangeEmail();
 
   const {
@@ -37,7 +37,7 @@ export const ChangeEmailForm = () => {
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
       onSuccess: () => {
-        toast.success(t('emailChangeRequested'));
+        toast.success(t(hasEmail ? 'emailChangeRequested' : 'emailAdded'));
         reset(DEFAULT_VALUES);
       },
       onError: toastError
@@ -48,15 +48,18 @@ export const ChangeEmailForm = () => {
     <form className={s.form} onSubmit={onSubmit}>
       <div className={s.current}>
         <Text size='xs' tone='muted'>
-          {t('currentEmailLabel')}
+          {hasEmail ? t('currentEmailLabel') : t('addEmailTitle')}
         </Text>
-        <Text size='sm'>{email}</Text>
+
+        <Text size='sm' tone={hasEmail ? 'default' : 'muted'}>
+          {hasEmail ? email : t('noEmail')}
+        </Text>
       </div>
 
       <FormField
         className={s.field}
         error={fieldError(errors.newEmail)}
-        hint={t('emailChangeHint')}
+        hint={hasEmail ? t('emailChangeHint') : t('addEmailHint')}
         htmlFor='profile-new-email'
         label={t('newEmailLabel')}
       >
@@ -64,7 +67,7 @@ export const ChangeEmailForm = () => {
       </FormField>
 
       <SubmitButton disabled={!isDirty} isPending={isPending} size='md'>
-        {t('changeEmail')}
+        {hasEmail ? t('changeEmail') : t('addEmail')}
       </SubmitButton>
     </form>
   );

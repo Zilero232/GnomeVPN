@@ -53,7 +53,6 @@ export class TelegramSubscriptionService {
     await this.shared.answered({
       ctx,
       prefix: CALLBACK_PREFIX.plan,
-      tellUnlinked: true,
       act: async ({ chat, value }) => {
         const text = BOT_TEXT[chat.locale];
         const planId = parsePlanId(value);

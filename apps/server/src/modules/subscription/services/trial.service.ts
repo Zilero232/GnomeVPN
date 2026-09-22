@@ -1,6 +1,6 @@
 import type { SubscriptionStatus } from '@gnomevpn/schemas';
 
-import { DEFAULT_PLAN_ID, TRIAL_DAYS } from '@gnomevpn/schemas';
+import { DEFAULT_PLAN_ID, isPlaceholderEmail, TRIAL_DAYS } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
 import { addDays } from 'date-fns';
 
@@ -21,10 +21,10 @@ export class TrialService {
   async eligibility(userId: string): Promise<TrialEligibility> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { emailVerified: true, subscription: { select: { currentPeriodEnd: true, trialStartedAt: true } } }
+      select: { email: true, emailVerified: true, subscription: { select: { currentPeriodEnd: true, trialStartedAt: true } } }
     });
 
-    if (!user?.emailVerified) {
+    if (!user || (!user.emailVerified && !isPlaceholderEmail(user.email))) {
       return 'emailUnverified';
     }
 

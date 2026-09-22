@@ -1,4 +1,4 @@
-export { Avatar, Badge, BrandMark, Button, CountryFlag, Input, Label, PasswordInput, Spinner, Stack, Text } from './atoms';
+export { Avatar, Badge, BrandMark, Button, CountryFlag, Input, Label, PasswordInput, Spinner, Stack, StatusIcon, Text } from './atoms';
 export type {
   AvatarProps,
   BadgeProps,
@@ -10,6 +10,7 @@ export type {
   PasswordInputProps,
   SpinnerProps,
   StackProps,
+  StatusIconProps,
   TextProps
 } from './atoms';
 export {

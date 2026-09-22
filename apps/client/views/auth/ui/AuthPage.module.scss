@@ -1,35 +1,3 @@
-@use '@/shared/styles/mixins' as *;
-
-.root {
-  display: flex;
-  min-height: var(--viewport-height);
-  align-items: center;
-  justify-content: center;
-
-  @include safe-padding(24px);
-}
-
-.panel {
-  display: flex;
-  width: 100%;
-  max-width: 400px;
-  flex-direction: column;
-  padding: 34px;
-
-  @include surface-card;
-  @include rise(0.5s);
-
-  box-shadow: 0 30px 80px -40px rgb(0 0 0 / 80%);
-  gap: 22px;
-}
-
-.head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .title {
   margin: 0;
   font-size: 27px;

@@ -1,4 +1,5 @@
 export { AccountAura } from './AccountAura';
+export { AccountIdentity } from './AccountIdentity';
 export { AccountNav } from './AccountNav';
 export { AccountTabs } from './AccountTabs';
 export type { AccountTab } from './AccountTabs';

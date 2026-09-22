@@ -31,3 +31,18 @@ model TelegramLinkCode {
   @@index([userId])
   @@map("telegram_link_code")
 }
+
+model TelegramWebLogin {
+  code String @id
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("telegram_web_login")
+}

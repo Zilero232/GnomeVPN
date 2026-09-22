@@ -1,3 +1,7 @@
-export const dynamic = 'force-dynamic';
+import { connection } from 'next/server';
 
-export const GET = () => Response.json({ status: 'ok' });
+export const GET = async () => {
+  await connection();
+
+  return Response.json({ status: 'ok' });
+};

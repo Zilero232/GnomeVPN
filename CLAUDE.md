@@ -245,6 +245,46 @@ and `/language`; `TelegramProfileService` announces the bot to Telegram; and
 `TelegramSharedService` holds the two things every command needs — resolving the
 chat and picking the locale — rather than each of them repeating it.
 
+**Telegram is a way in, not only a way back.** `/start` from an unknown chat
+creates the account itself — `ensureChat` mints a `User` through better-auth's
+`internalAdapter.createUser`, which runs the database hook that creates the
+`Subscription`, and writes the `TelegramAccount` row. Nobody has to visit the
+site first, and nobody has to link anything.
+
+**`User.email` stays required, and a Telegram-born account gets a placeholder.**
+The column is required in better-auth's _core_ schema, not in the
+emailAndPassword plugin, so making it nullable is an unsupported configuration
+rather than a migration. `telegramPlaceholderEmail` mints
+`<id>@telegram.placeholder.invalid` instead — `.invalid` is reserved by RFC 6761
+and can never resolve, which is the point. `sendEmail` drops anything addressed
+to one, so no transactional mail is ever attempted against an address that
+cannot receive it.
+
+**The trial asks for a verified email only where there is an email to verify.**
+`requireEmailVerification` is off, so that gate never meant more than "you hold
+some mailbox", which a disposable address satisfies. A Telegram id is not a
+weaker proof than that. `isPlaceholderEmail` is what the gate reads; the
+once-only guarantee still rests where it always did, on the `Subscription` row.
+
+**A chat that registered itself is not a claim on the id.** Someone who signs up
+on the site and then sends the bot their code would otherwise be told the chat
+belongs to another account — their own, created seconds earlier by `/start`.
+`consumeCode` therefore deletes the Telegram-born user when it is untouched:
+placeholder email, no trial taken, no period. A user with either is never
+deleted, and the refusal stands.
+
+**`/website` hands out a one-time link rather than a password.** The bot has no
+password to give, so `TelegramWebLogin` stores a 32-byte code for ten minutes and
+`/telegram/web-login` trades it once for a session token. It is a table of its
+own, not a second meaning for `TelegramLinkCode`: that one proves a chat may
+drive an account, this one turns its holder into the account. The route is
+anonymous by necessity and throttled tighter than the API for the same reason
+the feed is.
+
+**Unlinking is refused while the chat is the only way in.** For an account with a
+placeholder email, removing the chat would leave a paid subscription nothing can
+open, so `askUnlink` says so instead of asking to confirm.
+
 **The link is a code, not an OAuth flow.** The account page issues a short code,
 the reader retypes it into the bot, and the bot exchanges it for the user id.
 Issuing a second code invalidates the first, the code lives fifteen minutes, and
@@ -283,17 +323,25 @@ A webhook is only registered when `TELEGRAM_WEBHOOK_URL` is https and a secret
 is set. Both are Telegram's own requirements, and calling `setWebhook` without
 them fails the whole announcement, taking the command list with it.
 
-**The webhook has its own host, and that host resolves to AAAA only.** Telegram
-takes the `A` record whenever a name has one, and IPv4 from this VPS to
-`api.telegram.org` is SNI-blocked in both directions — so pointing the webhook
-at `API_URL` gets `Connection timed out` no matter how many AAAA records sit
-beside the A. `bot.gnome-vpn.com` carries no `A`, which leaves Telegram nothing
-else to pick. Caddy serves it `/telegram/*` and 404s the rest: it is a callback
-endpoint, not a second copy of the API.
+**The webhook has its own host, and that host is the only one behind
+Cloudflare.** IPv4 from this VPS to `api.telegram.org` is SNI-blocked in both
+directions, so a webhook pointed at `API_URL` gets `Connection timed out`.
+Telegram will not take an AAAA-only name either — `setWebhook` answers
+`IPv6-only addresses are not allowed` — so the callback host needs IPv4 that is
+not ours: `bot.example.com` is proxied through Cloudflare, and Telegram
+reaches its addresses. The site and `api` stay unproxied, because Russian ISPs
+have throttled Cloudflare since June 2025 and every user pays for that hop.
 
-That asymmetry is the current shape of the block, not a guarantee. IPv6
-filtering is being built out, so this buys time rather than settling it — the
-fallback, when it goes, is long polling, which needs no inbound path at all.
+Caddy serves the host `/telegram/*` and 404s the rest: it is a callback
+endpoint, not a second copy of the API. Outbound still needs the IPv6 network in
+`docker-compose.yml` — Cloudflare answers the inbound half only.
+
+Telegram caches DNS for a few minutes, so a record change is not visible to
+`setWebhook` immediately; it keeps answering for the old address until the cache
+expires.
+
+The fallback, if IPv6 egress goes too, is long polling, which needs no inbound
+path at all.
 
 The boot logs what `getWebhookInfo` answered — the registered URL, the last
 delivery error and the pending count — because that is the whole of what a
@@ -452,6 +500,60 @@ what keeps a global flag from carrying `lastIndex` between updates.
 **A Telegram id is a bigint from the edge inwards.** It exceeds what a JS number
 holds safely, so `identityOf` converts once at the boundary rather than leaving
 each call site to remember.
+
+## `cacheComponents` is on, and nothing writes `use cache`
+
+Next 16's `cacheComponents` is enabled. What it earns is narrow and worth
+stating exactly, because the obvious reading of it is wrong twice over.
+
+It is **not** here for `use cache`. Every candidate was measured and none kept
+it: `llms.txt` and `llms-full.txt` are static without it and only gain a
+revalidation window by adding it; `opengraph-image` stays dynamic with it,
+because an `ImageResponse` is no more cacheable than a `Response`; `manifest`,
+`robots` and the JSON-LD graph are module constants already computed once. A
+cache over work that happens at build time buys nothing and costs a profile
+somebody has to reason about later.
+
+What it earns is that `llms.txt` and `llms-full.txt` prerender **without**
+`export const dynamic = 'force-static'`. The flag rejects that directive
+outright, and turning it off makes both routes dynamic again — measured: 34
+prerendered files without the flag, 48 with it, the 14 extra being the Partial
+Prerender shells (`/[locale]/faq.html`, `/[locale]/blog/[slug].html`) that serve
+a path `generateStaticParams` did not name.
+
+Two rules follow, both learned by breaking the build:
+
+- **A route that must stay dynamic calls `await connection()`.** `/api/health`
+  does, and has to, because the Docker healthcheck needs a live answer.
+- **Reading the clock during a render fails the build.** `new Date()` in the
+  footer stopped the blog prerender with "encountered the unstable value", and
+  the same call in `sitemap.ts` quietly turned `/sitemap.xml` dynamic. Both are
+  module constants now — the build's own time, which is what `lastModified`
+  meant anyway. The footer's live year still comes from `useSyncExternalStore`
+  on the client.
+
+If a server component ever does real I/O, `use cache` is the tool for it and the
+flag is already on. Until then, adding one is a pessimisation.
+
+## Deleting an account frees the nodes before it frees the row
+
+`AccountService.remove` reads the user's peers first, hands them to
+`PeersService.releaseDetached`, and only then deletes the `User`. The order is
+the whole point: the rows name which client to remove on which node, and once
+they cascade away nothing knows what to clean up.
+
+Removal on the node is best-effort — `releaseDetached` deletes the rows, then
+fires the node calls detached — so a node that is down when someone deletes
+their account keeps a client nobody owns. `collect-orphans` is the guarantee:
+it already deletes any server-owned client whose owner id no longer resolves to
+a `User`, which is exactly what a deleted account leaves behind. It skips a
+client that currently has traffic, so a live session ends when it drops rather
+than mid-stream.
+
+Deletion is offered in both places for the same reason linking is: the account
+page has a confirm dialog, `/delete` in the bot has the same confirmation on an
+inline keyboard. Neither refunds the remaining period, and both say so before
+asking.
 
 ## Indexed pages are a set, not a page
 

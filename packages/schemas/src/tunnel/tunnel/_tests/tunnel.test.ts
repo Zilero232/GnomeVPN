@@ -25,7 +25,7 @@ describe('tunnelConfigSchema', () => {
     const result = tunnelConfigSchema.safeParse({ ...hysteria2Config, auth: '' });
 
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].message).toBe('validation.tunnelProtocolFields');
+    expect(result.error?.issues[0].message).toContain('reality');
   });
 
   it('rejects a hysteria2 config without a serverName', () => {

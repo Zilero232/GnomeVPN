@@ -1,3 +1,4 @@
+export { deleteAccount } from './account';
 export { authClient, clearToken, getAuthToken, saveAuthToken } from './auth/auth-client';
 export { AuthError } from './auth/auth-error';
 export { resetSession } from './auth/session-reset';
@@ -7,4 +8,4 @@ export { api, ApiError, apiErrorCode, toApiError } from './http';
 export { queryClient } from './query-client';
 export { claimTrial, getSubscriptionStatus } from './subscription';
 export { getSubscriptionLink, rotateSubscriptionLink } from './subscription-link';
-export { getTelegramStatus, issueTelegramCode, unlinkTelegram } from './telegram';
+export { getTelegramStatus, getTelegramWidget, issueTelegramCode, redeemTelegramLogin, signInWithTelegram, unlinkTelegram } from './telegram';

@@ -1,9 +1,11 @@
+import { isPlaceholderEmail } from '@gnomevpn/schemas';
 import { render } from '@react-email/render';
 import nodemailer from 'nodemailer';
 
 import type { SendEmailParams } from './email.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
+import { describeError } from '../../common/lib';
 import { validateEnv } from '../../config/env.schema';
 import { SMTP_TIMEOUTS } from './email.constants';
 
@@ -20,6 +22,10 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promise<void> => {
+  if (isPlaceholderEmail(to)) {
+    return;
+  }
+
   if (!isConfigured) {
     throw new AppServiceUnavailableException('EMAIL_UNAVAILABLE', 'Email is not configured: set SMTP_HOST, SMTP_USER and EMAIL_FROM');
   }
@@ -31,8 +37,6 @@ export const sendEmail = async ({ to, subject, react }: SendEmailParams): Promis
   try {
     await transporter.sendMail({ from: env.EMAIL_FROM, to: recipient, subject, html, text });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown error';
-
-    throw new AppServiceUnavailableException('EMAIL_UNAVAILABLE', `Failed to send email: ${message}`);
+    throw new AppServiceUnavailableException('EMAIL_UNAVAILABLE', `Failed to send email: ${describeError(error)}`);
   }
 };

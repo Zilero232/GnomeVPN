@@ -1,3 +1,4 @@
+import { PLANS } from '@gnomevpn/schemas';
 import { describe, expect, it } from 'vitest';
 
 import type { StatusTextInput } from '../status-text.types';
@@ -48,5 +49,14 @@ describe('statusText', () => {
 
     expect(russian).not.toBe(english);
     expect(english).toContain(BOT_TEXT.en.willRenew);
+  });
+
+  it('names the plan by its term rather than by the id the database stores', () => {
+    for (const plan of PLANS) {
+      const rendered = statusText({ ...active, plan: plan.id });
+
+      expect(rendered).toContain(String(plan.months));
+      expect(rendered).not.toContain(plan.id);
+    }
   });
 });

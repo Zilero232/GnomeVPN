@@ -33,7 +33,7 @@ api.gnome-vpn.com {
 	import access_log
 }
 
-# AAAA only: Telegram takes the A record when there is one, and IPv4 here is blocked.
+# Callback host for Telegram, proxied through Cloudflare: our own IPv4 is blocked.
 bot.gnome-vpn.com {
 	# route keeps source order; without it Caddy sorts respond ahead of the proxy.
 	route {

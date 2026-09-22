@@ -13,12 +13,15 @@
   "WEBHOOK_INVALID": "Invalid request signature.",
   "NODE_NOT_FOUND": "Country not found.",
   "NODE_UNAVAILABLE": "The node is not responding — try another country.",
-  "CONFIG_LIMIT_REACHED": "Config limit reached — remove one first.",
   "DEVICE_LIMIT_REACHED": "All device slots are in use — disconnect another device first.",
   "SUBSCRIPTION_REQUIRED": "Extra devices need an active subscription.",
   "EXTRA_DEVICES_LIMIT": "You already have the maximum number of devices.",
   "TRIAL_ALREADY_USED": "The trial has already been used",
   "TRIAL_EMAIL_UNVERIFIED": "Confirm your email address first",
   "TELEGRAM_CODE_INVALID": "That code is unknown, already used or expired",
-  "TELEGRAM_ALREADY_LINKED": "This Telegram account is linked to another subscription"
+  "TELEGRAM_ALREADY_LINKED": "This Telegram account is linked to another subscription",
+  "EMAIL_UNAVAILABLE": "The email could not be sent. Try again later or contact support.",
+  "SUBSCRIPTION_LINK_NOT_FOUND": "This link no longer works. Get a new one in your account.",
+  "TELEGRAM_LAST_SIGN_IN": "Telegram is the only way into this account. Add an email first, then unlink.",
+  "TELEGRAM_WIDGET_INVALID": "Telegram sign-in failed. Please try again."
 }

@@ -1,1 +1,1 @@
-export { useAvatarSeed, useChangeEmail, useChangePassword, useCurrentUser, useUpdateName } from './model/hooks';
+export { useAccountIdentity, useChangeEmail, useChangePassword, useCurrentUser, useUpdateName } from './model/hooks';
