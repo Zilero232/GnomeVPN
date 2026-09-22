@@ -3,6 +3,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
+import type { WidgetPayload } from './lib';
+
 import { WEB_LOGIN } from './config';
 import { TelegramWebLoginDto, TelegramWidgetDto } from './dto';
 import { TelegramWebLoginService } from './services';
@@ -32,8 +34,8 @@ export class TelegramWebLoginController {
   @Throttle({ default: WEB_LOGIN.throttle })
   @Post('widget')
   @ZodResponse({ type: TelegramWebLoginDto })
-  async signInWithWidget(@Body('idToken') idToken: string) {
-    const token = await this.webLogin.signInWithToken(idToken);
+  async signInWithWidget(@Body() payload: WidgetPayload) {
+    const token = await this.webLogin.signInWithWidget(payload);
 
     return { token };
   }

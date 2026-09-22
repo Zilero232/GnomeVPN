@@ -4,7 +4,6 @@ export { KEYBOARD_ROWS } from './keyboard.config';
 export { LANGUAGE_BUTTONS } from './language.config';
 export { LINK_CODE } from './link-code.config';
 export { HTTPS_PROTOCOL } from './menu-button.config';
-export { TELEGRAM_OIDC } from './oidc.config';
 export {
   BOT_BUTTONS,
   BOT_COMMANDS,

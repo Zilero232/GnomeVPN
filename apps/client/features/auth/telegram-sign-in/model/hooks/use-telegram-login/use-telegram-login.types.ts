@@ -1,38 +1,30 @@
-export type TelegramLoginUser = {
+import type { RefObject } from 'react';
+
+export type TelegramWidgetUser = {
   id: number;
-  name?: string;
-  preferred_username?: string;
-  picture?: string;
+  first_name: string;
+  auth_date: number;
+  hash: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
 };
 
-export type TelegramLoginResult = {
-  id_token?: string;
-  user?: TelegramLoginUser;
-  error?: string;
-};
-
-export type TelegramLoginOptions = {
-  client_id: number;
-  scope: string[];
-  lang?: string;
+export type WidgetScriptInput = {
+  botUsername: string;
+  onError: () => void;
 };
 
 export type TelegramLoginState = {
-  isReady: boolean;
+  slotRef: RefObject<HTMLDivElement | null>;
+  isUnreachable: boolean;
   isPending: boolean;
   isError: boolean;
-  onScriptLoad: () => void;
-  onScriptError: () => void;
-  signIn: () => void;
 };
 
 declare global {
   // eslint-disable-next-line ts/consistent-type-definitions -- declaration merging onto the DOM's Window needs an interface
   interface Window {
-    Telegram?: {
-      Login?: {
-        auth: (options: TelegramLoginOptions, callback: (result: TelegramLoginResult) => void) => void;
-      };
-    };
+    onTelegramAuth?: (user: TelegramWidgetUser) => void;
   }
 }

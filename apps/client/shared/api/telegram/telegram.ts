@@ -30,8 +30,8 @@ export const getTelegramWidget = async (): Promise<TelegramWidget> => {
   return data;
 };
 
-export const signInWithTelegram = async (idToken: string): Promise<TelegramWebLogin> => {
-  const { data } = await api.post('/telegram/web-login/widget', { idToken });
+export const signInWithTelegram = async (payload: Record<string, string>): Promise<TelegramWebLogin> => {
+  const { data } = await api.post('/telegram/web-login/widget', payload);
 
   return data;
 };

@@ -31,9 +31,41 @@ env:
 permissions: {}
 
 jobs:
+  # A manual deploy skips the pull request that would normally have run these.
+  # Typecheck, lint, tests and the client build run here so an image is never
+  # pushed from a tree that would have failed; the Playwright run stays in
+  # checks.yml, where it has a browser to install and nothing to deploy.
+  checks:
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    env:
+      DATABASE_URL: postgresql://placeholder
+      DIRECT_URL: postgresql://placeholder
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - run: bun run verify
+
+      - run: bun run test
+
+      - env:
+          NEXT_PUBLIC_API_URL: https://api.invalid
+        run: bun --filter @gnomevpn/client build
+
   # The two images share nothing at build time, so they build side by side —
   # the deploy waits on the slower one rather than on their sum.
   web:
+    needs: checks
+
     permissions:
       contents: read
       packages: write
@@ -54,6 +86,8 @@ jobs:
           build-args: NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
 
   server:
+    needs: checks
+
     permissions:
       contents: read
       packages: write

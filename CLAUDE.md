@@ -415,7 +415,12 @@ only thing that catches a page which typechecks but throws during prerender.
 
 A tag additionally asserts that it matches the root `package.json` version.
 
-**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS.
+**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS. It runs
+typecheck, lint, tests and the client build itself before either image is built:
+a manual deploy skips the pull request that would normally have caught those,
+and an image pushed from a failing tree is one somebody has to notice on the
+VPS. The Playwright run stays in `checks.yml` — it needs a browser installed and
+proves nothing about an image.
 Migrations run **before** `docker compose up -d`: doing it after means the new
 build serves traffic against the old schema and can query a column its migration
 has not added yet. `up -d` returns when the container starts, not when the app

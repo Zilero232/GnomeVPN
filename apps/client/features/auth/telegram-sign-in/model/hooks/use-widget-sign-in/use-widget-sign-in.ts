@@ -4,8 +4,8 @@ import { saveAuthToken, signInWithTelegram } from '@/shared/api';
 
 export const useWidgetSignIn = () =>
   useMutation({
-    mutationFn: async (idToken: string) => {
-      const { token } = await signInWithTelegram(idToken);
+    mutationFn: async (payload: Record<string, string>) => {
+      const { token } = await signInWithTelegram(payload);
 
       saveAuthToken(token);
     }

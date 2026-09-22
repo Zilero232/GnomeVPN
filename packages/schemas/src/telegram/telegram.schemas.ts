@@ -17,5 +17,5 @@ export const telegramWebLoginSchema = z.object({
 });
 
 export const telegramWidgetSchema = z.object({
-  clientId: z.string().nullable()
+  botUsername: z.string()
 });

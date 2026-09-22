@@ -5,16 +5,14 @@ import { addMinutes } from 'date-fns';
 import { randomBytes } from 'node:crypto';
 import { isNullish } from 'remeda';
 
-import type { VerifyIdTokenInput } from '../lib';
-import type { TelegramIdentity } from '../telegram.types';
+import type { WidgetPayload } from '../lib';
 
 import { AppBadRequestException, AppUnauthorizedException } from '../../../common/exceptions';
-import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { IdentityService } from '../../auth';
 import { WEB_LOGIN } from '../config';
-import { botIdOf, verifyIdToken } from '../lib';
+import { verifyWidgetPayload, widgetIdentity } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 
 @Injectable()
@@ -29,7 +27,7 @@ export class TelegramWebLoginService {
   ) {}
 
   widget(): TelegramWidget {
-    return { clientId: botIdOf(this.config.get('TELEGRAM_BOT_TOKEN')) };
+    return { botUsername: this.config.get('TELEGRAM_BOT_USERNAME') };
   }
 
   async issue(userId: string): Promise<string> {
@@ -48,27 +46,19 @@ export class TelegramWebLoginService {
     return url.toString();
   }
 
-  async signInWithToken(idToken: string): Promise<string> {
-    const clientId = botIdOf(this.config.get('TELEGRAM_BOT_TOKEN'));
+  async signInWithWidget(payload: WidgetPayload): Promise<string> {
+    const botToken = this.config.get('TELEGRAM_BOT_TOKEN');
+    const identity = widgetIdentity(payload);
 
-    if (isNullish(clientId)) {
-      throw new AppUnauthorizedException('TELEGRAM_WIDGET_INVALID', 'Telegram sign-in is not configured');
+    if (!botToken || !verifyWidgetPayload({ payload, botToken }) || isNullish(identity)) {
+      this.logger.warn('a telegram widget payload did not verify');
+
+      throw new AppUnauthorizedException('TELEGRAM_WIDGET_INVALID', 'The Telegram sign-in payload is not signed by our bot');
     }
 
-    const identity = await this.identityFromToken({ idToken, clientId });
     const { userId } = await this.link.ensureChat(identity);
 
     return this.identity.issueSessionToken(userId);
-  }
-
-  private async identityFromToken(input: VerifyIdTokenInput): Promise<TelegramIdentity> {
-    try {
-      return await verifyIdToken(input);
-    } catch (error) {
-      this.logger.warn(`telegram id token rejected: ${describeError(error)}`);
-
-      throw new AppUnauthorizedException('TELEGRAM_WIDGET_INVALID', 'The Telegram id token did not verify');
-    }
   }
 
   async redeem(code: string): Promise<string> {

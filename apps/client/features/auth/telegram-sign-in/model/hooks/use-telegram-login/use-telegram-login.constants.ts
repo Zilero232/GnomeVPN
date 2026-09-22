@@ -1,5 +1,9 @@
 export const TELEGRAM_LOGIN = {
-  scriptUrl: 'https://oauth.telegram.org/js/telegram-login.js?6',
-  scriptId: 'telegram-login',
-  scope: ['openid', 'profile']
+  scriptUrl: 'https://telegram.org/js/telegram-widget.js?22',
+  callbackName: 'onTelegramAuth',
+  dataset: {
+    size: 'large',
+    radius: '12',
+    requestAccess: 'write'
+  }
 } as const;
