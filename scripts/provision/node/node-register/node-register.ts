@@ -1,6 +1,6 @@
 import type { RegisterNodeInput, RememberNodeSecretsInput } from './node-register.types';
 
-import { LISTEN_PORT, MASQUERADE_HOST } from '../../config';
+import { LISTEN_PORT, log, MASQUERADE_HOST } from '../../config';
 import { upsertEnvGroup } from '../env-file';
 import { nodeKeyName, panelPasswordName, panelPathName } from '../node-credentials';
 import { upsertNode } from '../upsert-node';
@@ -25,6 +25,8 @@ export const registerNode = async ({
   auth,
   cert
 }: RegisterNodeInput): Promise<boolean> => {
+  log.step('writing the node row and its secrets');
+
   await rememberNodeSecrets({
     serverEnvPath,
     countryCode: config.countryCode,
@@ -50,6 +52,8 @@ export const registerNode = async ({
       apiTokenEnvVar: nodeKeyName(config.countryCode)
     }
   });
+
+  log.done(wasExisting ? 'the node row was updated' : 'the node row was created');
 
   return wasExisting;
 };

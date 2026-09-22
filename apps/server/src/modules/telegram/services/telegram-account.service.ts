@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
-import { isNullish } from 'remeda';
+import { isNonNullish, isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
-import type { BotContext, ChatCopy, ConsumeInput, RefusalInput, SpeakInput } from '../telegram.types';
+import type { BotContext, BotLocale, ChatCopy, ConsumeInput, RefusalInput, SpeakInput } from '../telegram.types';
 
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { AccountService, IdentityService } from '../../auth';
-import { BOT_TEXT, CALLBACK_PREFIX, LANGUAGE_BUTTONS, NEW_LINE, TEXT_TOKEN } from '../config';
+import { BOT_TEXT, CALLBACK_PREFIX, DEFAULT_BOT_LOCALE, LANGUAGE_BUTTONS, NEW_LINE, TEXT_TOKEN } from '../config';
 import { deleteCopy, identityOf, resolveLocale, unlinkCopy } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
@@ -35,9 +35,8 @@ export class TelegramAccountService {
     }
 
     const chat = await this.link.ensureChat(identity);
-    const start = BOT_TEXT[chat.locale].start.replace(TEXT_TOKEN.site, this.config.get('CLIENT_URL'));
 
-    await this.shared.reply({ ctx, chat, text: start });
+    await this.shared.reply({ ctx, chat, text: this.startText(chat.locale) });
   }
 
   async help(ctx: BotContext): Promise<void> {
@@ -59,12 +58,12 @@ export class TelegramAccountService {
   async askUnlink(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
-      act: async ({ userId, locale }) => {
-        if (await this.identity.hasRealEmail(userId)) {
+      act: async (chat) => {
+        if (await this.identity.hasRealEmail(chat.userId)) {
           return this.shared.ask({ ctx, prefix: CALLBACK_PREFIX.unlink, pick: unlinkCopy });
         }
 
-        return ctx.reply(BOT_TEXT[locale].unlinkNoEmail);
+        return this.shared.reply({ ctx, chat, text: BOT_TEXT[chat.locale].unlinkNoEmail });
       }
     });
   }
@@ -132,16 +131,26 @@ export class TelegramAccountService {
     }
 
     const copy = this.shared.textFor(ctx);
+    const known = await this.link.findChat(identity.telegramId);
 
     try {
       await this.link.consumeCode({ code: text, ...identity });
-
-      const chat = await this.link.findChat(identity.telegramId);
-
-      await this.shared.reply({ ctx, chat, text: chat ? BOT_TEXT[chat.locale].linked : copy.linked });
     } catch (error) {
-      await ctx.reply(this.refusalFor({ error, copy }));
+      await this.shared.reply({ ctx, chat: known, text: this.refusalFor({ error, copy }) });
+
+      return;
     }
+
+    const chat = await this.link.findChat(identity.telegramId);
+    const locale = chat?.locale ?? DEFAULT_BOT_LOCALE;
+    const linked = BOT_TEXT[locale].linked;
+    const greeting = isNonNullish(known) ? linked : [this.startText(locale), '', linked].join(NEW_LINE);
+
+    await this.shared.reply({ ctx, chat, text: greeting });
+  }
+
+  private startText(locale: BotLocale): string {
+    return BOT_TEXT[locale].start.replace(TEXT_TOKEN.site, this.config.get('CLIENT_URL'));
   }
 
   private async speak({ ctx, pick }: SpeakInput): Promise<void> {

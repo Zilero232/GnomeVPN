@@ -96,8 +96,8 @@ packages/
 └── scripts/         # shared script layer: reporter, ssh, shell
 scripts/
 └── provision/       # VPN node setup over SSH — the only local pipeline left
-    ├── config/      # paths, ports, the masquerade host
-    ├── remote/      # anything that runs over SSH on the node
+    ├── config/      # paths, ports, the masquerade host, the run logger
+    ├── remote/      # anything that runs over SSH — one folder per concern
     ├── inbound/     # protocol inbound definitions
     ├── node/        # the node model, its database row and credentials
     └── pipeline/    # orchestration and the run report
@@ -121,6 +121,30 @@ keeps stdout while `silent()` drops it).
 
 `nodes.json` and `.env.nodes` sit at the repo root — both gitignored, both
 holding secrets; `nodes.example.json` is the committed template.
+
+**`remote/` is one folder per thing done to the host**, not one file that grew:
+`host-packages` (docker, jq, fail2ban), `firewall`, `xray-stack`, `host-cert`,
+`reality-keys`, `panel-config`, and `host-prepare` which calls them in order.
+They were a single 232-line `remote-setup.ts` holding five unrelated concerns.
+`inContainer` lives with the stack that defines the container name, so a
+concern needing it imports the stack rather than a shared shell helper.
+
+**A provisioning run narrates itself, because a person watches it happen.**
+Every step logs what it is about to do and what it found — `docker is already
+installed`, `installing fail2ban`, `the node row was updated` — through the one
+`log` in `scripts/provision/config`, a `reporter('provision')` shared by every
+stage rather than passed down as a parameter. `log.step` prefixes `→` for work
+starting and `log.done` indents the outcome under it, so a run reads as a tree
+without anything hand-indenting its own messages. A summary at the end is not
+enough: a node that takes 30 seconds on `apt-get` looks identical to one that
+has hung.
+
+**fail2ban is provisioned, not installed by hand.** Every node and the VPS get
+the same `jail.d/sshd.local` — `backend = systemd`, because the nodes ship
+without rsyslog and a jail reading `/var/log/auth.log` silently bans nobody.
+`ensureFail2ban` is idempotent: it installs only when the binary is missing but
+rewrites the jail every run, so changing a threshold in `FAIL2BAN` is a
+re-provision rather than an ssh session.
 
 ## The subscription is the product surface
 
@@ -432,6 +456,25 @@ Both files pin every action to a commit SHA rather than a tag — a tag can be
 moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
 placeholders because the server postinstall runs `prisma generate`, which
 resolves `DIRECT_URL` through `env()` but never connects.
+
+## The database backs itself up, and the suffix lies
+
+The `backup` service is
+[postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local)
+— `go-cron` driving `pg_dump`, with daily/weekly/monthly rotation and an atomic
+rename already in it. A hand-written loop was tried first and grew five bugs
+before this replaced it. The tag has to match the postgres service: an older
+`pg_dump` refuses a newer server.
+
+**`--compress=9` is load-bearing.** The image names every file `.sql.gz` from a
+`BACKUP_SUFFIX` string, but it only pipes through `gzip` on its `pg_dumpall`
+cluster path — the single-database path writes plain SQL under that suffix. The
+dumps are readable either way, but every documented restore starts with `gunzip`
+and would fail on the first byte.
+
+The dumps sit on the VPS and nowhere else. That covers a bad migration, a
+mistaken `DELETE` and a corrupt table; it does not cover losing the machine, and
+DEPLOY.md says so where it says how to copy one off.
 
 ## A node's URL is a secret, so logs name the node instead
 

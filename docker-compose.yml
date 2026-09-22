@@ -1,24 +1,18 @@
-# GnomeVPN production stack.
+# GnomeVPN production stack, front to back: caddy → web → server → postgres,
+# with backup dumping postgres on a schedule.
 #
-#   caddy     — TLS termination and reverse proxy; the only public-facing
-#               container. Proxies the site to web and the API subdomain to
-#               server.
-#   web       — Next.js client, rendered per request on its own Node server
-#   server    — NestJS API on Bun
-#   postgres  — self-hosted database
+# CI builds web and server into ghcr.io; the VPS only pulls them and holds no
+# clone. Three files sit in one directory: this one and the Caddyfile, copied
+# by CI, and .env, written once by hand (DEPLOY.md).
 #
-# The web and server images are built by CI and pushed to ghcr.io. The VPS
-# builds nothing — it only pulls ready images, and must be logged in to ghcr.io
-# once (see DEPLOY.md).
-#
-# The VPS does NOT hold a clone of the repository. Two files live side by side
-# in one directory:
-#   docker-compose.yml  — copied here by CI on every deploy
-#   .env                — created once by hand with production values
-#
-# Pull latest & restart: docker compose pull && docker compose up -d
-# Logs:                  docker compose logs -f
-# Stop:                  docker compose down
+#   docker compose pull && docker compose up -d
+#   docker compose logs -f
+
+x-healthcheck: &healthcheck
+  interval: 30s
+  timeout: 5s
+  retries: 3
+  start_period: 15s
 
 services:
   caddy:
@@ -29,13 +23,11 @@ services:
       - web
       - server
     ports:
-      # 80 is required for the Let's Encrypt HTTP challenge; 443 serves HTTPS.
+      # 80 carries the Let's Encrypt challenge, 443 the site.
       - '80:80'
       - '443:443'
     volumes:
-      # Copied here by CI on every deploy, next to docker-compose.yml.
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Persists issued TLS certificates across restarts.
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -52,38 +44,8 @@ services:
     networks:
       - gnomevpn
     healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-
-  postgres:
-    image: postgres:17-alpine
-    container_name: gnomevpn-postgres
-    restart: always
-    # The postgres entrypoint reads POSTGRES_* directly from the env file.
-    env_file:
-      - ./.env
-    # Loopback only. Docker writes its own rules ahead of UFW, so a published
-    # port would be open to the internet whatever UFW says — reach it through an
-    # SSH tunnel, which every desktop client can open for itself (DEPLOY.md).
-    ports:
-      - '127.0.0.1:5432:5432'
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - gnomevpn
-    healthcheck:
-      test: [CMD-SHELL, 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      <<: *healthcheck
+      test: [CMD, node, -e, "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
   server:
     image: ghcr.io/zilero232/gnomevpn-server:latest
@@ -93,55 +55,81 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      # Sits next to this compose file on the VPS. Create it once from the
-      # root .env.example with production values.
       - ./.env
-      # Written by `bun provision`, one XRAY_KEY_<CC> / XRAY_PANEL_<CC> pair per
-      # node. Kept apart from .env so the hand-written file stays hand-written.
-      # Optional: it does not exist until the first node is provisioned.
+      # Written by provisioning; absent until the first node exists.
       - path: ./.env.nodes
         required: false
     expose:
       - '4000'
     volumes:
-      # `bun run provision:nodes` runs on a workstation and ships this file here
-      # over ssh, so the container reads what the last provisioning wrote rather
-      # than keeping its own copy. Create it before the first `up` — Docker makes
-      # a directory out of a bind mount whose source is missing: touch .env.nodes
+      # Create it before the first `up`: Docker makes a directory out of a missing source.
       - ./.env.nodes:/app/.env.nodes
     networks:
       - gnomevpn
     healthcheck:
-      test:
-        - CMD
-        - bun
-        - -e
-        - "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      <<: *healthcheck
+      test: [CMD, bun, -e, "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
+  postgres:
+    image: postgres:17-alpine
+    container_name: gnomevpn-postgres
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      # Loopback only: Docker's rules sit ahead of UFW, so a published port
+      # would face the internet. Reach it over an ssh tunnel.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - gnomevpn
+    healthcheck:
+      <<: *healthcheck
+      test: [CMD-SHELL, 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      retries: 5
+      start_period: 30s
 
-volumes:
-  caddy_data:
-  caddy_config:
-  pgdata:
+  # Tag must match postgres: an older pg_dump refuses a newer server.
+  # --compress=9: the image suffixes .sql.gz but does not gzip this path.
+  backup:
+    image: prodrigestivill/postgres-backup-local:17-alpine
+    container_name: gnomevpn-backup
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Named, not env_file: it has no business holding the bot or GitHub token.
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      SCHEDULE: ${BACKUP_SCHEDULE:-0 0 */6 * * *}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-8}
+      BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-6}
+      POSTGRES_EXTRA_OPTS: --no-owner --no-privileges --compress=9
+    volumes:
+      - pgbackups:/backups
+    networks:
+      - gnomevpn
 
-# api.telegram.org is reachable from this host over IPv6 and not over IPv4: the
-# TCP handshake to its A records completes and the TLS one never does, which is
-# what an SNI-based block looks like. The AAAA route is untouched, so the bot
-# needs the network to carry IPv6 — without it the container resolves only the
-# AAAA record and has nowhere to send it.
+# api.telegram.org answers over IPv6 and not IPv4 from this host — an SNI block.
+# Without IPv6 the bot resolves only the AAAA record and cannot reach it.
 networks:
   gnomevpn:
     driver: bridge
     enable_ipv6: true
     driver_opts:
-      # The subnet is private, so it needs masquerading the way IPv4 already
-      # gets it — without this the container holds an address it cannot route
-      # from, and every call to Telegram times out instead of failing.
+      # A private subnet needs masquerading the way IPv4 already gets it.
       com.docker.network.bridge.gateway_mode_ipv6: nat
     ipam:
       config:
         - subnet: fd00:d0c:e12::/64
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pgdata:
+  pgbackups:

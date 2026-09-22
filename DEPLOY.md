@@ -97,10 +97,15 @@ Create `/opt/gnomevpn/.env`. It is not in git — it lives only on the VPS.
 NODE_ENV=production
 PORT=4000
 
-# Postgres reads these three variables directly when it creates the database
+# Postgres reads these three variables directly when it creates the database,
+# and the backup container reads the same three to reach it
 POSTGRES_USER=gnomevpn
 POSTGRES_PASSWORD=<long random password>
 POSTGRES_DB=gnomevpn
+
+# Optional: the backup container defaults to these when they are absent
+BACKUP_INTERVAL_HOURS=6
+BACKUP_KEEP_DAYS=14
 
 # postgres is the service name in docker-compose, not localhost
 DATABASE_URL=postgresql://gnomevpn:<password>@postgres:5432/gnomevpn
@@ -239,6 +244,50 @@ secrets. Only provisioning stays on a workstation:
 - **SSH to the nodes** — `PROVISION_SSH_*` in the root `.env` (see section 3).
 - **`.env.nodes`** — one `XRAY_KEY_<CC>` / `XRAY_PANEL_<CC>` pair per node,
   written by `bun run provision:nodes` and shipped to the VPS over SSH.
+
+---
+
+## Automatic backups
+
+The `backup` container is
+[postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local):
+`pg_dump` on a cron, keeping daily, weekly and monthly copies in the `pgbackups`
+volume. It needs no setup — it ships in `docker-compose.yml` and starts with the
+rest of the stack.
+
+```bash
+docker compose logs backup                   # what it has taken
+docker compose exec backup ls -R /backups    # last/, daily/, weekly/, monthly/
+docker compose exec backup /backup.sh        # take one right now
+```
+
+Override the schedule in `.env` — `SCHEDULE` is a six-field cron, seconds first:
+
+```bash
+BACKUP_SCHEDULE=0 0 */6 * * *
+BACKUP_KEEP_DAYS=14
+BACKUP_KEEP_WEEKS=8
+BACKUP_KEEP_MONTHS=6
+```
+
+**The dumps live on this VPS and nowhere else.** They cover a bad migration, a
+mistaken `DELETE` and a corrupted table; they do not cover losing the machine.
+Before anything irreversible, copy one off the host:
+
+```bash
+docker compose cp backup:/backups ./backups   # all of them
+```
+
+Restoring one:
+
+```bash
+docker compose cp ./backups/daily/gnomevpn-latest.sql.gz postgres:/tmp/dump.sql.gz
+docker compose exec postgres sh -c 'gunzip -c /tmp/dump.sql.gz | psql -U gnomevpn -d gnomevpn'
+```
+
+`psql` needs no password: the image trusts local connections. The dump is plain
+SQL without owners or privileges, so it restores into any database the role can
+write to — which is what makes it usable on a fresh VPS as well.
 
 ---
 

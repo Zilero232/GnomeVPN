@@ -1,11 +1,13 @@
-import type { InstalledInbounds, InstallInboundsInput } from './node-cert.types';
+import type { InstalledInbounds, InstallInboundsInput } from './install-inbounds.types';
 
-import { MASQUERADE_HOST } from '../../config';
+import { log, MASQUERADE_HOST } from '../../config';
 import { ensureCert, ensureInbound, ensureRealityKeys, ensureVlessInbound, readCertFingerprint } from '../../remote';
 import { buildHysteriaInbound } from '../hysteria-inbound';
 import { buildRealityInbound } from '../reality-inbound';
 
 export const installInbounds = async ({ ssh, panel, auth }: InstallInboundsInput): Promise<InstalledInbounds> => {
+  log.step('installing the inbounds');
+
   await ensureCert(ssh);
 
   await ensureInbound({ ...panel, inbound: buildHysteriaInbound({ auth, sni: MASQUERADE_HOST }) });
