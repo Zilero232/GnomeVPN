@@ -5,3 +5,8 @@ export type VerifyWidgetInput = {
   botToken: string;
   now?: Date;
 };
+
+export type IsFreshInput = {
+  authDate: string;
+  now: Date;
+};

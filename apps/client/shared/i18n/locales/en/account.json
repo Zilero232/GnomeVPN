@@ -54,10 +54,13 @@
     "security": "Security",
     "noEmail": "No email yet",
     "addEmailTitle": "Add an email",
-    "addEmailHint": "Right now Telegram is the only way into this account. Add an email, then set a password through \"Forgot password?\" on the sign-in page — that gives you a second way in.",
+    "addEmailHint": "Right now Telegram is the only way into this account. Add an email, then set a password below — that gives you a second way in.",
     "addEmail": "Add email",
     "emailAdded": "If the address is free, the email is on its way. Nothing arrived? It may already belong to an account.",
-    "noPasswordHint": "No password yet — this account was created through Telegram. Add an email above, then set a password through \"Forgot password?\" on the sign-in page."
+    "setPassword": "Send me a link",
+    "setPasswordHint": "No password yet — this account was created through Telegram. We will email you a link to set one.",
+    "setPasswordNeedsEmail": "Add an email above first — there is nowhere to send the link.",
+    "passwordLinkSent": "The link is on its way to your inbox"
   },
   "tabs": {
     "subscription": "Subscription",

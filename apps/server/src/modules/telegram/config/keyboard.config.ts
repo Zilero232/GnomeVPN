@@ -1,4 +1,4 @@
-import type { KeyboardRow } from '../telegram.types';
+import type { KeyboardRow } from '../lib/keyboard';
 
 export const KEYBOARD_ROWS: KeyboardRow[] = [
   [

@@ -2,21 +2,21 @@ import { createHash, createHmac } from 'node:crypto';
 import { entries, isNullish } from 'remeda';
 
 import type { TelegramIdentity } from '../../telegram.types';
-import type { VerifyWidgetInput, WidgetPayload } from './widget-auth.types';
+import type { IsFreshInput, VerifyWidgetInput, WidgetPayload } from './widget-auth.types';
 
 import { timingSafeEqual } from '../../../../common/lib';
 import { WIDGET_AUTH } from './widget-auth.constants';
 
 const TELEGRAM_ID = /^\d{1,19}$/u;
 
-const checkString = (payload: WidgetPayload): string =>
+const checkString = (payload: WidgetPayload) =>
   entries(payload)
     .filter(([key]) => key !== WIDGET_AUTH.hashField)
     .map(([key, value]) => `${key}=${value}`)
     .sort()
     .join(WIDGET_AUTH.separator);
 
-const isFresh = ({ authDate, now }: { authDate: string; now: Date }): boolean => {
+const isFresh = ({ authDate, now }: IsFreshInput) => {
   const issuedAt = Number(authDate);
 
   if (!Number.isFinite(issuedAt)) {
@@ -28,7 +28,7 @@ const isFresh = ({ authDate, now }: { authDate: string; now: Date }): boolean =>
   return age >= 0 && age <= WIDGET_AUTH.maxAgeSeconds;
 };
 
-export const verifyWidgetPayload = ({ payload, botToken, now = new Date() }: VerifyWidgetInput): boolean => {
+export const verifyWidgetPayload = ({ payload, botToken, now = new Date() }: VerifyWidgetInput) => {
   const { hash, auth_date: authDate } = payload;
 
   if (isNullish(hash) || isNullish(authDate) || !isFresh({ authDate, now })) {

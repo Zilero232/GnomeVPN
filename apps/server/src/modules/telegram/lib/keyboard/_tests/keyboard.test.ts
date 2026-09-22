@@ -2,7 +2,7 @@ import type { KeyboardButton } from 'grammy/types';
 
 import { describe, expect, it } from 'vitest';
 
-import type { ChatState } from '../../../telegram.types';
+import type { ChatState } from '../keyboard.types';
 
 import { BOT_BUTTONS, BOT_LOCALES } from '../../../config';
 import { mainKeyboard } from '../keyboard';

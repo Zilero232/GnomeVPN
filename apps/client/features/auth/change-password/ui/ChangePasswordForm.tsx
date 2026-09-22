@@ -10,7 +10,9 @@ import { toast } from 'sonner';
 
 import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
 import { useAccountIdentity, useChangePassword } from '@/entities/auth/user';
-import { FormField, PasswordInput, SubmitButton, Text } from '@/ui-kit';
+import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
+
+import { SetPasswordCard } from './components';
 
 import s from './ChangePasswordForm.module.scss';
 
@@ -50,11 +52,7 @@ export const ChangePasswordForm = () => {
   });
 
   if (!hasPassword) {
-    return (
-      <Text size='sm' tone='muted'>
-        {t('noPasswordHint')}
-      </Text>
-    );
+    return <SetPasswordCard />;
   }
 
   return (

@@ -8,8 +8,8 @@ import type { BotContext, ChatCopy, ConsumeInput, RefusalInput, SpeakInput } fro
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { AccountService, IdentityService } from '../../auth';
-import { BOT_TEXT, CALLBACK_PREFIX, CONFIRMED, LANGUAGE_BUTTONS, NEW_LINE, TEXT_TOKEN } from '../config';
-import { identityOf, isConfirmed, resolveLocale } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, LANGUAGE_BUTTONS, NEW_LINE, TEXT_TOKEN } from '../config';
+import { deleteCopy, identityOf, resolveLocale, unlinkCopy } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
 import { TelegramWebLoginService } from './telegram-web-login.service';
@@ -60,67 +60,41 @@ export class TelegramAccountService {
     await this.shared.withUser({
       ctx,
       act: async ({ userId, locale }) => {
-        const text = BOT_TEXT[locale];
-
-        if (!(await this.identity.hasRealEmail(userId))) {
-          return ctx.reply(text.unlinkNoEmail);
+        if (await this.identity.hasRealEmail(userId)) {
+          return this.shared.ask({ ctx, prefix: CALLBACK_PREFIX.unlink, pick: unlinkCopy });
         }
 
-        const keyboard = new InlineKeyboard()
-          .text(text.unlinkYes, `${CALLBACK_PREFIX.unlink}${CONFIRMED}`)
-          .text(text.unlinkNo, `${CALLBACK_PREFIX.unlink}no`);
-
-        return ctx.reply(text.unlinkAsk, { reply_markup: keyboard });
+        return ctx.reply(BOT_TEXT[locale].unlinkNoEmail);
       }
     });
   }
 
   async askDelete(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({
-      ctx,
-      act: ({ locale }) => {
-        const text = BOT_TEXT[locale];
-        const keyboard = new InlineKeyboard()
-          .text(text.deleteYes, `${CALLBACK_PREFIX.deleteAccount}${CONFIRMED}`)
-          .text(text.deleteNo, `${CALLBACK_PREFIX.deleteAccount}no`);
-
-        return ctx.reply(text.deleteAsk, { reply_markup: keyboard });
-      }
-    });
+    await this.shared.ask({ ctx, prefix: CALLBACK_PREFIX.deleteAccount, pick: deleteCopy });
   }
 
   async confirmDelete(ctx: BotContext): Promise<void> {
-    await this.shared.answered({
+    await this.shared.confirmed({
       ctx,
       prefix: CALLBACK_PREFIX.deleteAccount,
-      act: async ({ chat, value }) => {
-        const text = BOT_TEXT[chat.locale];
-
-        if (!isConfirmed(value)) {
-          return this.shared.reply({ ctx, chat, text: text.deleteCancelled });
-        }
-
+      cancelled: (copy) => copy.deleteCancelled,
+      act: async (chat) => {
         await this.account.remove(chat.userId);
 
-        return ctx.reply(text.deleted, { reply_markup: { remove_keyboard: true } });
+        return ctx.reply(BOT_TEXT[chat.locale].deleted, { reply_markup: { remove_keyboard: true } });
       }
     });
   }
 
   async confirmUnlink(ctx: BotContext): Promise<void> {
-    await this.shared.answered({
+    await this.shared.confirmed({
       ctx,
       prefix: CALLBACK_PREFIX.unlink,
-      act: async ({ chat, value }) => {
-        const text = BOT_TEXT[chat.locale];
-
-        if (!isConfirmed(value)) {
-          return this.shared.reply({ ctx, chat, text: text.unlinkCancelled });
-        }
-
+      cancelled: (copy) => copy.unlinkCancelled,
+      act: async (chat) => {
         await this.link.unlink(chat.userId);
 
-        return ctx.reply(text.unlinked, { reply_markup: { remove_keyboard: true } });
+        return ctx.reply(BOT_TEXT[chat.locale].unlinked, { reply_markup: { remove_keyboard: true } });
       }
     });
   }

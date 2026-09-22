@@ -2,11 +2,11 @@ import { Keyboard } from 'grammy';
 import { isEmpty } from 'remeda';
 import { match } from 'ts-pattern';
 
-import type { ChatState, KeyboardInput, VisibilityInput } from '../../telegram.types';
+import type { ChatState, KeyboardInput, VisibilityInput } from './keyboard.types';
 
 import { BOT_BUTTONS, KEYBOARD_ROWS } from '../../config';
 
-const isVisible = ({ when, state }: VisibilityInput): boolean =>
+const isVisible = ({ when, state }: VisibilityInput) =>
   match(when)
     .with('always', () => true)
     .with('subscribed', () => state.isSubscribed)

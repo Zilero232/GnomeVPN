@@ -1,4 +1,5 @@
 import { DEFAULT_DEVICE_LIMIT, EXTRA_DEVICE_PRICE_RUB, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
+import { FormattedString } from '@grammyjs/parse-mode';
 import { Injectable, Logger } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
@@ -9,8 +10,8 @@ import { describeError } from '../../../common/lib';
 import { AutoRenewService, CheckoutService } from '../../billing';
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { AUTO_RENEW_CHOICE, BOT_TEXT, CALLBACK_PREFIX, CONFIRMED, DEVICE_CHOICES, TEXT_TOKEN } from '../config';
-import { autoRenewChoice, countFrom, formatDate, isConfirmed } from '../lib';
+import { AUTO_RENEW_CHOICE, BOT_TEXT, CALLBACK_PREFIX, DEVICE_CHOICES, NEW_LINE, TEXT_TOKEN } from '../config';
+import { autoRenewChoice, countFrom, formatDate, rotateCopy } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -26,33 +27,19 @@ export class TelegramBillingService {
   ) {}
 
   async askRotate(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({
-      ctx,
-      act: ({ locale }) => {
-        const text = BOT_TEXT[locale];
-        const keyboard = new InlineKeyboard()
-          .text(text.rotateYes, `${CALLBACK_PREFIX.rotate}${CONFIRMED}`)
-          .text(text.rotateNo, `${CALLBACK_PREFIX.rotate}no`);
-
-        return ctx.reply(text.rotateAsk, { reply_markup: keyboard });
-      }
-    });
+    await this.shared.ask({ ctx, prefix: CALLBACK_PREFIX.rotate, pick: rotateCopy });
   }
 
   async confirmRotate(ctx: BotContext): Promise<void> {
-    await this.shared.answered({
+    await this.shared.confirmed({
       ctx,
       prefix: CALLBACK_PREFIX.rotate,
-      act: async ({ chat, value }) => {
-        const text = BOT_TEXT[chat.locale];
-
-        if (!isConfirmed(value)) {
-          return this.shared.reply({ ctx, chat, text: text.rotateCancelled });
-        }
-
+      cancelled: (copy) => copy.rotateCancelled,
+      act: async (chat) => {
         const { url } = await this.subscriptionLink.rotate(chat.userId);
+        const message = FormattedString.join([BOT_TEXT[chat.locale].rotateDone, '', FormattedString.code(url)], NEW_LINE);
 
-        return this.shared.reply({ ctx, chat, text: [text.rotateDone, '', url].join('\n') });
+        return ctx.reply(message.text, { entities: message.entities, link_preview_options: { is_disabled: true } });
       }
     });
   }
@@ -66,8 +53,6 @@ export class TelegramBillingService {
       ctx,
       prefix: CALLBACK_PREFIX.autoRenew,
       act: async ({ chat, value }) => {
-        // A payload that is neither must change nothing: an else branch here
-        // would read anything unrecognised as "turn charging off".
         const choice = autoRenewChoice(value);
 
         if (isNullish(choice)) {

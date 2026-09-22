@@ -2,6 +2,7 @@ export { resolveLocale } from './bot-locale';
 export { callbackPattern } from './callback';
 export { autoRenewChoice, countFrom, isConfirmed } from './callback-value';
 export { clientName, parseClientId, platformNames } from './client-name';
+export { deleteCopy, rotateCopy, unlinkCopy } from './confirm-copy';
 export { formatDate } from './format-date';
 export { identityOf } from './identity';
 export { buttonFor, mainKeyboard } from './keyboard';

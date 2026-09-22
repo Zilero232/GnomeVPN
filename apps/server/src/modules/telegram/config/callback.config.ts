@@ -10,3 +10,5 @@ export const CALLBACK_PREFIX = {
 } as const;
 
 export const CONFIRMED = 'yes';
+
+export const DECLINED = 'no';

@@ -1,5 +1,5 @@
 export { BOT_API } from './bot-api.config';
-export { CALLBACK_PREFIX, CONFIRMED } from './callback.config';
+export { CALLBACK_PREFIX, CONFIRMED, DECLINED } from './callback.config';
 export { KEYBOARD_ROWS } from './keyboard.config';
 export { LANGUAGE_BUTTONS } from './language.config';
 export { LINK_CODE } from './link-code.config';

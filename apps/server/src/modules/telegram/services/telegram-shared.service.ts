@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
 
-import type { AnsweredInput, AttemptInput, BotContext, BotText, ChatState, ReplyInput, WithUserInput } from '../telegram.types';
+import type { ChatState } from '../lib/keyboard';
+import type { AnsweredInput, AskInput, AttemptInput, BotContext, BotText, ConfirmedInput, ReplyInput, WithUserInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { SubscriptionService, TrialService } from '../../subscription';
-import { BOT_TEXT, DEFAULT_BOT_LOCALE } from '../config';
-import { identityOf, mainKeyboard, resolveLocale } from '../lib';
+import { BOT_TEXT, CONFIRMED, DECLINED, DEFAULT_BOT_LOCALE } from '../config';
+import { identityOf, isConfirmed, mainKeyboard, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 
 @Injectable()
@@ -54,6 +56,32 @@ export class TelegramSharedService {
     const chat = await this.link.ensureChat(identity);
 
     await this.attempt({ ctx, chat, act: () => act({ chat, value: data.slice(prefix.length) }) });
+  }
+
+  async ask({ ctx, prefix, pick }: AskInput): Promise<void> {
+    await this.withUser({
+      ctx,
+      act: ({ locale }) => {
+        const { ask, yes, no } = pick(BOT_TEXT[locale]);
+        const keyboard = new InlineKeyboard().text(yes, `${prefix}${CONFIRMED}`).text(no, `${prefix}${DECLINED}`);
+
+        return ctx.reply(ask, { reply_markup: keyboard });
+      }
+    });
+  }
+
+  async confirmed({ ctx, prefix, cancelled, act }: ConfirmedInput): Promise<void> {
+    await this.answered({
+      ctx,
+      prefix,
+      act: async ({ chat, value }) => {
+        if (!isConfirmed(value)) {
+          return this.reply({ ctx, chat, text: cancelled(BOT_TEXT[chat.locale]) });
+        }
+
+        return act(chat);
+      }
+    });
   }
 
   async withUser({ ctx, act }: WithUserInput): Promise<void> {

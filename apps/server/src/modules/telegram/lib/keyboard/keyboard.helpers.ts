@@ -1,6 +1,6 @@
 import { entries } from 'remeda';
 
-import type { ButtonKey } from '../../telegram.types';
+import type { ButtonKey } from './keyboard.types';
 
 import { BOT_BUTTONS, BOT_LOCALES } from '../../config';
 
