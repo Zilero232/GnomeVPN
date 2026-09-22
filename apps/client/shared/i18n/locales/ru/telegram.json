@@ -15,18 +15,18 @@
   "manualHint": "Если Telegram не открылся: найдите @{bot} и отправьте ему код",
   "linkedAs": "Привязан",
   "linkedPlain": "Telegram привязан",
-  "linkedHint": "Откройте бота — управляйте подпиской кнопками, без команд.",
   "unlink": "Отвязать",
   "unlinked": "Telegram отвязан",
   "unavailable": "Не удалось загрузить статус Telegram. Проверьте соединение.",
   "retry": "Повторить",
   "title": "Бот в Telegram",
   "codeCopied": "Код скопирован",
-  "linkedActions": "Что можно в боте",
+  "linkedActions": "Управление подпиской",
   "openBotLinked": "Открыть бота",
-  "unlinkHint": "Отвязка не затронет подписку и доступ.",
+  "unlinkHint": "Подписка и доступ останутся — войти сможете по почте.",
   "unlinkConfirmTitle": "Отвязать Telegram?",
   "unlinkConfirmBody": "Бот перестанет отвечать в этом чате. Подписка и доступ не затронуты — привязать снова можно в любой момент.",
   "unlinkConfirmCancel": "Отмена",
-  "unlinkConfirmAction": "Отвязать"
+  "unlinkConfirmAction": "Отвязать",
+  "unlinkNoEmail": "Telegram — единственный вход в этот аккаунт. Добавьте почту в профиле, тогда отвязка станет безопасной."
 }

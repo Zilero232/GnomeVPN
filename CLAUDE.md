@@ -102,8 +102,7 @@ scripts/
     ├── node/        # the node model, its database row and credentials
     └── pipeline/    # orchestration and the run report
 .github/workflows/
-├── checks.yml       # push/PR → typecheck, lint, tests, prerender
-└── deploy.yml       # manual → images to ghcr → pull on the VPS
+└── deploy.yml       # manual → checks, then images to ghcr → pull on the VPS
 infra/
 └── caddy/           # TLS + reverse proxy, bind-mounted on the VPS
 ```
@@ -409,18 +408,14 @@ not https, because Telegram rejects a `web_app` over plain http and the whole
 
 ## What the workflows assume
 
-**`checks.yml`** — runs on pushes to master, on pull requests and on a `v*` tag.
-Typecheck, lint, tests, then a client build. The build is last because it is the
-only thing that catches a page which typechecks but throws during prerender.
+**`deploy.yml` is the only workflow.** It is manual, and it runs every check
+this repository has before either image is built — typecheck, lint, tests, the
+client build, and Playwright over the public routes — so an image is never
+pushed from a tree that would have failed. `checks` and `e2e` run beside each
+other: a lint error and a broken route are worth learning about in the same run.
 
-A tag additionally asserts that it matches the root `package.json` version.
-
-**`deploy.yml`** — manual only, images to ghcr then a pull on the VPS. It runs
-typecheck, lint, tests and the client build itself before either image is built:
-a manual deploy skips the pull request that would normally have caught those,
-and an image pushed from a failing tree is one somebody has to notice on the
-VPS. The Playwright run stays in `checks.yml` — it needs a browser installed and
-proves nothing about an image.
+The client build is separate from typecheck because it is the only thing that
+catches a page which typechecks but throws during prerender.
 Migrations run **before** `docker compose up -d`: doing it after means the new
 build serves traffic against the old schema and can query a column its migration
 has not added yet. `up -d` returns when the container starts, not when the app
@@ -707,8 +702,8 @@ Vitest is wired as projects: `packages/schemas`, `packages/scripts`,
 `apps/server` and `apps/client` each own a `vitest.config.ts`, and the root one
 lists them. A test lives in a `_tests/` folder next to what it tests.
 
-`checks.yml` runs all of the above on every push and pull request. It is the
-only automation that looks at a commit, so a red local run is a red CI run.
+`deploy.yml` runs all of the above before it builds anything. Nothing else
+looks at a commit, so a red local run is what a deploy will find.
 
 ## Things that have already bitten us
 

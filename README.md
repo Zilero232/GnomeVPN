@@ -132,13 +132,11 @@ the whole suite on the first Vitest-specific API it meets.
 
 ## Deployment
 
-Two GitHub Actions, no local build steps:
-
-- **`checks.yml`** runs on every push and pull request: typecheck, lint, tests,
-  then a client build.
-- **`deploy.yml`** is manual. It pushes both images to ghcr.io, copies
-  `docker-compose.yml` and the Caddyfile to the VPS, runs migrations **before**
-  bringing the new containers up, and waits on both healthchecks.
+One GitHub Action, no local build steps. **`deploy.yml`** is manual: it runs
+typecheck, lint, tests, the client build and Playwright over the public routes,
+then pushes both images to ghcr.io, copies `docker-compose.yml` and the Caddyfile
+to the VPS, runs migrations **before** bringing the new containers up, and waits
+on both healthchecks.
 
 Adding a VPN node stays a local command: it talks to the machine over SSH with
 credentials that never enter CI, and it is a decision a human makes, not a commit.

@@ -15,18 +15,18 @@
   "manualHint": "If Telegram did not open: find @{bot} and send it this code",
   "linkedAs": "Linked",
   "linkedPlain": "Telegram is linked",
-  "linkedHint": "Open the bot — manage your subscription with buttons, no commands.",
   "unlink": "Unlink",
   "unlinked": "Telegram unlinked",
   "unavailable": "Could not load the Telegram status. Check your connection.",
   "retry": "Try again",
   "title": "Telegram bot",
   "codeCopied": "Code copied",
-  "linkedActions": "What the bot does",
+  "linkedActions": "Manage your subscription",
   "openBotLinked": "Open the bot",
-  "unlinkHint": "Unlinking leaves your subscription and access untouched.",
+  "unlinkHint": "Your subscription and access stay — you can sign in with your email.",
   "unlinkConfirmTitle": "Unlink Telegram?",
   "unlinkConfirmBody": "The bot will stop answering in this chat. Your subscription and access are untouched — you can link it again at any time.",
   "unlinkConfirmCancel": "Cancel",
-  "unlinkConfirmAction": "Unlink"
+  "unlinkConfirmAction": "Unlink",
+  "unlinkNoEmail": "Telegram is the only way into this account. Add an email in your profile and unlinking becomes safe."
 }

@@ -10,7 +10,7 @@ import { ABILITIES } from './TelegramLinked.constants';
 
 import s from './TelegramLinked.module.scss';
 
-export const TelegramLinked = ({ bot, username, isPending, onUnlink }: TelegramLinkedProps) => {
+export const TelegramLinked = ({ bot, username, hasEmail, isPending, onUnlink }: TelegramLinkedProps) => {
   const t = useTranslations('telegram');
 
   return (
@@ -53,18 +53,14 @@ export const TelegramLinked = ({ bot, username, isPending, onUnlink }: TelegramL
         <ExternalLink aria-hidden size={15} />
       </a>
 
-      <Text size='xs' tone='muted'>
-        {t('linkedHint')}
-      </Text>
-
       <div className={s.footer}>
-        <Button disabled={isPending} variant='ghost' onClick={onUnlink}>
+        <Button disabled={isPending || !hasEmail} variant='ghost' onClick={onUnlink}>
           <Unlink aria-hidden size={16} />
           {t('unlink')}
         </Button>
 
         <Text size='xs' tone='muted'>
-          {t('unlinkHint')}
+          {hasEmail ? t('unlinkHint') : t('unlinkNoEmail')}
         </Text>
       </div>
     </div>

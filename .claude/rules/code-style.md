@@ -136,8 +136,8 @@ state between files fails under `--sequence.shuffle` before it fails in CI.
 ## Verify before claiming anything works
 
 `bun run verify` — typecheck, ESLint, Prettier, Stylelint. `bun run test` is
-separate; bare `bun test` is Bun's own runner and fails the suite. `checks.yml`
-runs both on every push and pull request.
+separate; bare `bun test` is Bun's own runner and fails the suite. `deploy.yml`
+runs both before it builds an image.
 
 Neither catches SSR breakage. `bun --filter @gnomevpn/client build` is the only
 check that does — it is where a page that typechecks but throws during prerender
