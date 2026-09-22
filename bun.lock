@@ -87,6 +87,7 @@
       "dependencies": {
         "@gnomevpn/logger": "workspace:*",
         "@gnomevpn/schemas": "workspace:*",
+        "@grammyjs/parse-mode": "^2.3.0",
         "@incy/link-encoder": "^1.3.0",
         "@nestjs/cache-manager": "^12.0.0",
         "@nestjs/common": "11.1.28",
@@ -538,6 +539,8 @@
     "@gnomevpn/scripts": ["@gnomevpn/scripts@workspace:packages/scripts"],
 
     "@gnomevpn/server": ["@gnomevpn/server@workspace:apps/server"],
+
+    "@grammyjs/parse-mode": ["@grammyjs/parse-mode@2.3.0", "", { "peerDependencies": { "grammy": "^1.41.0" } }, "sha512-kEEM1B5z4lNH/99HEzXvw6wuJEAmadZ4cfcNn/F5UMOsCRogFK5lMYrA4GLLoNQ0kY3e/GJkGUBTCagfyHzn4g=="],
 
     "@grammyjs/types": ["@grammyjs/types@5.0.0", "", {}, "sha512-iq1Qrq1iPKkB8yAa0qSuIURMZOCuqTY5pWy5gHpCeL1oQ+GPadGhw/cDTVE8waJwuCzacUzuIjRv1sESvk7u7A=="],
 

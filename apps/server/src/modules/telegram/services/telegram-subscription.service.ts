@@ -1,4 +1,5 @@
 import { PLANS } from '@gnomevpn/schemas';
+import { FormattedString } from '@grammyjs/parse-mode';
 import { Injectable, Logger } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
 import { isNonNullish, isNullish } from 'remeda';
@@ -85,7 +86,9 @@ export class TelegramSubscriptionService {
 
     const { url } = await this.subscriptionLink.get(chat.userId);
 
-    await ctx.reply([text.linkIntro, '', url, '', text.linkWarning].join('\n'));
+    const message = FormattedString.join([text.linkIntro, '', FormattedString.code(url), '', text.linkWarning], NEW_LINE);
+
+    await ctx.reply(message.text, { entities: message.entities, link_preview_options: { is_disabled: true } });
   }
 
   private async replyWithPlans({ ctx, locale }: ReplyWithPlansInput): Promise<void> {

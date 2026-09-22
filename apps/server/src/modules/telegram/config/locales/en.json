@@ -22,7 +22,7 @@
     "devicesLine": "Devices at once: {count}.",
     "willRenew": "Renews automatically.",
     "willNotRenew": "Auto-renewal is off.",
-    "help": "The buttons below do everything the commands do:\n\n🚀 Connect — your link for the app\n📱 Apps — the apps that take it, and where to get them\n📊 Subscription — expiry and devices\n💳 Subscribe or Renew — pay for access\n🎁 Free day — twenty-four hours, on us\n➕ Devices — add simultaneous connections\n🔄 Auto-renewal — turn charging on or off\n🔁 New link — when the old one reached the wrong hands\n🌍 Language — switch language\n🔌 Unlink — disconnect this chat from your account\n/delete — remove the account and its subscription\n\nSomething broken? Write to support on the site.",
+    "help": "The buttons below do everything the commands do:\n\n🚀 Connect — your link for the app\n📱 Apps — the apps that take it, and where to get them\n📊 Subscription — expiry and devices\n💳 Subscribe or Renew — pay for access\n🎁 Free day — twenty-four hours, on us\n➕ Devices — add simultaneous connections\n🔄 Auto-renewal — turn charging on or off\n🔁 New link — when the old one reached the wrong hands\n🌍 Language — switch language\n🔌 Unlink — disconnect this chat from your account\n🗑️ Delete account — remove the account and its subscription\n\nSomething broken? Write to support on the site.",
     "failed": "Something went wrong. Try again in a minute.",
     "monthShort": "mo",
     "appsIntro": "Pick an app — I will send the install link and the one that connects it.",
@@ -71,7 +71,8 @@
     "rotate": "🔁 New link",
     "help": "❓ Help",
     "language": "🌍 Language",
-    "unlink": "🔌 Unlink"
+    "unlink": "🔌 Unlink",
+    "deleteAccount": "🗑️ Delete account"
   },
   "platforms": {
     "ios": "iPhone",

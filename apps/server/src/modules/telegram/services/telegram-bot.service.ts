@@ -89,7 +89,7 @@ export class TelegramBotService implements OnModuleInit {
       { command: 'language', button: 'language', run: (ctx) => this.account.chooseLanguage(ctx) },
       { command: 'help', button: 'help', run: (ctx) => this.account.help(ctx) },
       { command: 'unlink', button: 'unlink', run: (ctx) => this.account.askUnlink(ctx) },
-      { command: 'delete', run: (ctx) => this.account.askDelete(ctx) }
+      { command: 'delete', button: 'deleteAccount', run: (ctx) => this.account.askDelete(ctx) }
     ];
   }
 

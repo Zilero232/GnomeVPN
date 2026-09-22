@@ -1,4 +1,7 @@
+import type { Stringable } from '@grammyjs/parse-mode';
+
 import { CLIENT_IDS } from '@gnomevpn/schemas';
+import { FormattedString } from '@grammyjs/parse-mode';
 import { Injectable } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
 import { isNonNullish, isNullish } from 'remeda';
@@ -7,7 +10,7 @@ import type { BotContext, ShowClientInput } from '../telegram.types';
 
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, CALLBACK_PREFIX, TEXT_TOKEN } from '../config';
+import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE, TEXT_TOKEN } from '../config';
 import { clientName, parseClientId, platformNames } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
@@ -66,20 +69,23 @@ export class TelegramAppsService {
     }
 
     const platforms = platformNames({ platforms: client.platforms, locale: chat.locale });
-    const lines = [
+    const lines: Stringable[] = [
       clientName({ id, locale: chat.locale }),
       '',
       text.appsPlatforms.replace(TEXT_TOKEN.platforms, platforms),
       '',
-      `${text.appsDownload}: ${client.downloadUrl}`
+      `${text.appsDownload}: ${client.downloadUrl}`,
+      ''
     ];
 
     if (isNonNullish(client.importUrl)) {
-      lines.push('', `${text.appsImport}: ${client.importUrl}`);
+      lines.push(text.appsImport, FormattedString.code(client.importUrl));
     } else {
-      lines.push('', text.appsManual, '', url);
+      lines.push(text.appsManual, '', FormattedString.code(url));
     }
 
-    await ctx.reply(lines.join('\n'), { link_preview_options: { is_disabled: true } });
+    const message = FormattedString.join(lines, NEW_LINE);
+
+    await ctx.reply(message.text, { entities: message.entities, link_preview_options: { is_disabled: true } });
   }
 }
