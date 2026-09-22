@@ -12,10 +12,10 @@ export const KEYBOARD_ROWS: KeyboardRow[] = [
   [{ key: 'trial', when: 'trialAvailable' }],
   [{ key: 'buy', when: 'unsubscribed' }],
   [
-    { key: 'devices', when: 'subscribed' },
     { key: 'autoRenew', when: 'subscribed' },
     { key: 'rotate', when: 'subscribed' }
   ],
+  [{ key: 'devices', when: 'subscribed' }],
   [
     { key: 'help', when: 'always' },
     { key: 'language', when: 'always' }
