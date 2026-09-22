@@ -11,6 +11,7 @@ const active: StatusTextInput = {
   status: 'active',
   plan: 'monthly',
   currentPeriodEnd: '2026-12-31T00:00:00.000Z',
+  isTrial: false,
   cancelAtPeriodEnd: false,
   limits: { deviceLimit: 2, extraDevices: 0, pricePerDeviceRub: 100, maxExtraDevices: 5 }
 };
@@ -49,6 +50,21 @@ describe('statusText', () => {
 
     expect(russian).not.toBe(english);
     expect(english).toContain(BOT_TEXT.en.willRenew);
+  });
+
+  it('calls a trial a trial rather than the plan the row happens to carry', () => {
+    const trial = statusText({ ...active, isTrial: true });
+
+    expect(trial).toContain(BOT_TEXT.ru.trialPeriod);
+    expect(trial).not.toContain(BOT_TEXT.ru.monthShort);
+  });
+
+  it('tells a trial reader what happens next instead of talking about renewal', () => {
+    const trial = statusText({ ...active, isTrial: true });
+
+    expect(trial).toContain(BOT_TEXT.ru.trialEnds);
+    expect(trial).not.toContain(BOT_TEXT.ru.willRenew);
+    expect(trial).not.toContain(BOT_TEXT.ru.willNotRenew);
   });
 
   it('names the plan by its term rather than by the id the database stores', () => {

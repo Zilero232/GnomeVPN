@@ -9,7 +9,7 @@ import type { DescribeInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
-import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, DEFAULT_BOT_LOCALE, FALLBACK_BOT_LOCALE, HTTPS_PROTOCOL } from '../config';
+import { BOT_API, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, FALLBACK_BOT_LOCALE } from '../config';
 import { profileText, webhookUrl } from '../lib';
 
 @Injectable()
@@ -115,16 +115,6 @@ export class TelegramProfileService {
   }
 
   private menuButton(): MenuButton {
-    const url = this.config.get('CLIENT_URL');
-
-    if (new URL(url).protocol !== HTTPS_PROTOCOL) {
-      return { type: 'commands' };
-    }
-
-    return {
-      type: 'web_app',
-      web_app: { url },
-      text: BOT_PROFILE[DEFAULT_BOT_LOCALE].menuButton
-    };
+    return { type: 'commands' };
   }
 }

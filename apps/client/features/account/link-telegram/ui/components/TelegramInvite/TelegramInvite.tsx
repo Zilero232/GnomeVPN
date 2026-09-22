@@ -5,7 +5,7 @@ import { Button, Text } from '@/ui-kit';
 
 import type { TelegramInviteProps } from './TelegramInvite.types';
 
-import { ABILITIES } from './TelegramInvite.constants';
+import { ABILITIES } from '../../../lib';
 
 import s from './TelegramInvite.module.scss';
 

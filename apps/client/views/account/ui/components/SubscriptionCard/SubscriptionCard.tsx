@@ -46,7 +46,7 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
             {subscription && (
               <div className={s.metaItem}>
                 <dt className={s.label}>{t('planLabel')}</dt>
-                <dd className={s.value}>{t(`plans.${subscription.plan}`)}</dd>
+                <dd className={s.value}>{subscription.isTrial ? t('trialPeriod') : t(`plans.${subscription.plan}`)}</dd>
               </div>
             )}
 

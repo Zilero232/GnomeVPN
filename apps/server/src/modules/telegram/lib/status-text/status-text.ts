@@ -9,7 +9,7 @@ import { DATE_FORMAT } from './status-text.constants';
 
 const DATE_LOCALES = { ru, en: enGB };
 
-export const statusText = ({ status, plan, currentPeriodEnd, cancelAtPeriodEnd, limits, locale }: StatusTextInput): string => {
+export const statusText = ({ status, plan, isTrial, currentPeriodEnd, cancelAtPeriodEnd, limits, locale }: StatusTextInput): string => {
   const text = BOT_TEXT[locale];
 
   if (status !== 'active' || !currentPeriodEnd) {
@@ -18,10 +18,13 @@ export const statusText = ({ status, plan, currentPeriodEnd, cancelAtPeriodEnd, 
 
   const until = format(new Date(currentPeriodEnd), DATE_FORMAT, { locale: DATE_LOCALES[locale] });
 
+  const period = isTrial ? text.trialPeriod : planLabel({ planId: plan, locale });
+  const renewal = cancelAtPeriodEnd ? text.willNotRenew : text.willRenew;
+
   return [
     text.activeUntil.replace(TEXT_TOKEN.date, until),
-    text.planLine.replace(TEXT_TOKEN.plan, planLabel({ planId: plan, locale })),
+    text.planLine.replace(TEXT_TOKEN.plan, period),
     text.devicesLine.replace(TEXT_TOKEN.count, String(limits.deviceLimit)),
-    cancelAtPeriodEnd ? text.willNotRenew : text.willRenew
+    isTrial ? text.trialEnds : renewal
   ].join('\n');
 };

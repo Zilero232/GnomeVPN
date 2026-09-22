@@ -6,6 +6,7 @@
   "active": "Subscription active",
   "daysLeft": "{count, plural, =0 {final day} one {day left} other {days left}}",
   "planLabel": "Plan",
+  "trialPeriod": "Free day",
   "untilLabel": "Valid until",
   "autoRenewOff": "Auto-renewal is off",
   "autoRenewOn": "Auto-renewal is on",
@@ -43,7 +44,7 @@
     "newEmailLabel": "New email",
     "emailChangeHint": "We will send a link to your current address — the change applies once confirmed.",
     "changeEmail": "Change email",
-    "emailChangeRequested": "Check your current email to confirm the change",
+    "emailChangeRequested": "If the address is free, the confirmation is already in your current inbox.",
     "currentPasswordLabel": "Current password",
     "newPasswordLabel": "New password",
     "confirmPasswordLabel": "Repeat password",
@@ -53,9 +54,10 @@
     "security": "Security",
     "noEmail": "No email yet",
     "addEmailTitle": "Add an email",
-    "addEmailHint": "Right now Telegram is the only way into this account. Add an email and it becomes your fallback if you ever lose Telegram.",
+    "addEmailHint": "Right now Telegram is the only way into this account. Add an email, then set a password through \"Forgot password?\" on the sign-in page — that gives you a second way in.",
     "addEmail": "Add email",
-    "emailAdded": "Check your inbox and confirm the address"
+    "emailAdded": "If the address is free, the email is on its way. Nothing arrived? It may already belong to an account.",
+    "noPasswordHint": "No password yet — this account was created through Telegram. Add an email above, then set a password through \"Forgot password?\" on the sign-in page."
   },
   "tabs": {
     "subscription": "Subscription",

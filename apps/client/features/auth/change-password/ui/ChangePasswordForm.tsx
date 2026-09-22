@@ -9,8 +9,8 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
-import { useChangePassword } from '@/entities/auth/user';
-import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
+import { useAccountIdentity, useChangePassword } from '@/entities/auth/user';
+import { FormField, PasswordInput, SubmitButton, Text } from '@/ui-kit';
 
 import s from './ChangePasswordForm.module.scss';
 
@@ -27,6 +27,7 @@ export const ChangePasswordForm = () => {
   const toastError = useToastError();
 
   const { isPending, mutate } = useChangePassword();
+  const { hasPassword } = useAccountIdentity();
 
   const {
     formState: { errors, isDirty },
@@ -47,6 +48,14 @@ export const ChangePasswordForm = () => {
       onError: toastError
     });
   });
+
+  if (!hasPassword) {
+    return (
+      <Text size='sm' tone='muted'>
+        {t('noPasswordHint')}
+      </Text>
+    );
+  }
 
   return (
     <form className={s.form} onSubmit={onSubmit}>

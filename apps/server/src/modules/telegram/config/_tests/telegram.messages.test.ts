@@ -121,10 +121,4 @@ describe('bot profile', () => {
       expect(BOT_PROFILE[locale].name.length).toBeLessThanOrEqual(64);
     }
   });
-
-  it('names a menu button in every language', () => {
-    for (const locale of BOT_LOCALES) {
-      expect(BOT_PROFILE[locale].menuButton.trim()).not.toBe('');
-    }
-  });
 });

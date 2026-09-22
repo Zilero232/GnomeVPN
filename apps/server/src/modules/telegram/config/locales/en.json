@@ -22,7 +22,7 @@
     "devicesLine": "Devices at once: {count}.",
     "willRenew": "Renews automatically.",
     "willNotRenew": "Auto-renewal is off.",
-    "help": "The buttons below do everything the commands do:\n\n🚀 Connect — your link for the app\n📱 Apps — the apps that take it, and where to get them\n📊 Subscription — expiry and devices\n💳 Subscribe or Renew — pay for access\n🎁 Free day — twenty-four hours, on us\n➕ Devices — add simultaneous connections\n🔄 Auto-renewal — turn charging on or off\n🔁 New link — when the old one reached the wrong hands\n🌍 Language — switch language\n🔌 Unlink — disconnect this chat from your account\n\nSomething broken? Write to support on the site.",
+    "help": "The buttons below do everything the commands do:\n\n🚀 Connect — your link for the app\n📱 Apps — the apps that take it, and where to get them\n📊 Subscription — expiry and devices\n💳 Subscribe or Renew — pay for access\n🎁 Free day — twenty-four hours, on us\n➕ Devices — add simultaneous connections\n🔄 Auto-renewal — turn charging on or off\n🔁 New link — when the old one reached the wrong hands\n🌍 Language — switch language\n🔌 Unlink — disconnect this chat from your account\n/delete — remove the account and its subscription\n\nSomething broken? Write to support on the site.",
     "failed": "Something went wrong. Try again in a minute.",
     "monthShort": "mo",
     "appsIntro": "Pick an app — I will send the install link and the one that connects it.",
@@ -50,12 +50,14 @@
     "devicesMax": "You are at the limit — no more devices can be added.",
     "devicesIntro": "Pay at the link below. The limit rises the moment it clears:",
     "websiteIntro": "Here is your sign-in link. It works once and lasts 10 minutes — do not forward it to anyone.",
-    "unlinkNoEmail": "This account was created in Telegram and there is no other way into it yet. Unlink now and the subscription stays, but nothing can open it.\n\nAdd an email in your account first — after that, unlinking is safe.",
+    "unlinkNoEmail": "This account was created in Telegram and there is no other way into it yet. Unlink now and the subscription stays, but nothing can open it.\n\nAdd an email in your account first and set a password through \"Forgot password?\" — after that, unlinking is safe.",
     "deleteAsk": "Delete this account? The subscription ends with no refund for the remaining period, every device disconnects and the link stops working. We cannot bring it back.",
     "deleteYes": "Delete permanently",
     "deleteNo": "Cancel",
     "deleteCancelled": "Kept the account.",
-    "deleted": "The account is gone. Thanks for being with us."
+    "deleted": "The account is gone. Thanks for being with us.",
+    "trialPeriod": "free day",
+    "trialEnds": "When the free day ends, subscribe to keep your access."
   },
   "buttons": {
     "connect": "🚀 Connect",
@@ -82,8 +84,7 @@
   "profile": {
     "name": "GnomeVPN",
     "description": "GnomeVPN — a fast VPN with no speed limits.\n\n🎬 YouTube in 4K, social media, games\n📱 iPhone, Android, Windows, macOS, TVs\n💳 From {price} RUB a month\n🎁 The first day is free\n\nPress Start to begin.",
-    "shortDescription": "A fast VPN with no limits. From {price} RUB a month, first day free.",
-    "menuButton": "Account"
+    "shortDescription": "A fast VPN with no limits. From {price} RUB a month, first day free."
   },
   "commands": {
     "status": "Subscription expiry",

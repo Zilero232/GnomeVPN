@@ -5,8 +5,7 @@ import { Button, Text } from '@/ui-kit';
 
 import type { TelegramLinkedProps } from './TelegramLinked.types';
 
-import { botLink } from '../../../lib';
-import { ABILITIES } from './TelegramLinked.constants';
+import { ABILITIES, botLink } from '../../../lib';
 
 import s from './TelegramLinked.module.scss';
 

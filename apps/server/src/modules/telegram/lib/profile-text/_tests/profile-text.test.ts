@@ -24,11 +24,9 @@ describe('profileText', () => {
     }
   });
 
-  it('keeps the name and the menu button untouched', () => {
+  it('keeps the name untouched', () => {
     const source = BOT_PROFILE.ru;
-    const filled = profileText(source);
 
-    expect(filled.name).toBe(source.name);
-    expect(filled.menuButton).toBe(source.menuButton);
+    expect(profileText(source).name).toBe(source.name);
   });
 });

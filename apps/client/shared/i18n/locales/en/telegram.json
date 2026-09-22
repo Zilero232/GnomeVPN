@@ -4,10 +4,13 @@
   "tabTelegram": "Telegram",
   "intro": "GnomeVPN has a Telegram bot — a second way to manage the subscription without opening the site.",
   "abilities": {
-    "status": "Expiry date and device count",
+    "status": "Period and device count",
     "link": "Your connection link",
     "buy": "Payment and renewal",
-    "trial": "A free trial day"
+    "trial": "The free day",
+    "devices": "Buy extra devices",
+    "autoRenew": "Turn auto-renewal on and off",
+    "rotate": "Get a new link if the old one leaked"
   },
   "connect": "Connect Telegram",
   "openBot": "Open the bot",
@@ -28,5 +31,5 @@
   "unlinkConfirmBody": "The bot will stop answering in this chat. Your subscription and access are untouched — you can link it again at any time.",
   "unlinkConfirmCancel": "Cancel",
   "unlinkConfirmAction": "Unlink",
-  "unlinkNoEmail": "Telegram is the only way into this account. Add an email in your profile and unlinking becomes safe."
+  "unlinkNoEmail": "Telegram is the only way into this account. Add an email in your profile and set a password, then unlinking is safe."
 }
