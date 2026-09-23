@@ -10,8 +10,8 @@ import { describeError } from '../../../common/lib';
 import { AutoRenewService, CheckoutService } from '../../billing';
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { AUTO_RENEW_CHOICE, BOT_TEXT, CALLBACK_PREFIX, DEVICE_CHOICES, NEW_LINE, TEXT_TOKEN } from '../config';
-import { autoRenewChoice, countFrom, formatDate, rotateCopy } from '../lib';
+import { AUTO_RENEW_CHOICE, BOT_TEXT, CALLBACK_PREFIX, DEVICE_CHOICES, NEW_LINE } from '../config';
+import { autoRenewChoice, countFrom, fillText, formatDate, rotateCopy } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -83,9 +83,10 @@ export class TelegramBillingService {
           keyboard.text(`+${quantity}`, `${CALLBACK_PREFIX.devices}${quantity}`);
         }
 
-        const intro = text.devicesNow
-          .replace(TEXT_TOKEN.count, String(status.limits.deviceLimit))
-          .replace(TEXT_TOKEN.price, String(EXTRA_DEVICE_PRICE_RUB));
+        const intro = fillText({
+          text: text.devicesNow,
+          fill: { count: String(status.limits.deviceLimit), price: String(EXTRA_DEVICE_PRICE_RUB) }
+        });
 
         return ctx.reply([intro, '', text.devicesChoose].join('\n'), { reply_markup: keyboard });
       }
@@ -132,7 +133,7 @@ export class TelegramBillingService {
     const keyboard = new InlineKeyboard().text(isOn ? text.autoRenewDisable : text.autoRenewEnable, `${CALLBACK_PREFIX.autoRenew}${choice}`);
     const body = isOn
       ? text.autoRenewOn
-      : text.autoRenewOff.replace(TEXT_TOKEN.date, formatDate({ iso: status.currentPeriodEnd, locale: chat.locale }));
+      : fillText({ text: text.autoRenewOff, fill: { date: formatDate({ iso: status.currentPeriodEnd, locale: chat.locale }) } });
 
     await ctx.reply(body, { reply_markup: keyboard });
   }
