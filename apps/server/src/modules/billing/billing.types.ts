@@ -1,6 +1,6 @@
 import type { Plan, PlanId } from '@gnomevpn/schemas';
 
-import type { Prisma } from '../../../generated';
+import type { PaymentKind, Prisma } from '../../../generated';
 
 export type PrismaExecutor = Prisma.TransactionClient;
 
@@ -57,4 +57,11 @@ export type SetAutoRenewServiceInput = {
 
 export type BindCardServiceInput = {
   userId: string;
+};
+
+export type SettledPayment = {
+  userId: string;
+  kind: PaymentKind;
+  isAutoCharge: boolean;
+  amount: Prisma.Decimal;
 };

@@ -1,15 +1,15 @@
 import type { OnModuleInit } from '@nestjs/common';
 import type { Update } from 'grammy/types';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Bot } from 'grammy';
 import { isNonNullish, isNullish } from 'remeda';
 
 import type { BotAction, BotCallback, BotContext } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
-import { AppConfigService } from '../../../config';
-import { BOT_API, CALLBACK_PREFIX } from '../config';
+import { TELEGRAM_BOT } from '../bot';
+import { CALLBACK_PREFIX } from '../config';
 import { buttonFor, callbackPattern, looksLikeLinkCode } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
 import { TelegramAppsService } from './telegram-apps.service';
@@ -21,11 +21,10 @@ import { TelegramSubscriptionService } from './telegram-subscription.service';
 @Injectable()
 export class TelegramBotService implements OnModuleInit {
   private readonly logger = new Logger(TelegramBotService.name);
-  private readonly bot: Bot | null;
   private ready: Promise<void> = Promise.resolve();
 
   constructor(
-    private readonly config: AppConfigService,
+    @Inject(TELEGRAM_BOT) private readonly bot: Bot | null,
     private readonly shared: TelegramSharedService,
     private readonly account: TelegramAccountService,
     private readonly subscription: TelegramSubscriptionService,
@@ -33,10 +32,6 @@ export class TelegramBotService implements OnModuleInit {
     private readonly billing: TelegramBillingService,
     private readonly profile: TelegramProfileService
   ) {
-    const token = this.config.get('TELEGRAM_BOT_TOKEN');
-
-    this.bot = token ? new Bot(token, { client: { timeoutSeconds: BOT_API.timeoutSeconds } }) : null;
-
     if (this.bot) {
       this.register(this.bot);
     }
@@ -85,7 +80,7 @@ export class TelegramBotService implements OnModuleInit {
       { command: 'devices', button: 'devices', run: (ctx) => this.billing.devices(ctx) },
       { command: 'rotate', button: 'rotate', run: (ctx) => this.billing.askRotate(ctx) },
       { button: 'autoRenew', run: (ctx) => this.billing.autoRenew(ctx) },
-      { command: 'website', run: (ctx) => this.account.openWebsite(ctx) },
+      { command: 'website', button: 'website', run: (ctx) => this.account.openWebsite(ctx) },
       { command: 'language', button: 'language', run: (ctx) => this.account.chooseLanguage(ctx) },
       { command: 'help', button: 'help', run: (ctx) => this.account.help(ctx) },
       { command: 'unlink', button: 'unlink', run: (ctx) => this.account.askUnlink(ctx) },

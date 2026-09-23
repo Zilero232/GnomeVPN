@@ -432,6 +432,29 @@ restart. The menu button falls back to `type: 'commands'` when `CLIENT_URL` is
 not https, because Telegram rejects a `web_app` over plain http and the whole
 `announce` call would fail with it.
 
+**The bot speaks first when the state changes under the reader.** A payment
+settles in a webhook and a renewal in a cron, so without this nobody learns
+anything until they open the chat and press something — and the keyboard they
+are looking at still offers "Subscribe" on a subscription that is already paid.
+`TelegramNotifyService.tell` sends the message and the keyboard rebuilt from the
+current state, for a payment, an automatic renewal, a card that was declined and
+a period that ran out.
+
+It lives in `TelegramNotifyModule`, which imports only `SubscriptionModule` —
+`BillingModule` and the scheduler import that rather than the whole
+`TelegramModule`, which imports billing back.
+
+**Both of its consumers import the files directly, never `telegram` or
+`telegram/services`.** Either barrel re-exports a service that injects
+`CheckoutService`, so reaching billing through one loads billing while billing
+is still initialising: `Cannot access 'CheckoutService' before initialization`,
+at boot, with nothing failing to typecheck first. This is the one place in the
+server that goes around a module barrel deliberately, and moving either import
+back to the barrel brings the crash back — it was tried.
+
+A chat that is not linked simply gets nothing, and a send that fails is logged
+rather than raised — an unreachable Telegram must not fail a settled payment.
+
 ## What the workflows assume
 
 **`deploy.yml` is the only workflow.** It is manual, and it runs every check

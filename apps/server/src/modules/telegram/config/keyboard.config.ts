@@ -17,9 +17,10 @@ export const KEYBOARD_ROWS: KeyboardRow[] = [
   ],
   [{ key: 'devices', when: 'subscribed' }],
   [
-    { key: 'help', when: 'always' },
-    { key: 'language', when: 'always' }
+    { key: 'website', when: 'always' },
+    { key: 'help', when: 'always' }
   ],
+  [{ key: 'language', when: 'always' }],
   [
     { key: 'unlink', when: 'always' },
     { key: 'deleteAccount', when: 'always' }

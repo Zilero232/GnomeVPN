@@ -10,6 +10,7 @@ import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
 import { CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
+import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 
 @Injectable()
@@ -20,7 +21,8 @@ export class RecurringChargeJob {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly checkout: CheckoutService,
-    private readonly webhook: WebhookService
+    private readonly webhook: WebhookService,
+    private readonly notify: TelegramNotifyService
   ) {}
 
   private async hasChargeInFlight(userId: string): Promise<boolean> {
@@ -67,7 +69,17 @@ export class RecurringChargeJob {
 
     if (payment.status === 'succeeded') {
       await this.webhook.settlePayment(payment.id);
+
+      return;
     }
+
+    if (payment.status === 'canceled') {
+      await this.tellChargeFailed(subscription);
+    }
+  }
+
+  private async tellChargeFailed({ userId, currentPeriodEnd }: DueSubscription): Promise<void> {
+    await this.notify.tell({ userId, pick: (copy) => copy.chargeFailed, date: currentPeriodEnd });
   }
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -88,6 +100,8 @@ export class RecurringChargeJob {
         await this.chargeIfDue(subscription);
       } catch (error) {
         this.logger.warn(`Recurring charge failed for ${subscription.userId}: ${describeError(error)}`);
+
+        await this.tellChargeFailed(subscription);
       }
     }
   }

@@ -8,6 +8,7 @@ import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { SubscriptionAccessService } from '../../../subscription-link';
+import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 import { activeSince, lapsedBefore } from '../../lib';
 
@@ -17,7 +18,8 @@ export class ExpiredAccessJob {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly access: SubscriptionAccessService
+    private readonly access: SubscriptionAccessService,
+    private readonly notify: TelegramNotifyService
   ) {}
 
   private async ownersOf({ user, state }: OwnersOfInput): Promise<string[]> {
@@ -65,6 +67,8 @@ export class ExpiredAccessJob {
 
     if (!isEmpty(disabled)) {
       this.logger.log(`Disabled access for ${disabled.length} subscriber(s)`);
+
+      await Promise.allSettled(disabled.map((userId) => this.notify.tell({ userId, pick: (copy) => copy.expired })));
     }
 
     if (!isEmpty(restored)) {

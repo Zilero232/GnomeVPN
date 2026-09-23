@@ -2,6 +2,7 @@ export const TEXT_TOKEN = {
   platforms: '{platforms}',
   count: '{count}',
   price: '{price}',
+  amount: '{amount}',
   date: '{date}',
   plan: '{plan}',
   site: '{site}'
