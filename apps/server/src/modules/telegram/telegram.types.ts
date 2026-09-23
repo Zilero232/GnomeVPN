@@ -3,6 +3,7 @@ import type { Bot, Context } from 'grammy';
 
 import type { Prisma } from '../../../generated';
 import type { AUTO_RENEW_CHOICE, BOT_LOCALES } from './config';
+import type { TextFill } from './lib/fill-text';
 import type { ButtonKey } from './lib/keyboard';
 
 export type BotLocale = (typeof BOT_LOCALES)[number];
@@ -172,4 +173,11 @@ export type DescribeInput = {
   bot: Bot;
   locale: BotLocale;
   isFallback?: boolean;
+};
+
+export type NotifyInput = {
+  userId: string;
+  pick: (copy: BotText) => string;
+  fill?: TextFill;
+  date?: Date | null;
 };

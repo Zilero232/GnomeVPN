@@ -3,10 +3,13 @@ import type { WebhookEvent } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { isNullish } from 'remeda';
 
+import type { SettledPayment } from '../billing.types';
+
 import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { SubscriptionAccessService } from '../../subscription-link';
+import { TelegramNotifyService } from '../../telegram/services/telegram-notify.service';
 import { BillingSharedService } from './billing-shared.service';
 
 @Injectable()
@@ -17,7 +20,8 @@ export class WebhookService {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly shared: BillingSharedService,
-    private readonly access: SubscriptionAccessService
+    private readonly access: SubscriptionAccessService,
+    private readonly notify: TelegramNotifyService
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
@@ -39,7 +43,9 @@ export class WebhookService {
         status: true,
         plan: true,
         kind: true,
-        extraDevices: true
+        extraDevices: true,
+        isAutoCharge: true,
+        amount: true
       }
     });
 
@@ -114,6 +120,31 @@ export class WebhookService {
     await this.access.setEnabledAll({ userId: row.userId, enabled: true }).catch((error: unknown) => {
       this.logger.error(`paid access for ${row.userId} was not re-enabled, the sweep will retry: ${describeError(error)}`);
     });
+
+    await this.announce(row);
+  }
+
+  private async announce({ userId, kind, isAutoCharge, amount }: SettledPayment): Promise<void> {
+    if (kind === 'extraDevices') {
+      await this.notify.tell({ userId, pick: (copy) => copy.devicesAdded });
+
+      return;
+    }
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { currentPeriodEnd: true }
+    });
+
+    const date = subscription?.currentPeriodEnd;
+
+    if (isAutoCharge) {
+      await this.notify.tell({ userId, pick: (copy) => copy.renewed, date, fill: { amount: String(amount) } });
+
+      return;
+    }
+
+    await this.notify.tell({ userId, pick: (copy) => copy.paid, date });
   }
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {

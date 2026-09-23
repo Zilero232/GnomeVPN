@@ -8,8 +8,8 @@ import type { BotContext, BotLocale, ChatCopy, ConsumeInput, RefusalInput, Speak
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { AccountService, IdentityService } from '../../auth';
-import { BOT_TEXT, CALLBACK_PREFIX, DEFAULT_BOT_LOCALE, LANGUAGE_BUTTONS, NEW_LINE, TEXT_TOKEN } from '../config';
-import { deleteCopy, identityOf, resolveLocale, unlinkCopy } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, DEFAULT_BOT_LOCALE, LANGUAGE_BUTTONS, NEW_LINE } from '../config';
+import { deleteCopy, fillText, identityOf, resolveLocale, unlinkCopy } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramSharedService } from './telegram-shared.service';
 import { TelegramWebLoginService } from './telegram-web-login.service';
@@ -150,7 +150,7 @@ export class TelegramAccountService {
   }
 
   private startText(locale: BotLocale): string {
-    return BOT_TEXT[locale].start.replace(TEXT_TOKEN.site, this.config.get('CLIENT_URL'));
+    return fillText({ text: BOT_TEXT[locale].start, fill: { site: this.config.get('CLIENT_URL') } });
   }
 
   private async speak({ ctx, pick }: SpeakInput): Promise<void> {

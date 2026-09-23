@@ -1,6 +1,7 @@
 import type { StatusTextInput } from './status-text.types';
 
-import { BOT_TEXT, TEXT_TOKEN } from '../../config';
+import { BOT_TEXT } from '../../config';
+import { fillText } from '../fill-text';
 import { formatDate } from '../format-date';
 import { planLabel } from '../plan-label';
 
@@ -17,9 +18,9 @@ export const statusText = ({ status, plan, isTrial, currentPeriodEnd, cancelAtPe
   const renewal = cancelAtPeriodEnd ? text.willNotRenew : text.willRenew;
 
   return [
-    text.activeUntil.replace(TEXT_TOKEN.date, until),
-    text.planLine.replace(TEXT_TOKEN.plan, period),
-    text.devicesLine.replace(TEXT_TOKEN.count, String(limits.deviceLimit)),
+    fillText({ text: text.activeUntil, fill: { date: until } }),
+    fillText({ text: text.planLine, fill: { plan: period } }),
+    fillText({ text: text.devicesLine, fill: { count: String(limits.deviceLimit) } }),
     isTrial ? text.trialEnds : renewal
   ].join('\n');
 };

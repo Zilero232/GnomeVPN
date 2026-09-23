@@ -3,6 +3,8 @@ export { callbackPattern } from './callback';
 export { autoRenewChoice, countFrom, isConfirmed } from './callback-value';
 export { clientName, parseClientId, platformNames } from './client-name';
 export { deleteCopy, rotateCopy, unlinkCopy } from './confirm-copy';
+export { fillText } from './fill-text';
+export type { TextFill } from './fill-text';
 export { formatDate } from './format-date';
 export { identityOf } from './identity';
 export { buttonFor, mainKeyboard } from './keyboard';

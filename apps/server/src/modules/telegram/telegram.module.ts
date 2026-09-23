@@ -16,11 +16,12 @@ import {
   TelegramWebLoginService
 } from './services';
 import { TelegramLinkController } from './telegram-link.controller';
+import { TelegramNotifyModule } from './telegram-notify.module';
 import { TelegramWebLoginController } from './telegram-web-login.controller';
 import { TelegramController } from './telegram.controller';
 
 @Module({
-  imports: [AuthModule, BillingModule, SubscriptionModule, SubscriptionLinkModule],
+  imports: [AuthModule, BillingModule, SubscriptionModule, SubscriptionLinkModule, TelegramNotifyModule],
   controllers: [TelegramController, TelegramLinkController, TelegramWebLoginController],
   providers: [
     TelegramAccountService,

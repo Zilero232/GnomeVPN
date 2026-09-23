@@ -10,8 +10,8 @@ import type { BotContext, ShowClientInput } from '../telegram.types';
 
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE, TEXT_TOKEN } from '../config';
-import { clientName, parseClientId, platformNames } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE } from '../config';
+import { clientName, fillText, parseClientId, platformNames } from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -72,7 +72,7 @@ export class TelegramAppsService {
     const lines: Stringable[] = [
       clientName({ id, locale: chat.locale }),
       '',
-      text.appsPlatforms.replace(TEXT_TOKEN.platforms, platforms),
+      fillText({ text: text.appsPlatforms, fill: { platforms } }),
       '',
       `${text.appsDownload}: ${client.downloadUrl}`,
       ''
