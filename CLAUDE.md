@@ -623,6 +623,21 @@ page has a confirm dialog, `/delete` in the bot has the same confirmation on an
 inline keyboard. Neither refunds the remaining period, and both say so before
 asking.
 
+## Signing in has to clear the cache signing out clears
+
+`queryClient.clear()` sat in `useSignOut` and nowhere else, so arriving as
+somebody else kept the previous reader's answers: a `/website` link from the bot
+landed on the account page still rendering the signed-out state, and only a
+reload fixed it. Every way in now goes through the same clear — the two Telegram
+hooks, the email form and sign-up.
+
+**The clear hangs off the token actually changing, not off saving one.**
+`saveAuthToken` runs on every better-auth response and every axios response,
+because the server may hand back a refreshed token at any time; clearing there
+unconditionally would throw away the cache on ordinary traffic. It returns
+whether the value it stored differs from the one already held, and `startSession`
+clears only then.
+
 ## Indexed pages are a set, not a page
 
 A public page is only indexed when it is in `INDEXED_ROUTES` (`shared/constants/routes.ts`).

@@ -14,12 +14,14 @@ export const getAuthToken = () => {
   return window.localStorage.getItem(STORAGE_KEY) ?? '';
 };
 
-export const saveAuthToken = (token: string | null) => {
-  if (isServer() || !token) {
-    return;
+export const saveAuthToken = (token: string | null): boolean => {
+  if (isServer() || !token || window.localStorage.getItem(STORAGE_KEY) === token) {
+    return false;
   }
 
   window.localStorage.setItem(STORAGE_KEY, token);
+
+  return true;
 };
 
 export const clearToken = () => {
@@ -36,9 +38,7 @@ export const authClient = createAuthClient({
   fetchOptions: {
     auth: { type: 'Bearer', token: getAuthToken },
     onSuccess: (ctx) => {
-      const token = ctx.response.headers.get('set-auth-token');
-
-      saveAuthToken(token);
+      saveAuthToken(ctx.response.headers.get('set-auth-token'));
     }
   }
 });

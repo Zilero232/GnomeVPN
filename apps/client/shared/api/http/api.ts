@@ -2,8 +2,8 @@ import axios from 'axios';
 
 import { env } from '@/shared/config';
 
-import { getAuthToken, saveAuthToken } from '../auth/auth-client';
-import { resetSession } from '../auth/session-reset';
+import { getAuthToken } from '../auth/auth-client';
+import { resetSession, startSession } from '../auth/session-reset';
 import { toApiError } from './api-error';
 
 export const api = axios.create({ baseURL: env.NEXT_PUBLIC_API_URL });
@@ -31,7 +31,7 @@ const readErrorBody = async (data: unknown): Promise<unknown> => {
 };
 
 api.interceptors.response.use((response) => {
-  saveAuthToken(response.headers['set-auth-token'] ?? null);
+  startSession(response.headers['set-auth-token'] ?? null);
 
   return response;
 });
