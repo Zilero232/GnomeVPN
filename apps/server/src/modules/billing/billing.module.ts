@@ -18,6 +18,6 @@ const yooKassaProvider = {
   imports: [SubscriptionLinkModule, TelegramNotifyModule],
   controllers: [BillingController],
   providers: [BillingSharedService, CheckoutService, WebhookService, AutoRenewService, CardService, WebhookIpGuard, yooKassaProvider],
-  exports: [AutoRenewService, CheckoutService, WebhookService, YooKassaClient]
+  exports: [AutoRenewService, CardService, CheckoutService, WebhookService, YooKassaClient]
 })
 export class BillingModule {}

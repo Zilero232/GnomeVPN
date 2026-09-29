@@ -56,6 +56,7 @@ export class ExpiredAccessJob {
     const [disabled, restored] = await Promise.all([
       this.sweep({
         user: lapsedBefore(subHours(now, WINDOW.configGraceHours)),
+        state: 'active',
         act: (userId) => this.access.setEnabledAll({ userId, enabled: false })
       }),
       this.sweep({

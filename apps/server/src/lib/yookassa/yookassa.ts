@@ -107,15 +107,17 @@ export class YooKassaClient {
 
   async getPayment(paymentId: string): Promise<PaymentInfo> {
     const payload = await this.request<PaymentResponse>({ path: `/payments/${paymentId}`, init: { method: 'GET' } });
+    const isSaved = payload.payment_method?.saved === true;
 
     return {
       id: payload.id,
       status: payload.status,
-      paymentMethodId: payload.payment_method?.id ?? null,
+      paymentMethodId: isSaved ? (payload.payment_method?.id ?? null) : null,
       paymentMethodTitle: describeCard({
         card: payload.payment_method?.card,
         title: payload.payment_method?.title
-      })
+      }),
+      cancellationReason: payload.cancellation_details?.reason ?? null
     };
   }
 
@@ -148,5 +150,24 @@ export class YooKassaClient {
     const payload = await this.request<PaymentMethodResponse>({ path: `/payment_methods/${paymentMethodId}`, init: { method: 'GET' } });
 
     return this.toPaymentMethodInfo(payload);
+  }
+
+  async isPaymentMethodUsable(paymentMethodId: string): Promise<boolean | null> {
+    const res = await fetch(`${API_URL}/payment_methods/${paymentMethodId}`, {
+      headers: this.headers(),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
+
+    if (res.status === 400 || res.status === 404) {
+      return false;
+    }
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const payload = (await res.json()) as PaymentMethodResponse;
+
+    return payload.saved === true && payload.status === 'active';
   }
 }

@@ -13,6 +13,8 @@ const active: StatusTextInput = {
   currentPeriodEnd: '2026-12-31T00:00:00.000Z',
   isTrial: false,
   cancelAtPeriodEnd: false,
+  hasPaymentMethod: true,
+  isRecurringAvailable: true,
   limits: { deviceLimit: 2, extraDevices: 0, pricePerDeviceRub: 100, maxExtraDevices: 5 }
 };
 
@@ -34,6 +36,14 @@ describe('statusText', () => {
     expect(renewing).not.toBe(cancelled);
     expect(renewing).toContain(BOT_TEXT.ru.willRenew);
     expect(cancelled).toContain(BOT_TEXT.ru.willNotRenew);
+  });
+
+  it('does not promise an automatic renewal when there is no card to charge', () => {
+    expect(statusText({ ...active, hasPaymentMethod: false })).toContain(BOT_TEXT.ru.renewManual);
+  });
+
+  it('does not promise an automatic renewal while recurring charges are switched off', () => {
+    expect(statusText({ ...active, isRecurringAvailable: false })).toContain(BOT_TEXT.ru.renewManual);
   });
 
   it('falls back to the inactive copy for an expired subscription rather than rendering a stale date', () => {

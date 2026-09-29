@@ -1,5 +1,6 @@
 export const WINDOW = {
   renewHours: 24,
   configGraceHours: 6,
-  inFlightHours: 24
+  remindHours: 72,
+  trialRemindHours: 3
 } as const;

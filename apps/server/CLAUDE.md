@@ -316,7 +316,15 @@ on the next sweep anyway, while a stuck release would be visible immediately.
 
 ## Cron jobs
 
-`modules/scheduler` runs four: node health, peer reconciliation, expired access, recurring charges.
+`modules/scheduler` runs five: node health, peer reconciliation, expired access, recurring charges, period reminders.
+
+`recurring-charge` makes **one attempt per period**. A declined card is canceled synchronously, and retrying with the same idempotence key only replays that cancellation from YooKassa — so the old hourly retry re-announced the same failure every hour until the key expired. An auto-charge row created inside the renewal window, pending or canceled, now means the period was already tried; the reader renews by hand. A thrown error is logged, not announced: it is not proof the card was declined.
+
+**Only a card YooKassa saved is a card.** Every settled payment carries a `payment_method.id`, saved or not — an SBP payment, a checkout with recurring off, a buyer who unticked "remember card". `settlePayment` used to store any of them as `savedCardId`, and the charge then failed hourly with `This payment_method_id doesn't exist`. `getPayment` now returns the id only when `payment_method.saved` is true. For rows written before that, a failed charge asks `isPaymentMethodUsable`; a definite "no" unbinds the card and tells the reader once, while an unknown answer (network, 5xx) leaves it alone.
+
+`period-reminder` warns before the period ends, once per period — `subscription.reminderSentFor` holds the period end it was sent for, so a renewal that moves the end re-arms it. Three messages: a trial gets `trialEndingSoon` in its last `trialRemindHours`, a period that will not auto-charge gets `endingSoon` within `remindHours`, and one that will gets `renewSoon` with the amount and card — only before the charge window opens, because after it `recurring-charge` speaks for itself.
+
+`expired-access` announces only the peers it actually turned off (`state: 'active'`). Without that filter every lapsed account was "disabled" again on each five-minute sweep and told its subscription had ended every time.
 
 `node-health` probes every available node each minute. `health()` returns the inbound's state together with the panel's own `cpu`, memory ratio and TCP count, so a node crossing `NODE_CPU_ALERT_PERCENT` or `NODE_MEMORY_ALERT_RATIO` is logged as a warning before it starts dropping tunnels.
 

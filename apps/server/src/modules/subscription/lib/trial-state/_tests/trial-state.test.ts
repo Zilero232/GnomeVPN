@@ -1,4 +1,4 @@
-import { addDays, subDays } from 'date-fns';
+import { addDays, addHours, subDays, subHours } from 'date-fns';
 import { describe, expect, it } from 'vitest';
 
 import { trialState } from '../trial-state';
@@ -32,11 +32,15 @@ describe('trialState', () => {
   });
 
   it('reports a running trial as one, so the interface can say what the access is', () => {
-    expect(trialState({ currentPeriodEnd: future, trialStartedAt: past }).isTrial).toBe(true);
+    expect(trialState({ currentPeriodEnd: addHours(new Date(), 23), trialStartedAt: subHours(new Date(), 1) }).isTrial).toBe(true);
   });
 
   it('stops calling it a trial once the period is over', () => {
     expect(trialState({ currentPeriodEnd: past, trialStartedAt: past }).isTrial).toBe(false);
+  });
+
+  it('stops calling it a trial once a payment has extended the period past the trial day', () => {
+    expect(trialState({ currentPeriodEnd: addDays(new Date(), 30), trialStartedAt: past }).isTrial).toBe(false);
   });
 
   it('does not call a paid period a trial', () => {

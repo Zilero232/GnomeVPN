@@ -6,3 +6,8 @@ export type DueSubscription = {
   plan: PlanId;
   currentPeriodEnd: Date | null;
 };
+
+export type ChargeAttemptInput = {
+  userId: string;
+  currentPeriodEnd: Date;
+};
