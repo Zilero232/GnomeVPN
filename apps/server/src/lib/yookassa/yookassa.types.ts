@@ -14,9 +14,11 @@ export type PaymentResponse = {
   confirmation?: { confirmation_url?: string };
   payment_method?: {
     id?: string;
+    saved?: boolean;
     title?: string;
     card?: CardData;
   };
+  cancellation_details?: { party?: string; reason?: string };
 };
 
 export type CreatePaymentInput = {
@@ -45,6 +47,7 @@ export type PaymentInfo = {
   status: string;
   paymentMethodId: string | null;
   paymentMethodTitle: string | null;
+  cancellationReason: string | null;
 };
 
 export type BindPaymentMethodInput = {
@@ -64,6 +67,7 @@ export type PaymentMethodInfo = {
 export type PaymentMethodResponse = {
   id: string;
   status: PaymentMethodStatus;
+  saved?: boolean;
   title?: string;
   card?: CardData;
   confirmation?: { confirmation_url?: string };

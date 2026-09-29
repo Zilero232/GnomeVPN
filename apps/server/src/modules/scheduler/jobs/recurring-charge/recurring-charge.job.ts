@@ -4,12 +4,12 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { addHours, subHours } from 'date-fns';
 import { isNonNullish } from 'remeda';
 
-import type { DueSubscription } from './recurring-charge.job.types';
+import type { ChargeAttemptInput, DueSubscription } from './recurring-charge.job.types';
 
 import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
-import { CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
+import { CardService, CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
 import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 
@@ -21,22 +21,23 @@ export class RecurringChargeJob {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly checkout: CheckoutService,
+    private readonly card: CardService,
     private readonly webhook: WebhookService,
     private readonly notify: TelegramNotifyService
   ) {}
 
-  private async hasChargeInFlight(userId: string): Promise<boolean> {
-    const pending = await this.prisma.payment.findFirst({
+  private async wasAttempted({ userId, currentPeriodEnd }: ChargeAttemptInput): Promise<boolean> {
+    const attempt = await this.prisma.payment.findFirst({
       where: {
         userId,
         isAutoCharge: true,
-        status: 'pending',
-        createdAt: { gt: subHours(new Date(), WINDOW.inFlightHours) }
+        status: { in: ['pending', 'canceled'] },
+        createdAt: { gt: subHours(currentPeriodEnd, WINDOW.renewHours) }
       },
       select: { id: true }
     });
 
-    return isNonNullish(pending);
+    return isNonNullish(attempt);
   }
 
   private async chargeIfDue(subscription: DueSubscription): Promise<void> {
@@ -44,7 +45,7 @@ export class RecurringChargeJob {
       return;
     }
 
-    if (await this.hasChargeInFlight(subscription.userId)) {
+    if (await this.wasAttempted({ userId: subscription.userId, currentPeriodEnd: subscription.currentPeriodEnd })) {
       return;
     }
 
@@ -67,15 +68,33 @@ export class RecurringChargeJob {
       isAutoCharge: true
     });
 
-    if (payment.status === 'succeeded') {
-      await this.webhook.settlePayment(payment.id);
-
+    if (payment.status === 'pending') {
       return;
     }
+
+    await this.webhook.settlePayment(payment.id);
 
     if (payment.status === 'canceled') {
       await this.tellChargeFailed(subscription);
     }
+  }
+
+  private async dropUnusableCard(subscription: DueSubscription): Promise<void> {
+    if (!subscription.savedCardId) {
+      return;
+    }
+
+    const isUsable = await this.yookassa.isPaymentMethodUsable(subscription.savedCardId);
+
+    if (isUsable !== false) {
+      return;
+    }
+
+    await this.card.unbindCard(subscription.userId);
+
+    this.logger.warn(`Dropped an unusable saved card for ${subscription.userId}`);
+
+    await this.tellChargeFailed(subscription);
   }
 
   private async tellChargeFailed({ userId, currentPeriodEnd }: DueSubscription): Promise<void> {
@@ -101,7 +120,9 @@ export class RecurringChargeJob {
       } catch (error) {
         this.logger.warn(`Recurring charge failed for ${subscription.userId}: ${describeError(error)}`);
 
-        await this.tellChargeFailed(subscription);
+        await this.dropUnusableCard(subscription).catch((checkError: unknown) => {
+          this.logger.warn(`Could not check the saved card of ${subscription.userId}: ${describeError(checkError)}`);
+        });
       }
     }
   }

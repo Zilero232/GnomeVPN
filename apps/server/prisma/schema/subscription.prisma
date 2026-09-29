@@ -16,6 +16,8 @@ model Subscription {
 
   trialStartedAt DateTime? @map("trial_started_at") @db.Timestamptz(3)
 
+  reminderSentFor DateTime? @map("reminder_sent_for") @db.Timestamptz(3)
+
   savedCardId    String? @map("saved_card_id")
   savedCardTitle String? @map("saved_card_title")
   pendingCardId  String? @unique @map("pending_card_id")

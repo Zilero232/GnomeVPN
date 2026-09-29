@@ -69,7 +69,7 @@ export class WebhookService {
         data: { status: 'canceled' }
       });
 
-      this.logger.log(`payment ${paymentId} was canceled`);
+      this.logger.log(`payment ${paymentId} was canceled: ${payment.cancellationReason ?? 'no reason given'}`);
 
       return;
     }
