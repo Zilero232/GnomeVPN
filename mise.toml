@@ -1,0 +1,11 @@
+# The toolchain for this repo: `mise install` in the repo root.
+# Keep each pin in step with what CI and the Dockerfiles use.
+
+min_version = "2026.9.0"
+
+[tools]
+# CI installs it from here (.github/actions/setup, jdx/mise-action). mise does not read package.json's
+# `packageManager` or the oven/bun tag in the Dockerfiles, so bumping bun means all three.
+bun = "1.3.14"
+# The client's runtime image (apps/client/Dockerfile: node:22-alpine) serves the standalone build on it.
+node = "22"
