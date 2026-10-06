@@ -1,5 +1,11 @@
 # Deploying GnomeVPN
 
+The VPS side of a deploy: DNS, the server's `.env`, the Telegram bot, the first
+run and migrations. Backups and moving the database are in
+[backups.md](backups.md); adding a VPN node is
+[provisioning-a-node.md](provisioning-a-node.md). Part of the
+[documentation index](../README.md).
+
 ## What runs where
 
 | Component     | Where          | How it updates            |
@@ -18,19 +24,22 @@ to ghcr.io; **the VPS builds nothing** — it only pulls ready-made images.
 
 Settings → Secrets and variables → Actions:
 
-| Secret                                    | What it is                                                    |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`                     | API address, baked into the browser bundle at build time      |
-| `DEPLOY_SSH_HOST` / `_USER` / `_PASSWORD` | control VPS                                                   |
-| `DEPLOY_SSH_KEY`                          | private key, preferred over the password                      |
-| `DEPLOY_PATH`                             | directory holding docker-compose.yml, usually `/opt/gnomevpn` |
+| Secret                      | What it is                                                    |
+| --------------------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`       | API address, baked into the browser bundle at build time      |
+| `DEPLOY_SSH_HOST` / `_USER` | control VPS                                                   |
+| `DEPLOY_SSH_KEY`            | private key, preferred                                        |
+| `DEPLOY_SSH_PASSWORD`       | used only when no key is set                                  |
+| `DEPLOY_SSH_PORT`           | optional, defaults to 22                                      |
+| `DEPLOY_PATH`               | directory holding docker-compose.yml, usually `/opt/gnomevpn` |
 
 No signing keys: nothing here ships a binary. The VPN client is INCY, installed
 from the user's own app store.
 
-`deploy.yml` fires on a push to master or by hand. It builds both images, pushes
-them to ghcr.io, SSHes in, copies `docker-compose.yml`, then runs migrations and
-`pull && up -d`.
+`deploy.yml` runs by hand (`workflow_dispatch`). It runs every check, builds both
+images and pushes them to ghcr.io, copies `docker-compose.yml` and the
+`Caddyfile` to the VPS, then over SSH pulls `web` and `server`, runs migrations,
+`up -d`, and waits for both containers to report healthy.
 
 ---
 
@@ -44,9 +53,9 @@ one is written down in exactly two places, both outside the docs:
 Changing the canonical host means every subscription URL already handed out
 points at the old one, so every subscriber has to add the new link once.
 
-DNS runs through Cloudflare, which hides the server's address: a visitor
-resolves a Cloudflare IP, not this VPS, so the machine cannot be blocked by
-address. The free plan covers all of it.
+DNS is hosted at Cloudflare, on the free plan. Only `bot` is proxied (orange
+cloud); the site and `api` resolve straight to this VPS — why is in
+[architecture/telegram-bot.md](../architecture/telegram-bot.md).
 
 **Pointing the domain at Cloudflare**
 
@@ -104,7 +113,8 @@ POSTGRES_PASSWORD=<long random password>
 POSTGRES_DB=gnomevpn
 
 # Optional: the backup container defaults to these when they are absent
-BACKUP_INTERVAL_HOURS=6
+# (see backups.md)
+BACKUP_SCHEDULE=0 0 */6 * * *
 BACKUP_KEEP_DAYS=14
 
 # postgres is the service name in docker-compose, not localhost
@@ -136,6 +146,9 @@ EMAIL_FROM=GnomeVPN <noreply@example.com>
 # Where the links in the emails lead.
 CLIENT_URL=https://example.com
 
+# Optional: sent to INCY as the support-url header.
+SUPPORT_URL=
+
 # Telegram bot — optional. Leave the token empty and the bot never starts.
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_USERNAME=
@@ -144,11 +157,12 @@ TELEGRAM_WEBHOOK_URL=https://bot.example.com
 
 ```
 
-Node keys are not written here. `bun provision` puts them in a separate
-`.env.nodes` file next to `docker-compose.yml` — one pair per node:
+Node keys are not written here. `bun run provision:nodes` puts them in a
+separate `.env.nodes` file next to `docker-compose.yml` — one pair per node:
 `XRAY_KEY_<country code>` (the name from the `node.api_token_env_var` column)
 and `XRAY_PANEL_<country code>`. The container picks up both files, so `.env`
-stays hand-written. To check which variables are needed:
+stays hand-written; the deploy creates an empty `.env.nodes` if none exists yet.
+To check which variables are needed:
 `SELECT country, api_token_env_var FROM node;`
 
 Plan prices are not set in `.env` — they live in `PLANS` (`packages/schemas`),
@@ -193,20 +207,18 @@ TELEGRAM_WEBHOOK_URL=https://bot.example.com
 
 **`bot.example.com` is the one name that goes through Cloudflare.** Point an
 `A` record at the VPS and turn the orange cloud **on**; an `AAAA` beside it is
-fine. Our own IPv4 cannot reach Telegram and Telegram refuses an AAAA-only host
-(`IPv6-only addresses are not allowed`), so the callback needs IPv4 that is not
-ours.
-
-Leave the site and `api` on grey clouds. Russian ISPs have throttled Cloudflare
-since June 2025, and only the callback host should pay that cost.
+fine. Leave the site and `api` on grey clouds. Why the callback host needs
+Cloudflare's IPv4 and nothing else should pay for it:
+[architecture/telegram-bot.md](../architecture/telegram-bot.md#telegram-is-a-second-door-to-the-same-account).
 
 After a DNS change Telegram keeps answering for the old address for a few
 minutes. `setWebhook` failing right afterwards usually means its cache, not the
 records — wait and let the boot retry.
 
-`bun run secrets` fills in the secrets that are still empty — locally into
-`.env`, and it leaves anything already set alone. `--force` overwrites, which
-for `BETTER_AUTH_SECRET` signs every live session out.
+`bun run secrets` fills in `TELEGRAM_WEBHOOK_SECRET` and `BETTER_AUTH_SECRET`
+when they are still empty — in the root `.env` of the machine it runs on, and it
+leaves anything already set alone. `--force` overwrites, which for
+`BETTER_AUTH_SECRET` signs every live session out.
 
 `TELEGRAM_BOT_USERNAME` carries no `@`: the account page builds
 `t.me/<username>?start=<code>` out of it, and a wrong value makes the connect
@@ -215,11 +227,7 @@ button lead nowhere.
 **3. Restart the server.** Everything else happens on boot, in both languages:
 the bot's name, its description, its short description, its command list, the
 menu button — and the webhook, pointed at `TELEGRAM_WEBHOOK_URL`. The bot
-answers `/start` from then on.
-
-Nothing is registered by hand. `api.telegram.org` is blocked by most Russian
-ISPs, so a manual step would be something only the production host could do, and
-something a domain change or a rotated secret would silently invalidate.
+answers `/start` from then on. Nothing is registered by hand.
 
 The webhook needs `TELEGRAM_WEBHOOK_URL` to be https and
 `TELEGRAM_WEBHOOK_SECRET` to be set; without either, the server logs that it
@@ -241,111 +249,21 @@ restart, because the locale files under
 Deploys go through Actions, so almost everything lives in the repository
 secrets. Only provisioning stays on a workstation:
 
-- **SSH to the nodes** — `PROVISION_SSH_*` in the root `.env` (see section 3).
+- **SSH to the nodes** — root credentials per host in `nodes.json`.
+- **SSH to this VPS** — `PROVISION_SSH_*` in the workstation's root `.env`, which
+  provisioning uses to ship `.env.nodes` and the node rows here.
 - **`.env.nodes`** — one `XRAY_KEY_<CC>` / `XRAY_PANEL_<CC>` pair per node,
   written by `bun run provision:nodes` and shipped to the VPS over SSH.
 
----
-
-## Automatic backups
-
-The `backup` container is
-[postgres-backup-local](https://github.com/prodrigestivill/docker-postgres-backup-local):
-`pg_dump` on a cron, keeping daily, weekly and monthly copies in the `pgbackups`
-volume. It needs no setup — it ships in `docker-compose.yml` and starts with the
-rest of the stack.
-
-```bash
-docker compose logs backup                   # what it has taken
-docker compose exec backup ls -R /backups    # last/, daily/, weekly/, monthly/
-docker compose exec backup /backup.sh        # take one right now
-```
-
-Override the schedule in `.env` — `SCHEDULE` is a six-field cron, seconds first:
-
-```bash
-BACKUP_SCHEDULE=0 0 */6 * * *
-BACKUP_KEEP_DAYS=14
-BACKUP_KEEP_WEEKS=8
-BACKUP_KEEP_MONTHS=6
-```
-
-**The dumps live on this VPS and nowhere else.** They cover a bad migration, a
-mistaken `DELETE` and a corrupted table; they do not cover losing the machine.
-Before anything irreversible, copy one off the host:
-
-```bash
-docker compose cp backup:/backups ./backups   # all of them
-```
-
-Restoring one:
-
-```bash
-docker compose cp ./backups/daily/gnomevpn-latest.sql.gz postgres:/tmp/dump.sql.gz
-docker compose exec postgres sh -c 'gunzip -c /tmp/dump.sql.gz | psql -U gnomevpn -d gnomevpn'
-```
-
-`psql` needs no password: the image trusts local connections. The dump is plain
-SQL without owners or privileges, so it restores into any database the role can
-write to — which is what makes it usable on a fresh VPS as well.
+The steps are in [provisioning-a-node.md](provisioning-a-node.md).
 
 ---
 
-## Moving to another VPS
+## Backups
 
-The database is the only thing that cannot be rebuilt from the repository, so it
-moves first and everything else follows.
-
-**1. Dump it on the old server**
-
-```bash
-docker exec gnomevpn-postgres pg_dump -U gnomevpn -Fc gnomevpn > gnomevpn.dump
-```
-
-`-Fc` is the custom format: it restores in one command and does not care about
-the order the objects come back in.
-
-**2. Copy it across**
-
-```bash
-scp gnomevpn.dump root@<new IP>:/opt/gnomevpn/
-```
-
-**3. Bring up only Postgres on the new server**, so nothing writes to a half
-restored database:
-
-```bash
-docker compose up -d postgres
-```
-
-**4. Restore**
-
-```bash
-docker exec -i gnomevpn-postgres pg_restore -U gnomevpn -d gnomevpn --clean --if-exists < /opt/gnomevpn/gnomevpn.dump
-```
-
-**5. Check the rows arrived** before pointing any DNS at the new machine:
-
-```bash
-docker exec gnomevpn-postgres psql -U gnomevpn -d gnomevpn -c 'SELECT count(*) FROM "user";'
-docker exec gnomevpn-postgres psql -U gnomevpn -d gnomevpn -c 'SELECT count(*) FROM node;'
-```
-
-**6. Then the rest** — `docker compose up -d`, DNS, and the old server stays
-running until the new one answers on the domain.
-
-**`.env.nodes` travels too.** It holds one panel password and one API token per
-VPN node, it is not in git, and `bun provision` is the only thing that writes
-it. Without it the server cannot talk to any node, and every tunnel stops being
-issued.
-
-```bash
-scp root@<old IP>:/opt/gnomevpn/.env.nodes root@<new IP>:/opt/gnomevpn/
-```
-
-The nodes themselves do not move and are not reprovisioned: they hold no state
-beyond their own keys, and their addresses live in the `node` table that just
-came across with the dump.
+The `backup` container dumps the database on a schedule with no setup. How to
+read, copy off and restore the dumps, and how to move the database to another
+VPS: [backups.md](backups.md).
 
 ---
 
@@ -370,8 +288,10 @@ curl -I https://example.com           # 200
 ## 6. Database migrations
 
 The migration history lives in `apps/server/prisma/migrations`. `deploy.yml`
-applies them itself: when migration files are present it runs `migrate resolve`
-(a baseline for a database built earlier with `db push`) and then `migrate deploy`.
+applies it itself, in a one-off `server` container before `up -d`: first
+`migrate resolve --applied 20260723000000_baseline` (marks the baseline as
+applied on a database built earlier with `db push`; it fails harmlessly once
+that is recorded), then `migrate deploy`.
 
 Create a new migration like this:
 
@@ -418,10 +338,9 @@ when a shell is enough.
 docker compose logs -f server     # API logs
 docker compose restart server     # restart
 docker compose pull && docker compose up -d   # manual update
-
-# database backup
-docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
 ```
+
+Dumping, restoring and copying the database off the host: [backups.md](backups.md).
 
 ---
 
@@ -431,3 +350,42 @@ docker compose exec postgres pg_dump -U gnomevpn gnomevpn > backup.sql
 docker build -f apps/server/Dockerfile -t gnomevpn-server .
 docker build -f apps/client/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t gnomevpn-web .
 ```
+
+---
+
+## What the workflows assume
+
+[.github/workflows/deploy.yml](../../.github/workflows/deploy.yml) is shaped by
+the reasons below.
+
+**Deploys are a workflow, not a local command.** There are no binaries to build
+or sign any more: `deploy.yml` pushes two images to ghcr and the VPS pulls them.
+
+**`deploy.yml` is the only workflow.** It is manual, and it runs every check
+this repository has before either image is built — typecheck, lint, tests, the
+client build, and Playwright over the public routes — so an image is never
+pushed from a tree that would have failed. `checks` and `e2e` run beside each
+other: a lint error and a broken route are worth learning about in the same run.
+
+The client build is separate from typecheck because it is the only thing that
+catches a page which typechecks but throws during prerender.
+Migrations run **before** `docker compose up -d`: doing it after means the new
+build serves traffic against the old schema and can query a column its migration
+has not added yet. `up -d` returns when the container starts, not when the app
+answers, so the deploy waits on the compose healthchecks for both `server` and
+`web`.
+
+`docker-compose.yml` and `infra/caddy/Caddyfile` are copied to the VPS on every
+deploy and land flat next to each other — the compose file bind-mounts
+`./Caddyfile`, so a nested path would mount a directory.
+
+The workflow and its composite actions in `.github/actions/` pin every action to a commit SHA rather than a tag — a tag can be
+moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
+placeholders because the server postinstall runs `prisma generate`, which
+resolves `DIRECT_URL` through `env()` but never connects.
+
+The toolchain is pinned in `mise.toml` — bun, and node 22 for serving the
+standalone build the way the web image does. CI installs it through
+`jdx/mise-action` in `.github/actions/setup`, so bumping a version is one edit
+there (plus `packageManager` and the Dockerfiles' `oven/bun` tag, which mise
+does not read).

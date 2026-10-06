@@ -6,11 +6,11 @@ Full specification: [feature-sliced.design](https://feature-sliced.design). Lint
 
 > **Where this project departs from canonical FSD** (deliberately — reasons below):
 >
-> | Canonical FSD | GnomeVPN | Why |
-> |---|---|---|
-> | `src/` root | `apps/client/` root (no `src/`) | Monorepo: `apps/client` already isolates the frontend. `@/` → `apps/client/`. |
-> | `pages/` layer | `views/` layer | `pages/` at the Next.js root turns on the Pages Router. `views/` sidesteps it. |
-> | `shared/ui` segment | `ui-kit/` at the root | The design system is large enough to read as its own thing, and every layer imports it. Keeping it under `shared` buried it three levels down. |
+> | Canonical FSD       | GnomeVPN                        | Why                                                                                                                                            |
+> | ------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+> | `src/` root         | `apps/client/` root (no `src/`) | Monorepo: `apps/client` already isolates the frontend. `@/` → `apps/client/`.                                                                  |
+> | `pages/` layer      | `views/` layer                  | `pages/` at the Next.js root turns on the Pages Router. `views/` sidesteps it.                                                                 |
+> | `shared/ui` segment | `ui-kit/` at the root           | The design system is large enough to read as its own thing, and every layer imports it. Keeping it under `shared` buried it three levels down. |
 
 ## 1. Layers
 
@@ -41,21 +41,24 @@ A layer never imports from itself across slices. Two features that need the same
 
 ```text
 features/
+├── account/    # delete-account, link-telegram
 ├── app/        # cross-domain application concerns
 │   └── switch-locale/
-├── auth/       # sign-in, sign-up, password, email
-├── billing/    # checkout
+├── auth/       # sign-in, sign-up, sign-out, telegram-sign-in, change-email,
+│               # change-password, forgot-password, reset-password, update-name,
+│               # verify-email
+├── billing/    # checkout, claim-trial
 └── vpn/        # connect-incy
 entities/
-├── app/        # about, faq, incy, locale
+├── app/        # about, blog, faq, incy, locale, protocols
 ├── auth/       # user
 └── billing/    # subscription
 widgets/
 ├── billing/    # pricing-plans
-└── site/       # site-header, site-footer
+└── site/       # site-header, site-footer, related-links
 ```
 
-`views/` does not group by domain — route screens sit directly in it: `views/landing`, `views/account`, `views/faq`, `views/setup`, `views/about`, `views/pricing`, `views/privacy`, `views/auth`, `views/reset-password`, `views/error`, `views/not-found`.
+`views/` does not group by domain — route screens sit directly in it: `views/landing`, `views/account`, `views/faq`, `views/setup`, `views/about`, `views/pricing`, `views/privacy`, `views/servers`, `views/blog`, `views/blog-post`, `views/auth`, `views/reset-password`, `views/telegram-sign-in`, `views/error`, `views/not-found`.
 
 ## 3. Public API
 
@@ -82,13 +85,13 @@ Every slice has an `index.ts` that re-exports what the outside may use. Everythi
 
 Inside a slice:
 
-| Segment | Holds |
-|---|---|
-| `ui/` | components |
-| `model/` | hooks, stores, derived state |
-| `lib/` | pure functions, one folder per concern |
-| `config/` | constants |
-| `api/` | requests — but most requests live in `shared/api` |
+| Segment   | Holds                                             |
+| --------- | ------------------------------------------------- |
+| `ui/`     | components                                        |
+| `model/`  | hooks, stores, derived state                      |
+| `lib/`    | pure functions, one folder per concern            |
+| `config/` | constants                                         |
+| `api/`    | requests — but most requests live in `shared/api` |
 
 A folder is one concern, not one function: each gets its own `index.ts`, `<name>.types.ts` and `<name>.constants.ts` where it needs them.
 
@@ -97,9 +100,9 @@ A folder is one concern, not one function: each gets its own `index.ts`, `<name>
 ```text
 ui-kit/
 ├── atoms/       # Avatar, Badge, BrandMark, Button, CountryFlag, Input, Label,
-│                # PasswordInput, Spinner, Stack, Text
-├── molecules/   # Accordion, AppSplash, Dialog, FormField, LinkCard, Segmented,
-│                # SelectableCard, SubmitButton, Tabs
+│                # PasswordInput, Spinner, Stack, StatusIcon, Text
+├── molecules/   # Accordion, AppSplash, ConfirmDialog, Dialog, ErrorBlock, FormField,
+│                # LinkCard, LoadingBlock, Segmented, SelectableCard, SubmitButton, Tabs
 ├── organisms/   # AppToaster, StatusScreen
 └── index.ts     # the one barrel the rest of the app imports
 ```
@@ -117,18 +120,22 @@ From outside — only `@/ui-kit`. Inside it, imports between segments are relati
 ```text
 app/
 ├── [locale]/              # every page lives under the locale segment
-│   ├── (marketing)/       # landing, pricing, setup, faq, about, privacy
-│   ├── (auth)/            # auth, reset-password
+│   ├── (marketing)/       # landing, pricing, setup, servers, faq, blog, about, privacy
+│   ├── (auth)/            # auth, reset, telegram
 │   ├── (account)/         # account
 │   ├── layout.tsx         # the root layout — html, providers, fonts
+│   ├── opengraph-image.tsx
 │   ├── error.tsx
 │   └── not-found.tsx
 ├── api/health/            # container healthcheck
 ├── providers/             # AppProviders, AuthProvider
 ├── llms.txt/              # SEO routes as route handlers
 ├── llms-full.txt/
+├── manifest.ts
 ├── robots.ts
 ├── sitemap.ts
+├── globals.scss
+├── error.tsx
 └── global-error.tsx
 ```
 
@@ -138,18 +145,18 @@ Route groups `(marketing)`, `(auth)`, `(account)` do not appear in the URL — t
 
 ## 7. Where a thing goes
 
-| It is… | It goes in |
-|---|---|
-| a route | `app/[locale]/…/page.tsx`, thin — metadata plus one view |
-| a whole screen | `views/<route>` |
-| a block two views share | `widgets/<domain>/<slice>` |
-| something the user does | `features/<domain>/<slice>` |
-| a domain concept with its own data | `entities/<domain>/<slice>` |
-| a request | `shared/api/<resource>` |
-| a constant, helper or type with no domain | `shared/` |
-| a visual primitive | `ui-kit/<segment>/<Component>` |
+| It is…                                    | It goes in                                               |
+| ----------------------------------------- | -------------------------------------------------------- |
+| a route                                   | `app/[locale]/…/page.tsx`, thin — metadata plus one view |
+| a whole screen                            | `views/<route>`                                          |
+| a block two views share                   | `widgets/<domain>/<slice>`                               |
+| something the user does                   | `features/<domain>/<slice>`                              |
+| a domain concept with its own data        | `entities/<domain>/<slice>`                              |
+| a request                                 | `shared/api/<resource>`                                  |
+| a constant, helper or type with no domain | `shared/`                                                |
+| a visual primitive                        | `ui-kit/<segment>/<Component>`                           |
 
-An example from live code: `views/setup` assembles `SetupPage` out of `entities/app/incy` (`usePlatforms`), `ui-kit` primitives (`LinkCard`, `Tabs`, `Text`) and its own `ui/components/SetupSteps`. It reaches nothing sideways.
+An example from live code: `views/setup` assembles `SetupPage` out of `entities/app/incy` (`usePlatforms`), `ui-kit` primitives (`LinkCard`, `Tabs`, `Text`), its own `config/` and its own `ui/components/SetupSteps` and `OtherClients`. It reaches nothing sideways.
 
 ## 8. Tests
 
