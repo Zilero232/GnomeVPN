@@ -8,7 +8,7 @@
   "includedTitle": "Included in every plan",
   "included": {
     "servers": "Every server in every country",
-    "devices": "Two devices at once",
+    "devices": "Two devices",
     "protocol": "Hysteria2 over QUIC",
     "noLogs": "No connection logs",
     "support": "Email support",
@@ -22,7 +22,7 @@
     },
     "devices": {
       "title": "How many devices",
-      "body": "Two simultaneous connections by default. There is one subscription link — add it to a phone, a laptop and a television, and two of them run at a time. If you need more, extra devices are bought in your account without changing plan. What counts is active connections rather than installations: the app sitting on a fourth device costs you nothing until you use it."
+      "body": "Two devices by default. There is one subscription link; a device takes a slot when its app fetches the subscription. A device over the limit gets no servers — remove one you no longer use in your account, or buy more slots there without changing plan."
     },
     "payment": {
       "title": "Paying and renewing",

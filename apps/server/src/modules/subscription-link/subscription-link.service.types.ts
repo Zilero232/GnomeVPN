@@ -1,5 +1,6 @@
 import type { TunnelProtocol } from '@gnomevpn/schemas';
 
+import type { DeviceHeaders, DeviceIdentity } from '../devices';
 import type { TlsMode } from './lib';
 
 export type SubscriptionNode = {
@@ -31,22 +32,25 @@ export type SubscriptionBody = {
 
 export type BuildFeedInput = {
   token: string;
+  headers: DeviceHeaders;
+};
+
+export type TouchLinkInput = {
+  token: string;
   userAgent: string | null;
 };
 
-export type TouchLinkInput = BuildFeedInput;
-
 export type ServerUrisInput = {
   userId: string;
+  deviceId: string;
   nodes: SubscriptionNode[];
-  limitIp: number;
   tls: TlsMode;
 };
 
 export type EnsureNodeInput = {
   userId: string;
+  deviceId: string;
   node: SubscriptionNode;
-  limitIp: number;
 };
 
 export type IssueFeedPeerInput = EnsureNodeInput & {
@@ -55,12 +59,15 @@ export type IssueFeedPeerInput = EnsureNodeInput & {
 
 export type ForgetPeersInput = {
   userId: string;
+  name: string;
   nodeId: string;
   protocols: TunnelProtocol[];
 };
 
 export type PersistPeerInput = {
   userId: string;
+  deviceId: string;
+  name: string;
   nodeId: string;
   protocol: TunnelProtocol;
   nodeCredential: string;
@@ -89,4 +96,18 @@ export type UpsertLinkInput = {
 export type PresentLinkInput = {
   token: string;
   createdAt: Date;
+};
+
+export type DeviceAddedInput = {
+  userId: string;
+  identity: DeviceIdentity;
+  deviceCount: number;
+  deviceLimit: number;
+};
+
+export type DeviceBlockedInput = {
+  token: string;
+  userId: string;
+  identity: DeviceIdentity;
+  deviceLimit: number;
 };

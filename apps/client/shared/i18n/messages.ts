@@ -5,6 +5,7 @@ import enAccount from './locales/en/account.json';
 import enAuth from './locales/en/auth.json';
 import enBlog from './locales/en/blog.json';
 import enCommon from './locales/en/common.json';
+import enDevices from './locales/en/devices.json';
 import enError from './locales/en/error.json';
 import enErrors from './locales/en/errors.json';
 import enFaq from './locales/en/faq.json';
@@ -26,6 +27,7 @@ import ruAccount from './locales/ru/account.json';
 import ruAuth from './locales/ru/auth.json';
 import ruBlog from './locales/ru/blog.json';
 import ruCommon from './locales/ru/common.json';
+import ruDevices from './locales/ru/devices.json';
 import ruError from './locales/ru/error.json';
 import ruErrors from './locales/ru/errors.json';
 import ruFaq from './locales/ru/faq.json';
@@ -49,6 +51,7 @@ const ru = {
   auth: ruAuth,
   blog: ruBlog,
   common: ruCommon,
+  devices: ruDevices,
   error: ruError,
   errors: ruErrors,
   faq: ruFaq,
@@ -73,6 +76,7 @@ const en = {
   auth: enAuth,
   blog: enBlog,
   common: enCommon,
+  devices: enDevices,
   error: enError,
   errors: enErrors,
   faq: enFaq,

@@ -2,6 +2,7 @@ export { TelegramAccountService } from './telegram-account.service';
 export { TelegramAppsService } from './telegram-apps.service';
 export { TelegramBillingService } from './telegram-billing.service';
 export { TelegramBotService } from './telegram-bot.service';
+export { TelegramDevicesService } from './telegram-devices.service';
 export { TelegramLinkService } from './telegram-link.service';
 export { TelegramNotifyService } from './telegram-notify.service';
 export { TelegramProfileService } from './telegram-profile.service';

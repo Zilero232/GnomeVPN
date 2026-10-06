@@ -106,6 +106,7 @@ shared/api/
   auth/               ← the better-auth client, session start/reset
   account/            ← deleteAccount
   billing/            ← checkout, auto-renew, bound cards, extra devices
+  devices/            ← the device registry: list and remove
   subscription/       ← status and trial
   subscription-link/  ← the INCY link and its rotation
   telegram/           ← linking and Telegram sign-in

@@ -48,9 +48,11 @@ client, so the encryption hides the URL from scanners, not from people.
 
 ## Issuing the peers
 
-`SubscriptionPeersService.ensureNode` ensures one `kind: 'config'` peer named
-`incy` (`FEED.peerName`) per **node and protocol**, reusing
-`PeersService.issueAndPersist`; `SubscriptionFeedService` then renders each as a
+The feed first admits the requesting device ([devices.md](devices.md)); a device
+over the account's limit gets an empty list and the device-limit announcement.
+For an admitted one, `SubscriptionPeersService.ensureNode` ensures one
+`kind: 'config'` peer per **device, node and protocol**, named
+`devicePeerName(deviceId)` (`d-<12 hex>`), reusing `PeersService.issueAndPersist`; `SubscriptionFeedService` then renders each as a
 `hysteria2://` or `vless://` URI. **A node that fails to issue is logged and
 skipped** — one unreachable node must not empty the user's whole server list.
 

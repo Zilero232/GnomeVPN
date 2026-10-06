@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth';
 import { BillingModule } from '../billing';
+import { DevicesModule } from '../devices';
 import { SubscriptionModule } from '../subscription';
 import { SubscriptionLinkModule } from '../subscription-link';
 import {
@@ -9,6 +10,7 @@ import {
   TelegramAppsService,
   TelegramBillingService,
   TelegramBotService,
+  TelegramDevicesService,
   TelegramLinkService,
   TelegramProfileService,
   TelegramSharedService,
@@ -21,13 +23,14 @@ import { TelegramWebLoginController } from './telegram-web-login.controller';
 import { TelegramController } from './telegram.controller';
 
 @Module({
-  imports: [AuthModule, BillingModule, SubscriptionModule, SubscriptionLinkModule, TelegramNotifyModule],
+  imports: [AuthModule, BillingModule, DevicesModule, SubscriptionModule, SubscriptionLinkModule, TelegramNotifyModule],
   controllers: [TelegramController, TelegramLinkController, TelegramWebLoginController],
   providers: [
     TelegramAccountService,
     TelegramAppsService,
     TelegramBillingService,
     TelegramBotService,
+    TelegramDevicesService,
     TelegramLinkService,
     TelegramProfileService,
     TelegramSharedService,

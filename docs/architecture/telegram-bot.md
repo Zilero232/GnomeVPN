@@ -16,8 +16,9 @@ it.
 owns the routing table — `actions` maps each command and keyboard button to a
 handler, `callbacks` each inline-button prefix — and nothing else.
 `TelegramSubscriptionService` answers `/connect` (`/link`), `/status`, `/buy`
-and `/trial`; `TelegramAppsService` `/apps`; `TelegramBillingService`
-`/devices`, `/rotate` and auto-renewal; `TelegramAccountService` `/start`,
+and `/trial`; `TelegramAppsService` `/apps`; `TelegramDevicesService`
+`/devices` — the device list, removing one and buying extra places;
+`TelegramBillingService` `/rotate` and auto-renewal; `TelegramAccountService` `/start`,
 linking, `/website`, `/language`, `/help`, `/unlink` and `/delete`.
 `TelegramLinkService` owns the chat rows and link codes, `TelegramWebLoginService`
 the sign-in links, `TelegramProfileService` announces the bot to Telegram,
@@ -216,8 +217,10 @@ anything until they open the chat and press something — and the keyboard they
 are looking at still offers "Subscribe" on a subscription that is already paid.
 `TelegramNotifyService.tell` sends the message and the keyboard rebuilt from the
 current state, for a payment, extra devices bought, an automatic renewal, a card
-that was declined, a period about to end (`period-reminder`) and a period that
-ran out.
+that was declined, a period about to end (`period-reminder`), a period that
+ran out, and every change to the device registry — a device added, a device
+refused at the limit, devices cut by a smaller limit, the shared keys retired
+([devices.md](devices.md)).
 
 It lives in `TelegramNotifyModule`, which imports only `SubscriptionModule` —
 `BillingModule` and the scheduler import that rather than the whole
@@ -234,6 +237,27 @@ back to the barrel brings the crash back — it was tried.
 A chat that is not linked simply gets nothing, and anything that fails — the
 chat lookup included, which sits inside the same `try` — is logged rather than
 raised: an unreachable Telegram must not fail a settled payment.
+
+**`/devices` is the bot's copy of the device page.** It lists what
+`DevicesService.list` holds — numbered, with the system, the app, when it was
+last seen and a mark on any device past the limit — and puts one "Remove"
+button per device above the existing `+1/+2/+3` purchase. An empty list says
+when a device appears (the app's first subscription refresh), because that is
+the question someone asking with nothing listed has. This is also where the
+over-limit announcement in the feed sends people.
+
+Removing a device asks first, like `/rotate` and `/unlink`, but the question
+names its subject, so the yes/no payload carries it: `confirmKeyboard` writes
+`<yes|no>:<device id>` under `CALLBACK_PREFIX.removeDevice`, and `deviceAnswer`
+reads it back only when the answer is one of the two and the id is a UUID. A
+press on a device that is already gone — an old list, a second phone — answers
+that the device is no longer there rather than "something went wrong":
+`DEVICE_NOT_FOUND` is a state, not a failure. The confirmation warns that an app
+which refreshes again takes the place back, since registration is just a feed
+fetch.
+
+`TelegramModule` imports `DevicesModule` directly; that module depends on
+Prisma alone, so it brings no path back into billing or the bot.
 
 ## Identity, input and callbacks
 
@@ -258,7 +282,8 @@ time around the shared unwrap that just did.
 and `"0x2"` as two, and `autoRenewChoice` returns null rather than treating an
 unrecognised payload as "off" — a ternary there would let a crafted press turn a
 paying reader's renewal off. `parseClientId` matches against `CLIENT_IDS` rather
-than asking `in`, which also answers for `__proto__`.
+than asking `in`, which also answers for `__proto__`. `parseDeviceId` takes
+nothing but a UUID, so a crafted device id never reaches a query.
 
 **Every callback handler unwraps the press the same way**, so
 `TelegramSharedService.answered` does it once: read the sender, acknowledge the

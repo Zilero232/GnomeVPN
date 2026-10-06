@@ -31,6 +31,14 @@ describe('announcement', () => {
     expect(announcement({ ...active, hasSubscription: false, currentPeriodEnd: null })).not.toBeNull();
   });
 
+  it('tells a device over the account limit why it has no servers', () => {
+    expect(announcement({ ...active, blockedAtLimit: 2 })).toBe(ANNOUNCEMENTS.deviceLimit(2));
+  });
+
+  it('still reports a lapsed subscription before the device limit', () => {
+    expect(announcement({ ...active, currentPeriodEnd: subDays(NOW, 1), blockedAtLimit: 2 })).toBe(ANNOUNCEMENTS.expired);
+  });
+
   it('distinguishes a lapsed subscription from one that was never bought', () => {
     const expired = announcement({ ...active, currentPeriodEnd: subDays(NOW, 1) });
 

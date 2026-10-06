@@ -15,14 +15,14 @@
   "bindCard": "Привязать карту",
   "cardBound": "Карта привязана",
   "unbindCard": "Отвязать карту",
-  "extraDevicesTitle": "Одновременные подключения",
-  "extraDevicesCount": "{limit} устройств доступно",
+  "extraDevicesTitle": "Слоты устройств",
+  "extraDevicesCount": "{limit, plural, one {# устройство} few {# устройства} other {# устройств}} в подписке",
   "extraDevicesHint": "Дополнительное устройство — {price} ₽. Работает, пока активна подписка.",
-  "extraDevicesResult": "После покупки — {total} устройств",
+  "extraDevicesResult": "После покупки — {total, plural, one {# устройство} few {# устройства} other {# устройств}}",
   "extraDevicesBuy": "Добавить за {price} ₽",
   "extraDevicesMore": "Ещё одно",
   "extraDevicesLess": "На одно меньше",
-  "extraDevicesMaxed": "Максимум — {limit} устройств. Больше добавить нельзя.",
+  "extraDevicesMaxed": "Максимум — {limit, plural, one {# устройство} few {# устройства} other {# устройств}}. Больше добавить нельзя.",
   "inactive": "Подписка не активна",
   "pitch": "Доступ ко всем странам, отмена в один клик",
   "plans": {
@@ -64,6 +64,7 @@
   "tabs": {
     "subscription": "Подписка",
     "app": "Приложение",
+    "devices": "Устройства",
     "telegram": "Telegram",
     "label": "Разделы кабинета"
   },

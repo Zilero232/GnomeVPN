@@ -1,0 +1,22 @@
+{
+  "title": "Devices",
+  "count": "{count} of {limit, plural, one {# device} other {# devices}}",
+  "hint": "You can connect as many devices as you have slots. A device appears here when a VPN app refreshes the subscription. When every slot is taken, a new device gets no servers — remove one you no longer use here, or with /devices in the bot.",
+  "overLimitWarning": "Devices over the limit get no servers. Remove one you no longer use or buy more slots below.",
+  "overLimit": "Gets no servers",
+  "unnamed": "Device",
+  "lastSeen": "Last seen {time}",
+  "remove": "Remove",
+  "removeLabel": "Remove device {name}",
+  "removed": "Device removed",
+  "emptyTitle": "No devices yet",
+  "emptyBody": "A device shows up here the first time a VPN app refreshes the subscription from your link.",
+  "loading": "Loading devices…",
+  "unavailable": "Could not load your devices. Check your connection and try again.",
+  "retry": "Try again",
+  "confirmTitle": "Remove “{name}”?",
+  "confirmBody": "Within a few minutes the app on this device stops connecting. You can bring it back at any time: refresh the subscription in the app and it takes a free slot again.",
+  "confirmAction": "Remove",
+  "confirmCancel": "Cancel",
+  "hwidTip": "INCY without HWID sending counts as one device however many phones use it. Turn on HWID sending in INCY's subscription settings and refresh the subscription — every device will then show up here on its own."
+}

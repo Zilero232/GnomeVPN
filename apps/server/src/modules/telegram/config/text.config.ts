@@ -1,6 +1,9 @@
 export const TEXT_TOKEN = {
   platforms: '{platforms}',
   count: '{count}',
+  limit: '{limit}',
+  name: '{name}',
+  names: '{names}',
   price: '{price}',
   amount: '{amount}',
   date: '{date}',

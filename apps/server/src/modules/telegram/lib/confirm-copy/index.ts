@@ -1,1 +1,1 @@
-export { deleteCopy, rotateCopy, unlinkCopy } from './confirm-copy';
+export { confirmKeyboard, deleteCopy, removeDeviceCopy, rotateCopy, unlinkCopy } from './confirm-copy';

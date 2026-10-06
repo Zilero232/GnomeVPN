@@ -1,3 +1,4 @@
+export { DeviceSlotsJob } from './device-slots';
 export { ExpiredAccessJob } from './expired-access';
 export { NodeHealthJob } from './node-health';
 export { PendingPaymentsJob } from './pending-payments';

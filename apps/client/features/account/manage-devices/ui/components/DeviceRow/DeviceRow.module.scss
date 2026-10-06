@@ -1,0 +1,52 @@
+@use '@/shared/styles/mixins' as *;
+
+.root {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  background-color: var(--color-surface);
+  gap: 12px;
+
+  &[data-over-limit='true'] {
+    background-color: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
+  }
+}
+
+.icon {
+  @include icon-tile(34px);
+
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+
+  [data-over-limit='true'] > & {
+    background-color: color-mix(in srgb, var(--color-danger) 14%, transparent);
+    color: var(--color-danger);
+  }
+}
+
+.body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.titleRow {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.removeText {
+  @include below(sm) {
+    @include visually-hidden;
+  }
+}

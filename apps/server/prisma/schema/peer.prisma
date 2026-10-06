@@ -18,6 +18,8 @@ model Peer {
   userId String @map("user_id")
   nodeId String @map("node_id")
 
+  deviceId String? @map("device_id")
+
   kind     PeerKind
   protocol TunnelProtocol @default(hysteria2)
   name     String?
@@ -26,13 +28,17 @@ model Peer {
 
   nodeCredential String @map("node_credential")
 
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  node Node @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  node   Node    @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, kind, name, nodeId, protocol])
   @@index([userId])
   @@index([nodeId, state])
+  @@index([deviceId])
   @@map("peer")
 }

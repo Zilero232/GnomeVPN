@@ -56,6 +56,9 @@ export {
 } from './clients';
 export type { ClientEntry, ClientId, ClientImport, ClientImportStyle, ClientLink, ClientPlatform } from './clients';
 
+export { deviceIdParamSchema, deviceListSchema, deviceSchema } from './devices';
+export type { Device, DeviceIdParam, DeviceList } from './devices';
+
 export { apiErrorCodeSchema, apiErrorSchema } from './errors';
 export type { ApiError, ApiErrorCode } from './errors';
 

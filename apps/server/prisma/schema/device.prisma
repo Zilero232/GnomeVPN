@@ -1,0 +1,21 @@
+model Device {
+  id     String @id @default(dbgenerated("gen_random_uuid()"))
+  userId String @map("user_id")
+
+  key       String
+  hwid      String?
+  platform  String?
+  model     String?
+  osVersion String? @map("os_version")
+  app       String?
+
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  peers Peer[]
+
+  @@unique([userId, key])
+  @@index([userId, createdAt])
+  @@map("device")
+}

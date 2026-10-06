@@ -181,3 +181,14 @@ export type NotifyInput = {
   fill?: TextFill;
   date?: Date | null;
 };
+
+export type ExtraTextInput = {
+  copy: BotText;
+  isAtMax: boolean;
+};
+
+export type RemovalInput = {
+  userId: string;
+  deviceId: string;
+  copy: BotText;
+};

@@ -11,10 +11,11 @@ src/
 ├── modules/         # one folder per domain
 │   ├── auth/        # better-auth wiring, the account (deletion) — services/
 │   ├── billing/     # YooKassa checkout and webhooks — config/ dto/ guards/ lib/ services/
+│   ├── devices/     # the device registry and the account's device limit — config/ dto/ lib/ services/
 │   ├── health/      # /health — also probes the database
 │   ├── peers/       # xray clients the subscription issues — config/ lib/ services/
 │   ├── platforms/   # the INCY download links, cached — config/ dto/ services/
-│   ├── scheduler/   # the six cron jobs — config/ jobs/ lib/
+│   ├── scheduler/   # the seven cron jobs — config/ jobs/ lib/
 │   ├── subscription/# plan status, the trial and the access guard — dto/ guards/ lib/ services/
 │   ├── subscription-link/  # the INCY feed and its token — config/ dto/ lib/ services/
 │   └── telegram/    # the bot — a second door to the same account

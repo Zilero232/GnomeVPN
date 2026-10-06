@@ -7,21 +7,22 @@ argued in [billing.md](billing.md); the peer jobs lean on
 
 ## Cron jobs
 
-`modules/scheduler/jobs` holds six jobs: node health, peer reconciliation,
-expired access, recurring charges, pending payments, period reminders.
-`reconcile-peers` runs on two schedules, so there are seven crons in all.
+`modules/scheduler/jobs` holds seven jobs: node health, peer reconciliation,
+expired access, recurring charges, pending payments, period reminders, device
+slots. `reconcile-peers` runs on two schedules, so there are eight crons in all.
 Intervals that have no `CronExpression` constant live in `SCHEDULE`
 (`config/schedule.config.ts`).
 
-| Job                           | Runs                                      | Does                                                                         |
-| ----------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
-| `node-health`                 | every minute                              | probes every available node, stamps `lastHealthyAt`, warns on CPU and memory |
-| `reconcile-peers` (`run`)     | `SCHEDULE.reconcileCron`, every 5 minutes | syncs peer rows with the panels and restores lost clients                    |
-| `reconcile-peers` (`collect`) | `SCHEDULE.collectOrphansCron`, weekly     | the same pass plus orphan collection                                         |
-| `expired-access`              | every 5 minutes                           | revokes lapsed access and restores access left disabled on a live period     |
-| `recurring-charge`            | every hour                                | charges the saved card once in the last `WINDOW.renewHours` of a period      |
-| `pending-payments`            | every 10 minutes                          | settles payments still `pending` after `PENDING.settleAfterMinutes`          |
-| `period-reminder`             | every hour                                | warns once per period before it ends                                         |
+| Job                           | Runs                                      | Does                                                                              |
+| ----------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------- |
+| `node-health`                 | every minute                              | probes every available node, stamps `lastHealthyAt`, warns on CPU and memory      |
+| `reconcile-peers` (`run`)     | `SCHEDULE.reconcileCron`, every 5 minutes | deletes revoked clients, syncs peer rows with the panels, restores lost ones      |
+| `reconcile-peers` (`collect`) | `SCHEDULE.collectOrphansCron`, weekly     | the same pass plus orphan collection and retiring idle shared `incy` peers        |
+| `expired-access`              | every 5 minutes                           | revokes lapsed access and restores access left disabled on a live period          |
+| `recurring-charge`            | every hour                                | charges the saved card once in the last `WINDOW.renewHours` of a period           |
+| `pending-payments`            | every 10 minutes                          | settles payments still `pending` after `PENDING.settleAfterMinutes`               |
+| `device-slots`                | every 10 minutes                          | revokes the keys of devices over their account's limit ([devices.md](devices.md)) |
+| `period-reminder`             | every hour                                | warns once per period before it ends                                              |
 
 `reconcile-peers` waits out `SCHEDULE.bootGraceMs` after a boot, and its passes
 never overlap: a regular run is skipped while a pass is in flight, and the weekly

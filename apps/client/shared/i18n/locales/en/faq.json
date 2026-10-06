@@ -30,7 +30,7 @@
     },
     "howManyDevices": {
       "q": "How many devices can I use?",
-      "a": "Two at once by default. There is one link per account — paste it on your phone, your laptop and your TV, but two connections run at a time. If you need more, buy extra devices in your account."
+      "a": "Two by default. There is one link per account; a device takes a slot the first time its app fetches the subscription. Remove a device you no longer use on the Devices tab of your account or with /devices in the Telegram bot, or buy more slots. In INCY, turn on HWID sending in the subscription settings so each device is counted on its own; without it every copy of INCY counts as one device."
     },
     "whichCountries": {
       "q": "Which countries do you have servers in?",
@@ -62,7 +62,7 @@
     },
     "changePhone": {
       "q": "I got a new phone — how do I move it over?",
-      "a": "Nothing to move. Install INCY on the new device and paste the same link from your account. If you are done with the old device, just delete the app there."
+      "a": "Nothing to move. Install INCY on the new device and paste the same link from your account. If you are done with the old device, remove it on the Devices tab of your account to free its slot."
     },
     "howToPay": {
       "q": "How do I pay?",

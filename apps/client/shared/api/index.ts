@@ -6,6 +6,7 @@ export { resetSession, startSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
 export { useHasSession } from './auth/use-has-session';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
+export { getDevices, removeDevice } from './devices';
 export { api, ApiError, apiErrorCode } from './http';
 export { queryClient } from './query-client';
 export { claimTrial, getSubscriptionStatus } from './subscription';

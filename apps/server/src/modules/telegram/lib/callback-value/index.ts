@@ -1,1 +1,2 @@
-export { autoRenewChoice, countFrom, isConfirmed } from './callback-value';
+export { autoRenewChoice, countFrom, deviceAnswer, isConfirmed, parseDeviceId } from './callback-value';
+export type { DeviceAnswer } from './callback-value.types';

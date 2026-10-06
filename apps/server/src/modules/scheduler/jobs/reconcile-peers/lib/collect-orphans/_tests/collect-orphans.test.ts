@@ -12,6 +12,8 @@ const STRANGER = 'wwlEUEx5LASlRRfUKoKpa14X1iaChDVV';
 
 const peer = (overrides: Partial<ReconcilePeer> = {}): ReconcilePeer => ({
   id: 'peer-1',
+  deviceId: null,
+  revokedAt: null,
   userId: OWNER,
   kind: 'config',
   name: 'incy',
