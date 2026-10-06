@@ -21,5 +21,5 @@ export type {
   ServiceJsonLdInput
 } from './json-ld';
 
-export { absoluteUrl, createPageMetadata, defaultMetadata, defaultViewport, languageAlternates, X_DEFAULT } from './site-metadata';
+export { absoluteUrl, createPageMetadata, defaultMetadata, defaultViewport, languageAlternates } from './site-metadata';
 export type { PageMetadataInput } from './site-metadata';

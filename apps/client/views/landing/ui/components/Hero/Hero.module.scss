@@ -3,6 +3,10 @@
 .root {
   position: relative;
   padding: 72px 0 40px;
+
+  @include below(md) {
+    padding: 40px 0 24px;
+  }
 }
 
 .mark {
@@ -47,10 +51,11 @@
 
   @include rise(0.6s, 0.08s, 16px);
 
-  font-size: clamp(46px, 9vw, 92px);
+  font-size: clamp(40px, 9vw, 92px);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 0.95;
+  overflow-wrap: break-word;
 }
 
 .titleAccent {
@@ -70,13 +75,13 @@
 }
 
 .lead {
+  max-width: 62ch;
   margin: 0 0 40px;
-
-  @include rise(0.6s, 0.16s, 16px);
-
   color: var(--color-text-muted);
   font-size: clamp(16px, 2vw, 19px);
   line-height: 1.6;
+
+  @include rise(0.6s, 0.16s, 16px);
 }
 
 .actions {
@@ -94,7 +99,12 @@
   flex-wrap: wrap;
   padding-top: 44px;
   border-top: 1px solid var(--color-border);
-  margin-top: 56px;
+  margin: 56px 0 0;
+
+  @include below(md) {
+    padding-top: 28px;
+    margin-top: 36px;
+  }
 
   @include rise(0.6s, 0.32s, 16px);
 
@@ -103,11 +113,12 @@
 
 .metaItem {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 6px;
 }
 
 .metaValue {
+  margin: 0;
   color: var(--color-accent);
   font-family: var(--font-mono);
   font-size: 24px;

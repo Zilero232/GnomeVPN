@@ -2,12 +2,14 @@ import type { AuthErrorInput } from './auth-error.types';
 
 import { AUTH_ERROR_KEY } from './auth-error.constants';
 
+const isKnownCode = (code: string): code is keyof typeof AUTH_ERROR_KEY => Object.hasOwn(AUTH_ERROR_KEY, code);
+
 export const authErrorKey = ({ code, fallbackKey }: AuthErrorInput): string => {
-  if (!code) {
+  if (!code || !isKnownCode(code)) {
     return fallbackKey;
   }
 
-  return AUTH_ERROR_KEY[code as keyof typeof AUTH_ERROR_KEY] ?? fallbackKey;
+  return AUTH_ERROR_KEY[code];
 };
 
 export class AuthError extends Error {

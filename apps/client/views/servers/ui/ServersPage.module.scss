@@ -6,6 +6,7 @@
 
 .head {
   @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
 }
 
 .title {
@@ -34,11 +35,14 @@
 .tableWrap {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  background-color: var(--color-surface);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .table {
   width: 100%;
+  min-width: 480px;
   border-collapse: collapse;
   font-size: 14px;
 
@@ -54,6 +58,7 @@
     color: var(--color-text-muted);
     font-size: 12px;
     font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 

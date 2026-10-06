@@ -4,15 +4,11 @@ import type { UpdateNameValues } from '@gnomevpn/schemas';
 
 import { useMutation } from '@tanstack/react-query';
 
-import { authClient } from '@/shared/api';
+import { authClient, unwrapAuth } from '@/shared/api';
 
 export const useUpdateName = () =>
   useMutation({
     mutationFn: async ({ name }: UpdateNameValues) => {
-      const { error } = await authClient.updateUser({ name });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      unwrapAuth({ result: await authClient.updateUser({ name }), fallbackKey: 'errors.nameUpdateFailed' });
     }
   });

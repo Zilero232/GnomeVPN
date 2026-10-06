@@ -2,15 +2,18 @@ import type { TunnelProtocol } from '@gnomevpn/schemas';
 
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
+import { isEmpty, isNonNullish } from 'remeda';
 
 import type { NodeTraffic } from '../../../lib';
 import type {
-  EnsurePeerInput,
+  EnsureNodeInput,
+  FeedPeer,
+  ForgetPeersInput,
+  IssueFeedPeerInput,
   NodeTrafficInput,
   OneNodeTrafficInput,
   PersistPeerInput,
-  SubscriptionNode,
-  SubscriptionPeer
+  SubscriptionNode
 } from '../subscription-link.service.types';
 
 import { describeError, xrayClientForNode } from '../../../common/lib';
@@ -32,34 +35,37 @@ export class SubscriptionPeersService {
     return hasReality(node) ? [TUNNEL_PROTOCOL.hysteria2, TUNNEL_PROTOCOL.vless] : [TUNNEL_PROTOCOL.hysteria2];
   }
 
-  async ensure({ userId, node, protocol, limitIp }: EnsurePeerInput): Promise<SubscriptionPeer | null> {
-    const existing = await this.prisma.peer.findUnique({
-      where: { userId_kind_name_nodeId_protocol: this.identity({ userId, nodeId: node.id, protocol }) },
-      select: { nodeCredential: true }
+  async ensureNode({ userId, node, limitIp }: EnsureNodeInput): Promise<FeedPeer[]> {
+    const protocols = this.protocolsFor(node);
+
+    const existing = await this.prisma.peer.findMany({
+      where: { userId, kind: 'config', name: FEED.peerName, nodeId: node.id, protocol: { in: protocols } },
+      select: { protocol: true, nodeCredential: true }
     });
 
-    if (existing) {
+    const missing = protocols.filter((protocol) => !existing.some((peer) => peer.protocol === protocol));
+
+    if (isEmpty(missing)) {
+      return existing;
+    }
+
+    const issued = (await Promise.all(missing.map((protocol) => this.issue({ userId, node, protocol, limitIp })))).filter(isNonNullish);
+
+    if (isEmpty(issued)) {
       return existing;
     }
 
     try {
-      const created = await this.peers.issueAndPersist({
-        node,
-        nodeId: node.id,
-        userId,
-        kind: 'config',
-        protocol,
-        limitIp,
-        name: FEED.peerName,
-        persist: (peer) => this.persist({ userId, nodeId: node.id, protocol, nodeCredential: peer.nodeCredential })
-      });
-
-      return { nodeCredential: created.nodeCredential };
+      await this.peers.restartCore(node);
     } catch (error) {
-      this.logger.warn(`subscription peer failed on node ${node.id} over ${protocol}: ${describeError(error)}`);
+      this.logger.warn(`node ${node.id} did not restart after issuing, its new peers wait for the next fetch: ${describeError(error)}`);
 
-      return null;
+      await this.forget({ userId, nodeId: node.id, protocols: issued.map((peer) => peer.protocol) });
+
+      return existing;
     }
+
+    return [...existing, ...issued];
   }
 
   async traffic({ userId, nodes }: NodeTrafficInput): Promise<NodeTraffic> {
@@ -70,6 +76,36 @@ export class SubscriptionPeersService {
     const perNode = await Promise.all(nodes.map((node) => this.nodeTraffic({ node, emails })));
 
     return sumTraffic(perNode);
+  }
+
+  private async issue({ userId, node, protocol, limitIp }: IssueFeedPeerInput): Promise<FeedPeer | null> {
+    try {
+      const created = await this.peers.issueAndPersist({
+        node,
+        nodeId: node.id,
+        userId,
+        kind: 'config',
+        protocol,
+        limitIp,
+        name: FEED.peerName,
+        deferRestart: true,
+        persist: (peer) => this.persist({ userId, nodeId: node.id, protocol, nodeCredential: peer.nodeCredential })
+      });
+
+      return { protocol, nodeCredential: created.nodeCredential };
+    } catch (error) {
+      this.logger.warn(`subscription peer failed on node ${node.id} over ${protocol}: ${describeError(error)}`);
+
+      return null;
+    }
+  }
+
+  private async forget({ userId, nodeId, protocols }: ForgetPeersInput): Promise<void> {
+    await this.prisma.peer
+      .deleteMany({ where: { userId, kind: 'config', name: FEED.peerName, nodeId, protocol: { in: protocols } } })
+      .catch((error: unknown) => {
+        this.logger.warn(`unrestarted peers on node ${nodeId} were not forgotten: ${describeError(error)}`);
+      });
   }
 
   private async nodeTraffic({ node, emails }: OneNodeTrafficInput): Promise<NodeTraffic> {

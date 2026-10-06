@@ -4,13 +4,27 @@
 
 .spinner {
   position: absolute;
-  left: 14px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  inset: 0;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) ease;
 }
 
 .visible {
   opacity: 1;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: inherit;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.hidden {
+  opacity: 0;
 }

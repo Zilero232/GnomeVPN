@@ -8,21 +8,6 @@
   gap: 12px;
 }
 
-.back {
-  display: inline-flex;
-  align-items: center;
-  color: var(--color-text-muted);
-  font-family: var(--font-sans);
-  font-size: 13px;
-  gap: 7px;
-  text-decoration: none;
-  transition: color 0.16s ease;
-
-  &:hover {
-    color: var(--color-text);
-  }
-}
-
 .brand {
   display: inline-flex;
   align-items: center;

@@ -30,3 +30,13 @@ describe('isPlaceholderEmail', () => {
     expect(isPlaceholderEmail(`${PLACEHOLDER_EMAIL.domain}@example.com`)).toBe(false);
   });
 });
+
+describe('isPlaceholderEmail on the bare domain', () => {
+  it('recognises the reserved domain itself, not only its subdomains', () => {
+    expect(isPlaceholderEmail(`someone@${PLACEHOLDER_EMAIL.domain}`)).toBe(true);
+  });
+
+  it('does not match a domain that merely ends in the same letters', () => {
+    expect(isPlaceholderEmail(`someone@not${PLACEHOLDER_EMAIL.domain}`)).toBe(false);
+  });
+});

@@ -26,8 +26,6 @@
   gap: 4px 12px;
   grid-template-columns: auto 1fr auto;
 
-  // The action drops under the name rather than squeezing it: at this width the
-  // two side by side wrap the platform list onto a ragged second line.
   @include below(md) {
     grid-template-columns: auto 1fr;
     row-gap: 10px;
@@ -72,11 +70,16 @@
   font-size: 13px;
   gap: 6px;
   text-decoration: none;
+  transition:
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
 
   &:hover {
     border-color: var(--color-accent);
     color: var(--color-accent);
   }
+
+  @include touch-target;
 
   @include below(md) {
     padding: 9px 10px;

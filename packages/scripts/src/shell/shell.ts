@@ -1,8 +1,18 @@
-import { quote } from 'shell-quote';
+import { posix } from 'node:path';
 
 import type { DockerExecInput, DockerShellInput, ShellArg } from './shell.types';
 
-export const arg = (value: ShellArg) => quote([String(value)]);
+import { SHELL } from './shell.constants';
+
+export const arg = (value: ShellArg) => {
+  const text = String(value);
+
+  if (SHELL.bareToken.test(text)) {
+    return text;
+  }
+
+  return `'${text.replaceAll("'", SHELL.escapedQuote)}'`;
+};
 
 export const line = (parts: ShellArg[]) => parts.map(String).join(' ');
 
@@ -18,4 +28,4 @@ export const dockerExec = ({ container, argv }: DockerExecInput) => line(['docke
 
 export const dockerShell = ({ container, script }: DockerShellInput) => line(['docker', 'exec', container, 'sh', '-lc', arg(script)]);
 
-export const dirOf = (path: string) => path.slice(0, path.lastIndexOf('/'));
+export const dirOf = (path: string) => posix.dirname(path);

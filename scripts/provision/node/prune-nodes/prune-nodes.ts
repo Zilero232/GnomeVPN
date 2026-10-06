@@ -3,22 +3,15 @@ import { prop } from 'remeda';
 import type { PruneNodesInput, PruneNodesResult } from './prune-nodes.types';
 
 import { pruneEnvKeys } from '../env-file';
-import { NODE_KEY_PREFIX, nodeKeyName, PANEL_PASSWORD_PREFIX, panelPasswordName } from '../node-credentials';
+import { PRUNED_SECRETS } from './prune-nodes.constants';
 
 export const pruneNodes = async ({ prisma, nodes, serverEnvPath }: PruneNodesInput): Promise<PruneNodesResult> => {
   const countryCodes = nodes.map(prop('countryCode'));
+  const removedKeys: string[] = [];
 
-  const removedKeys = await pruneEnvKeys({
-    filePath: serverEnvPath,
-    prefix: NODE_KEY_PREFIX,
-    keep: countryCodes.map(nodeKeyName)
-  });
-
-  const removedPasswords = await pruneEnvKeys({
-    filePath: serverEnvPath,
-    prefix: PANEL_PASSWORD_PREFIX,
-    keep: countryCodes.map(panelPasswordName)
-  });
+  for (const { prefix, name } of PRUNED_SECRETS) {
+    removedKeys.push(...(await pruneEnvKeys({ filePath: serverEnvPath, prefix, keep: countryCodes.map(name) })));
+  }
 
   const stale = await prisma.node.findMany({
     where: { host: { notIn: nodes.map(prop('host')) } },
@@ -30,7 +23,7 @@ export const pruneNodes = async ({ prisma, nodes, serverEnvPath }: PruneNodesInp
   }
 
   return {
-    removedKeys: [...removedKeys, ...removedPasswords],
+    removedKeys,
     removedNodes: stale.map((node) => `${node.country} (${node.host})`)
   };
 };

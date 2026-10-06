@@ -39,6 +39,8 @@
     outline: 2px solid var(--color-accent-dim);
     outline-offset: -2px;
   }
+
+  @include touch-target;
 }
 
 .pill {
@@ -88,4 +90,8 @@
     justify-content: flex-start;
     padding: 10px 12px;
   }
+}
+
+.panel:focus-visible {
+  outline-offset: 4px;
 }

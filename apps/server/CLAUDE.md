@@ -9,381 +9,52 @@ Guidance for the API. Extends the root [../../CLAUDE.md](../../CLAUDE.md); those
 ```text
 src/
 ├── modules/         # one folder per domain
-│   ├── auth/        # better-auth module wiring
-│   ├── billing/     # YooKassa checkout and webhooks — config/ guards/ lib/
+│   ├── auth/        # better-auth wiring, the account (deletion) — services/
+│   ├── billing/     # YooKassa checkout and webhooks — config/ dto/ guards/ lib/ services/
 │   ├── health/      # /health — also probes the database
-│   ├── nodes/       # node list with health status (auth-gated) — config/ lib/
-│   ├── peers/       # xray clients the subscription issues — config/ lib/
+│   ├── peers/       # xray clients the subscription issues — config/ lib/ services/
 │   ├── platforms/   # the INCY download links, cached — config/ dto/ services/
-│   ├── scheduler/   # cron jobs — config/ jobs/
-│   ├── sessions/    # live tunnels, one slot per device — config/ dto/
-│   ├── subscription/# plan status and the access guard — guards/
-│   └── subscription-link/  # the INCY feed and its token — config/ dto/ lib/
-├── lib/             # external integrations: auth, xray, yookassa
-├── core/            # Prisma service
-├── common/          # exceptions, filters, decorators
-└── config/          # env schema (Zod)
+│   ├── scheduler/   # the six cron jobs — config/ jobs/ lib/
+│   ├── subscription/# plan status, the trial and the access guard — dto/ guards/ lib/ services/
+│   ├── subscription-link/  # the INCY feed and its token — config/ dto/ lib/ services/
+│   └── telegram/    # the bot — a second door to the same account
+├── lib/             # external integrations: auth, email, xray, yookassa
+├── core/            # Prisma (service, base client, pg pool), logger, serializable retry
+├── common/          # exceptions, filters, decorators, shared lib (node credentials, period…)
+└── config/          # env schema (Zod), config service, CORS
 ```
 
-## Module convention
-
-A module is `x.module.ts` + `x.controller.ts` + `services/`, plus `dto/`, `guards/`, `lib/`, `config/` as needed. Controllers stay thin: validate, delegate, return. Business logic lives in `services/`.
-
-**Business logic lives in `services/<domain>.service.ts`, one service per domain of work** — never a single fat `x.service.ts` at the module root. `billing/services/` holds `checkout`, `webhook`, `auto-renew`, `card` and a shared `billing-shared` for what several of them need; a single-domain module (`nodes`, `peers`) still gets a `services/` folder with one service inside, for a predictable shape. There is **no facade**: the controller and any cross-module consumer inject the specific domain service they use, and the module `exports` only those that other modules legitimately call. Services collaborate by injecting one another (e.g. `session-connect` injects `session-access` for `releaseAll`); shared helpers used by 2+ domains go into a `*-shared` service, not duplicated.
-
-**Nothing but the class lives in a service or controller file.** Constants, lookup tables and pure functions go elsewhere, so the file reads as behaviour rather than a mix of data and logic:
-
-| What                               | Where                                                                             |
-| ---------------------------------- | --------------------------------------------------------------------------------- |
-| Constants, timeouts, lookup tables | `config/x.config.ts`, or `<name>.constants.ts` inside the folder that owns them   |
-| Pure functions                     | `lib/<name>/` — one folder per **concern**, with `index.ts` and `<name>.types.ts` |
-| Types                              | `x.types.ts` next to the file that owns them                                      |
-
-**A folder is one concern, not one function.** Each gets its own `index.ts`,
-`<name>.types.ts` and `<name>.constants.ts` where it needs them, so a reader
-opens `vless/` and finds every VLESS thing and nothing else.
-
-The unit is the concern because the alternative was tried: `lib/xray` once held
-seven folders and fifteen files for a handful of lines — `strip-cidr-mask/` was a
-single regex behind its own barrel, `generate-auth/` a single `randomBytes` call.
-Reaching either meant `lib/xray/lib/<name>/<name>.ts`, three levels of
-indirection to arrive at one statement. A helper too small to have its own types
-belongs in the `<name>.helpers.ts` of the concern that uses it.
-
-```ts
-// no — a service file holding data
-const CACHE_TTL_MS = 10 * 60_000;
-const EXTENSION_TO_PLATFORM = { exe: 'windows' };
-
-// yes
-import { CACHE_TTL_MS, EXTENSION_TO_PLATFORM } from './config';
-```
-
-Every module has an `index.ts` — its public API. **Import from the barrel across module boundaries**, never reach into another module's files:
-
-```ts
-import { SubscriptionGuard } from '../subscription'; // yes
-import { SubscriptionGuard } from '../subscription/guards/subscription.guard'; // no
-```
-
-Inside a module, relative paths are fine. The barrel exports only what other modules legitimately need — a controller or a DTO has no business being imported elsewhere.
-
-The better-auth instance lives in `lib/auth/`, not in `modules/auth/`: it is configuration for an external library, and `modules/auth/` only wires it into Nest.
-
-DTOs come from shared schemas:
-
-```ts
-export class NodeDto extends createZodDto(nodeSchema) {}
-```
-
-The schema itself belongs in [`packages/schemas`](../../packages/schemas) — the client imports the same one.
-
-## Environment
-
-`config/env.schema.ts` validates on boot and **throws** on a missing variable. That is deliberate: a server that starts without `DATABASE_URL` fails later, in a harder-to-read way.
-
-Node panel passwords are the exception. The `node` table stores the _name_ of an env var (`apiTokenEnvVar`), never the password:
-
-```ts
-const key = process.env[node.apiTokenEnvVar];
-```
-
-So credentials stay out of the database. `bun provision` writes those lines itself, into **`.env.nodes`** — a separate gitignored file holding `XRAY_KEY_<CC>` and `XRAY_PANEL_<CC>` per node. The server loads it alongside `.env`, which keeps the hand-written file hand-written and the generated secrets out of it.
-
-## Errors
-
-Throw the app exceptions from `common/exceptions` with a code from `@gnomevpn/schemas`:
-
-```ts
-throw new AppServiceUnavailableException('NODE_UNAVAILABLE', 'xray node unreachable');
-```
-
-The client matches on the code, so the message is free text but the code is a contract.
-
-## Billing
-
-Prices live in `PLANS` ([`packages/schemas`](../../packages/schemas)), not in the environment: the server charges from that list and the landing page renders from it, so an advertised price cannot drift from a billed one.
-
-Two flags decide what auto-renewal does, and they are not the same thing:
-
-- **`YOOKASSA_RECURRING`** — whether the shop _can_ charge recurrently at all. YooKassa enables this per shop by hand, on request to support; there is no dashboard toggle. Until they do, `save_payment_method` and `POST /v3/payment_methods` both answer `forbidden`, so checkout fails outright. It defaults to `false`.
-- **`subscription.cancelAtPeriodEnd`** — whether _this user_ wants renewal. Theirs to flip.
-
-Renewal also needs a card on file (`savedCardId`). Without one the job has nothing to charge, so `resumeAutoRenew` refuses rather than promising a renewal that never happens — the client offers `bindCard` instead.
-
-Webhooks are the only thing that activates a subscription; the browser returning to `YOOKASSA_RETURN_URL` proves nothing. `handleWebhook` never trusts the request body either — it re-reads the payment or payment method from the API, because a webhook is just JSON somebody posted. It answers `200` even when it does nothing: any other status makes YooKassa retry for a day.
-
-**Re-enabling access happens outside the claiming transaction, so it must be recoverable.** `settlePayment` claims the payment row and grants the subscription atomically, then calls `setEnabledAll` — a separate write that can fail, or never run at all if the process dies right after the commit. That used to leave a paying user with every peer `disabled` and nothing in the system able to turn them back on: `expired-access` only ever revoked. The sweep now runs a third pass over `disabled` config peers whose owner has a live period (`activeSince`) and re-enables them, so the post-commit call is an optimisation and the job is the guarantee. Do not make `setEnabledAll` the only path back.
-
-## Three modules, one xray client
-
-`peers` owns everything that talks to the node's panel — creating a client,
-releasing it, building the tunnel config. `sessions` and `subscription-link` sit on top and
-never touch `XrayClient` directly, which is why the same "create → persist →
-roll back on failure" dance is written once instead of twice.
-
-`XrayClient` itself is a **facade over four concerns**, each its own folder:
-
-```text
-lib/xray/
-├── panel-client/   # the 3x-ui HTTP API, and nothing above it
-├── inbounds/       # find/create an inbound, shape its payload — used by both protocols
-├── hysteria/       # Hysteria2 clients: create, delete, enable
-├── vless/          # VLESS + Reality clients, in their own inbound
-└── xray.ts         # the facade the rest of the server calls
-```
-
-The name is historical and misleads: `XrayClient` talks to the **3x-ui panel**,
-not to Xray-core. The panel runs the core; Hysteria2 is an inbound inside it,
-which is why a fix released for the standalone `apernet/hysteria` server does not
-reach these nodes.
-
-It was one 300-line class holding every protocol, and that is how a restart bug
-hid in it: each inbound needs the core restarted after its own kind of change,
-and with the paths interleaved one was easy to miss. Splitting by protocol makes
-each rule visible where it applies.
-
-Both protocols are ordinary panel clients, so one `deleteClient` removes either.
-`peerClientNames` still derives the pre-protocol name alongside the current one,
-so a peer written before the protocol became part of the key can still be found
-on its node.
-
-**Every write path parses settings strictly.** `readSettings` returns `null` on
-malformed JSON and the caller refuses to rewrite; `parseJson` returns `{}` and is
-for reads only. Mixing them up is what once erased a node's clients: a tolerant
-parse produced an empty settings object, which was then written back over the
-real one. `ensureInbound` and `write` both use the strict parser now.
-
-## The subscription feed
-
-`subscription-link/` is how the VPN actually reaches a user. Three routes:
-
-| Route                            | Auth     | Purpose                                             |
-| -------------------------------- | -------- | --------------------------------------------------- |
-| `GET /subscription-link`         | session  | the user's URL plus its `incy://crypt1/…` deep link |
-| `POST /subscription-link/rotate` | session  | mint a new token; the old URL dies immediately      |
-| `GET /sub/:token`                | **none** | what the INCY app fetches                           |
-
-**The token is the credential.** INCY cannot log in, so the URL is all the
-authentication there is: 32 random bytes, `base64url`, one row per user. That is
-why rotation exists, and why the route sits on `/sub` rather than
-`/subscription` — `/subscription/status` already lives there, and a token whose
-value happened to be `status` would have shadowed it.
-
-`SubscriptionFeedService.build` ensures one `kind: 'config'` peer named `incy`
-per **node and protocol**, reusing `PeersService.issueAndPersist`, then renders
-each as a `hy2://` or `vless://` URI. **A node that fails to issue is logged and
-skipped** — one unreachable node must not empty the user's whole server list.
-
-`protocolsFor` decides what a node advertises. Hysteria2 always; VLESS only when
-the node carries `realityPublicKey` and `realityShortId`, which provisioning
-writes. A node provisioned before Reality existed keeps serving Hysteria2 alone
-rather than advertising a server the client can never reach.
-
-**A Reality client is a UUID, not a password**, and needs `flow` alongside the
-rest of the mandatory field set — `PanelClient.addVlessClient` writes all of it
-for the same reason `addClient` does.
-
-**`ensureVlessInbound` refuses to rewrite an inbound whose clients it cannot
-read**, exactly like `updateInbound`. A re-provision that overwrote the client
-list from the template would wipe every subscriber on that node.
-
-`SubscriptionPeersService` owns the peer rows; `SubscriptionFeedService` owns
-the response. Splitting them keeps the transaction and the retry out of the
-path that only renders URIs.
-
-`lib/` under the module is split the same way, one folder per concern:
-
-```text
-lib/
-├── client-platform/   # what the User-Agent says the caller is
-├── incy-headers/      # the response headers, with header-value/ and userinfo/
-├── incy-uri/          # the server list, with hysteria2/ and vless/ beside it
-├── server-name/       # the flag-and-country label both protocols share
-└── subscription-token/
-```
-
-The two URI builders were one file once, which hid that they share nothing but
-the server label — and that label is what keeps `🇳🇱 Netherlands` apart from
-`🇳🇱 Netherlands · TCP` in the app's list.
-
-**A self-signed node is pinned, not trusted blindly.** `hysteria2Uri` emits
-`pinSHA256` from the node's `certFingerprint`; `insecure=1` survives only as the
-fallback for a node provisioned before the fingerprint was captured. A current
-xray core refuses to start at all on `allowInsecure`, so a node without a
-fingerprint is a node nobody can reach over Hysteria2 — reprovision it.
-
-`clientEnabledByEmail` must list **every** protocol the subscription issues.
-It once listed Hysteria2 and WireGuard, and when WireGuard was removed a VLESS
-client looked to `reconcile-peers` like a peer that had vanished from its node.
-
-## Platform downloads
-
-`GET /platforms` is the INCY download list: anonymous, because the landing page
-renders it before anyone signs up, and cached for a day through
-`CacheInterceptor` because it is a constant rather than a query.
-
-The URLs point at `releases/latest`, so they follow INCY's current release
-without a redeploy. Only a renamed artifact forces a change here.
-
-**Every non-ASCII header value must be `base64:<…>`.** HTTP headers cannot carry
-UTF-8: a raw Cyrillic `profile-title` or `announce` does not merely render wrong,
-it breaks the response. `incyHeaderValue` decides per value.
-
-`subscription-userinfo` carries the expiry as a Unix timestamp in seconds. When
-there is no period to report it must be the literal `0`, which tells the app to
-hide the traffic block entirely rather than render zeros.
-
-`upload`/`download` are the bytes the nodes have counted for this user's peers,
-summed over every node by `SubscriptionPeersService.traffic` from the
-`clientStats` the panel already returns with `/panel/api/inbounds/list`. `total`
-stays `0` — it is the traffic **quota**, and the subscription has none. A node
-that fails to answer contributes zero rather than failing the response, the same
-rule the server list follows.
-
-Traffic is read **after** the peers are issued, not alongside them: a peer the
-panel has just been asked to create has no `clientStats` row yet.
-
-`announce` is a banner the app shows on every fetch, and nobody writes it by
-hand: `lib/announcement` derives it from what the request already knows. It
-returns **one** message, because the header is one — the order is the priority.
-A lapsed or missing subscription outranks everything, then an expiry inside
-`EXPIRY_WARNING_DAYS`, then a node that has gone quiet, then a node added inside
-`FRESH_NODE_DAYS`. Nothing to say returns `null` and the header is omitted rather
-than sent blank.
-
-**A down node is found through `lastHealthyAt`, not `isAvailable`.** Nothing
-clears `isAvailable` — provisioning is the only thing that ever writes it — so a
-dead node keeps serving in the list. `node-health` stamps `lastHealthyAt` every
-minute, and a stamp older than `NODE_STALE_MINUTES` is what "down" means here. A
-node that has never reported counts as down rather than as new.
-
-The text is Russian, and only Russian: the subscription request carries no
-`Accept-Language`, and INCY's User-Agent names the platform, not the locale.
-Plurals and country lists go through `Intl.PluralRules` and `Intl.ListFormat`
-rather than hand-rolled suffix rules.
-
-The format is documented at https://incy.gitbook.io/docs/docs-en — the pages
-that matter are `subscription-format` (headers, body) and `share-links`
-(the exact `hy2://` query parameters).
-
-## Device limits
-
-A subscription covers `DEFAULT_DEVICE_LIMIT` (2) simultaneous connections, plus
-whatever `extraDevices` the user has bought. `resolveLimits` turns the two into a
-`deviceLimit`, and `activeDeviceLimit` in `common/lib/period` is the one place
-that reads it off a subscription — it returns the default whenever the period has
-lapsed, so extras stop counting the moment they stop being paid for.
-
-**The limit is enforced on the node, as `limitIp` on the panel client.** It
-travels from `SubscriptionFeedService` through `PeersService.issue` into
-`addClient`/`addVlessClient`; `CLIENT_DEFAULTS` no longer carries it, because it
-is the one client field that differs per user. Since 3x-ui v3.3.1 the panel
-counts IPs through Xray's online-stats API rather than by parsing `access.log`,
-so nothing extra has to be installed on a node — no Fail2ban, no access log. Over
-the limit, `disconnectClientTemporarily` drops the client from the running core
-and re-adds it 100 ms later; it refuses the surplus connection rather than
-banning anybody.
-
-**The limit is per node, not per account.** Each panel only sees the IPs
-connected to itself, so a subscription can hold `deviceLimit` connections on
-every node at once. That is a ceiling on sharing, not an exact seat count.
-
-**A restored peer must get its owner's limit back.** `restoreMissing` recreates a
-client the node has lost, and it reads the limit from the peer's own subscription
-— `RECONCILE_PEER_SELECT` pulls `user.subscription` for exactly this. Reissuing
-with the default would silently revoke devices the user paid for.
-
-**Liveness comes from the Xray core.** `onlineEmails()` reads
-`/panel/api/clients/onlines` — the sessions the core itself proxies. A node that
-does not answer returns `null` rather than an empty set, which is the difference
-between _unknown_ and _idle_: `collectOrphans` only reaps a client the node
-positively reports as offline, never one it has no evidence about.
-
-**The client email is scoped by protocol, and it has to be.** The database is
-unique on `(userId, kind, name, nodeId, protocol)` — five fields — while the
-email was built from four. One user issuing two protocols under the same name on
-the same node therefore produced two rows and one email, and
-`clientEnabledByEmail` merges every protocol into a single map keyed on it: one
-client overwrote the other, and `syncEnabled` then disabled a live config against
-the wrong client's state.
-
-**Releasing a peer deletes the row first and the panel client afterwards.**
-Deleting a client is an HTTP call to the node, so waiting for it means a slow or
-unreachable panel holds up the response. `releaseDetached` removes the rows, then
-fires the panel calls detached; a leaked client is collected by `collectOrphans`
-on the next sweep anyway, while a stuck release would be visible immediately.
-
-## Cron jobs
-
-`modules/scheduler` runs five: node health, peer reconciliation, expired access, recurring charges, period reminders.
-
-`recurring-charge` makes **one attempt per period**. A declined card is canceled synchronously, and retrying with the same idempotence key only replays that cancellation from YooKassa — so the old hourly retry re-announced the same failure every hour until the key expired. An auto-charge row created inside the renewal window, pending or canceled, now means the period was already tried; the reader renews by hand. A thrown error is logged, not announced: it is not proof the card was declined.
-
-**Only a card YooKassa saved is a card.** Every settled payment carries a `payment_method.id`, saved or not — an SBP payment, a checkout with recurring off, a buyer who unticked "remember card". `settlePayment` used to store any of them as `savedCardId`, and the charge then failed hourly with `This payment_method_id doesn't exist`. `getPayment` now returns the id only when `payment_method.saved` is true. For rows written before that, a failed charge asks `isPaymentMethodUsable`; a definite "no" unbinds the card and tells the reader once, while an unknown answer (network, 5xx) leaves it alone.
-
-`period-reminder` warns before the period ends, once per period — `subscription.reminderSentFor` holds the period end it was sent for, so a renewal that moves the end re-arms it. Three messages: a trial gets `trialEndingSoon` in its last `trialRemindHours`, a period that will not auto-charge gets `endingSoon` within `remindHours`, and one that will gets `renewSoon` with the amount and card — only before the charge window opens, because after it `recurring-charge` speaks for itself.
-
-`expired-access` announces only the peers it actually turned off (`state: 'active'`). Without that filter every lapsed account was "disabled" again on each five-minute sweep and told its subscription had ended every time.
-
-`node-health` probes every available node each minute. `health()` returns the inbound's state together with the panel's own `cpu`, memory ratio and TCP count, so a node crossing `NODE_CPU_ALERT_PERCENT` or `NODE_MEMORY_ALERT_RATIO` is logged as a warning before it starts dropping tunnels.
-
-`expired-access` sweeps in both directions — it revokes sessions and subscription peers whose subscription lapsed (`lapsedBefore`), and restores peers left `disabled` while the subscription is live (`activeSince`). The two predicates are complements and are tested as such; a gap between them either strands a paying user or keeps serving an expired one. `kind: 'config'` peers get `CONFIG_GRACE_HOURS` before revocation, sessions do not.
-
-Use a raw cron string when the interval has no `CronExpression` constant. Inventing one that doesn't exist crashes the server at boot, and only at boot — nothing catches it earlier.
-
-## Provisioning nodes
-
-`bun provision` reads `nodes.json` from the repo root (gitignored — it holds root SSH passwords; `nodes.example.json` next to it is the committed template) and sets each host up over SSH: install Docker, ship the 3x-ui compose stack, open 443/udp, configure the panel, generate the TLS cert, register the node.
-
-The script is staged: `prepareHost` (docker, firewall, port hopping, compose) → `startPanel` (configure, wait for the api) → `installInbounds` (cert, Hysteria2, Reality) → `registerNode` (env secrets, database row). Remote commands are composed through `@gnomevpn/scripts/shell` rather than written as strings — `arg()` quotes anything untrusted, and `quiet()`/`silent()` are distinct on purpose: `quiet` hides stderr but keeps stdout, which is what reading a remote key needs.
-
-The node runs a **Hysteria2 inbound** (`protocol: hysteria`, `version: 2`) built in `scripts/provision/hysteria-inbound`, served by the 3x-ui panel — no separate hysteria process. It listens on **443/UDP** (QUIC), so `openTunnelPort` opens udp, not tcp. `ensureCert` generates a self-signed EC cert inside the container (`/etc/gnomevpn/{cert,key}.pem`); clients accept it with `insecure: true`.
-
-Each client has its own `auth` password, generated in `XrayClient.createClient` and stored as the peer's tunnel credential (in the `xrayUserId` column, reused as-is). `ensureInbound` **updates** an existing inbound rather than replacing it, and `updateInbound` preserves the current client list so a re-provision does not strand live sessions.
-
-**Adding a client goes through `POST /panel/api/clients/add`, never a rewrite of
-the inbound.** The old path read the whole client array, appended to it and wrote
-it back, which races with itself — two connects at once and the first client is
-lost. The panel's endpoint takes one client and owns that read-modify-write
-itself.
-
-The `auth` is still generated here rather than left to the panel: it mints one
-when the field is omitted, but it does not return it, and the credential has to
-be known to be handed to the device.
-
-**The explicit `restartCore()` afterwards is load-bearing.** The panel only calls
-`SetToNeedRestart()`, which sets a flag — nothing acts on it on its own, and
-`CheckXrayRunningJob` restarts on a crash, not on that flag. `updateInbound`
-behaves identically, which is why the old path called `restartCore()` too. Drop
-it and the client sits in the database while the running core has never heard of
-it, so the very first connection fails auth with a 404.
-
-The masquerade target is `MASQUERADE_HOST` in `scripts/provision/hysteria-inbound` — the SNI the tunnel disguises itself as, and the CN of the self-signed cert. Unlike REALITY it is not a real reverse-proxy donor, so it does not need to answer anything; it only has to look like a plausible HTTPS host.
-
-**Verify a node end-to-end, never by "the panel returned 200".** A Hysteria2 client written without its full field set is stored by the panel but dropped from the running core (`clients: null`), and every connection then fails auth with a 404. The only trustworthy check is to run a real hysteria client against the node and confirm a request returns the node's own IP — ideally from the target network, since the whole reason for Hysteria2 is a TSPU that treats UDP/QUIC differently from TCP.
-
-## Prisma
-
-Schema is split across `prisma/schema/`. The generated client lands in `generated/` and is gitignored, so `prisma generate` must run before typecheck — CI does this explicitly.
-
-**There is no migration history yet** (development used `db push`). Deployment needs one — see [DEPLOY.md](../../DEPLOY.md).
-
-Both Prisma clients (`PrismaService` for the API, `basePrisma` for better-auth)
-build their pool through `core/pg-pool.ts` — one place, with a `pool.on('error')`
-listener (pg _requires_ one, or a dropped idle connection crashes the process)
-and `maxLifetimeSeconds: 300`. A pooled connection left open for hours eventually
-gets reset by the network in between, and the next query on it throws
-`Connection terminated unexpectedly` — which surfaced from the scheduler jobs
-that reuse connections every minute. Capping the lifetime recycles connections
-before they age into that window; verified with `pg_backend_pid()` changing after
-the lifetime elapses. Idle-drop was ruled out first — a held connection survived
-60s idle through the Docker Desktop port-proxy, so the cause was age, not idleness.
+## Where to read more
+
+| Topic                                                                | Doc                                                                                    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Module shape, services, barrels, DTOs, environment, errors, timeouts | [docs/guides/server/nestjs.md](../../docs/guides/server/nestjs.md)                     |
+| Prisma, the pg pool, strict parsing on write, revocation and restore | [docs/guides/server/data.md](../../docs/guides/server/data.md)                         |
+| The subscription feed: routes, token, headers, URIs, announce        | [docs/architecture/subscription-feed.md](../../docs/architecture/subscription-feed.md) |
+| `XrayClient`, the 3x-ui panel, device limits, liveness, releasing    | [docs/architecture/nodes-and-peers.md](../../docs/architecture/nodes-and-peers.md)     |
+| Billing, renewal, pending payments, the trial, deleting an account   | [docs/architecture/billing.md](../../docs/architecture/billing.md)                     |
+| The cron jobs                                                        | [docs/architecture/scheduler.md](../../docs/architecture/scheduler.md)                 |
+| The Telegram bot                                                     | [docs/architecture/telegram-bot.md](../../docs/architecture/telegram-bot.md)           |
+| Provisioning nodes                                                   | [docs/architecture/provisioning.md](../../docs/architecture/provisioning.md)           |
+| Logging and redaction                                                | [docs/architecture/logging.md](../../docs/architecture/logging.md)                     |
+
+## Conventions that bite
+
+- **One service per domain of work** in `services/<domain>.service.ts`, never a fat `x.service.ts`; no facade — a consumer injects the specific service it uses. Controllers validate, delegate, return.
+- **Nothing but the class in a service or controller file.** Constants go to `config/`, pure functions to `lib/<concern>/`, types to `x.types.ts`.
+- **Import another module through its barrel**, never into its files. The one deliberate exception is the Telegram notify import from billing and the scheduler — see [telegram-bot.md](../../docs/architecture/telegram-bot.md).
+- **DTOs wrap a schema from `@gnomevpn/schemas`** (`createZodDto(platformSchema)`), so the client validates against the same one.
+- **Errors** are the app exceptions from `common/exceptions` with a code from `@gnomevpn/schemas`; the code is a contract, the message is free text.
+- **`config/env.schema.ts` throws on boot** on a missing variable. Node panel API tokens are the exception: the `node` table stores the env var's _name_ (`apiTokenEnvVar`), and the values live in `.env.nodes`, written by `bun run provision:nodes`.
+- **Every outbound `fetch` carries `AbortSignal.timeout(MS)`.**
+- **`XrayClient` talks to the 3x-ui panel, not to Xray-core**: a client change needs an explicit `restartCore()`, batched once per pass.
+- **A revocation needs a restore in the same sweep**, and every write path parses settings strictly.
+- **Use a raw cron string when the interval has no `CronExpression` constant** — an invented one crashes the server at boot.
 
 ## Verification
 
 ```bash
-bunx tsc --noEmit
-bun run dev            # env validation only fires at boot
+bun --filter @gnomevpn/server typecheck
+bun run dev:server     # env validation only fires at boot
 curl localhost:4000/health
 ```

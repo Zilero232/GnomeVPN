@@ -3,9 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
-import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import type { SignInValues } from '../model/hooks';
@@ -20,6 +19,7 @@ const DEFAULT_VALUES: SignInValues = { email: '', password: '' };
 export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const toastError = useToastError();
   const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useSignIn();
 
@@ -34,12 +34,12 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
 
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
-      onError: (error: Error) => toast.error(t(error.message))
+      onError: toastError
     });
   });
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <FormField error={fieldError(errors.email)} htmlFor='signin-email' label={t('fields.email')}>
         <Input autoComplete='email' id='signin-email' type='email' {...register('email')} />
       </FormField>

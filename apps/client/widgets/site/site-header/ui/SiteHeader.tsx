@@ -7,14 +7,16 @@ import { useEffect, useRef, useState } from 'react';
 import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { ROUTES, SITE_NAV } from '@/shared/constants';
 import { Link, usePathname } from '@/shared/i18n/navigation';
-import { BrandMark, Button } from '@/ui-kit';
+import { BrandMark, buttonVariants } from '@/ui-kit';
 
 import { SiteNavMenu } from './components';
+import { CONTENT_ID } from './SiteHeader.constants';
 
 import s from './SiteHeader.module.scss';
 
 export const SiteHeader = () => {
   const t = useTranslations('nav');
+  const tCommon = useTranslations('common');
   const pathname = usePathname();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -37,11 +39,15 @@ export const SiteHeader = () => {
 
   return (
     <>
+      <a className={s.skip} href={`#${CONTENT_ID}`}>
+        {tCommon('skipToContent')}
+      </a>
+
       <div aria-hidden ref={sentinelRef} className={s.sentinel} />
 
       <header className={clsx(s.root, isScrolled && s.scrolled)}>
         <div className={s.inner}>
-          <Link className={s.brand} href={ROUTES.landing}>
+          <Link aria-label={t('home')} className={s.brand} href={ROUTES.landing}>
             <BrandMark labelClassName={s.brandLabel} size='lg' />
           </Link>
 
@@ -56,8 +62,8 @@ export const SiteHeader = () => {
           <div className={s.actions}>
             <LocaleSwitcher />
 
-            <Link className={s.accountLink} href={ROUTES.account}>
-              <Button>{t('account')}</Button>
+            <Link className={buttonVariants({ class: s.accountLink })} href={ROUTES.account}>
+              {t('account')}
             </Link>
 
             <SiteNavMenu />

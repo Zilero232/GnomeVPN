@@ -5,6 +5,7 @@ export type DueSubscription = {
   savedCardId: string | null;
   plan: PlanId;
   currentPeriodEnd: Date | null;
+  trialStartedAt: Date | null;
 };
 
 export type ChargeAttemptInput = {

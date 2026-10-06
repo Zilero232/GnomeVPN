@@ -12,8 +12,13 @@
   color: var(--color-text);
   cursor: pointer;
   transition:
-    border-color 0.16s ease,
-    color 0.16s ease;
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+
+  @media (pointer: coarse) {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
 
   &:hover {
     border-color: var(--color-border-bright);
@@ -48,15 +53,8 @@
   text-decoration: none;
 
   &[aria-current='page'] {
+    border-color: rgb(230 240 236 / 8%);
+    background-color: rgb(230 240 236 / 4%);
     color: var(--color-accent);
-  }
-}
-
-.account {
-  display: block;
-  text-decoration: none;
-
-  button {
-    width: 100%;
   }
 }

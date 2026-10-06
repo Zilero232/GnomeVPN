@@ -4,4 +4,4 @@ import type { SpinnerProps } from './Spinner.types';
 
 import s from './Spinner.module.scss';
 
-export const Spinner = ({ className }: SpinnerProps) => <span aria-hidden className={clsx(s.root, className)} />;
+export const Spinner = ({ className }: SpinnerProps) => <span aria-hidden data-spinner className={clsx(s.root, className)} />;

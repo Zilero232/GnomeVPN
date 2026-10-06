@@ -88,7 +88,7 @@ export class TelegramBillingService {
           fill: { count: String(status.limits.deviceLimit), price: String(EXTRA_DEVICE_PRICE_RUB) }
         });
 
-        return ctx.reply([intro, '', text.devicesChoose].join('\n'), { reply_markup: keyboard });
+        return ctx.reply([intro, '', text.devicesChoose].join(NEW_LINE), { reply_markup: keyboard });
       }
     });
   }
@@ -98,7 +98,7 @@ export class TelegramBillingService {
       ctx,
       prefix: CALLBACK_PREFIX.devices,
       act: async ({ chat, value }) => {
-        const quantity = countFrom(value, MAX_EXTRA_DEVICES);
+        const quantity = countFrom({ raw: value, max: MAX_EXTRA_DEVICES });
         const text = BOT_TEXT[chat.locale];
 
         if (isNullish(quantity)) {
@@ -108,7 +108,7 @@ export class TelegramBillingService {
         try {
           const { confirmationUrl } = await this.checkout.buyExtraDevices({ userId: chat.userId, quantity });
 
-          await ctx.reply([text.devicesIntro, '', confirmationUrl].join('\n'));
+          await ctx.reply([text.devicesIntro, '', confirmationUrl].join(NEW_LINE));
         } catch (error) {
           this.logger.warn(`telegram extra devices failed: ${describeError(error)}`);
 

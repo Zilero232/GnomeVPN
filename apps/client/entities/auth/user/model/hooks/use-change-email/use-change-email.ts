@@ -4,16 +4,12 @@ import type { ChangeEmailValues } from '@gnomevpn/schemas';
 
 import { useMutation } from '@tanstack/react-query';
 
-import { authClient } from '@/shared/api';
+import { authClient, unwrapAuth } from '@/shared/api';
 import { ROUTES } from '@/shared/constants';
 
 export const useChangeEmail = () =>
   useMutation({
     mutationFn: async ({ newEmail }: ChangeEmailValues) => {
-      const { error } = await authClient.changeEmail({ newEmail, callbackURL: ROUTES.account });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      unwrapAuth({ result: await authClient.changeEmail({ newEmail, callbackURL: ROUTES.account }), fallbackKey: 'errors.emailChangeFailed' });
     }
   });

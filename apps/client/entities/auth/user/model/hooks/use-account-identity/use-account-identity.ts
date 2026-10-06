@@ -1,8 +1,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { isNullish } from 'remeda';
 
-import { authClient } from '@/shared/api';
+import { authClient, unwrapAuth } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 import { useHydrated } from '@/shared/lib';
 
@@ -18,7 +19,7 @@ export const useAccountIdentity = (): AccountIdentity => {
 
   const { data: accounts } = useQuery({
     queryKey: QUERY_KEYS.authAccounts(),
-    queryFn: async () => (await authClient.listAccounts()).data ?? []
+    queryFn: async () => unwrapAuth({ result: await authClient.listAccounts(), fallbackKey: 'errors.sessionExpired' })
   });
 
   if (!isHydrated) {
@@ -28,7 +29,7 @@ export const useAccountIdentity = (): AccountIdentity => {
   return {
     email,
     hasEmail: hasRealEmail,
-    hasPassword: (accounts ?? []).some((account) => account.providerId === CREDENTIAL_PROVIDER),
+    hasPassword: isNullish(accounts) || accounts.some((account) => account.providerId === CREDENTIAL_PROVIDER),
     avatarSeed: avatarSeed(user?.id ?? '')
   };
 };

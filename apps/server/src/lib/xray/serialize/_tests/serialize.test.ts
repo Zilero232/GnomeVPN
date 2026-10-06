@@ -166,6 +166,23 @@ describe('serializeByKey', () => {
     await expect(followUp).resolves.toBe('next');
   });
 
+  it('forgets a key once its last task has settled', async () => {
+    vi.resetModules();
+
+    const { pendingChains, serializeByKey } = await import('../serialize');
+
+    const first = serializeByKey({ key: 'node-a', task: () => Promise.resolve('a') });
+    const second = serializeByKey({ key: 'node-b', task: () => Promise.reject(new Error('down')) });
+
+    expect(pendingChains()).toBe(2);
+
+    await first;
+    await expect(second).rejects.toThrow('down');
+    await flush();
+
+    expect(pendingChains()).toBe(0);
+  });
+
   it('starts a fresh chain once every task on a key has settled', async () => {
     const serializeByKey = await freshSerializeByKey();
     const first = deferred<string>();

@@ -2,9 +2,10 @@
 
 import { CreditCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { Button, Text } from '@/ui-kit';
+import { Button, ConfirmDialog, SubmitButton, Text } from '@/ui-kit';
 
 import type { AutoRenewControlProps } from './AutoRenewControl.types';
 
@@ -19,11 +20,17 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
   const cancel = useCancelAutoRenew();
   const resume = useResumeAutoRenew();
 
+  const [isUnbindOpen, setIsUnbindOpen] = useState(false);
+
   const { isRecurringAvailable, hasPaymentMethod, cancelAtPeriodEnd, savedCardTitle } = subscription;
+
+  const onUnbind = () => {
+    unbind.mutate(undefined, { onSettled: () => setIsUnbindOpen(false) });
+  };
 
   const card = (
     <div className={s.card}>
-      <span className={s.cardIcon}>
+      <span aria-hidden className={s.cardIcon}>
         <CreditCard size={15} />
       </span>
 
@@ -37,9 +44,20 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
         </Text>
       </div>
 
-      <Button className={s.unbind} disabled={unbind.isPending} variant='ghost' onClick={() => unbind.mutate()}>
+      <Button aria-haspopup='dialog' className={s.unbind} disabled={unbind.isPending} variant='ghost' onClick={() => setIsUnbindOpen(true)}>
         {t('unbindCard')}
       </Button>
+
+      <ConfirmDialog
+        cancelLabel={t('unbindConfirmCancel')}
+        confirmLabel={t('unbindConfirmAction')}
+        description={t('unbindConfirmBody')}
+        isOpen={isUnbindOpen}
+        isPending={unbind.isPending}
+        title={t('unbindConfirmTitle')}
+        onConfirm={onUnbind}
+        onOpenChange={setIsUnbindOpen}
+      />
     </div>
   );
 
@@ -51,27 +69,27 @@ export const AutoRenewControl = ({ subscription }: AutoRenewControlProps) => {
           {t('noPaymentMethod')}
         </Text>
 
-        <Button disabled={bind.isPending} variant='ghost' onClick={() => bind.mutate()}>
+        <SubmitButton isPending={bind.isPending} size='md' type='button' variant='ghost' onClick={() => bind.mutate()}>
           {t('bindCard')}
-        </Button>
+        </SubmitButton>
       </div>
     ))
     .with({ cancelAtPeriodEnd: true }, () => (
       <div className={s.root}>
         {card}
 
-        <Button disabled={resume.isPending} variant='ghost' onClick={() => resume.mutate()}>
+        <SubmitButton isPending={resume.isPending} size='md' type='button' variant='ghost' onClick={() => resume.mutate()}>
           {t('resumeAutoRenew')}
-        </Button>
+        </SubmitButton>
       </div>
     ))
     .otherwise(() => (
       <div className={s.root}>
         {card}
 
-        <Button disabled={cancel.isPending} variant='ghost' onClick={() => cancel.mutate()}>
+        <SubmitButton isPending={cancel.isPending} size='md' type='button' variant='ghost' onClick={() => cancel.mutate()}>
           {t('cancelAutoRenew')}
-        </Button>
+        </SubmitButton>
       </div>
     ));
 };

@@ -71,19 +71,22 @@ const pushToProduction = async () => {
 
 const main = async () => {
   const nodes = await loadNodesConfig(NODES_CONFIG_PATH);
-  const results = await provisionAll(nodes);
-  const hasFailed = results.map(prop('status')).includes('failed');
 
-  log.info(`\nsummary:\n${formatSummary(results)}`);
+  try {
+    const results = await provisionAll(nodes);
+    const hasFailed = results.map(prop('status')).includes('failed');
 
-  if (!hasFailed) {
-    await pruneStale(nodes);
-    await pushToProduction();
+    log.info(`\nsummary:\n${formatSummary(results)}`);
+
+    if (!hasFailed) {
+      await pruneStale(nodes);
+      await pushToProduction();
+    }
+
+    process.exitCode = hasFailed ? 1 : 0;
+  } finally {
+    await basePrisma.$disconnect();
   }
-
-  await basePrisma.$disconnect();
-
-  process.exitCode = hasFailed ? 1 : 0;
 };
 
 await main();

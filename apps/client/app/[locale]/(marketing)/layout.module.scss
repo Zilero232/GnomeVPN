@@ -2,8 +2,13 @@
   display: flex;
   min-height: 100dvh;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 .content {
   flex: 1;
+
+  &:focus {
+    outline: none;
+  }
 }

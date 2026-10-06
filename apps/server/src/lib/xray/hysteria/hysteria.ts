@@ -1,5 +1,5 @@
-import type { Inbounds } from '../inbounds';
 import type { PanelClient } from '../panel-client';
+import type { ProtocolClientsDeps } from '../protocol-clients';
 import type { CreateClientInput, CreateClientResult, HysteriaClient, SetClientsEnabledInput } from './hysteria.types';
 
 import { ProtocolClients } from '../protocol-clients';
@@ -7,12 +7,13 @@ import { serializeByKey } from '../serialize';
 
 export class HysteriaClients {
   private readonly clients: ProtocolClients<HysteriaClient>;
+  private readonly panel: PanelClient;
+  private readonly nodeKey: string;
 
-  constructor(
-    private readonly panel: PanelClient,
-    inbounds: Inbounds,
-    private readonly nodeKey: string
-  ) {
+  constructor({ panel, inbounds, nodeKey }: ProtocolClientsDeps) {
+    this.panel = panel;
+    this.nodeKey = nodeKey;
+
     this.clients = new ProtocolClients<HysteriaClient>({
       panel,
       inbounds,

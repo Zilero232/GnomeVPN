@@ -1,5 +1,3 @@
-'use client';
-
 import { CLIENT_REGISTRY } from '@gnomevpn/schemas';
 import { useTranslations } from 'next-intl';
 

@@ -1,16 +1,13 @@
 import pRetry from 'p-retry';
 
 import { isPrismaRequestError } from '../prisma';
+import { SERIALIZABLE_RETRY } from './serializable-retry.constants';
 
-const SERIALIZATION_FAILURE = 'P2034';
-const RETRIES = 4;
-const MIN_TIMEOUT_MS = 25;
-
-const isSerializationFailure = (error: unknown): boolean => isPrismaRequestError(error) && error.code === SERIALIZATION_FAILURE;
+const isSerializationFailure = (error: unknown): boolean => isPrismaRequestError(error) && error.code === SERIALIZABLE_RETRY.failureCode;
 
 export const withSerializableRetry = <T>(run: () => Promise<T>): Promise<T> =>
   pRetry(run, {
-    retries: RETRIES,
-    minTimeout: MIN_TIMEOUT_MS,
+    retries: SERIALIZABLE_RETRY.retries,
+    minTimeout: SERIALIZABLE_RETRY.minTimeoutMs,
     shouldRetry: ({ error }) => isSerializationFailure(error)
   });

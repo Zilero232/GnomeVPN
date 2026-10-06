@@ -39,7 +39,7 @@ export default eslint(
     name: 'gnomevpn/typescript',
     files: ['**/*.?([cm])[jt]s?(x)'],
     rules: {
-      // `type` everywhere, never `interface` — see the root CLAUDE.md.
+      // `type` everywhere, never `interface` — see docs/guides/shared/types.md.
       'ts/consistent-type-definitions': ['error', 'type'],
       // No `as` casts. `as const` stays — it narrows literals instead of
       // overriding the checker, which is the opposite of what a cast does.
@@ -50,7 +50,7 @@ export default eslint(
       // require() that has no place in an ESM workspace.
       'node/prefer-global/buffer': 'off',
       'node/prefer-global/process': 'off',
-      // "Let the code breathe" from the root CLAUDE.md, enforced instead of
+      // "Let the code breathe" from docs/guides/shared/blank-lines.md, enforced instead of
       // eyeballed: a blank line before every exit, and between the const/let
       // setup block and the logic that acts on it. Prettier only preserves
       // blank lines, it never inserts them — this rule does, and --fix applies it.

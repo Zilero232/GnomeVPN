@@ -8,8 +8,8 @@
   gap: 12px;
   text-decoration: none;
   transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
 
   &:hover {
     border-color: var(--color-border-bright);

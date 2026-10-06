@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { subHours } from 'date-fns';
-import { isEmpty, map, pipe, unique } from 'remeda';
+import { isEmpty } from 'remeda';
 
 import type { OwnersOfInput, SweepInput } from './expired-access.job.types';
 
@@ -25,14 +25,11 @@ export class ExpiredAccessJob {
   private async ownersOf({ user, state }: OwnersOfInput): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
       where: { kind: 'config', user, ...(state ? { state } : {}) },
-      select: { userId: true }
+      select: { userId: true },
+      distinct: ['userId']
     });
 
-    return pipe(
-      peers,
-      map((peer) => peer.userId),
-      unique()
-    );
+    return peers.map((peer) => peer.userId);
   }
 
   private async sweep({ user, state, act }: SweepInput): Promise<string[]> {

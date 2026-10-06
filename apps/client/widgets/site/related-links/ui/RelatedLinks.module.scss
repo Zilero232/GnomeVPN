@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   display: flex;
   flex-direction: column;
@@ -23,11 +25,11 @@
 }
 
 .link {
-  color: var(--color-accent);
-  font-size: 14px;
-  text-decoration: none;
+  @include text-link;
 
-  &:hover {
-    text-decoration: underline;
+  @media (pointer: coarse) {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
   }
 }

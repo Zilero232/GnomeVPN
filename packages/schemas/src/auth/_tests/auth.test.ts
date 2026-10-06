@@ -9,6 +9,7 @@ import {
   signUpSchema,
   updateNameSchema
 } from '../auth.schemas';
+import { PLACEHOLDER_EMAIL, telegramPlaceholderEmail } from '../placeholder-email';
 
 const firstIssue = (result: { error?: { issues: { message: string; path: PropertyKey[] }[] } }) => result.error?.issues[0];
 
@@ -156,5 +157,22 @@ describe('changePasswordSchema', () => {
     const result = changePasswordSchema.safeParse({ ...valid, confirmPassword: 'password2' });
 
     expect(firstIssue(result)?.path).toEqual(['confirmPassword']);
+  });
+});
+
+describe('the shared email rule', () => {
+  it('refuses an address in the placeholder domain, which would skip the trial email check', () => {
+    const result = signUpSchema.safeParse({
+      name: 'Alex',
+      email: telegramPlaceholderEmail(123n),
+      password: 'password1',
+      confirmPassword: 'password1'
+    });
+
+    expect(firstIssue(result)?.message).toBe('validation.emailInvalid');
+  });
+
+  it('refuses the placeholder domain as a new address too', () => {
+    expect(changeEmailSchema.safeParse({ newEmail: `someone@${PLACEHOLDER_EMAIL.domain}` }).success).toBe(false);
   });
 });

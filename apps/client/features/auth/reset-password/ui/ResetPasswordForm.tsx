@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
 import { FormField, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import type { ResetPasswordValues } from '../model/hooks';
@@ -20,6 +20,7 @@ const DEFAULT_VALUES: ResetPasswordValues = { newPassword: '', confirmPassword: 
 export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const toastError = useToastError();
   const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useResetPassword();
 
@@ -40,13 +41,13 @@ export const ResetPasswordForm = ({ token, onDone }: ResetPasswordFormProps) => 
           toast.success(t('passwordReset'));
           onDone();
         },
-        onError: (error: Error) => toast.error(t(error.message))
+        onError: toastError
       }
     );
   });
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <FormField error={fieldError(errors.newPassword)} htmlFor='reset-password' label={t('fields.password')}>
         <PasswordInput autoComplete='new-password' id='reset-password' {...passwordLabels} {...register('newPassword')} />
       </FormField>

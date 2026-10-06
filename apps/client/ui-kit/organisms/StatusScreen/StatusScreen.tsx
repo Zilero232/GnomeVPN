@@ -8,7 +8,7 @@ export const StatusScreen = ({ code, title, body, children, tone = 'accent' }: S
   <main className={s.root}>
     <div className={clsx(s.code, tone === 'danger' ? s.codeDanger : s.codeAccent)}>
       {code}
-      <span className={s.scan} />
+      <span aria-hidden className={s.scan} />
     </div>
 
     <h1 className={s.title}>{title}</h1>

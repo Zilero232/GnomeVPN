@@ -2,18 +2,18 @@ import pWaitFor from 'p-wait-for';
 
 import type { PanelSession, PanelUrlInput, StartPanelInput, WaitForPanelInput } from './panel-session.types';
 
-import { log, PANEL_PORT } from '../../config';
+import { log, PORTS } from '../../config';
 import { configurePanel } from '../panel-config';
 import { isPanelReachable } from '../xray-panel';
-import { HEALTH_INTERVAL_MS, HEALTH_TIMEOUT_MS } from './panel-session.constants';
+import { PANEL_HEALTH } from './panel-session.constants';
 
-const panelUrl = ({ host, panelPath }: PanelUrlInput) => `http://${host}:${PANEL_PORT}/${panelPath}`;
+const panelUrl = ({ host, panelPath }: PanelUrlInput) => `http://${host}:${PORTS.panel}/${panelPath}`;
 
 const waitForPanel = async (credentials: WaitForPanelInput): Promise<boolean> => {
   try {
     await pWaitFor(() => isPanelReachable(credentials), {
-      timeout: HEALTH_TIMEOUT_MS,
-      interval: HEALTH_INTERVAL_MS
+      timeout: PANEL_HEALTH.timeoutMs,
+      interval: PANEL_HEALTH.intervalMs
     });
 
     return true;

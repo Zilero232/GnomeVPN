@@ -141,7 +141,7 @@ on both healthchecks.
 Adding a VPN node stays a local command: it talks to the machine over SSH with
 credentials that never enter CI, and it is a decision a human makes, not a commit.
 
-See [DEPLOY.md](DEPLOY.md) for the VPS side.
+See [docs/ops/deploy.md](docs/ops/deploy.md) for the VPS side, and [docs/README.md](docs/README.md) for every other doc.
 
 ## Status
 

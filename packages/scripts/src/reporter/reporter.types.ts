@@ -1,4 +1,6 @@
-export type LogFields = Record<string, unknown>;
+import type { LogFields } from '@gnomevpn/logger';
+
+export type { LogFields };
 
 export type ColorForInput = {
   key: string;

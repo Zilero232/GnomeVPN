@@ -1,1 +1,8 @@
-export * from './app.exception';
+export {
+  AppBadRequestException,
+  AppForbiddenException,
+  AppNotFoundException,
+  AppPaymentRequiredException,
+  AppServiceUnavailableException,
+  AppUnauthorizedException
+} from './app.exception';

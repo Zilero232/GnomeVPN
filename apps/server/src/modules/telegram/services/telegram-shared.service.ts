@@ -2,14 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
 
-import type { ChatState } from '../lib/keyboard';
 import type { AnsweredInput, AskInput, AttemptInput, BotContext, BotText, ConfirmedInput, ReplyInput, WithUserInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
-import { SubscriptionService, TrialService } from '../../subscription';
-import { BOT_TEXT, CONFIRMED, DECLINED, DEFAULT_BOT_LOCALE } from '../config';
+import { BOT_TEXT, CONFIRMED, DECLINED } from '../config';
 import { identityOf, isConfirmed, mainKeyboard, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
+import { TelegramNotifyService } from './telegram-notify.service';
 
 @Injectable()
 export class TelegramSharedService {
@@ -17,12 +16,11 @@ export class TelegramSharedService {
 
   constructor(
     private readonly link: TelegramLinkService,
-    private readonly subscription: SubscriptionService,
-    private readonly trial: TrialService
+    private readonly notify: TelegramNotifyService
   ) {}
 
   textFor(ctx: BotContext): BotText {
-    return BOT_TEXT[resolveLocale(ctx.from?.language_code) ?? DEFAULT_BOT_LOCALE];
+    return BOT_TEXT[resolveLocale(ctx.from?.language_code)];
   }
 
   async reply({ ctx, text, chat }: ReplyInput): Promise<void> {
@@ -32,15 +30,9 @@ export class TelegramSharedService {
       return;
     }
 
-    const state = await this.stateOf(chat.userId);
+    const state = await this.notify.stateOf(chat.userId);
 
     await ctx.reply(text, { reply_markup: mainKeyboard({ locale: chat.locale, state }) });
-  }
-
-  async stateOf(userId: string): Promise<ChatState> {
-    const [isSubscribed, eligibility] = await Promise.all([this.subscription.hasActiveAccess(userId), this.trial.eligibility(userId)]);
-
-    return { isSubscribed, isTrialAvailable: eligibility === 'available' };
   }
 
   async answered({ ctx, prefix, act }: AnsweredInput): Promise<void> {

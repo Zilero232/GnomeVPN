@@ -1,4 +1,5 @@
 import { apiErrorCodeSchema } from '@gnomevpn/schemas';
+import { isPlainObject } from 'remeda';
 import { describe, expect, it } from 'vitest';
 
 import { LOCALES } from '../locale';
@@ -34,7 +35,7 @@ describe('messages', () => {
   it('leaves no value empty', () => {
     for (const locale of LOCALES) {
       const empty = keysOf(messages[locale]).filter((key) => {
-        const value = key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown>)?.[part], messages[locale]);
+        const value = key.split('.').reduce<unknown>((node, part) => (isPlainObject(node) ? node[part] : undefined), messages[locale]);
 
         return typeof value === 'string' && value.trim() === '';
       });

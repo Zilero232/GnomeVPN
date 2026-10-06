@@ -1,6 +1,6 @@
 import type { Instrumentation } from 'next';
 
-import { isNonNullish, isObjectType } from 'remeda';
+import { isObjectType } from 'remeda';
 
 export const register = async () => {
   if (process.env.NEXT_RUNTIME !== 'nodejs') {
@@ -23,6 +23,6 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
     routeType: context.routeType,
     routePath: context.routePath,
     routerKind: context.routerKind,
-    digest: isObjectType(error) && isNonNullish(error) && 'digest' in error ? String(error.digest) : undefined
+    digest: isObjectType(error) && 'digest' in error ? String(error.digest) : undefined
   });
 };

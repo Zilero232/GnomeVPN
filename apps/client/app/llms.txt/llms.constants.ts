@@ -7,6 +7,7 @@ export const LLMS_PAGES = [
   { path: ROUTES.pricing, namespace: 'pricing' },
   { path: ROUTES.setup, namespace: 'setup' },
   { path: ROUTES.servers, namespace: 'servers' },
+  { path: ROUTES.blog, namespace: 'blog' },
   { path: ROUTES.faq, namespace: 'faq' },
   { path: ROUTES.about, namespace: 'about' },
   { path: ROUTES.privacy, namespace: 'privacy' }

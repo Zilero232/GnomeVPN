@@ -13,11 +13,19 @@
   background-color: var(--color-bg-deep);
   gap: 4px;
 
+  @media (pointer: coarse) {
+    height: var(--tap-target);
+  }
+
   &[data-size='sm'] {
     height: 34px;
     padding: 3px;
     border-radius: var(--radius-sm);
     gap: 2px;
+
+    @media (pointer: coarse) {
+      height: 40px;
+    }
   }
 }
 
@@ -79,8 +87,9 @@
   opacity: 0;
   transform: translateX(var(--segment-offset, 0));
   transition:
-    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.18s ease;
+    transform var(--duration-base) var(--ease-out),
+    width var(--duration-base) var(--ease-out),
+    background-color var(--duration-fast) ease;
 
   .root[data-ready='true'] & {
     opacity: 1;

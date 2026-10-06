@@ -1,34 +1,26 @@
 import type { SshClient } from '@gnomevpn/scripts/ssh';
 
-import { all, arg, dirOf, line, orElse, silent } from '@gnomevpn/scripts/shell';
+import { dirOf } from '@gnomevpn/scripts/shell';
 
 import type { EnsuredRealityKeys } from './reality-keys.types';
 
 import { generateRealityKeys, generateRealityShortId } from '../../../../apps/server/src/modules/peers/lib/reality-keys';
-import { log, REALITY_KEY_PATH, REALITY_PUB_PATH, REALITY_SID_PATH } from '../../config';
+import { log, NODE_FILES } from '../../config';
 import { inContainer } from '../xray-stack';
+import { seedRealityKeysScript } from './reality-keys.helpers';
 
 export const ensureRealityKeys = async (ssh: SshClient): Promise<EnsuredRealityKeys> => {
   const fresh = generateRealityKeys();
-  const freshShortId = generateRealityShortId();
 
   const seed = [
-    [REALITY_KEY_PATH, fresh.privateKey],
-    [REALITY_PUB_PATH, fresh.publicKey],
-    [REALITY_SID_PATH, freshShortId]
-  ] as const;
+    { path: NODE_FILES.realityKey, value: fresh.privateKey },
+    { path: NODE_FILES.realityPub, value: fresh.publicKey },
+    { path: NODE_FILES.realitySid, value: generateRealityShortId() }
+  ];
 
   log.step('ensuring the reality server keys');
 
-  const result = await ssh.exec(
-    inContainer(
-      all([
-        line(['mkdir', '-p', dirOf(REALITY_KEY_PATH)]),
-        ...seed.map(([path, value]) => orElse([silent(line(['test', '-s', path])), `printf '%s\\\\n' ${arg(value)} > ${path}`])),
-        ...seed.map(([path]) => line(['awk', arg('NR==1{print; exit}'), path]))
-      ])
-    )
-  );
+  const result = await ssh.exec(inContainer(seedRealityKeysScript({ dir: dirOf(NODE_FILES.realityKey), seed })));
 
   if (result.exitCode !== 0) {
     throw new Error(`cannot reach the panel container to read the Reality keys: ${result.stderr.trim() || 'no output'}`);

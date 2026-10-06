@@ -9,9 +9,6 @@
 .grid {
   display: grid;
   gap: 10px;
-
-  // Five tiles: two even rows of three and two beat the ragged row `auto-fit`
-  // produces at the width this section is read at.
   grid-template-columns: repeat(3, 1fr);
 
   @include below(xl) {

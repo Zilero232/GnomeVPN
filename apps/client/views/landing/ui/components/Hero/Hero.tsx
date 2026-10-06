@@ -1,11 +1,9 @@
-'use client';
-
 import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
 import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
-import { Button, Text } from '@/ui-kit';
+import { buttonVariants, Text } from '@/ui-kit';
 
 import { HERO_METRICS } from '../../../config';
 
@@ -18,7 +16,7 @@ export const Hero = () => {
     <section className={s.root}>
       <img aria-hidden alt='' className={s.mark} height={200} src='/brand/logo-mark.svg' width={200} />
 
-      <Text as='span' className={s.eyebrow}>
+      <Text as='p' className={s.eyebrow}>
         {t('eyebrow')}
       </Text>
 
@@ -32,24 +30,23 @@ export const Hero = () => {
       </Text>
 
       <div className={s.actions}>
-        <Link href={ROUTES.account}>
-          <Button size='md'>{t('cta', { price: LOWEST_MONTHLY_RUB })}</Button>
+        <Link className={buttonVariants({ size: 'md' })} href={ROUTES.account}>
+          {t('cta', { price: LOWEST_MONTHLY_RUB })}
         </Link>
-        <Link href='#how'>
-          <Button size='md' variant='ghost'>
-            {t('ctaSecondary')}
-          </Button>
+
+        <Link className={buttonVariants({ size: 'md', variant: 'ghost' })} href='#how'>
+          {t('ctaSecondary')}
         </Link>
       </div>
 
-      <div className={s.meta}>
+      <dl className={s.meta}>
         {HERO_METRICS.map((metric) => (
           <div key={metric.key} className={s.metaItem}>
-            <span className={s.metaValue}>{metric.value}</span>
-            <span className={s.metaLabel}>{t(`metrics.${metric.key}`)}</span>
+            <dt className={s.metaLabel}>{t(`metrics.${metric.key}`)}</dt>
+            <dd className={s.metaValue}>{metric.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
     </section>
   );
 };

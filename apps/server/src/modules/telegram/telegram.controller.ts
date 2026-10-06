@@ -1,6 +1,7 @@
 import type { Update } from 'grammy/types';
 
 import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { isNullish } from 'remeda';
 
@@ -17,6 +18,7 @@ export class TelegramController {
   ) {}
 
   @AllowAnonymous()
+  @SkipThrottle()
   @Post()
   @HttpCode(HttpStatus.OK)
   async receive(@Body() update: Update, @Headers(WEBHOOK.secretHeader) secret: string | undefined): Promise<void> {
@@ -34,6 +36,6 @@ export class TelegramController {
       return false;
     }
 
-    return timingSafeEqual(secret, expected);
+    return timingSafeEqual({ actual: secret, expected });
   }
 }

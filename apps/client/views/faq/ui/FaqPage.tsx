@@ -1,11 +1,7 @@
-'use client';
-
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { FAQ_GROUPS } from '@/entities/app/faq';
 import { SITE } from '@/shared/config';
-import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { faqJsonLd, JsonLd } from '@/shared/seo';
 import { Accordion, Text } from '@/ui-kit';
 
@@ -19,10 +15,10 @@ export const FaqPage = () => {
   );
 
   return (
-    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
+    <main className={s.root}>
       <JsonLd data={faqJsonLd({ entries })} />
 
-      <motion.header className={s.head} variants={HEAD_MOTION}>
+      <header className={s.head}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -30,10 +26,10 @@ export const FaqPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </motion.header>
+      </header>
 
       {FAQ_GROUPS.map(({ key, questions }) => (
-        <motion.section key={key} className={s.group} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+        <section key={key} className={s.group}>
           <Text as='h2' className={s.groupTitle}>
             {t(`groups.${key}`)}
           </Text>
@@ -45,10 +41,10 @@ export const FaqPage = () => {
               content: t(`questions.${question}.a`)
             }))}
           />
-        </motion.section>
+        </section>
       ))}
 
-      <motion.footer className={s.footer} variants={HEAD_MOTION}>
+      <footer className={s.footer}>
         <Text as='p' size='sm' tone='muted'>
           {t('stillStuck')}
         </Text>
@@ -56,7 +52,7 @@ export const FaqPage = () => {
         <a className={s.link} href={`mailto:${SITE.email}`}>
           {SITE.email}
         </a>
-      </motion.footer>
-    </motion.main>
+      </footer>
+    </main>
   );
 };

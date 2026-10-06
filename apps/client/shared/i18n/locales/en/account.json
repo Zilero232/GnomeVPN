@@ -1,7 +1,6 @@
 {
   "loading": "Loading…",
   "title": "Account",
-  "backToVpn": "Back to VPN",
   "signOut": "Sign out",
   "active": "Subscription active",
   "daysLeft": "{count, plural, =0 {final day} one {day left} other {days left}}",
@@ -15,7 +14,7 @@
   "noPaymentMethod": "No card on file — auto-renewal is unavailable",
   "bindCard": "Add a card",
   "cardBound": "Card on file",
-  "unbindCard": "Remove",
+  "unbindCard": "Remove card",
   "extraDevicesTitle": "Simultaneous connections",
   "extraDevicesCount": "{limit} devices available",
   "extraDevicesHint": "An extra device costs {price} ₽ and lasts as long as the subscription.",
@@ -65,7 +64,8 @@
   "tabs": {
     "subscription": "Subscription",
     "app": "App",
-    "telegram": "Telegram"
+    "telegram": "Telegram",
+    "label": "Account sections"
   },
   "meta": {
     "title": "Account",
@@ -79,5 +79,11 @@
     "confirmBody": "The subscription ends with no refund for the remaining period, every device disconnects and the link stops working. We cannot bring the account back.",
     "confirmCancel": "Cancel",
     "confirmAction": "Delete permanently"
-  }
+  },
+  "unavailable": "Could not load the subscription status. Check your connection and try again.",
+  "retry": "Try again",
+  "unbindConfirmTitle": "Remove the saved card?",
+  "unbindConfirmBody": "Auto-renewal stops with it: when the paid period ends, access ends too unless you pay again by hand. You can add a card again at any time.",
+  "unbindConfirmAction": "Remove card",
+  "unbindConfirmCancel": "Keep it"
 }

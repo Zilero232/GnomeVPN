@@ -1,11 +1,17 @@
 export { Accordion } from './Accordion';
 export type { AccordionItem, AccordionProps } from './Accordion';
 export { AppSplash } from './AppSplash';
-export { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './Dialog';
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogProps } from './ConfirmDialog';
+export { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './Dialog';
+export { ErrorBlock } from './ErrorBlock';
+export type { ErrorBlockProps } from './ErrorBlock';
 export { FormField } from './FormField';
 export type { FormFieldProps } from './FormField';
 export { LinkCard } from './LinkCard';
 export type { LinkCardProps } from './LinkCard';
+export { LoadingBlock } from './LoadingBlock';
+export type { LoadingBlockProps } from './LoadingBlock';
 export { Segmented } from './Segmented';
 export type { SegmentedOption, SegmentedProps } from './Segmented';
 

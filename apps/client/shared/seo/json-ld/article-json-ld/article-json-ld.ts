@@ -1,4 +1,5 @@
 import { SITE } from '@/shared/config';
+import { localePath } from '@/shared/i18n';
 
 import type { ArticleJsonLdInput } from './article-json-ld.types';
 
@@ -10,7 +11,7 @@ export const articleJsonLd = ({ headline, description, path, locale }: ArticleJs
   headline,
   description,
   inLanguage: locale,
-  mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(path) },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(localePath({ path, locale })) },
   author: { '@id': `${SITE.url}/#organization` },
   publisher: { '@id': `${SITE.url}/#organization` }
 });

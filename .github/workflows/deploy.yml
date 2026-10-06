@@ -6,7 +6,7 @@ name: deploy
 # every deploy — Caddy reads the latter through a bind mount rather than from
 # an image layer.
 #
-# Why it is shaped this way: ../../CLAUDE.md, "What the workflows assume".
+# Why it is shaped this way: docs/ops/deploy.md, "What the workflows assume".
 #
 # Repository secrets — Settings → Secrets and variables → Actions:
 #   NEXT_PUBLIC_API_URL       baked into the web image at build time

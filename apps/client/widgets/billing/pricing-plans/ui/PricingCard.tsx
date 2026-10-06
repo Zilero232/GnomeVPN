@@ -1,15 +1,11 @@
-'use client';
-
 import { planDiscountPercent, planMonthlyRub, PLANS } from '@gnomevpn/schemas';
 import { clsx } from 'clsx';
 import { Check } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
-import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
-import { Badge, Button, Stack, Text } from '@/ui-kit';
+import { Badge, buttonVariants, Stack, Text } from '@/ui-kit';
 
 import { FEATURED_PLAN_ID, PRICING_FEATURES } from '../config';
 
@@ -20,12 +16,12 @@ export const PricingCard = () => {
 
   return (
     <Stack className={s.root} gap='lg'>
-      <motion.div className={s.plans} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <ul className={s.plans}>
         {PLANS.map((plan) => {
           const discount = planDiscountPercent(plan.id);
 
           return (
-            <Stack key={plan.id} className={clsx(s.plan, plan.id === FEATURED_PLAN_ID && s.featured)} gap='md'>
+            <Stack key={plan.id} as='li' className={clsx(s.plan, plan.id === FEATURED_PLAN_ID && s.featured)} gap='md'>
               <div className={s.head}>
                 <Text as='span' className={s.term}>
                   {t(`plans.${plan.id}`)}
@@ -50,7 +46,7 @@ export const PricingCard = () => {
             </Stack>
           );
         })}
-      </motion.div>
+      </ul>
 
       <Stack className={s.footer} gap='md'>
         <ul className={s.list}>
@@ -62,8 +58,8 @@ export const PricingCard = () => {
           ))}
         </ul>
 
-        <Link href={ROUTES.account}>
-          <Button size='lg'>{t('cta')}</Button>
+        <Link className={buttonVariants({ size: 'lg', class: s.cta })} href={ROUTES.account}>
+          {t('cta')}
         </Link>
       </Stack>
     </Stack>

@@ -27,6 +27,6 @@ export class Inbounds {
   }
 
   async create({ inbound, remark = INBOUND_REMARK }: CreateInboundInput): Promise<void> {
-    await this.panel.addInbound(inboundPayload(inbound, remark));
+    await this.panel.addInbound(inboundPayload({ inbound, remark }));
   }
 }

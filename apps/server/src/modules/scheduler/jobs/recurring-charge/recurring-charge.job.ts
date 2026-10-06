@@ -10,6 +10,7 @@ import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
 import { CardService, CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
+import { trialState } from '../../../subscription';
 import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 
@@ -41,7 +42,7 @@ export class RecurringChargeJob {
   }
 
   private async chargeIfDue(subscription: DueSubscription): Promise<void> {
-    if (!subscription.savedCardId || !subscription.currentPeriodEnd) {
+    if (!subscription.savedCardId || !subscription.currentPeriodEnd || trialState(subscription).isTrial) {
       return;
     }
 
@@ -57,7 +58,9 @@ export class RecurringChargeJob {
       paymentMethodId: subscription.savedCardId,
       idempotenceKey: renewalIdempotenceKey({
         userId: subscription.userId,
-        currentPeriodEnd: subscription.currentPeriodEnd
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        paymentMethodId: subscription.savedCardId,
+        amountRub: plan.priceRub
       })
     });
 
@@ -73,10 +76,6 @@ export class RecurringChargeJob {
     }
 
     await this.webhook.settlePayment(payment.id);
-
-    if (payment.status === 'canceled') {
-      await this.tellChargeFailed(subscription);
-    }
   }
 
   private async dropUnusableCard(subscription: DueSubscription): Promise<void> {
@@ -106,12 +105,13 @@ export class RecurringChargeJob {
     const due = await this.prisma.subscription.findMany({
       where: {
         cancelAtPeriodEnd: false,
+        savedCardId: { not: null },
         currentPeriodEnd: {
           gt: new Date(),
           lt: addHours(new Date(), WINDOW.renewHours)
         }
       },
-      select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true }
+      select: { userId: true, savedCardId: true, plan: true, currentPeriodEnd: true, trialStartedAt: true }
     });
 
     for (const subscription of due) {

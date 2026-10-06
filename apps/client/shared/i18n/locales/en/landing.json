@@ -73,7 +73,10 @@
     "blockingLabel": "Works where VPNs are blocked",
     "blockingHint": "Hysteria2 hides as ordinary HTTPS traffic",
     "limitsLabel": "No traffic cap",
-    "limitsHint": "No gigabyte limits and no evening slowdown"
+    "limitsHint": "No gigabyte limits and no evening slowdown",
+    "feature": "Feature",
+    "yes": "Yes",
+    "no": "No"
   },
   "guarantee": {
     "title": "Cancel in one click",

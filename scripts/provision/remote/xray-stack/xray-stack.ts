@@ -3,16 +3,16 @@ import { all, dockerShell, line } from '@gnomevpn/scripts/shell';
 import type { ShipStackInput } from './xray-stack.types';
 
 import { log } from '../../config';
-import { CONTAINER_NAME, REMOTE_DIR } from './xray-stack.constants';
+import { CONTAINER_NAME, XRAY_STACK } from './xray-stack.constants';
 
 export const inContainer = (script: string) => dockerShell({ container: CONTAINER_NAME, script });
 
 export const shipStack = async ({ ssh, composeContent }: ShipStackInput) => {
-  log.step(`shipping the xray stack to ${REMOTE_DIR}`);
+  log.step(`shipping the xray stack to ${XRAY_STACK.remoteDir}`);
 
-  await ssh.exec(line(['mkdir', '-p', REMOTE_DIR]));
-  await ssh.putFile(composeContent, `${REMOTE_DIR}/docker-compose.yml`);
-  await ssh.exec(all([line(['cd', REMOTE_DIR]), 'docker compose up -d']));
+  await ssh.run(line(['mkdir', '-p', XRAY_STACK.remoteDir]));
+  await ssh.putFile({ content: composeContent, remotePath: XRAY_STACK.composeFile });
+  await ssh.run(all([line(['cd', XRAY_STACK.remoteDir]), 'docker compose up -d']));
 
   log.done('the xray stack is up');
 };

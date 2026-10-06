@@ -4,7 +4,8 @@ import { Gift } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
-import { Button, Text } from '@/ui-kit';
+import { useToastError } from '@/entities/app/locale';
+import { SubmitButton, Text } from '@/ui-kit';
 
 import { useClaimTrial } from '../model/hooks';
 
@@ -12,13 +13,13 @@ import s from './TrialBanner.module.scss';
 
 export const TrialBanner = () => {
   const t = useTranslations('trial');
-  const tErrors = useTranslations('errors');
+  const toastError = useToastError();
   const claim = useClaimTrial();
 
   const onClaim = () => {
     claim.mutate(undefined, {
       onSuccess: () => toast.success(t('granted')),
-      onError: (error: Error) => toast.error(tErrors(error.message))
+      onError: toastError
     });
   };
 
@@ -36,9 +37,9 @@ export const TrialBanner = () => {
         </Text>
       </div>
 
-      <Button className={s.action} disabled={claim.isPending} onClick={onClaim}>
+      <SubmitButton className={s.action} isPending={claim.isPending} size='md' type='button' onClick={onClaim}>
         {t('action')}
-      </Button>
+      </SubmitButton>
     </div>
   );
 };

@@ -1,10 +1,12 @@
 export { deleteAccount } from './account';
-export { authClient, clearToken, getAuthToken, saveAuthToken } from './auth/auth-client';
+export { authClient } from './auth/auth-client';
 export { AuthError } from './auth/auth-error';
+export { requestPasswordReset } from './auth/password-reset';
 export { resetSession, startSession } from './auth/session-reset';
 export { unwrapAuth } from './auth/unwrap-auth';
+export { useHasSession } from './auth/use-has-session';
 export { bindCard, buyExtraDevices, cancelAutoRenew, createCheckout, resumeAutoRenew, unbindCard } from './billing';
-export { api, ApiError, apiErrorCode, toApiError } from './http';
+export { api, ApiError, apiErrorCode } from './http';
 export { queryClient } from './query-client';
 export { claimTrial, getSubscriptionStatus } from './subscription';
 export { getSubscriptionLink, rotateSubscriptionLink } from './subscription-link';

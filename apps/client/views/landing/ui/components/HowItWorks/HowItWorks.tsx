@@ -1,14 +1,9 @@
-'use client';
-
 import { LOWEST_MONTHLY_RUB } from '@gnomevpn/schemas';
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { HOW_IT_WORKS_STEPS } from '../../../config';
-import { STEP_MOTION } from '../../LandingPage.motion';
 
 import s from './HowItWorks.module.scss';
 
@@ -16,20 +11,20 @@ export const HowItWorks = () => {
   const t = useTranslations('landing.how');
 
   return (
-    <motion.div className={s.grid} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+    <ol className={s.grid}>
       {HOW_IT_WORKS_STEPS.map((step, index) => (
-        <motion.article key={step} className={s.step} variants={STEP_MOTION}>
-          <Text as='span' className={s.index}>
-            0{index + 1}
-          </Text>
+        <li key={step} className={s.step}>
+          <span aria-hidden className={s.index}>
+            {String(index + 1).padStart(2, '0')}
+          </span>
           <Text as='h3' className={s.title}>
             {t(`${step}Title`)}
           </Text>
           <Text as='p' className={s.body}>
             {t(`${step}Body`, { price: LOWEST_MONTHLY_RUB })}
           </Text>
-        </motion.article>
+        </li>
       ))}
-    </motion.div>
+    </ol>
   );
 };

@@ -9,7 +9,7 @@ import type { PageMetadataInput } from './page-metadata.types';
 
 import { languageAlternates } from './site-metadata.helpers';
 
-const OG_LOCALES: Record<string, string> = {
+const OG_LOCALES: Record<PageMetadataInput['locale'], string> = {
   ru: SITE.locale,
   en: SITE.en.locale
 };

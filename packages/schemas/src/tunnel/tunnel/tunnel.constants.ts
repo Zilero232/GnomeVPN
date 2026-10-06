@@ -4,3 +4,5 @@ export const TUNNEL_PROTOCOL = {
 } as const;
 
 export const DEFAULT_TUNNEL_PROTOCOL = TUNNEL_PROTOCOL.hysteria2;
+
+export const MAX_PORT = 65_535;

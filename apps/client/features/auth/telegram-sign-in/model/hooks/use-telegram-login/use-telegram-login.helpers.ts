@@ -1,4 +1,4 @@
-import type { WidgetScriptInput } from './use-telegram-login.types';
+import type { TelegramWidgetUser, WidgetScriptInput } from './use-telegram-login.types';
 
 import { TELEGRAM_LOGIN } from './use-telegram-login.constants';
 
@@ -17,3 +17,6 @@ export const widgetScript = ({ botUsername, onError }: WidgetScriptInput): HTMLS
 
   return script;
 };
+
+export const payloadOf = (user: TelegramWidgetUser): Record<string, string> =>
+  Object.fromEntries(Object.entries(user).map(([key, value]) => [key, String(value)]));

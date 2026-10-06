@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { ROUTES, SITE_NAV } from '@/shared/constants';
 import { Link, usePathname } from '@/shared/i18n/navigation';
-import { Button, Dialog, DialogContent, DialogTitle } from '@/ui-kit';
+import { buttonVariants, Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/ui-kit';
 
 import s from './SiteNavMenu.module.scss';
 
@@ -16,25 +16,27 @@ export const SiteNavMenu = () => {
 
   const [isOpen, setIsOpen] = useState(false);
 
+  const close = () => setIsOpen(false);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <button aria-label={t('openMenu')} className={s.trigger} type='button' onClick={() => setIsOpen(true)}>
-        <Menu size={18} />
-      </button>
+      <DialogTrigger aria-label={t('openMenu')} className={s.trigger}>
+        <Menu aria-hidden size={18} />
+      </DialogTrigger>
 
       <DialogContent className={s.content}>
         <DialogTitle className={s.title}>{t('menu')}</DialogTitle>
 
         <nav aria-label={t('ariaLabel')} className={s.nav}>
           {SITE_NAV.map(({ key, href }) => (
-            <Link key={key} aria-current={pathname === href ? 'page' : undefined} className={s.link} href={href} onClick={() => setIsOpen(false)}>
+            <Link key={key} aria-current={pathname === href ? 'page' : undefined} className={s.link} href={href} onClick={close}>
               {t(key)}
             </Link>
           ))}
         </nav>
 
-        <Link className={s.account} href={ROUTES.account} onClick={() => setIsOpen(false)}>
-          <Button>{t('account')}</Button>
+        <Link className={buttonVariants({ size: 'lg' })} href={ROUTES.account} onClick={close}>
+          {t('account')}
         </Link>
       </DialogContent>
     </Dialog>

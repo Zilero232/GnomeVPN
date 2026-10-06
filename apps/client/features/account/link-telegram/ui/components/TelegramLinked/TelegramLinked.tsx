@@ -1,11 +1,12 @@
 import { Check, ExternalLink, Unlink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button, Text } from '@/ui-kit';
+import { Button, buttonVariants, Text } from '@/ui-kit';
 
 import type { TelegramLinkedProps } from './TelegramLinked.types';
 
-import { ABILITIES, botLink } from '../../../lib';
+import { ABILITIES } from '../../../config';
+import { botLink } from '../../../lib';
 
 import s from './TelegramLinked.module.scss';
 
@@ -47,7 +48,7 @@ export const TelegramLinked = ({ bot, username, hasEmail, isPending, onUnlink }:
         </ul>
       </div>
 
-      <a className={s.openBot} href={botLink({ bot })} rel='noopener noreferrer' target='_blank'>
+      <a className={buttonVariants({ class: s.openBot })} href={botLink({ bot })} rel='noopener noreferrer' target='_blank'>
         {t('openBotLinked')}
         <ExternalLink aria-hidden size={15} />
       </a>

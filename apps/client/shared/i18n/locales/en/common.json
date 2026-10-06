@@ -7,5 +7,6 @@
   "ogTitle": "A VPN on Hysteria2",
   "ogDescription": "A fast QUIC tunnel. Servers in several countries, one link for every device.",
   "relatedTitle": "Read next",
-  "language": "Language"
+  "language": "Language",
+  "skipToContent": "Skip to content"
 }

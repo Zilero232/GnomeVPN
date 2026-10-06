@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     projects: [
       'packages/schemas/vitest.config.ts',
+      'packages/logger/vitest.config.ts',
       'packages/scripts/vitest.config.ts',
       'apps/server/vitest.config.ts',
       'apps/client/vitest.config.ts',
@@ -14,6 +15,7 @@ export default defineConfig({
       reporter: ['text', 'html'],
       include: [
         'packages/schemas/src/**',
+        'packages/logger/src/**',
         'packages/scripts/src/**',
         'apps/server/src/**',
         'apps/client/{entities,features,shared}/**',

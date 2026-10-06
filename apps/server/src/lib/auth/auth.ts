@@ -1,6 +1,8 @@
+import { isPlaceholderEmail } from '@gnomevpn/schemas';
 import { Logger } from '@nestjs/common';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { bearer } from 'better-auth/plugins';
 import { createElement } from 'react';
 
@@ -10,7 +12,8 @@ import { validateEnv } from '../../config/env.schema';
 import { basePrisma } from '../../core';
 import { ChangeEmail, ResetPassword, sendEmail, VerifyEmail } from '../email';
 import { withClientCallback } from './auth-callback-url';
-import { SESSION_EXPIRES_IN, SESSION_UPDATE_AGE } from './auth.constants';
+import { SESSION } from './auth.constants';
+import { claimedEmail } from './claimed-email';
 
 const env = validateEnv(process.env);
 const logger = new Logger('Auth');
@@ -20,10 +23,7 @@ export const auth = betterAuth({
   baseURL: env.API_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: allowedOrigins,
-  session: {
-    expiresIn: SESSION_EXPIRES_IN,
-    updateAge: SESSION_UPDATE_AGE
-  },
+  session: SESSION,
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -43,9 +43,9 @@ export const auth = betterAuth({
       void sendEmail({
         to: user.email,
         subject: 'Confirm your GnomeVPN email',
-        react: createElement(VerifyEmail, { url: withClientCallback(url, '/account') })
+        react: createElement(VerifyEmail, { url: withClientCallback({ url, path: '/account' }) })
       }).catch((error: unknown) => {
-        logger.error(`verification email to ${user.email} failed: ${describeError(error)}`);
+        logger.error(`verification email for ${user.id} failed: ${describeError(error)}`);
       });
     }
   },
@@ -59,11 +59,20 @@ export const auth = betterAuth({
           subject: 'Confirm your new GnomeVPN email',
           react: createElement(ChangeEmail, {
             newEmail,
-            url: withClientCallback(url, '/account')
+            url: withClientCallback({ url, path: '/account' })
           })
         });
       }
     }
+  },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      const email = claimedEmail({ path: ctx.path, body: ctx.body });
+
+      if (email && isPlaceholderEmail(email)) {
+        throw new APIError('BAD_REQUEST', { message: 'This address cannot be used' });
+      }
+    })
   },
   databaseHooks: {
     user: {

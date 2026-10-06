@@ -2,7 +2,10 @@
 
 .list {
   display: grid;
+  padding: 0;
+  margin: 0;
   gap: 0;
+  list-style: none;
 }
 
 .row {
@@ -12,14 +15,9 @@
   border-bottom: 1px solid var(--color-border);
   column-gap: 20px;
   grid-template-columns: 24px minmax(120px, 190px) 1fr;
-  transition: border-color 0.25s ease;
 
   &:first-child {
     border-top: 1px solid var(--color-border);
-  }
-
-  &:hover {
-    border-bottom-color: var(--color-border-bright);
   }
 
   @include below(md) {

@@ -1,3 +1,4 @@
-export const HEALTH_TIMEOUT_MS = 120_000;
-
-export const HEALTH_INTERVAL_MS = 3_000;
+export const PANEL_HEALTH = {
+  timeoutMs: 120_000,
+  intervalMs: 3_000
+} as const;

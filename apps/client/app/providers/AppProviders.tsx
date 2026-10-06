@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { QueryClientProvider } from '@tanstack/react-query';
+import { MotionConfig } from 'motion/react';
 import { NextIntlClientProvider } from 'next-intl';
 
 import type { Locale } from '@/shared/i18n';
@@ -21,7 +22,9 @@ type AppProvidersProps = {
 export const AppProviders = ({ children, locale }: AppProvidersProps) => (
   <QueryClientProvider client={queryClient}>
     <NextIntlClientProvider locale={locale} messages={messages[locale]} timeZone={TIME_ZONE}>
-      <AuthProvider>{children}</AuthProvider>
+      <MotionConfig reducedMotion='user'>
+        <AuthProvider>{children}</AuthProvider>
+      </MotionConfig>
 
       <AppToaster />
     </NextIntlClientProvider>

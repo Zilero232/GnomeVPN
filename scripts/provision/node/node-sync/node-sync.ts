@@ -1,89 +1,23 @@
 import { SshClient } from '@gnomevpn/scripts/ssh';
+import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { escapeLiteral } from 'pg';
 
-import type { SyncableNode, SyncToProductionInput } from './node-sync.types';
+import type { SyncToProductionInput } from './node-sync.types';
 
-import { SSH_KEY_NAMES } from './node-sync.constants';
+import { HEREDOC_NONCE_BYTES, PRODUCTION_SSH } from './node-sync.constants';
+import { applySqlCommand, buildNodeSync, restartServerCommand } from './node-sync.helpers';
 
-const defaultKeyPath = (): string | undefined => SSH_KEY_NAMES.map((name) => join(homedir(), '.ssh', name)).find((path) => existsSync(path));
-
-const quote = (value: string | null) => (value === null ? 'NULL' : escapeLiteral(value));
-
-const row = (node: SyncableNode) =>
-  [
-    quote(node.country),
-    quote(node.countryCode),
-    quote(node.city),
-    quote(node.host),
-    String(node.port),
-    quote(node.serverName),
-    quote(node.hysteriaAuth),
-    quote(node.certFingerprint),
-    quote(node.realityPublicKey),
-    quote(node.realityShortId),
-    quote(node.apiUrl),
-    quote(node.apiTokenEnvVar),
-    String(node.displayOrder)
-  ].join(', ');
-
-const buildNodeSync = (nodes: SyncableNode[]) => {
-  const values = nodes.map((node) => `  (${row(node)})`).join(',\n');
-  const hosts = nodes.map((node) => quote(node.host)).join(', ');
-
-  return [
-    'BEGIN;',
-    '',
-    'CREATE TEMP TABLE incoming_node (',
-    '  country text, country_code text, city text, host text, port int,',
-    '  server_name text, hysteria_auth text, cert_fingerprint text,',
-    '  reality_public_key text, reality_short_id text,',
-    '  api_url text, api_token_env_var text, display_order int',
-    ') ON COMMIT DROP;',
-    '',
-    'INSERT INTO incoming_node VALUES',
-    `${values};`,
-    '',
-    `DELETE FROM node WHERE host NOT IN (${hosts});`,
-    '',
-    'DELETE FROM peer WHERE node_id IN (',
-    '  SELECT n.id FROM node n JOIN incoming_node i ON n.host = i.host',
-    '  WHERE n.port <> i.port OR n.server_name <> i.server_name',
-    ');',
-    '',
-    'UPDATE node SET',
-    '  country = i.country, country_code = i.country_code, city = i.city,',
-    '  port = i.port, server_name = i.server_name, hysteria_auth = i.hysteria_auth,',
-    '  cert_fingerprint = i.cert_fingerprint,',
-    '  reality_public_key = i.reality_public_key, reality_short_id = i.reality_short_id,',
-    '  api_url = i.api_url, api_token_env_var = i.api_token_env_var,',
-    '  display_order = i.display_order, is_available = true',
-    'FROM incoming_node i WHERE node.host = i.host;',
-    '',
-    'INSERT INTO node (',
-    '  country, country_code, city, host, port, server_name, hysteria_auth, cert_fingerprint,',
-    '  reality_public_key, reality_short_id,',
-    '  api_url, api_token_env_var, display_order, is_available',
-    ')',
-    'SELECT',
-    '  i.country, i.country_code, i.city, i.host, i.port, i.server_name, i.hysteria_auth, i.cert_fingerprint,',
-    '  i.reality_public_key, i.reality_short_id,',
-    '  i.api_url, i.api_token_env_var, i.display_order, true',
-    'FROM incoming_node i',
-    'WHERE NOT EXISTS (SELECT 1 FROM node n WHERE n.host = i.host);',
-    '',
-    'COMMIT;'
-  ].join('\n');
-};
+const defaultKeyPath = (): string | undefined =>
+  PRODUCTION_SSH.keyNames.map((name) => join(homedir(), '.ssh', name)).find((path) => existsSync(path));
 
 export const syncToProduction = async ({ nodes, envNodes }: SyncToProductionInput): Promise<string> => {
   const host = process.env.PROVISION_SSH_HOST;
-  const username = process.env.PROVISION_SSH_USER ?? 'root';
+  const username = process.env.PROVISION_SSH_USER ?? PRODUCTION_SSH.defaultUser;
   const password = process.env.PROVISION_SSH_PASSWORD;
   const privateKeyPath = process.env.PROVISION_SSH_KEY ?? defaultKeyPath();
-  const deployPath = process.env.PROVISION_DEPLOY_PATH ?? '/opt/gnomevpn';
+  const deployPath = process.env.PROVISION_DEPLOY_PATH ?? PRODUCTION_SSH.defaultDeployPath;
 
   if (!host) {
     return 'skipped: PROVISION_SSH_HOST is not set';
@@ -93,26 +27,24 @@ export const syncToProduction = async ({ nodes, envNodes }: SyncToProductionInpu
     return 'skipped: neither PROVISION_SSH_PASSWORD nor an ssh key is available';
   }
 
+  if (nodes.length === 0) {
+    return 'skipped: the local database holds no nodes';
+  }
+
   const ssh = new SshClient();
 
   try {
     await ssh.connect({ host, username, password, privateKeyPath });
-    await ssh.putFile(envNodes, `${deployPath}/.env.nodes`);
+    await ssh.putFile({ content: envNodes, remotePath: `${deployPath}/.env.nodes` });
 
-    const applied = await ssh.exec(
-      [
-        `cd ${deployPath} &&`,
-        'docker compose exec -T postgres',
-        'sh -c \'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"\'',
-        `<<'SQL'\n${buildNodeSync(nodes)}\nSQL`
-      ].join(' ')
-    );
+    const delimiter = `SQL_${randomBytes(HEREDOC_NONCE_BYTES).toString('hex')}`;
+    const applied = await ssh.exec(applySqlCommand({ deployPath, sql: buildNodeSync(nodes), delimiter }));
 
     if (applied.exitCode !== 0) {
       return `failed: ${(applied.stderr || applied.stdout).trim()}`;
     }
 
-    const restarted = await ssh.exec(`cd ${deployPath} && docker compose restart server`);
+    const restarted = await ssh.exec(restartServerCommand(deployPath));
 
     if (restarted.exitCode !== 0) {
       return `nodes written, restart failed: ${(restarted.stderr || restarted.stdout).trim()}`;

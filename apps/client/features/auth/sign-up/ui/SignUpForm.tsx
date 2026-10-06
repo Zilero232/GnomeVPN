@@ -3,9 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
-import { useFieldError, usePasswordLabels } from '@/entities/app/locale';
+import { useFieldError, usePasswordLabels, useToastError } from '@/entities/app/locale';
 import { FormField, Input, PasswordInput, SubmitButton } from '@/ui-kit';
 
 import type { SignUpValues } from '../model/hooks';
@@ -24,6 +23,7 @@ const DEFAULT_VALUES: SignUpValues = {
 export const SignUpForm = () => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const toastError = useToastError();
   const passwordLabels = usePasswordLabels();
   const { isPending, mutate } = useSignUp();
 
@@ -38,12 +38,12 @@ export const SignUpForm = () => {
 
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
-      onError: (error: Error) => toast.error(t(error.message))
+      onError: toastError
     });
   });
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <FormField error={fieldError(errors.name)} htmlFor='signup-name' label={t('fields.name')}>
         <Input autoComplete='name' id='signup-name' {...register('name')} />
       </FormField>

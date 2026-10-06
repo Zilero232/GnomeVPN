@@ -11,5 +11,6 @@ export type AccountTab = {
 
 export type AccountTabsProps = {
   items: AccountTab[];
+  label: string;
   panelClassName?: string;
 };

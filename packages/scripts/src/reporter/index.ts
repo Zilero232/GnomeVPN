@@ -1,2 +1,3 @@
-export * from './reporter';
-export type * from './reporter.types';
+export { reporter } from './reporter';
+
+export type { LogFields, Reporter } from './reporter.types';

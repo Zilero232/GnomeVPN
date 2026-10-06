@@ -73,3 +73,11 @@ export type UpdateInboundInput = {
   id: number;
   payload: unknown;
 };
+
+export type PanelRequestInput = {
+  method: 'GET' | 'POST';
+  path: string;
+  body?: unknown;
+};
+
+export type PanelPostInput = Omit<PanelRequestInput, 'method'>;

@@ -5,7 +5,7 @@ import { MonitorSmartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { Button } from '@/ui-kit';
+import { SubmitButton } from '@/ui-kit';
 
 import type { ExtraDevicesControlProps, SlotState } from './ExtraDevicesControl.types';
 
@@ -33,12 +33,12 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
   return (
     <section className={s.root}>
       <header className={s.head}>
-        <span className={s.icon}>
+        <span aria-hidden className={s.icon}>
           <MonitorSmartphone size={15} />
         </span>
 
         <div className={s.headText}>
-          <span className={s.title}>{t('extraDevicesTitle')}</span>
+          <h3 className={s.title}>{t('extraDevicesTitle')}</h3>
 
           <span className={s.count}>{t('extraDevicesCount', { limit: limits.deviceLimit })}</span>
         </div>
@@ -68,7 +68,9 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
                 −
               </button>
 
-              <span className={s.quantity}>{quantity}</span>
+              <output aria-live='polite' className={s.quantity}>
+                {quantity}
+              </output>
 
               <button
                 aria-label={t('extraDevicesMore')}
@@ -81,12 +83,14 @@ export const ExtraDevicesControl = ({ limits }: ExtraDevicesControlProps) => {
               </button>
             </div>
 
-            <Button disabled={buy.isPending} size='md' onClick={() => buy.mutate(quantity)}>
+            <SubmitButton isPending={buy.isPending} size='md' type='button' onClick={() => buy.mutate(quantity)}>
               {t('extraDevicesBuy', { price: extraDevicesPriceRub(quantity) })}
-            </Button>
+            </SubmitButton>
           </div>
 
-          <p className={s.result}>{t('extraDevicesResult', { total: limits.deviceLimit + quantity })}</p>
+          <p aria-live='polite' className={s.result}>
+            {t('extraDevicesResult', { total: limits.deviceLimit + quantity })}
+          </p>
         </>
       )}
     </section>

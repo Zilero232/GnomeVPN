@@ -19,15 +19,20 @@ describe('arg', () => {
     expect(arg('node; rm -rf /')).toBe("'node; rm -rf /'");
   });
 
-  it('escapes an embedded single quote', () => {
-    const quoted = arg("it's");
-
-    expect(quoted).not.toBe("it's");
-    expect(quoted).toContain('it');
+  it('closes, escapes and reopens the quote around an embedded single quote', () => {
+    expect(arg("it's")).toBe(String.raw`'it'\''s'`);
   });
 
-  it('escapes a backtick so the shell cannot expand it', () => {
-    expect(arg('`whoami`')).toBe('\\`whoami\\`');
+  it('quotes a backtick so the shell cannot expand it', () => {
+    expect(arg('`whoami`')).toBe("'`whoami`'");
+  });
+
+  it('keeps an exclamation mark literal beside a quote, which a double-quoted sh string does not', () => {
+    expect(arg("it's!")).toBe(String.raw`'it'\''s!'`);
+  });
+
+  it('keeps a backslash literal', () => {
+    expect(arg(String.raw`a\nb`)).toBe(String.raw`'a\nb'`);
   });
 
   it('stringifies a number', () => {
@@ -105,10 +110,10 @@ describe('dirOf', () => {
   });
 
   it('keeps the root for a top-level path', () => {
-    expect(dirOf('/file.txt')).toBe('');
+    expect(dirOf('/file.txt')).toBe('/');
   });
 
-  it('drops the last character when the path has no separator', () => {
-    expect(dirOf('file.txt')).toBe('file.tx');
+  it('answers the current directory for a bare file name rather than eating its last character', () => {
+    expect(dirOf('file.txt')).toBe('.');
   });
 });

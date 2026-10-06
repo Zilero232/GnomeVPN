@@ -3,33 +3,26 @@
 import { resolveLimits } from '@gnomevpn/schemas';
 import { useQuery } from '@tanstack/react-query';
 
-import { useCurrentUser } from '@/entities/auth/user';
-import { getSubscriptionStatus } from '@/shared/api';
+import { getSubscriptionStatus, useHasSession } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 
-const INACTIVE_POLL_MS = 3_000;
-
-const ACTIVE_POLL_MS = 60_000;
-
-const ERROR_POLL_MS = 5_000;
-
-const ERROR_RETRIES = 3;
+import { SUBSCRIPTION_POLL } from './use-subscription-status.constants';
 
 export const useSubscriptionStatus = () => {
-  const { isAuthenticated } = useCurrentUser();
+  const hasSession = useHasSession();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEYS.subscriptionStatus(),
     queryFn: getSubscriptionStatus,
-    enabled: isAuthenticated,
+    enabled: hasSession,
     refetchOnWindowFocus: true,
-    retry: ERROR_RETRIES,
+    retry: SUBSCRIPTION_POLL.retries,
     refetchInterval: (query) => {
       if (query.state.error) {
-        return ERROR_POLL_MS;
+        return Math.min(SUBSCRIPTION_POLL.errorMs * 2 ** query.state.fetchFailureCount, SUBSCRIPTION_POLL.maxErrorMs);
       }
 
-      return query.state.data?.status === 'active' ? ACTIVE_POLL_MS : INACTIVE_POLL_MS;
+      return query.state.data?.status === 'active' ? SUBSCRIPTION_POLL.activeMs : SUBSCRIPTION_POLL.inactiveMs;
     }
   });
 

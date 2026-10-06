@@ -14,7 +14,7 @@ import type {
 } from './yookassa.types';
 
 import { AppServiceUnavailableException } from '../../common/exceptions';
-import { API_URL, CURRENCY, REQUEST_TIMEOUT_MS } from './yookassa.constants';
+import { YOOKASSA_API } from './yookassa.constants';
 import { describeCard } from './yookassa.helpers';
 
 export class YooKassaClient {
@@ -41,14 +41,14 @@ export class YooKassaClient {
   }
 
   private amount(rub: number) {
-    return { value: rub.toFixed(2), currency: CURRENCY };
+    return { value: rub.toFixed(2), currency: YOOKASSA_API.currency };
   }
 
   private async request<T>({ path, init, idempotenceKey }: YooKassaRequestInput): Promise<T> {
-    const res = await fetch(`${API_URL}${path}`, {
+    const res = await fetch(`${YOOKASSA_API.url}${path}`, {
       ...init,
       headers: this.headers(idempotenceKey),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+      signal: AbortSignal.timeout(YOOKASSA_API.timeoutMs)
     });
 
     if (!res.ok) {
@@ -106,7 +106,7 @@ export class YooKassaClient {
   }
 
   async getPayment(paymentId: string): Promise<PaymentInfo> {
-    const payload = await this.request<PaymentResponse>({ path: `/payments/${paymentId}`, init: { method: 'GET' } });
+    const payload = await this.request<PaymentResponse>({ path: `/payments/${encodeURIComponent(paymentId)}`, init: { method: 'GET' } });
     const isSaved = payload.payment_method?.saved === true;
 
     return {
@@ -147,15 +147,18 @@ export class YooKassaClient {
   }
 
   async getPaymentMethod(paymentMethodId: string): Promise<PaymentMethodInfo> {
-    const payload = await this.request<PaymentMethodResponse>({ path: `/payment_methods/${paymentMethodId}`, init: { method: 'GET' } });
+    const payload = await this.request<PaymentMethodResponse>({
+      path: `/payment_methods/${encodeURIComponent(paymentMethodId)}`,
+      init: { method: 'GET' }
+    });
 
     return this.toPaymentMethodInfo(payload);
   }
 
   async isPaymentMethodUsable(paymentMethodId: string): Promise<boolean | null> {
-    const res = await fetch(`${API_URL}/payment_methods/${paymentMethodId}`, {
+    const res = await fetch(`${YOOKASSA_API.url}/payment_methods/${encodeURIComponent(paymentMethodId)}`, {
       headers: this.headers(),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+      signal: AbortSignal.timeout(YOOKASSA_API.timeoutMs)
     });
 
     if (res.status === 400 || res.status === 404) {

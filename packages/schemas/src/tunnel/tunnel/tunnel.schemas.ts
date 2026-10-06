@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { DEFAULT_TUNNEL_PROTOCOL, TUNNEL_PROTOCOL } from './tunnel.constants';
+import { DEFAULT_TUNNEL_PROTOCOL, MAX_PORT, TUNNEL_PROTOCOL } from './tunnel.constants';
 
-export const tunnelProtocolSchema = z.enum([TUNNEL_PROTOCOL.hysteria2, TUNNEL_PROTOCOL.vless]);
+export const tunnelProtocolSchema = z.enum(TUNNEL_PROTOCOL);
 
 export const realityConfigSchema = z.object({
   publicKey: z.string().min(1),
@@ -16,7 +16,7 @@ export const tunnelConfigSchema = z
   .object({
     protocol: tunnelProtocolSchema.default(DEFAULT_TUNNEL_PROTOCOL),
     server: z.string().min(1),
-    port: z.number().int().positive(),
+    port: z.number().int().positive().max(MAX_PORT),
     auth: z.string().default(''),
     serverName: z.string().default(''),
     insecure: z.boolean().default(false),
@@ -25,12 +25,6 @@ export const tunnelConfigSchema = z
     reality: realityConfigSchema.optional()
   })
   .refine(
-    (config) => {
-      if (config.protocol === TUNNEL_PROTOCOL.vless) {
-        return config.reality !== undefined && config.auth.length > 0 && config.serverName.length > 0;
-      }
-
-      return config.auth.length > 0 && config.serverName.length > 0;
-    },
+    (config) => config.auth.length > 0 && config.serverName.length > 0 && (config.protocol !== TUNNEL_PROTOCOL.vless || config.reality !== undefined),
     { message: 'a tunnel config needs auth and serverName, and a vless one needs reality' }
   );

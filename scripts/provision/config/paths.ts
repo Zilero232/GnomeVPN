@@ -1,11 +1,10 @@
-export const SECRETS_DIR = '/etc/gnomevpn';
+const SECRETS_DIR = '/etc/gnomevpn';
 
-export const CERT_PATH = `${SECRETS_DIR}/cert.pem`;
-
-export const KEY_PATH = `${SECRETS_DIR}/key.pem`;
-
-export const REALITY_KEY_PATH = `${SECRETS_DIR}/reality.key`;
-
-export const REALITY_PUB_PATH = `${SECRETS_DIR}/reality.pub`;
-
-export const REALITY_SID_PATH = `${SECRETS_DIR}/reality.sid`;
+export const NODE_FILES = {
+  dir: SECRETS_DIR,
+  cert: `${SECRETS_DIR}/cert.pem`,
+  key: `${SECRETS_DIR}/key.pem`,
+  realityKey: `${SECRETS_DIR}/reality.key`,
+  realityPub: `${SECRETS_DIR}/reality.pub`,
+  realitySid: `${SECRETS_DIR}/reality.sid`
+} as const;

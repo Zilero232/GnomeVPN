@@ -25,7 +25,7 @@ export const DeleteAccountCard = () => {
         </Text>
       </div>
 
-      <Button disabled={isPending} size='md' variant='danger' onClick={open}>
+      <Button aria-haspopup='dialog' disabled={isPending} size='md' variant='danger' onClick={open}>
         {t('action')}
       </Button>
 

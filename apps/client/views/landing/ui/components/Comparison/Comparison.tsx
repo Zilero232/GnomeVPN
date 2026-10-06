@@ -1,10 +1,7 @@
-'use client';
-
 import { Check, X } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from '@/shared/lib';
+import { SITE } from '@/shared/config';
 import { Text } from '@/ui-kit';
 
 import { COMPARISON_ROWS } from '../../../config';
@@ -15,16 +12,22 @@ export const Comparison = () => {
   const t = useTranslations('landing.comparison');
 
   return (
-    <motion.div className={s.wrapper} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
-      <div className={s.head}>
-        <span className={s.headFeature} />
-        <span className={s.headUs}>GnomeVPN</span>
-        <span className={s.headThem}>{t('free')}</span>
+    <div aria-labelledby='compare-title' className={s.wrapper} role='table'>
+      <div className={s.head} role='row'>
+        <span role='columnheader'>
+          <span className={s.srOnly}>{t('feature')}</span>
+        </span>
+        <span className={s.headUs} role='columnheader'>
+          {SITE.name}
+        </span>
+        <span className={s.headThem} role='columnheader'>
+          {t('free')}
+        </span>
       </div>
 
       {COMPARISON_ROWS.map((row) => (
-        <motion.div key={row} className={s.row} variants={ROW_MOTION}>
-          <div className={s.feature}>
+        <div key={row} className={s.row} role='row'>
+          <div className={s.feature} role='rowheader'>
             <Text as='span' className={s.featureText}>
               {t(`${row}Label`)}
             </Text>
@@ -33,19 +36,21 @@ export const Comparison = () => {
             </Text>
           </div>
 
-          <div className={s.cell}>
+          <div className={s.cell} role='cell'>
             <span className={s.yes}>
-              <Check size={14} strokeWidth={3} />
+              <Check aria-hidden size={14} strokeWidth={3} />
+              <span className={s.srOnly}>{t('yes')}</span>
             </span>
           </div>
 
-          <div className={s.cell}>
+          <div className={s.cell} role='cell'>
             <span className={s.no}>
-              <X size={14} strokeWidth={3} />
+              <X aria-hidden size={14} strokeWidth={3} />
+              <span className={s.srOnly}>{t('no')}</span>
             </span>
           </div>
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 };

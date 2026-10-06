@@ -14,6 +14,7 @@ export class ReconcilePeersJob {
   private readonly logger = new Logger(ReconcilePeersJob.name);
   private readonly bootedAt = Date.now();
   private readonly failures = new Map<string, number>();
+  private running: Promise<void> | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -37,6 +38,24 @@ export class ReconcilePeersJob {
   }
 
   private async sweep(withOrphans: boolean): Promise<void> {
+    if (Date.now() - this.bootedAt < SCHEDULE.bootGraceMs || (this.running && !withOrphans)) {
+      return;
+    }
+
+    while (this.running) {
+      await this.running.catch(() => undefined);
+    }
+
+    this.running = this.sweepNodes(withOrphans);
+
+    try {
+      await this.running;
+    } finally {
+      this.running = null;
+    }
+  }
+
+  private async sweepNodes(withOrphans: boolean): Promise<void> {
     const nodes = await this.prisma.node.findMany({ select: IDENTIFIED_NODE_SELECT });
 
     const results = await Promise.allSettled(nodes.map((node) => this.reconcileNode({ node, withOrphans })));
@@ -56,19 +75,11 @@ export class ReconcilePeersJob {
 
   @Cron(SCHEDULE.reconcileCron)
   async run(): Promise<void> {
-    if (Date.now() - this.bootedAt < SCHEDULE.bootGraceMs) {
-      return;
-    }
-
     await this.sweep(false);
   }
 
   @Cron(SCHEDULE.collectOrphansCron)
   async collect(): Promise<void> {
-    if (Date.now() - this.bootedAt < SCHEDULE.bootGraceMs) {
-      return;
-    }
-
     await this.sweep(true);
   }
 

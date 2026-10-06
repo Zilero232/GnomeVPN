@@ -1,8 +1,8 @@
 {
   "title": "Connect with INCY",
   "hint": "The link below adds every server to the INCY app. You install the app once — the setup guide is on its own page.",
-  "copyDeepLink": "INCY link",
-  "showQr": "QR code",
+  "copyDeepLink": "Copy INCY link",
+  "showQr": "Show QR code",
   "deepLinkCopied": "Link copied",
   "qrTitle": "Scan the code",
   "qrHint": "Point a phone camera at it, or scan it from the app on a TV.",
@@ -32,11 +32,8 @@
   "rotateConfirmBody": "The current link stops working the moment you confirm. Every device you have added it to loses the connection until you paste the new one.",
   "rotateConfirmAction": "Rotate link",
   "rotateConfirmCancel": "Keep the current one",
-  "copyDeepLinkHint": "Opens the INCY app",
-  "copyUrl": "Subscription URL",
-  "copyUrlHint": "Hiddify, v2rayNG and others",
+  "copyUrl": "Copy subscription URL",
   "urlCopied": "Subscription URL copied",
-  "showQrHint": "For a TV",
   "qrKindLabel": "What the code carries",
   "qrKinds": {
     "url": "Any app",
@@ -67,5 +64,9 @@
     "linux": "Linux",
     "tv": "TV"
   },
-  "importCopied": "Link copied — opening the app"
+  "importCopied": "Link copied — opening the app",
+  "loading": "Loading your link…",
+  "unavailable": "Could not load your subscription link. Check your connection and try again.",
+  "retry": "Try again",
+  "copyFailed": "Could not copy — select the link and copy it by hand."
 }

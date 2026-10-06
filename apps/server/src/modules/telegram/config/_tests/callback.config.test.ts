@@ -10,8 +10,6 @@ describe('CALLBACK_PREFIX', () => {
     expect(new Set(all).size).toBe(all.length);
   });
 
-  // A payload is routed by the prefix it starts with, so one prefix that begins
-  // with another would send its callbacks to the wrong handler.
   it('has no prefix that begins with another', () => {
     for (const [name, prefix] of entries(CALLBACK_PREFIX)) {
       for (const [otherName, other] of entries(CALLBACK_PREFIX)) {

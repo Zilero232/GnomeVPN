@@ -1,12 +1,12 @@
 import type { BuildInboundInput } from './hysteria-inbound.types';
 
-import { CERT_PATH, KEY_PATH, LISTEN_PORT, MASQUERADE_HOST } from '../../config';
-import { INBOUND_TAG, SNIFF_PROTOCOLS, UDP_IDLE_TIMEOUT } from './hysteria-inbound.constants';
+import { MASQUERADE_HOST, NODE_FILES, PORTS } from '../../config';
+import { HYSTERIA_INBOUND } from './hysteria-inbound.constants';
 
 export const buildHysteriaInbound = ({ auth, sni }: BuildInboundInput): Record<string, unknown> => ({
-  tag: INBOUND_TAG,
+  tag: HYSTERIA_INBOUND.tag,
   listen: null,
-  port: LISTEN_PORT,
+  port: PORTS.hysteria,
   protocol: 'hysteria',
   settings: {
     version: 2,
@@ -17,7 +17,7 @@ export const buildHysteriaInbound = ({ auth, sni }: BuildInboundInput): Record<s
     security: 'tls',
     hysteriaSettings: {
       version: 2,
-      udpIdleTimeout: UDP_IDLE_TIMEOUT,
+      udpIdleTimeout: HYSTERIA_INBOUND.udpIdleTimeout,
       masquerade: {
         type: 'proxy',
         url: `https://${MASQUERADE_HOST}`,
@@ -32,8 +32,8 @@ export const buildHysteriaInbound = ({ auth, sni }: BuildInboundInput): Record<s
       alpn: ['h3'],
       certificates: [
         {
-          certificateFile: CERT_PATH,
-          keyFile: KEY_PATH,
+          certificateFile: NODE_FILES.cert,
+          keyFile: NODE_FILES.key,
           usage: 'encipherment'
         }
       ]
@@ -41,6 +41,6 @@ export const buildHysteriaInbound = ({ auth, sni }: BuildInboundInput): Record<s
   },
   sniffing: {
     enabled: true,
-    destOverride: SNIFF_PROTOCOLS
+    destOverride: [...HYSTERIA_INBOUND.sniff]
   }
 });

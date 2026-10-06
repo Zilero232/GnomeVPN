@@ -17,6 +17,7 @@ const env = validateEnv(process.env);
 const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false, logger: appLogger });
 
 app.set('trust proxy', 1);
+app.set('etag', false);
 
 app.use(helmet({ contentSecurityPolicy: false }));
 

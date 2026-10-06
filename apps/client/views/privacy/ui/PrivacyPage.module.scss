@@ -1,68 +1,47 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
-  display: flex;
-  min-height: 100dvh;
-  justify-content: center;
-  padding: 48px 24px 96px;
+  @include marketing-page(720px, 0, 0);
 }
 
 .article {
-  width: 100%;
-  max-width: 720px;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 40px;
-  gap: 16px;
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  color: inherit;
-  gap: 10px;
-  text-decoration: none;
+  @include stack(28px);
 }
 
 .head {
-  margin-bottom: 40px;
+  @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
+
+  margin-bottom: 12px;
 }
 
 .title {
-  margin: 0 0 12px;
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  @include marketing-title;
 }
 
 .updated {
-  margin: 0 0 20px;
   color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 12px;
 }
 
 .intro {
-  margin: 0;
   color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.6;
 }
 
 .section {
-  margin-bottom: 28px;
+  @include stack(10px);
 }
 
 .heading {
-  margin: 0 0 10px;
   font-size: 18px;
   font-weight: 600;
+  text-wrap: balance;
 }
 
 .body {
-  margin: 0;
   color: var(--color-text-muted);
   font-size: 15px;
   line-height: 1.65;
@@ -72,15 +51,11 @@
 .footer {
   padding-top: 24px;
   border-top: 1px solid var(--color-border);
-  margin-top: 40px;
+  margin-top: 12px;
 }
 
 .link {
-  color: var(--color-accent);
-  font-size: 15px;
-  text-decoration: none;
+  overflow-wrap: anywhere;
 
-  &:hover {
-    text-decoration: underline;
-  }
+  @include text-link(15px);
 }

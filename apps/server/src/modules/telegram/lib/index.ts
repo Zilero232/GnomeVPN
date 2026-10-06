@@ -15,6 +15,4 @@ export { statusText } from './status-text';
 export type { StatusTextInput } from './status-text';
 
 export { webhookUrl } from './webhook-url';
-export { verifyWidgetPayload, widgetIdentity } from './widget-auth';
-
-export type { WidgetPayload } from './widget-auth';
+export { isWidgetPayload, verifyWidgetPayload, widgetIdentity } from './widget-auth';

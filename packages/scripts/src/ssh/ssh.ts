@@ -4,10 +4,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import pRetry from 'p-retry';
 
-import type { SshConnectOptions, SshExecResult, SshScriptInput } from './ssh.types';
+import type { SshConnectOptions, SshExecResult, SshPutFileInput } from './ssh.types';
 
-import { arg } from '../shell';
-import { CONNECT_ATTEMPTS, CONNECT_BACKOFF_MS, READY_TIMEOUT_MS } from './ssh.constants';
+import { SIGNALLED_EXIT_CODE, SSH_CONNECT, SSH_UPLOAD } from './ssh.constants';
+import { failureOf } from './ssh.helpers';
 
 export class SshClient {
   private readonly ssh = new NodeSSH();
@@ -20,36 +20,38 @@ export class SshClient {
           username: opts.username,
           ...(opts.port && { port: opts.port }),
           ...(opts.privateKeyPath ? { privateKeyPath: opts.privateKeyPath } : { password: opts.password }),
-          readyTimeout: READY_TIMEOUT_MS
+          readyTimeout: SSH_CONNECT.readyTimeoutMs
         }),
-      { retries: CONNECT_ATTEMPTS, minTimeout: CONNECT_BACKOFF_MS }
+      { retries: SSH_CONNECT.retries, minTimeout: SSH_CONNECT.minBackoffMs }
     );
   }
 
   async exec(command: string): Promise<SshExecResult> {
     const result = await this.ssh.execCommand(command);
 
-    return { stdout: result.stdout, stderr: result.stderr, exitCode: result.code ?? 0 };
+    return { stdout: result.stdout, stderr: result.stderr, exitCode: result.code ?? SIGNALLED_EXIT_CODE };
   }
 
-  async runScript({ cwd, script }: SshScriptInput): Promise<SshExecResult> {
-    return this.exec(`set -e; cd ${arg(cwd)}; ${script}`);
+  async run(command: string): Promise<SshExecResult> {
+    const result = await this.exec(command);
+
+    if (result.exitCode !== 0) {
+      throw new Error(failureOf(result));
+    }
+
+    return result;
   }
 
-  async putFile(localContent: string, remotePath: string) {
-    const dir = await mkdtemp(join(tmpdir(), 'gnomevpn-ssh-put-'));
-    const localPath = join(dir, 'payload');
+  async putFile({ content, remotePath }: SshPutFileInput) {
+    const dir = await mkdtemp(join(tmpdir(), SSH_UPLOAD.tempPrefix));
+    const localPath = join(dir, SSH_UPLOAD.payloadName);
 
     try {
-      await writeFile(localPath, localContent, 'utf8');
+      await writeFile(localPath, content, 'utf8');
       await this.ssh.putFile(localPath, remotePath);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
-  }
-
-  async uploadFile(localPath: string, remotePath: string) {
-    await this.ssh.putFile(localPath, remotePath);
   }
 
   dispose(): void {

@@ -3,14 +3,15 @@ import { useMutation } from '@tanstack/react-query';
 import { useToastError } from '@/entities/app/locale';
 import { buyExtraDevices } from '@/shared/api';
 
-import { redirectToConfirmation } from '../../checkout.helpers';
+import { useSettlePayment } from '../use-settle-payment';
 
 export const useBuyExtraDevices = () => {
+  const settlePayment = useSettlePayment();
   const toastError = useToastError();
 
   return useMutation({
     mutationFn: (quantity: number) => buyExtraDevices({ quantity }),
-    onSuccess: (result) => redirectToConfirmation(result.confirmationUrl),
+    onSuccess: settlePayment,
     onError: toastError
   });
 };

@@ -1,13 +1,8 @@
-'use client';
-
 import { useFormatter, useTranslations } from 'next-intl';
 
-import { LocaleSwitcher } from '@/features/app/switch-locale';
 import { SITE } from '@/shared/config';
-import { ROUTES } from '@/shared/constants';
 import { DATE_FORMAT } from '@/shared/i18n';
-import { Link } from '@/shared/i18n/navigation';
-import { BrandMark, Text } from '@/ui-kit';
+import { Text } from '@/ui-kit';
 
 import { PRIVACY_SECTIONS, PRIVACY_UPDATED } from '../config';
 
@@ -20,23 +15,17 @@ export const PrivacyPage = () => {
   return (
     <main className={s.root}>
       <article className={s.article}>
-        <nav className={s.nav}>
-          <Link className={s.brand} href={ROUTES.landing}>
-            <BrandMark size='sm' />
-          </Link>
-
-          <LocaleSwitcher />
-        </nav>
-
         <header className={s.head}>
           <Text as='h1' className={s.title}>
             {t('title')}
           </Text>
+
           <Text as='p' className={s.updated}>
             {t('updated', {
               date: format.dateTime(new Date(PRIVACY_UPDATED), DATE_FORMAT)
             })}
           </Text>
+
           <Text as='p' className={s.intro}>
             {t('intro')}
           </Text>
@@ -47,6 +36,7 @@ export const PrivacyPage = () => {
             <Text as='h2' className={s.heading}>
               {t(`${section}.title`)}
             </Text>
+
             <Text as='p' className={s.body}>
               {t(`${section}.body`)}
             </Text>

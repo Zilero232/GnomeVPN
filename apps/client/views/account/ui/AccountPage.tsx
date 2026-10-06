@@ -17,7 +17,7 @@ import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
-  const { subscription, isLoading } = useSubscriptionStatus();
+  const { subscription, isLoading, isError, refetch } = useSubscriptionStatus();
 
   const signOut = useSignOut();
 
@@ -34,7 +34,7 @@ export const AccountPage = () => {
       value: 'subscription',
       label: t('tabs.subscription'),
       icon: CreditCard,
-      render: () => <SubscriptionCard isLoading={isLoading} subscription={subscription} />
+      render: () => <SubscriptionCard isError={isError} isLoading={isLoading} subscription={subscription} onRetry={() => void refetch()} />
     },
     {
       value: 'telegram',
@@ -55,14 +55,14 @@ export const AccountPage = () => {
       <motion.header className={s.header} variants={HEADER_MOTION}>
         <AccountIdentity />
 
-        <button className={s.signOut} disabled={signOut.isPending} type='button' onClick={() => signOut.mutate()}>
+        <button aria-busy={signOut.isPending} className={s.signOut} disabled={signOut.isPending} type='button' onClick={() => signOut.mutate()}>
           <LogOut aria-hidden size={15} />
           <span className={s.signOutLabel}>{t('signOut')}</span>
         </button>
       </motion.header>
 
       <motion.div className={s.body} variants={BLOCK_MOTION}>
-        <AccountTabs items={tabs} panelClassName={s.card} />
+        <AccountTabs items={tabs} label={t('tabs.label')} panelClassName={s.card} />
       </motion.div>
     </motion.main>
   );

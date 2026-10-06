@@ -1,23 +1,10 @@
-'use client';
-
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import { REVEAL_VIEWPORT } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 
 import { Comparison, Faq, Features, Guarantee, Hero, HowItWorks, Locations, Platforms } from './components';
-import { TITLE_MOTION } from './LandingPage.motion';
 
 import s from './LandingPage.module.scss';
-
-const SectionTitle = ({ children }: { children: string }) => (
-  <motion.div initial='hidden' variants={TITLE_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
-    <Text as='h2' className={s.sectionTitle}>
-      {children}
-    </Text>
-  </motion.div>
-);
 
 export const LandingPage = () => {
   const t = useTranslations('landing');
@@ -26,28 +13,38 @@ export const LandingPage = () => {
     <main className={s.root}>
       <Hero />
 
-      <section className={s.section} id='how'>
-        <SectionTitle>{t('how.title')}</SectionTitle>
+      <section aria-labelledby='how-title' className={s.section} id='how'>
+        <Text as='h2' className={s.sectionTitle} id='how-title'>
+          {t('how.title')}
+        </Text>
         <HowItWorks />
       </section>
 
-      <section className={s.section} id='features'>
-        <SectionTitle>{t('features.title')}</SectionTitle>
+      <section aria-labelledby='features-title' className={s.section} id='features'>
+        <Text as='h2' className={s.sectionTitle} id='features-title'>
+          {t('features.title')}
+        </Text>
         <Features />
       </section>
 
-      <section className={s.section} id='locations'>
-        <SectionTitle>{t('locations.title')}</SectionTitle>
+      <section aria-labelledby='locations-title' className={s.section} id='locations'>
+        <Text as='h2' className={s.sectionTitle} id='locations-title'>
+          {t('locations.title')}
+        </Text>
         <Locations />
       </section>
 
-      <section className={s.section} id='compare'>
-        <SectionTitle>{t('comparison.title')}</SectionTitle>
+      <section aria-labelledby='compare-title' className={s.section} id='compare'>
+        <Text as='h2' className={s.sectionTitle} id='compare-title'>
+          {t('comparison.title')}
+        </Text>
         <Comparison />
       </section>
 
-      <section className={s.section} id='platforms'>
-        <SectionTitle>{t('platforms.title')}</SectionTitle>
+      <section aria-labelledby='platforms-title' className={s.section} id='platforms'>
+        <Text as='h2' className={s.sectionTitle} id='platforms-title'>
+          {t('platforms.title')}
+        </Text>
         <Platforms />
       </section>
 
@@ -55,8 +52,10 @@ export const LandingPage = () => {
         <Guarantee />
       </section>
 
-      <section className={s.section} id='faq'>
-        <SectionTitle>{t('faq.title')}</SectionTitle>
+      <section aria-labelledby='faq-title' className={s.section} id='faq'>
+        <Text as='h2' className={s.sectionTitle} id='faq-title'>
+          {t('faq.title')}
+        </Text>
         <Faq />
       </section>
     </main>
