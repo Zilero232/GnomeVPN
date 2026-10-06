@@ -3,6 +3,16 @@
 # Certificates come from Let's Encrypt over HTTP-01, so behind Cloudflare the
 # orange cloud stays off until they exist, then SSL mode must be Full (strict)
 # or the two redirect each other in a loop.
+#
+# A ClientHello without SNI, or with a name no site here holds, used to get a
+# TLS internal_error alert. INCY refreshing its subscription through a live
+# tunnel arrives exactly like that, so those handshakes get the API's
+# certificate and are routed by Host instead.
+
+{
+	default_sni api.gnome-vpn.com
+	fallback_sni api.gnome-vpn.com
+}
 
 (proxy_headers) {
 	header {

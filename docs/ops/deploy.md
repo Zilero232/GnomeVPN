@@ -379,6 +379,19 @@ answers, so the deploy waits on the compose healthchecks for both `server` and
 deploy and land flat next to each other — the compose file bind-mounts
 `./Caddyfile`, so a nested path would mount a directory.
 
+**A copied Caddyfile does nothing until Caddy restarts.** A single-file bind
+mount pins the inode it saw at container start; `scp` writes a new file, so the
+container keeps reading the old one, and `up -d` does not recreate a container
+whose spec did not change. The deploy therefore ends with
+`docker compose restart caddy` — `caddy reload` would re-read the stale inode.
+
+**Caddy answers a handshake it has no certificate for with the API's.**
+`default_sni` and `fallback_sni` both name `api.gnome-vpn.com`. Without them a
+ClientHello carrying no SNI, or a name no site block holds, got a TLS
+`internal_error` alert — which is what INCY received refreshing its
+subscription through a live tunnel (`TLSV1_ALERT_INTERNAL_ERROR` in its log),
+while the same URL opened fine in a browser. Routing still goes by `Host`.
+
 The workflow and its composite actions in `.github/actions/` pin every action to a commit SHA rather than a tag — a tag can be
 moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to
 placeholders because the server postinstall runs `prisma generate`, which
