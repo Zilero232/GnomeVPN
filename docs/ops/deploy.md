@@ -385,12 +385,16 @@ container keeps reading the old one, and `up -d` does not recreate a container
 whose spec did not change. The deploy therefore ends with
 `docker compose restart caddy` — `caddy reload` would re-read the stale inode.
 
-**Caddy answers a handshake it has no certificate for with the API's.**
-`default_sni` and `fallback_sni` both name `api.gnome-vpn.com`. Without them a
-ClientHello carrying no SNI, or a name no site block holds, got a TLS
-`internal_error` alert — which is what INCY received refreshing its
-subscription through a live tunnel (`TLSV1_ALERT_INTERNAL_ERROR` in its log),
-while the same URL opened fine in a browser. Routing still goes by `Host`.
+**The API also answers on `api.gnomevpn.ru`.** The project lived on
+`gnomevpn.ru` before moving, and a subscription link imported then still names
+the old host. When the Caddyfile dropped it, every such INCY refresh got a TLS
+`internal_error` alert (`TLSV1_ALERT_INTERNAL_ERROR` in its log) — Caddy's
+answer to an SNI it holds no certificate for — while the same account worked in
+a browser on the new domain. The old DNS records still point at the VPS, so
+Caddy issues a certificate for the old name too; the old site names redirect to
+`gnome-vpn.com`. `default_sni`/`fallback_sni` hand the API certificate to a
+ClientHello without SNI or with an unknown name instead of the bare alert.
+Never drop a domain that subscription links were ever issued on.
 
 The workflow and its composite actions in `.github/actions/` pin every action to a commit SHA rather than a tag — a tag can be
 moved, and these jobs hold production SSH. `DATABASE_URL`/`DIRECT_URL` are set to

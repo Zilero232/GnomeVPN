@@ -4,10 +4,9 @@
 # orange cloud stays off until they exist, then SSL mode must be Full (strict)
 # or the two redirect each other in a loop.
 #
-# A ClientHello without SNI, or with a name no site here holds, used to get a
-# TLS internal_error alert. INCY refreshing its subscription through a live
-# tunnel arrives exactly like that, so those handshakes get the API's
-# certificate and are routed by Host instead.
+# A ClientHello without SNI, or with a name no site here holds, gets the API's
+# certificate rather than a bare TLS internal_error alert, which is all a
+# client logs and says nothing about which host it asked for.
 
 {
 	default_sni api.gnome-vpn.com
@@ -31,11 +30,14 @@
 	}
 }
 
-www.gnome-vpn.com {
+# The project lived on gnomevpn.ru first, and every subscription link imported
+# before the move still names api.gnomevpn.ru. Those keep working: the API
+# answers on both names, and the old site redirects.
+www.gnome-vpn.com, gnomevpn.ru, www.gnomevpn.ru {
 	redir https://gnome-vpn.com{uri} permanent
 }
 
-api.gnome-vpn.com {
+api.gnome-vpn.com, api.gnomevpn.ru {
 	encode gzip zstd
 
 	reverse_proxy server:4000
