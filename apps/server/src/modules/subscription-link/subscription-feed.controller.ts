@@ -17,6 +17,9 @@ export class SubscriptionFeedController {
   async serve(@Param('token') token: string, @Headers('user-agent') userAgent: string | undefined, @Res() res: Response): Promise<void> {
     const { body, headers } = await this.feed.build({ token, userAgent: userAgent ?? null });
 
-    res.type(FEED.contentType).set(headers).send(body);
+    res
+      .type(FEED.contentType)
+      .set({ ...headers, 'cache-control': FEED.cacheControl })
+      .send(body);
   }
 }

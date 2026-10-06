@@ -1,13 +1,13 @@
 import { TUNNEL_PROTOCOL } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { groupBy, isEmpty, isNullish } from 'remeda';
+import { groupBy, isEmpty } from 'remeda';
 import { match } from 'ts-pattern';
 
+import type { NodeAccess } from '../../../common/lib';
 import type {
   CreatedPeer,
   DeleteClientInput,
   DiscardPeerInput,
-  FindPeersInput,
   ForEachNodeInput,
   IssueAndPersistInput,
   IssuePeerInput,
@@ -16,9 +16,8 @@ import type {
 } from '../peers.service.types';
 
 import { AppServiceUnavailableException } from '../../../common/exceptions';
-import { describeError, xrayClientForNode } from '../../../common/lib';
+import { describeError, IDENTIFIED_NODE_SELECT, xrayClientForNode } from '../../../common/lib';
 import { PrismaService } from '../../../core';
-import { NODE_ACCESS_SELECT, PEER_REF_SELECT } from '../config';
 import { peerClientName } from '../lib';
 
 @Injectable()
@@ -26,10 +25,6 @@ export class PeersService {
   private readonly logger = new Logger(PeersService.name);
 
   constructor(private readonly prisma: PrismaService) {}
-
-  async findRefs(where: FindPeersInput): Promise<PeerRef[]> {
-    return this.prisma.peer.findMany({ where, select: PEER_REF_SELECT });
-  }
 
   async issueAndPersist({ persist, ...input }: IssueAndPersistInput): Promise<CreatedPeer> {
     const created = await this.issue(input);
@@ -45,13 +40,13 @@ export class PeersService {
     return created;
   }
 
-  async issue({ node, nodeId, userId, kind, protocol, limitIp, name }: IssuePeerInput): Promise<CreatedPeer> {
+  async issue({ node, nodeId, userId, kind, protocol, limitIp, name, deferRestart }: IssuePeerInput): Promise<CreatedPeer> {
     const email = peerClientName({ userId, kind, name, nodeId, protocol });
     const client = xrayClientForNode(node);
 
     const create = match(protocol)
-      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient({ email, limitIp }))
-      .otherwise(() => () => client.createClient({ email, limitIp }));
+      .with(TUNNEL_PROTOCOL.vless, () => () => client.createVlessClient({ email, limitIp, deferRestart }))
+      .otherwise(() => () => client.createClient({ email, limitIp, deferRestart }));
 
     try {
       const created = await create();
@@ -67,20 +62,12 @@ export class PeersService {
   private async forEachNode<TPeer extends { nodeId: string }>({ peers, run }: ForEachNodeInput<TPeer>): Promise<void> {
     const byNode = groupBy(peers, (peer) => peer.nodeId);
 
-    await Promise.all(
-      Object.entries(byNode).map(async ([nodeId, nodePeers]) => {
-        const node = await this.prisma.node.findUnique({
-          where: { id: nodeId },
-          select: NODE_ACCESS_SELECT
-        });
+    const nodes = await this.prisma.node.findMany({
+      where: { id: { in: Object.keys(byNode) } },
+      select: IDENTIFIED_NODE_SELECT
+    });
 
-        if (isNullish(node)) {
-          return;
-        }
-
-        await run({ client: xrayClientForNode(node), peers: nodePeers });
-      })
-    );
+    await Promise.all(nodes.map((node) => run({ client: xrayClientForNode(node), peers: byNode[node.id] ?? [] })));
   }
 
   private async deleteFromNodes(peers: PeerRef[]): Promise<void> {
@@ -117,6 +104,10 @@ export class PeersService {
       where,
       data: { state: enabled ? 'active' : 'disabled' }
     });
+  }
+
+  async restartCore(node: NodeAccess): Promise<void> {
+    await xrayClientForNode(node).restartCore();
   }
 
   async discard({ node, email }: DiscardPeerInput): Promise<void> {

@@ -6,7 +6,7 @@
   align-self: flex-start;
   padding: 5px 11px 5px 9px;
   border: 1px solid rgb(53 240 160 / 22%);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: rgb(53 240 160 / 8%);
   color: var(--color-accent);
   font-family: var(--font-sans);
@@ -48,6 +48,7 @@
 .countdownValue {
   color: var(--color-text);
   font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+  font-variant-numeric: tabular-nums;
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;

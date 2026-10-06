@@ -47,7 +47,7 @@ export const TelegramSignInPage = () => {
         {t('telegramSignIn')}
       </Text>
 
-      <span className={s.pending}>
+      <span className={s.pending} role='status'>
         <Spinner />
 
         <Text size='sm' tone='muted'>

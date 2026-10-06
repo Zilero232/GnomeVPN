@@ -1,6 +1,14 @@
 import { z } from 'zod';
 
-const emailSchema = z.string().trim().toLowerCase().pipe(z.email('validation.emailInvalid'));
+import { isPlaceholderEmail } from './placeholder-email';
+
+const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email('validation.emailInvalid'))
+  .refine((email) => !isPlaceholderEmail(email), 'validation.emailInvalid');
+
 const passwordSchema = z.string().min(8, 'validation.passwordMin');
 const nameSchema = z.string().trim().min(2, 'validation.nameMin').max(32, 'validation.nameMax');
 

@@ -8,8 +8,13 @@
   gap: 12px;
   text-align: left;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease;
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
+    transform var(--duration-press) var(--ease-out);
+
+  &:active:not(:disabled) {
+    transform: scale(0.99);
+  }
 
   &:hover:not(:disabled) {
     border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-bright));
@@ -28,12 +33,12 @@
 
 .sm {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
 .md {
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .lg {

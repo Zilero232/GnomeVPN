@@ -1,5 +1,5 @@
 import { createHash, createHmac } from 'node:crypto';
-import { entries, isNullish } from 'remeda';
+import { entries, isNullish, isPlainObject, isString, keys, values } from 'remeda';
 
 import type { TelegramIdentity } from '../../telegram.types';
 import type { IsFreshInput, VerifyWidgetInput, WidgetPayload } from './widget-auth.types';
@@ -38,7 +38,7 @@ export const verifyWidgetPayload = ({ payload, botToken, now = new Date() }: Ver
   const secret = createHash('sha256').update(botToken).digest();
   const expected = createHmac('sha256', secret).update(checkString(payload)).digest('hex');
 
-  return timingSafeEqual(hash, expected);
+  return timingSafeEqual({ actual: hash, expected });
 };
 
 export const widgetIdentity = (payload: WidgetPayload): TelegramIdentity | null => {
@@ -54,3 +54,6 @@ export const widgetIdentity = (payload: WidgetPayload): TelegramIdentity | null 
     languageCode: languageCode ?? null
   };
 };
+
+export const isWidgetPayload = (raw: unknown): raw is WidgetPayload =>
+  isPlainObject(raw) && keys(raw).length <= WIDGET_AUTH.maxFields && values(raw).every(isString);

@@ -3,14 +3,16 @@ import type { WebhookEvent } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { isNullish } from 'remeda';
 
-import type { SettledPayment } from '../billing.types';
+import type { CanceledPayment, SettledPayment } from '../billing.types';
 
 import { describeError } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
 import { SubscriptionAccessService } from '../../subscription-link';
 import { TelegramNotifyService } from '../../telegram/services/telegram-notify.service';
+import { CARD_LOST_REASONS, WEBHOOK_EVENT } from '../config';
 import { BillingSharedService } from './billing-shared.service';
+import { CardService } from './card.service';
 
 @Injectable()
 export class WebhookService {
@@ -20,13 +22,20 @@ export class WebhookService {
     private readonly prisma: PrismaService,
     private readonly yookassa: YooKassaClient,
     private readonly shared: BillingSharedService,
+    private readonly card: CardService,
     private readonly access: SubscriptionAccessService,
     private readonly notify: TelegramNotifyService
   ) {}
 
   async handleWebhook(event: WebhookEvent): Promise<void> {
-    if (event.event === 'payment_method.active') {
+    if (event.event === WEBHOOK_EVENT.methodActive) {
       await this.handlePaymentMethodActive(event.object.id);
+
+      return;
+    }
+
+    if (!event.event.startsWith(WEBHOOK_EVENT.paymentPrefix)) {
+      this.logger.debug(`ignoring webhook event ${event.event}`);
 
       return;
     }
@@ -64,12 +73,7 @@ export class WebhookService {
     const payment = await this.yookassa.getPayment(paymentId);
 
     if (payment.status === 'canceled') {
-      await this.prisma.payment.update({
-        where: { id: row.id },
-        data: { status: 'canceled' }
-      });
-
-      this.logger.log(`payment ${paymentId} was canceled: ${payment.cancellationReason ?? 'no reason given'}`);
+      await this.cancel({ ...row, paymentId, reason: payment.cancellationReason });
 
       return;
     }
@@ -122,6 +126,36 @@ export class WebhookService {
     });
 
     await this.announce(row);
+  }
+
+  private async cancel({ id, userId, isAutoCharge, paymentId, reason }: CanceledPayment): Promise<void> {
+    const claimed = await this.prisma.payment.updateMany({
+      where: { id, status: 'pending' },
+      data: { status: 'canceled' }
+    });
+
+    if (claimed.count === 0) {
+      return;
+    }
+
+    this.logger.log(`payment ${paymentId} was canceled: ${reason ?? 'no reason given'}`);
+
+    if (!isAutoCharge) {
+      return;
+    }
+
+    if (reason && CARD_LOST_REASONS.includes(reason)) {
+      await this.card.unbindCard(userId);
+
+      this.logger.warn(`Dropped the saved card of ${userId}: ${reason}`);
+    }
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { currentPeriodEnd: true }
+    });
+
+    await this.notify.tell({ userId, pick: (copy) => copy.chargeFailed, date: subscription?.currentPeriodEnd });
   }
 
   private async announce({ userId, kind, isAutoCharge, amount }: SettledPayment): Promise<void> {

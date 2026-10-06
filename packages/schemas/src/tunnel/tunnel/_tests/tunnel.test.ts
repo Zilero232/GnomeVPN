@@ -40,3 +40,19 @@ describe('tunnelConfigSchema', () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe('tunnelConfigSchema bounds', () => {
+  it('rejects a port no socket can bind', () => {
+    expect(tunnelConfigSchema.safeParse({ ...hysteria2Config, port: 70_000 }).success).toBe(false);
+  });
+
+  it('rejects a vless config without its reality block', () => {
+    expect(tunnelConfigSchema.safeParse({ ...hysteria2Config, protocol: 'vless' }).success).toBe(false);
+  });
+
+  it('accepts a vless config carrying reality', () => {
+    const reality = { publicKey: 'pub', shortId: 'ab', fingerprint: 'chrome' };
+
+    expect(tunnelConfigSchema.safeParse({ ...hysteria2Config, protocol: 'vless', reality }).success).toBe(true);
+  });
+});

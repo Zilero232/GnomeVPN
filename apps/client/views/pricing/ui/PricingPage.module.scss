@@ -6,6 +6,7 @@
 
 .head {
   @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
 
   align-items: center;
   text-align: center;
@@ -32,30 +33,29 @@
   padding: 0;
   margin: 0;
   gap: 10px;
-
-  // Six items: rows of three read as a block, rows of two on a narrow screen.
   grid-template-columns: repeat(3, 1fr);
 
   @include below(xl) {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  list-style: none;
+
   @include below(sm) {
     grid-template-columns: 1fr;
   }
-
-  list-style: none;
 }
 
 .item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   font-size: 15px;
   gap: 8px;
 }
 
 .check {
   flex-shrink: 0;
+  margin-top: 3px;
   color: var(--color-accent);
 }
 

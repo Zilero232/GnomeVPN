@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { WidgetPayload } from '../widget-auth.types';
 
-import { verifyWidgetPayload, widgetIdentity } from '../widget-auth';
+import { isWidgetPayload, verifyWidgetPayload, widgetIdentity } from '../widget-auth';
 import { WIDGET_AUTH } from '../widget-auth.constants';
 
 const BOT_TOKEN = '123456:test-token';
@@ -85,5 +85,28 @@ describe('widgetIdentity', () => {
 
   it('treats a missing username as absent rather than empty', () => {
     expect(widgetIdentity({ id: '42' })?.username).toBeNull();
+  });
+});
+
+describe('isWidgetPayload', () => {
+  it('accepts the flat string record the widget posts', () => {
+    expect(isWidgetPayload(signedPayload())).toBe(true);
+  });
+
+  it('refuses a payload whose values are not all strings', () => {
+    expect(isWidgetPayload({ ...signedPayload(), id: 42 })).toBe(false);
+    expect(isWidgetPayload({ ...signedPayload(), hash: { not: '' } })).toBe(false);
+  });
+
+  it('refuses anything that is not a plain object', () => {
+    expect(isWidgetPayload(null)).toBe(false);
+    expect(isWidgetPayload('id=42')).toBe(false);
+    expect(isWidgetPayload([['id', '42']])).toBe(false);
+  });
+
+  it('refuses a payload with more fields than the widget ever sends', () => {
+    const padded = Object.fromEntries(Array.from({ length: WIDGET_AUTH.maxFields + 1 }, (_, index) => [`field${index}`, 'x']));
+
+    expect(isWidgetPayload(padded)).toBe(false);
   });
 });

@@ -1,35 +1,35 @@
 import type { BuildRealityInboundInput } from './reality-inbound.types';
 
-import { REALITY_DEST, REALITY_LISTEN_PORT, REALITY_SERVER_NAMES } from '../../config';
-import { REALITY_INBOUND_TAG, REALITY_NETWORK, REALITY_SERVICE_NAME, SNIFF_PROTOCOLS } from './reality-inbound.constants';
+import { PORTS, REALITY_DONOR } from '../../config';
+import { REALITY_INBOUND } from './reality-inbound.constants';
 
 export const buildRealityInbound = ({ privateKey, shortId }: BuildRealityInboundInput): Record<string, unknown> => ({
-  tag: REALITY_INBOUND_TAG,
+  tag: REALITY_INBOUND.tag,
   listen: null,
-  port: REALITY_LISTEN_PORT,
+  port: PORTS.reality,
   protocol: 'vless',
   settings: {
     clients: [],
     decryption: 'none'
   },
   streamSettings: {
-    network: REALITY_NETWORK,
+    network: REALITY_INBOUND.network,
     security: 'reality',
     realitySettings: {
       show: false,
-      dest: REALITY_DEST,
+      dest: REALITY_DONOR.dest,
       xver: 0,
-      serverNames: REALITY_SERVER_NAMES,
+      serverNames: [...REALITY_DONOR.serverNames],
       privateKey,
       shortIds: [shortId]
     },
     grpcSettings: {
-      serviceName: REALITY_SERVICE_NAME,
+      serviceName: REALITY_INBOUND.serviceName,
       multiMode: false
     }
   },
   sniffing: {
     enabled: true,
-    destOverride: SNIFF_PROTOCOLS
+    destOverride: [...REALITY_INBOUND.sniff]
   }
 });

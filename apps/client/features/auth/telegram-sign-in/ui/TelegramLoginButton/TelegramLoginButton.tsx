@@ -27,7 +27,7 @@ export const TelegramLoginButton = () => {
       <div ref={slotRef} className={s.slot} />
 
       {isPending && (
-        <span className={s.pending}>
+        <span className={s.pending} role='status'>
           <Spinner />
 
           <Text size='sm' tone='muted'>
@@ -37,7 +37,7 @@ export const TelegramLoginButton = () => {
       )}
 
       {isError && (
-        <Text align='center' size='sm' tone='danger'>
+        <Text align='center' role='alert' size='sm' tone='danger'>
           {t('telegramSignInFailed')}
         </Text>
       )}

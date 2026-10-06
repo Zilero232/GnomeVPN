@@ -18,3 +18,9 @@ export type SyncToProductionInput = {
   nodes: SyncableNode[];
   envNodes: string;
 };
+
+export type ApplySqlCommandInput = {
+  deployPath: string;
+  sql: string;
+  delimiter: string;
+};

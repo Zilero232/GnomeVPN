@@ -5,8 +5,9 @@ import { useState } from 'react';
 import { isNonNullish } from 'remeda';
 import { toast } from 'sonner';
 
+import { useToastError } from '@/entities/app/locale';
 import { useAccountIdentity } from '@/entities/auth/user';
-import { Button, Spinner, Text } from '@/ui-kit';
+import { ErrorBlock, LoadingBlock } from '@/ui-kit';
 
 import { useIssueCode, useTelegramStatus, useUnlinkTelegram } from '../model/hooks';
 import { TelegramCode, TelegramInvite, TelegramLinked, TelegramUnlinkDialog } from './components';
@@ -15,15 +16,13 @@ import s from './TelegramPanel.module.scss';
 
 export const TelegramPanel = () => {
   const t = useTranslations('telegram');
-  const tErrors = useTranslations('errors');
+  const toastError = useToastError();
   const issue = useIssueCode();
-  const { data: status, isPending, isError, refetch } = useTelegramStatus({ isAwaitingLink: isNonNullish(issue.data) });
+  const { data: status, isPending, isError, isRefetching, refetch } = useTelegramStatus({ isAwaitingLink: isNonNullish(issue.data) });
   const { hasEmail } = useAccountIdentity();
   const unlink = useUnlinkTelegram();
 
   const [isUnlinkOpen, setIsUnlinkOpen] = useState(false);
-
-  const onError = (error: Error) => toast.error(tErrors(error.message));
 
   const onUnlink = () => {
     unlink.mutate(undefined, {
@@ -31,30 +30,16 @@ export const TelegramPanel = () => {
         setIsUnlinkOpen(false);
         toast.success(t('unlinked'));
       },
-      onError
+      onError: toastError
     });
   };
 
   if (isPending) {
-    return (
-      <div className={s.loading}>
-        <Spinner />
-      </div>
-    );
+    return <LoadingBlock label={t('loading')} />;
   }
 
   if (isError || !status) {
-    return (
-      <div className={s.root}>
-        <Text as='p' size='sm' tone='muted'>
-          {t('unavailable')}
-        </Text>
-
-        <Button className={s.action} variant='ghost' onClick={() => void refetch()}>
-          {t('retry')}
-        </Button>
-      </div>
-    );
+    return <ErrorBlock isRetrying={isRefetching} message={t('unavailable')} retryLabel={t('retry')} onRetry={() => void refetch()} />;
   }
 
   if (status.isLinked) {
@@ -77,7 +62,11 @@ export const TelegramPanel = () => {
 
   return (
     <div className={s.root}>
-      <TelegramInvite isIssued={isNonNullish(issued)} isPending={issue.isPending} onConnect={() => issue.mutate(undefined, { onError })} />
+      <TelegramInvite
+        isIssued={isNonNullish(issued)}
+        isPending={issue.isPending}
+        onConnect={() => issue.mutate(undefined, { onError: toastError })}
+      />
 
       {isNonNullish(issued) && <TelegramCode bot={issued.botUsername} code={issued.code} />}
     </div>

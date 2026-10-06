@@ -2,7 +2,7 @@ import { createLogger } from '@gnomevpn/logger';
 
 import type { LogFields, Reporter } from './reporter.types';
 
-import { PRETTY_FORMAT, SERVICE_NAME } from './reporter.constants';
+import { MARK, PRETTY_FORMAT, SERVICE_NAME } from './reporter.constants';
 import { colorFor, paint } from './reporter.helpers';
 
 const root = createLogger({ service: SERVICE_NAME, pretty: PRETTY_FORMAT });
@@ -17,8 +17,8 @@ export const reporter = (scope: string): Reporter => {
 
   return {
     info: (message, fields) => write(message, fields),
-    step: (message, fields) => write(`→ ${message}`, fields),
-    done: (message, fields) => write(`  ${message}`, fields),
+    step: (message, fields) => write(`${MARK.step}${message}`, fields),
+    done: (message, fields) => write(`${MARK.done}${message}`, fields),
     warn: (message, fields) => log.warn(fields ?? {}, paint({ message, color })),
     fail: (message, code = 1) => {
       log.error(message);

@@ -31,5 +31,8 @@
   "unlinkConfirmBody": "The bot will stop answering in this chat. Your subscription and access are untouched — you can link it again at any time.",
   "unlinkConfirmCancel": "Cancel",
   "unlinkConfirmAction": "Unlink",
-  "unlinkNoEmail": "Telegram is the only way into this account. Add an email in your profile and set a password, then unlinking is safe."
+  "unlinkNoEmail": "Telegram is the only way into this account. Add an email in your profile and set a password, then unlinking is safe.",
+  "loading": "Checking Telegram…",
+  "copyFailed": "Could not copy — type the code by hand.",
+  "copyCode": "Copy code {code}"
 }

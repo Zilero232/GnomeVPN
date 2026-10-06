@@ -3,7 +3,7 @@
 #
 # CI builds web and server into ghcr.io; the VPS only pulls them and holds no
 # clone. Three files sit in one directory: this one and the Caddyfile, copied
-# by CI, and .env, written once by hand (DEPLOY.md).
+# by CI, and .env, written once by hand (docs/ops/deploy.md).
 #
 #   docker compose pull && docker compose up -d
 #   docker compose logs -f

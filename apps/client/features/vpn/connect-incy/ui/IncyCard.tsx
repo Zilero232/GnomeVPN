@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 import { ROUTES } from '@/shared/constants';
 import { Link } from '@/shared/i18n/navigation';
-import { Button, Spinner, Text } from '@/ui-kit';
+import { Button, ErrorBlock, LoadingBlock, Text } from '@/ui-kit';
 
 import type { CopyInput } from './IncyCard.types';
 
@@ -19,7 +19,7 @@ import s from './IncyCard.module.scss';
 
 export const IncyCard = () => {
   const t = useTranslations('incy');
-  const { data: link, isLoading } = useSubscriptionLink();
+  const { data: link, isPending, isError, isRefetching, refetch } = useSubscriptionLink();
   const rotate = useRotateLink();
 
   const [isQrOpen, setIsQrOpen] = useState(false);
@@ -32,7 +32,13 @@ export const IncyCard = () => {
   };
 
   const onCopy = async ({ value, message, id }: CopyInput) => {
-    await navigator.clipboard.writeText(value);
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      toast.error(t('copyFailed'));
+
+      return;
+    }
 
     setCopied(id);
     toast.success(message);
@@ -40,12 +46,12 @@ export const IncyCard = () => {
     setTimeout(setCopied, COPIED_RESET_MS, null);
   };
 
-  if (isLoading || !link) {
-    return (
-      <div className={s.loading}>
-        <Spinner />
-      </div>
-    );
+  if (isPending) {
+    return <LoadingBlock label={t('loading')} />;
+  }
+
+  if (isError) {
+    return <ErrorBlock isRetrying={isRefetching} message={t('unavailable')} retryLabel={t('retry')} onRetry={() => void refetch()} />;
   }
 
   return (
@@ -75,19 +81,29 @@ export const IncyCard = () => {
           {t('copyUrl')}
         </Button>
 
-        <Button className={s.action} size='lg' variant='ghost' onClick={() => setIsQrOpen(true)}>
+        <Button aria-haspopup='dialog' className={s.action} size='lg' variant='ghost' onClick={() => setIsQrOpen(true)}>
           <QrCode aria-hidden size={16} />
           {t('showQr')}
         </Button>
       </div>
 
       <div className={s.other}>
-        <button aria-expanded={isOtherOpen} className={s.otherToggle} type='button' onClick={() => setIsOtherOpen((open) => !open)}>
+        <button
+          aria-controls='incy-other-apps'
+          aria-expanded={isOtherOpen}
+          className={s.otherToggle}
+          type='button'
+          onClick={() => setIsOtherOpen((open) => !open)}
+        >
           <ChevronDown aria-hidden className={s.chevron} data-open={isOtherOpen} size={16} />
           {t('otherApps')}
         </button>
 
-        {isOtherOpen && <OtherAppsList clients={link.clients} url={link.url} onCopy={onCopy} />}
+        {isOtherOpen && (
+          <div id='incy-other-apps'>
+            <OtherAppsList clients={link.clients} url={link.url} onCopy={onCopy} />
+          </div>
+        )}
       </div>
 
       <div className={s.rotate}>
@@ -95,7 +111,7 @@ export const IncyCard = () => {
           {t('rotateHint')}
         </Text>
 
-        <Button className={s.rotateButton} disabled={rotate.isPending} variant='ghost' onClick={() => setIsRotateOpen(true)}>
+        <Button aria-haspopup='dialog' className={s.rotateButton} disabled={rotate.isPending} variant='ghost' onClick={() => setIsRotateOpen(true)}>
           <RefreshCw aria-hidden size={14} />
           {t('rotate')}
         </Button>

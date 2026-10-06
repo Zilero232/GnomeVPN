@@ -12,3 +12,8 @@ const LOOPBACK_CIDRS = ['127.0.0.1/32', '::1/128'] as const;
 
 export const WEBHOOK_ALLOWED_CIDRS: readonly string[] =
   process.env.NODE_ENV === 'production' ? YOOKASSA_CIDRS : [...YOOKASSA_CIDRS, ...LOOPBACK_CIDRS];
+
+export const WEBHOOK_EVENT = {
+  methodActive: 'payment_method.active',
+  paymentPrefix: 'payment.'
+} as const;

@@ -22,8 +22,6 @@
   animation: breathe 2.4s ease-in-out infinite;
 }
 
-// A determinate-looking bar would be a lie: nothing here reports progress.
-// It sweeps instead, which reads as "working" without claiming a percentage.
 .bar {
   position: relative;
   overflow: hidden;

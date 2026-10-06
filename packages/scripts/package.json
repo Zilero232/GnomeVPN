@@ -26,12 +26,10 @@
   "dependencies": {
     "@gnomevpn/logger": "workspace:*",
     "node-ssh": "^13.2.1",
-    "p-retry": "catalog:",
-    "shell-quote": "^1.10.0"
+    "p-retry": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "@types/shell-quote": "^1.7.5",
     "typescript": "catalog:"
   }
 }

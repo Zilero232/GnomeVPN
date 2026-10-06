@@ -51,7 +51,7 @@
   color: var(--color-text-muted);
   cursor: pointer;
   font-family: var(--font-sans);
-  transition: color 0.18s ease;
+  transition: color var(--duration-fast) ease;
 }
 
 @mixin text-button($font-size: 13px) {
@@ -62,7 +62,7 @@
   cursor: pointer;
   font-family: var(--font-sans);
   font-size: $font-size;
-  transition: color 0.16s ease;
+  transition: color var(--duration-fast) ease;
 
   &:hover {
     color: var(--color-accent);
@@ -71,6 +71,35 @@
   &:focus-visible {
     outline: 2px solid var(--color-accent-dim);
     outline-offset: 3px;
+  }
+
+  @include touch-target;
+}
+
+@mixin text-link($font-size: 14px) {
+  color: var(--color-accent);
+  font-size: $font-size;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration-fast) ease;
+
+  &:hover {
+    text-decoration-color: currentcolor;
+  }
+}
+
+@mixin touch-target($size: var(--tap-target)) {
+  @media (pointer: coarse) {
+    min-height: $size;
+  }
+}
+
+@mixin pressable($scale: 0.97) {
+  &:active:not(:disabled) {
+    transform: scale($scale);
   }
 }
 
@@ -128,9 +157,11 @@
   gap: 11px;
   text-align: left;
   transition:
-    border-color 0.16s ease,
-    background-color 0.16s ease,
-    color 0.16s ease;
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+
+  @include touch-target;
 
   &:hover:not(:disabled) {
     border-color: rgb(230 240 236 / 10%);
@@ -141,4 +172,15 @@
   &:active:not(:disabled) {
     background-color: rgb(230 240 236 / 4%);
   }
+}
+
+@mixin visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

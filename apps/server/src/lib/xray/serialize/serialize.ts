@@ -6,16 +6,17 @@ export const serializeByKey = <T>({ key, task }: SerializeByKeyInput<T>): Promis
   const previous = chains.get(key) ?? Promise.resolve();
   const next = previous.catch(() => undefined).then(task);
 
-  chains.set(
-    key,
-    next
-      .catch(() => undefined)
-      .finally(() => {
-        if (chains.get(key) === next) {
-          chains.delete(key);
-        }
-      })
-  );
+  const tail: Promise<unknown> = next
+    .catch(() => undefined)
+    .finally(() => {
+      if (chains.get(key) === tail) {
+        chains.delete(key);
+      }
+    });
+
+  chains.set(key, tail);
 
   return next;
 };
+
+export const pendingChains = (): number => chains.size;

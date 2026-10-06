@@ -1,9 +1,10 @@
-export const NODE_KEY_PREFIX = 'XRAY_KEY_';
+export const NODE_ENV_PREFIX = {
+  apiKey: 'XRAY_KEY_',
+  panelPassword: 'XRAY_PANEL_',
+  panelPath: 'XRAY_PATH_'
+} as const;
 
-export const PANEL_PASSWORD_PREFIX = 'XRAY_PANEL_';
-
-export const PANEL_PATH_PREFIX = 'XRAY_PATH_';
-
-export const PASSWORD_BYTES = 16;
-
-export const PANEL_PATH_BYTES = 8;
+export const CREDENTIAL_BYTES = {
+  password: 16,
+  panelPath: 8
+} as const;

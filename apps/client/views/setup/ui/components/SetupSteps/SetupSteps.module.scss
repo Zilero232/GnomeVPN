@@ -29,7 +29,9 @@
 
 .body {
   display: flex;
+  min-width: 0;
   flex-direction: column;
+  padding-top: 3px;
   gap: 4px;
 }
 

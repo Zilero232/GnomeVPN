@@ -6,6 +6,7 @@
 
 .head {
   @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
 }
 
 .title {
@@ -38,11 +39,7 @@
 }
 
 .link {
-  color: var(--color-accent);
-  font-size: 14px;
-  text-decoration: none;
+  overflow-wrap: anywhere;
 
-  &:hover {
-    text-decoration: underline;
-  }
+  @include text-link;
 }

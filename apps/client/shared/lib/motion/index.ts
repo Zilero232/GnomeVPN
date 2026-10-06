@@ -1,1 +1,1 @@
-export { EASE_OUT, HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, ROW_MOTION, SECTION_MOTION } from './motion';
+export { EASE_OUT } from './motion';

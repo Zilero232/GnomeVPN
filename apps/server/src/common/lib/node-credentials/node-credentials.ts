@@ -5,7 +5,7 @@ import type { NodeAccess } from './node-credentials.types';
 import { XrayClient } from '../../../lib';
 import { AppServiceUnavailableException } from '../../exceptions';
 
-export const resolveNodeApiKey = (ref: string): string => {
+const resolveNodeApiKey = (ref: string): string => {
   const key = process.env[ref];
 
   if (isNullish(key)) {

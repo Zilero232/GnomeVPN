@@ -15,15 +15,18 @@ export const useRedeemLogin = (): RedeemLoginState => {
   const searchParams = useSearchParams();
   const signIn = useTelegramSignIn();
   const redeemRef = useRef(signIn.mutate);
+  const redeemedRef = useRef<string | null>(null);
 
   redeemRef.current = signIn.mutate;
 
   const code = searchParams.get('code');
 
   useEffect(() => {
-    if (!code) {
+    if (!code || redeemedRef.current === code) {
       return;
     }
+
+    redeemedRef.current = code;
 
     redeemRef.current(code, { onSuccess: () => router.replace(ROUTES.account) });
   }, [code, router]);

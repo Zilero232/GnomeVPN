@@ -1,8 +1,10 @@
 import { timingSafeEqual as nodeTimingSafeEqual } from 'node:crypto';
 
-export const timingSafeEqual = (left: string, right: string): boolean => {
-  const a = Buffer.from(left);
-  const b = Buffer.from(right);
+import type { TimingSafeEqualInput } from './timing-safe-equal.types';
+
+export const timingSafeEqual = ({ actual, expected }: TimingSafeEqualInput): boolean => {
+  const a = Buffer.from(actual);
+  const b = Buffer.from(expected);
 
   if (a.length !== b.length) {
     return false;

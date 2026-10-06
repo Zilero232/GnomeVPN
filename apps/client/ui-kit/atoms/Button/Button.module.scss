@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .root {
   position: relative;
   display: inline-flex;
@@ -12,16 +14,16 @@
   font-weight: 700;
   gap: 8px;
   letter-spacing: 0.01em;
+  text-decoration: none;
   transition:
-    transform 0.12s ease,
-    box-shadow 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+    transform var(--duration-press) var(--ease-out),
+    box-shadow var(--duration-base) ease,
+    background-color var(--duration-base) ease,
+    border-color var(--duration-base) ease,
+    color var(--duration-base) ease;
   white-space: nowrap;
 
-  &:active:not(:disabled) {
-    transform: translateY(1px);
-  }
+  @include pressable;
 
   &:disabled {
     cursor: not-allowed;
@@ -33,11 +35,18 @@
   width: 34px;
   height: 34px;
   padding: 0;
+
+  @media (pointer: coarse) {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
 }
 
 .md {
   height: 40px;
   padding: 0 18px;
+
+  @include touch-target;
 }
 
 .lg {
@@ -51,8 +60,10 @@
   background-color: var(--color-accent);
   color: var(--color-bg-deep);
 
-  &:hover:not(:disabled) {
-    box-shadow: 0 0 28px -6px rgb(53 240 160 / 55%);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      box-shadow: 0 0 28px -6px rgb(53 240 160 / 55%);
+    }
   }
 }
 
@@ -61,9 +72,11 @@
   background-color: transparent;
   color: var(--color-text);
 
-  &:hover:not(:disabled) {
-    border-color: var(--color-accent-dim);
-    color: var(--color-accent);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      border-color: var(--color-accent-dim);
+      color: var(--color-accent);
+    }
   }
 }
 
@@ -71,7 +84,9 @@
   background-color: var(--color-danger);
   color: #fff;
 
-  &:hover:not(:disabled) {
-    box-shadow: 0 0 24px -6px rgb(255 77 94 / 55%);
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      box-shadow: 0 0 24px -6px rgb(255 77 94 / 55%);
+    }
   }
 }

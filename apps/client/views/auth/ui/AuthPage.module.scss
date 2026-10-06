@@ -1,3 +1,5 @@
+@use '@/shared/styles/mixins' as *;
+
 .title {
   margin: 0;
   font-size: 27px;
@@ -9,11 +11,9 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-accent);
   cursor: pointer;
   font: inherit;
 
-  &:hover {
-    text-decoration: underline;
-  }
+  @include text-link(inherit);
+  @include touch-target;
 }

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/ui-kit';
+import { ConfirmDialog } from '@/ui-kit';
 
 import type { DeleteAccountDialogProps } from './DeleteAccountDialog.types';
 
@@ -12,23 +12,16 @@ export const DeleteAccountDialog = ({ isOpen, isPending, onOpenChange, onConfirm
   const t = useTranslations('account.danger');
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className={s.content}>
-        <DialogHeader>
-          <DialogTitle>{t('confirmTitle')}</DialogTitle>
-          <DialogDescription>{t('confirmBody')}</DialogDescription>
-        </DialogHeader>
-
-        <div className={s.actions}>
-          <Button disabled={isPending} variant='ghost' onClick={() => onOpenChange(false)}>
-            {t('confirmCancel')}
-          </Button>
-
-          <Button disabled={isPending} variant='danger' onClick={onConfirm}>
-            {t('confirmAction')}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDialog
+      cancelLabel={t('confirmCancel')}
+      className={s.content}
+      confirmLabel={t('confirmAction')}
+      description={t('confirmBody')}
+      isOpen={isOpen}
+      isPending={isPending}
+      title={t('confirmTitle')}
+      onConfirm={onConfirm}
+      onOpenChange={onOpenChange}
+    />
   );
 };

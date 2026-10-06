@@ -8,6 +8,8 @@ import type {
   PanelClientStat,
   PanelInbound,
   PanelOnlines,
+  PanelPostInput,
+  PanelRequestInput,
   PanelResponse,
   PanelServerStatus,
   SetClientsEnabledInput,
@@ -30,7 +32,7 @@ export class PanelClient {
     this.timeout = timeout;
   }
 
-  private async send<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+  private async send<T>({ method, path, body }: PanelRequestInput): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method,
       signal: AbortSignal.timeout(this.timeout),
@@ -56,11 +58,11 @@ export class PanelClient {
   }
 
   private get<T>(path: string): Promise<T> {
-    return this.send<T>('GET', path);
+    return this.send<T>({ method: 'GET', path });
   }
 
-  private post<T>(path: string, body?: unknown): Promise<T> {
-    return this.send<T>('POST', path, body);
+  private post<T>({ path, body }: PanelPostInput): Promise<T> {
+    return this.send<T>({ method: 'POST', path, body });
   }
 
   listInbounds(): Promise<PanelInbound[]> {
@@ -68,15 +70,15 @@ export class PanelClient {
   }
 
   async addInbound(payload: unknown): Promise<void> {
-    await this.post(PANEL_ROUTES.addInbound, payload);
+    await this.post({ path: PANEL_ROUTES.addInbound, body: payload });
   }
 
   async updateInbound({ id, payload }: UpdateInboundInput): Promise<void> {
-    await this.post(PANEL_ROUTES.updateInbound(id), payload);
+    await this.post({ path: PANEL_ROUTES.updateInbound(id), body: payload });
   }
 
   async restartCore(): Promise<void> {
-    await this.post(PANEL_ROUTES.restartCore);
+    await this.post({ path: PANEL_ROUTES.restartCore });
   }
 
   async clientTraffic(): Promise<PanelClientStat[]> {
@@ -90,13 +92,13 @@ export class PanelClient {
   }
 
   async deleteClient(email: string): Promise<void> {
-    await this.post(PANEL_ROUTES.deleteClient(email));
+    await this.post({ path: PANEL_ROUTES.deleteClient(email) });
   }
 
   private async addPanelClient({ inboundId, client }: AddPanelClientInput): Promise<void> {
-    await this.post(PANEL_ROUTES.addClient, {
-      inboundIds: [inboundId],
-      client: { ...client, ...CLIENT_DEFAULTS }
+    await this.post({
+      path: PANEL_ROUTES.addClient,
+      body: { inboundIds: [inboundId], client: { ...client, ...CLIENT_DEFAULTS } }
     });
   }
 
@@ -113,11 +115,11 @@ export class PanelClient {
       return;
     }
 
-    await this.post(PANEL_ROUTES.setEnabled(enabled), { emails });
+    await this.post({ path: PANEL_ROUTES.setEnabled(enabled), body: { emails } });
   }
 
   async onlineEmails(): Promise<Set<string> | null> {
-    const payload = await this.post<PanelOnlines>(PANEL_ROUTES.onlines);
+    const payload = await this.post<PanelOnlines>({ path: PANEL_ROUTES.onlines });
 
     return collectOnlineEmails(payload);
   }

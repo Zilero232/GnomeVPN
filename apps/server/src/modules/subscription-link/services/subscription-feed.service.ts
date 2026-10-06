@@ -1,14 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { isNonNullish } from 'remeda';
 
-import type {
-  BuildFeedInput,
-  FeedTarget,
-  ServerUrisInput,
-  SubscriptionBody,
-  SubscriptionNode,
-  TouchLinkInput
-} from '../subscription-link.service.types';
+import type { BuildFeedInput, ServerUrisInput, SubscriptionBody, SubscriptionNode, TouchLinkInput } from '../subscription-link.service.types';
 
 import { AppNotFoundException } from '../../../common/exceptions';
 import { activeDeviceLimit, describeError, isPeriodActive } from '../../../common/lib';
@@ -85,22 +78,22 @@ export class SubscriptionFeedService {
   }
 
   private async serverUris({ userId, nodes, limitIp, tls }: ServerUrisInput): Promise<string[]> {
-    const targets: FeedTarget[] = nodes.flatMap((node) => this.subscriptionPeers.protocolsFor(node).map((protocol) => ({ node, protocol })));
+    const issued = await Promise.all(nodes.map((node) => this.subscriptionPeers.ensureNode({ userId, node, limitIp })));
 
-    const issued = await Promise.all(targets.map(({ node, protocol }) => this.subscriptionPeers.ensure({ userId, node, protocol, limitIp })));
+    return nodes
+      .flatMap((node, index) =>
+        this.subscriptionPeers.protocolsFor(node).map((protocol) => {
+          const peer = issued[index].find((candidate) => candidate.protocol === protocol);
 
-    return targets
-      .map(({ node, protocol }, index) => {
-        const peer = issued[index];
+          if (!peer) {
+            return null;
+          }
 
-        if (!peer) {
-          return null;
-        }
+          const config = buildTunnelConfig({ node, protocol, auth: peer.nodeCredential });
 
-        const config = buildTunnelConfig({ node, protocol, auth: peer.nodeCredential });
-
-        return incyServerUri({ config, country: node.country, countryCode: node.countryCode, city: node.city, tls });
-      })
+          return incyServerUri({ config, country: node.country, countryCode: node.countryCode, city: node.city, tls });
+        })
+      )
       .filter(isNonNullish);
   }
 }

@@ -12,7 +12,7 @@ export type SshExecResult = {
   exitCode: number;
 };
 
-export type SshScriptInput = {
-  cwd: string;
-  script: string;
+export type SshPutFileInput = {
+  content: string;
+  remotePath: string;
 };

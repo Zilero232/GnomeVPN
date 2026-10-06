@@ -28,6 +28,7 @@
   font: inherit;
   gap: 12px;
   text-align: left;
+  transition: background-color var(--duration-fast) ease;
 
   &:hover {
     background-color: var(--color-surface-raised);
@@ -47,7 +48,7 @@
 .chevron {
   flex-shrink: 0;
   color: var(--color-text-muted);
-  transition: transform 0.2s ease;
+  transition: transform var(--duration-base) var(--ease-out);
 
   .trigger[data-panel-open] & {
     transform: rotate(180deg);
@@ -60,7 +61,7 @@
   color: var(--color-text-muted);
   font-size: 14px;
   line-height: 1.6;
-  transition: height 0.2s ease;
+  transition: height var(--duration-base) var(--ease-out);
 
   &[data-starting-style],
   &[data-ending-style] {

@@ -8,18 +8,18 @@ export const PAGE_MOTION: Variants = {
 };
 
 export const HEADER_MOTION: Variants = {
-  hidden: { opacity: 0, y: 18, filter: 'blur(6px)' },
-  visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.55, ease: EASE_OUT } }
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE_OUT } }
 };
 
 export const BLOCK_MOTION: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.985 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 240, damping: 26 } }
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { type: 'spring', duration: 0.45, bounce: 0 } }
 };
 
 export const TAB_PANEL_MOTION: Variants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.22, ease: EASE_OUT } }
+  hidden: { opacity: 0, y: 6 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: EASE_OUT } }
 };
 
 export const SPOTLIGHT_SPRING = { stiffness: 120, damping: 22, mass: 0.4 } as const;

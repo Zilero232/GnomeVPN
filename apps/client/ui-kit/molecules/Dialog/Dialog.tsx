@@ -11,6 +11,8 @@ import s from './Dialog.module.scss';
 
 export const Dialog = BaseDialog.Root;
 
+export const DialogTrigger = BaseDialog.Trigger;
+
 export const DialogContent = ({ className, children, ...props }: ComponentProps<typeof BaseDialog.Popup>) => {
   const t = useTranslations('common');
 
@@ -22,7 +24,7 @@ export const DialogContent = ({ className, children, ...props }: ComponentProps<
         {children}
 
         <BaseDialog.Close aria-label={t('close')} className={s.close}>
-          <X size={15} />
+          <X aria-hidden size={15} />
         </BaseDialog.Close>
       </BaseDialog.Popup>
     </BaseDialog.Portal>

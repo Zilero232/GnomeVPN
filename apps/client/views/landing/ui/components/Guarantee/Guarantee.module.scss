@@ -18,6 +18,10 @@
     padding: 28px 24px;
     gap: 20px;
   }
+
+  @include below(md) {
+    padding: 24px 20px;
+  }
 }
 
 .icon {
@@ -55,4 +59,12 @@
   color: var(--color-text-muted);
   font-size: 14px;
   line-height: 1.55;
+}
+
+.cta {
+  flex-shrink: 0;
+
+  @include below(xl) {
+    align-self: stretch;
+  }
 }

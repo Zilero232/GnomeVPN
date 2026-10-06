@@ -3,6 +3,7 @@
 import { botttsNeutral } from '@dicebear/collection';
 import { createAvatar } from '@dicebear/core';
 import { clsx } from 'clsx';
+import { useMemo } from 'react';
 
 import { AVATAR } from '@/shared/config';
 
@@ -11,12 +12,16 @@ import type { AvatarProps } from './Avatar.types';
 import s from './Avatar.module.scss';
 
 export const Avatar = ({ seed, size = AVATAR.size, className, ...props }: AvatarProps) => {
-  const source = createAvatar(botttsNeutral, {
-    seed,
-    size,
-    radius: AVATAR.radius,
-    backgroundColor: [...AVATAR.backgrounds]
-  }).toDataUri();
+  const source = useMemo(
+    () =>
+      createAvatar(botttsNeutral, {
+        seed,
+        size,
+        radius: AVATAR.radius,
+        backgroundColor: [...AVATAR.backgrounds]
+      }).toDataUri(),
+    [seed, size]
+  );
 
   return (
     <span aria-hidden className={clsx(s.root, className)} style={{ width: size, height: size }} {...props}>

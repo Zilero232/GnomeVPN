@@ -1,4 +1,4 @@
-import type { Limits, SubscriptionStatus } from '@gnomevpn/schemas';
+import type { SubscriptionStatus } from '@gnomevpn/schemas';
 
 import { DEFAULT_PLAN_ID, resolveLimits } from '@gnomevpn/schemas';
 import { Injectable } from '@nestjs/common';
@@ -23,15 +23,6 @@ export class SubscriptionService {
     });
 
     return isPeriodActive(row?.currentPeriodEnd);
-  }
-
-  async getLimits(userId: string): Promise<Limits> {
-    const row = await this.prisma.subscription.findUnique({
-      where: { userId },
-      select: { extraDevices: true, currentPeriodEnd: true }
-    });
-
-    return resolveLimits(isPeriodActive(row?.currentPeriodEnd) ? row?.extraDevices : 0);
   }
 
   async getStatus(userId: string): Promise<SubscriptionStatus> {

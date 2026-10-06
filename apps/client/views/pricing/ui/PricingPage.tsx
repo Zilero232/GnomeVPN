@@ -1,11 +1,7 @@
-'use client';
-
 import { Check } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { blogPostRoute, ROUTES } from '@/shared/constants';
-import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 import { PricingCard } from '@/widgets/billing/pricing-plans';
 import { RelatedLinks } from '@/widgets/site/related-links';
@@ -18,8 +14,8 @@ export const PricingPage = () => {
   const t = useTranslations('pricing');
 
   return (
-    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
-      <motion.header className={s.head} variants={HEAD_MOTION}>
+    <main className={s.root}>
+      <header className={s.head}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -27,11 +23,11 @@ export const PricingPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </motion.header>
+      </header>
 
       <PricingCard />
 
-      <motion.section className={s.included} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section>
         <Text as='h2' className={s.sectionTitle}>
           {t('includedTitle')}
         </Text>
@@ -44,9 +40,9 @@ export const PricingPage = () => {
             </li>
           ))}
         </ul>
-      </motion.section>
+      </section>
 
-      <motion.section className={s.sections} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section className={s.sections}>
         <Text as='h2' className={s.sectionTitle}>
           {t('sectionsTitle')}
         </Text>
@@ -62,7 +58,7 @@ export const PricingPage = () => {
             </Text>
           </div>
         ))}
-      </motion.section>
+      </section>
 
       <RelatedLinks
         links={[
@@ -71,6 +67,6 @@ export const PricingPage = () => {
           { href: blogPostRoute('subscription-link-explained'), label: t('related.subscription') }
         ]}
       />
-    </motion.main>
+    </main>
   );
 };

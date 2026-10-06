@@ -1,11 +1,11 @@
 import { Check, Send } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { Button, Text } from '@/ui-kit';
+import { SubmitButton, Text } from '@/ui-kit';
 
 import type { TelegramInviteProps } from './TelegramInvite.types';
 
-import { ABILITIES } from '../../../lib';
+import { ABILITIES } from '../../../config';
 
 import s from './TelegramInvite.module.scss';
 
@@ -38,10 +38,10 @@ export const TelegramInvite = ({ isPending, isIssued, onConnect }: TelegramInvit
       </ul>
 
       {!isIssued && (
-        <Button className={s.action} disabled={isPending} onClick={onConnect}>
+        <SubmitButton className={s.action} isPending={isPending} size='md' type='button' onClick={onConnect}>
           <Send aria-hidden size={16} />
           {t('connect')}
-        </Button>
+        </SubmitButton>
       )}
     </>
   );

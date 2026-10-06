@@ -1,5 +1,5 @@
-export const INBOUND_TAG = 'hysteria-in';
-
-export const UDP_IDLE_TIMEOUT = 180;
-
-export const SNIFF_PROTOCOLS = ['http', 'tls', 'quic'];
+export const HYSTERIA_INBOUND = {
+  tag: 'hysteria-in',
+  udpIdleTimeout: 180,
+  sniff: ['http', 'tls', 'quic']
+} as const;

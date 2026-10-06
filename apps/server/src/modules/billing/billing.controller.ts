@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { AllowAnonymous } from '@thallesp/nestjs-better-auth';
 import { ZodResponse } from 'nestjs-zod';
 
@@ -53,6 +54,7 @@ export class BillingController {
   }
 
   @AllowAnonymous()
+  @SkipThrottle()
   @UseGuards(WebhookIpGuard)
   @Post('webhook')
   @HttpCode(200)

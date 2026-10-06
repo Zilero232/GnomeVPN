@@ -1,4 +1,9 @@
-export const DOCKER_INSTALL_URL = 'https://get.docker.com';
+export const DOCKER = {
+  installUrl: 'https://get.docker.com',
+  probe: 'docker --version'
+} as const;
+
+export const APT_ENV = 'DEBIAN_FRONTEND=noninteractive';
 
 export const FAIL2BAN = {
   jailPath: '/etc/fail2ban/jail.d/sshd.local',

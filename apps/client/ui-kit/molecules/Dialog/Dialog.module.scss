@@ -4,15 +4,18 @@
   position: fixed;
   z-index: 50;
   backdrop-filter: blur(3px);
-  inset: 0;
-}
-
-.overlay:after {
-  position: absolute;
-  animation: fade-in 0.16s ease;
   background-color: rgb(0 0 0 / 72%);
-  content: '';
   inset: 0;
+  transition: opacity var(--duration-base) ease;
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+  }
+
+  &[data-ending-style] {
+    transition-duration: var(--duration-fast);
+  }
 }
 
 .content {
@@ -28,13 +31,25 @@
   padding: 28px;
   border: 1px solid var(--color-border-bright);
   border-radius: var(--radius-lg);
-  animation: dialog-in 0.18s ease;
   background-color: var(--color-surface-raised);
   box-shadow: 0 32px 72px -28px rgb(0 0 0 / 85%);
   gap: 22px;
   overflow-y: auto;
   overscroll-behavior: contain;
   transform: translate(-50%, -50%);
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.97);
+  }
+
+  &[data-ending-style] {
+    transition-duration: var(--duration-fast);
+  }
 
   @include below(md) {
     top: auto;
@@ -48,8 +63,18 @@
     border-right: none;
     border-bottom: none;
     border-left: none;
-    animation: sheet-in 0.2s ease;
     transform: none;
+    transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+
+    &[data-starting-style],
+    &[data-ending-style] {
+      opacity: 1;
+      transform: translateY(100%);
+    }
+
+    &[data-ending-style] {
+      transition-duration: 200ms;
+    }
   }
 }
 
@@ -58,8 +83,8 @@
   top: 18px;
   right: 18px;
   display: inline-flex;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
@@ -68,9 +93,14 @@
   color: var(--color-text-muted);
   cursor: pointer;
   transition:
-    color 0.16s ease,
-    border-color 0.16s ease,
-    background-color 0.16s ease;
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+
+  @media (pointer: coarse) {
+    width: var(--tap-target);
+    height: var(--tap-target);
+  }
 
   &:hover {
     border-color: var(--color-border);
@@ -84,15 +114,15 @@
   }
 
   @include below(md) {
-    top: 14px;
-    right: 14px;
+    top: 10px;
+    right: 10px;
   }
 }
 
 .header {
   @include stack(8px);
 
-  padding-right: 38px;
+  padding-right: 40px;
 }
 
 .title {
@@ -109,38 +139,4 @@
   color: var(--color-text-muted);
   font-size: 14px;
   line-height: 1.6;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes dialog-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -46%) scale(0.97);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-@keyframes sheet-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }

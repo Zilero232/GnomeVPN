@@ -13,10 +13,13 @@ export type AddProtocolClientInput = {
   limitIp: number;
 };
 
-export type ProtocolClientsInput<TClient extends ProtocolClient> = {
+export type ProtocolClientsDeps = {
   panel: PanelClient;
   inbounds: Inbounds;
   nodeKey: string;
+};
+
+export type ProtocolClientsInput<TClient extends ProtocolClient> = ProtocolClientsDeps & {
   remark?: string;
   credentialOf: (client: TClient) => string | undefined;
   add: (input: AddProtocolClientInput) => Promise<void>;

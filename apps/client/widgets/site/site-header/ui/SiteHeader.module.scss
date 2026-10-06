@@ -1,5 +1,23 @@
 @use '@/shared/styles/mixins' as *;
 
+.skip {
+  position: fixed;
+  z-index: 60;
+  top: calc(var(--safe-area-top) + 8px);
+  left: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent);
+  color: var(--color-bg-deep);
+  font-size: 14px;
+  font-weight: 700;
+  transform: translateY(calc(-100% - 24px));
+
+  &:focus-visible {
+    transform: none;
+  }
+}
+
 .sentinel {
   position: absolute;
   top: 0;
@@ -10,11 +28,11 @@
 .root {
   position: sticky;
   z-index: 30;
-  top: var(--titlebar-height);
+  top: 0;
   border-bottom: 1px solid transparent;
   transition:
-    background-color 0.24s ease,
-    border-color 0.24s ease;
+    background-color var(--duration-base) ease,
+    border-color var(--duration-base) ease;
 }
 
 .scrolled {
@@ -66,9 +84,10 @@
   font-family: var(--font-sans);
   font-size: 13px;
   text-decoration: none;
-  transition: color 0.16s ease;
+  transition: color var(--duration-fast) ease;
 
-  &:hover {
+  &:hover,
+  &[aria-current='page'] {
     color: var(--color-text);
   }
 
@@ -86,24 +105,10 @@
 
   @include below(md) {
     gap: 6px;
-
-    button {
-      height: 34px;
-      padding: 0 12px;
-      font-size: 12px;
-    }
   }
 }
 
 .accountLink {
-  text-decoration: none;
-
-  @include below(sm) {
-    display: none;
-  }
-}
-
-.downloadLabel {
   @include below(sm) {
     display: none;
   }

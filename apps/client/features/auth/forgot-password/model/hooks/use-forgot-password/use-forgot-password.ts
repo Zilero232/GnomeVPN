@@ -2,24 +2,18 @@ import type { ForgotPasswordValues } from '@gnomevpn/schemas';
 
 import { forgotPasswordSchema } from '@gnomevpn/schemas';
 import { useMutation } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 
-import { authClient } from '@/shared/api';
-import { SITE } from '@/shared/config';
-import { ROUTES } from '@/shared/constants';
+import { requestPasswordReset } from '@/shared/api';
+import { resolveLocale } from '@/shared/i18n';
 
 export type { ForgotPasswordValues };
 export { forgotPasswordSchema };
 
-export const useForgotPassword = () =>
-  useMutation({
-    mutationFn: async ({ email }: ForgotPasswordValues) => {
-      const { error } = await authClient.requestPasswordReset({
-        email,
-        redirectTo: `${SITE.url}${ROUTES.resetPassword}`
-      });
+export const useForgotPassword = () => {
+  const locale = resolveLocale(useLocale());
 
-      if (error) {
-        throw new Error('errors.resetLinkFailed');
-      }
-    }
+  return useMutation({
+    mutationFn: ({ email }: ForgotPasswordValues) => requestPasswordReset({ email, locale })
   });
+};

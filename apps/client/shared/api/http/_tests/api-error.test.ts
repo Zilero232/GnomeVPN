@@ -35,7 +35,7 @@ describe('toApiError', () => {
 
 describe('apiErrorCode', () => {
   it('reads the code off an ApiError', () => {
-    expect(apiErrorCode(new ApiError('FORBIDDEN', 'Nope'))).toBe('FORBIDDEN');
+    expect(apiErrorCode(new ApiError({ code: 'FORBIDDEN', message: 'Nope' }))).toBe('FORBIDDEN');
   });
 
   it('falls back to INTERNAL_ERROR for anything else', () => {

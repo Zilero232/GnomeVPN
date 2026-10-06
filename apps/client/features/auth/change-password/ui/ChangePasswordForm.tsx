@@ -56,7 +56,7 @@ export const ChangePasswordForm = () => {
   }
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <FormField className={s.field} error={fieldError(errors.currentPassword)} htmlFor='profile-current-password' label={t('currentPasswordLabel')}>
         <PasswordInput autoComplete='current-password' id='profile-current-password' {...passwordLabels} {...register('currentPassword')} />
       </FormField>

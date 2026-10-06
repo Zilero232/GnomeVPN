@@ -37,7 +37,7 @@ export const IncyQrDialog = ({ deepLink, url, isOpen, onOpenChange }: IncyQrDial
         />
 
         <div className={s.code}>
-          <QRCodeSVG level='M' marginSize={2} size={240} value={value} />
+          <QRCodeSVG className={s.svg} level='M' marginSize={2} size={240} title={t(`qrKinds.${kind}`)} value={value} />
         </div>
 
         <Text className={s.note} size='xs' tone='muted'>

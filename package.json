@@ -68,7 +68,7 @@
     "format:check": "prettier --check .",
     "lint:css": "stylelint \"apps/client/**/*.scss\"",
     "lint:css:fix": "stylelint \"apps/client/**/*.scss\" --fix",
-    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/scripts typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck && tsc -p scripts --noEmit",
+    "typecheck": "bun --filter @gnomevpn/schemas typecheck && bun --filter @gnomevpn/logger typecheck && bun --filter @gnomevpn/scripts typecheck && bun --filter @gnomevpn/server typecheck && bun --filter @gnomevpn/client typecheck && tsc -p scripts --noEmit",
     "verify": "bun run typecheck && bun run lint && bun run format:check && bun run lint:css",
     "fix": "bun run lint:fix && bun run format && bun run lint:css:fix && bun run format:prisma",
     "provision:nodes": "bun --env-file .env --env-file .env.nodes scripts/provision/index.ts",
@@ -80,8 +80,8 @@
     "@gnomevpn/scripts": "workspace:*",
     "p-wait-for": "^6.0.0",
     "pg": "catalog:",
-    "remeda": "^2.50.0",
-    "zod": "^4.6.5"
+    "remeda": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

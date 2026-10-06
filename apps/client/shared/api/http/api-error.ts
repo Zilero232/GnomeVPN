@@ -2,10 +2,14 @@ import type { ApiErrorCode } from '@gnomevpn/schemas';
 
 import { apiErrorSchema } from '@gnomevpn/schemas';
 
+import type { ApiErrorInput } from './api-error.types';
+
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
-  constructor(code: ApiErrorCode, message: string) {
+
+  constructor({ code, message }: ApiErrorInput) {
     super(message);
+
     this.name = 'ApiError';
     this.code = code;
   }
@@ -18,7 +22,7 @@ export const toApiError = (data: unknown) => {
     return null;
   }
 
-  return new ApiError(parsed.data.code, parsed.data.error);
+  return new ApiError({ code: parsed.data.code, message: parsed.data.error });
 };
 
 export const apiErrorCode = (error: unknown): ApiErrorCode => (error instanceof ApiError ? error.code : 'INTERNAL_ERROR');

@@ -30,6 +30,8 @@
   font-weight: 500;
   white-space: nowrap;
 
+  @include touch-target(40px);
+
   &:hover:not([data-active]) {
     color: var(--color-text);
   }
@@ -58,8 +60,8 @@
   background-color: var(--color-surface-raised);
   transform: translateX(var(--active-tab-left));
   transition:
-    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    transform var(--duration-base) var(--ease-out),
+    width var(--duration-base) var(--ease-out);
 }
 
 /* stylelint-enable plugin/no-low-performance-animation-properties */

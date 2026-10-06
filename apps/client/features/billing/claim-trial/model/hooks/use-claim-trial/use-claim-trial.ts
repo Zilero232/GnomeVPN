@@ -1,13 +1,13 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
+import { useInvalidateSubscription } from '@/entities/billing/subscription';
 import { claimTrial } from '@/shared/api';
-import { QUERY_KEYS } from '@/shared/constants';
 
 export const useClaimTrial = () => {
-  const queryClient = useQueryClient();
+  const invalidateSubscription = useInvalidateSubscription();
 
   return useMutation({
     mutationFn: claimTrial,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.subscriptionStatus() })
+    onSuccess: invalidateSubscription
   });
 };

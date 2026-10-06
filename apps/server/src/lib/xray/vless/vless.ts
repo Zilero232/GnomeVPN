@@ -1,5 +1,4 @@
-import type { Inbounds } from '../inbounds';
-import type { PanelClient } from '../panel-client';
+import type { ProtocolClientsDeps } from '../protocol-clients';
 import type { CreateVlessClientInput, CreateVlessClientResult, VlessClient } from './vless.types';
 
 import { ProtocolClients } from '../protocol-clients';
@@ -8,7 +7,7 @@ import { VLESS_INBOUND_REMARK } from './vless.constants';
 export class VlessClients {
   private readonly clients: ProtocolClients<VlessClient>;
 
-  constructor(panel: PanelClient, inbounds: Inbounds, nodeKey: string) {
+  constructor({ panel, inbounds, nodeKey }: ProtocolClientsDeps) {
     this.clients = new ProtocolClients<VlessClient>({
       panel,
       inbounds,

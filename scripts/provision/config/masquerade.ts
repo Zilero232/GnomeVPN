@@ -3,6 +3,7 @@
 // must also be plausible traffic for the user's own network.
 export const MASQUERADE_HOST = 'www.bing.com';
 
-export const REALITY_DEST = `${MASQUERADE_HOST}:443`;
-
-export const REALITY_SERVER_NAMES = [MASQUERADE_HOST];
+export const REALITY_DONOR = {
+  dest: `${MASQUERADE_HOST}:443`,
+  serverNames: [MASQUERADE_HOST]
+} as const;

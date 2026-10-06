@@ -15,10 +15,10 @@
 .card {
   position: relative;
   display: grid;
-  padding: 26px 26px 26px 64px;
+  align-content: start;
+  padding: 26px;
   background-color: var(--color-surface);
   gap: 6px;
-  transition: background-color 0.25s ease;
 
   &:first-child,
   &:last-child {
@@ -29,26 +29,8 @@
     }
   }
 
-  &:hover {
-    background-color: var(--color-surface-raised);
-  }
-
   @include below(sm) {
-    padding: 22px 20px 22px 56px;
-  }
-}
-
-.index {
-  position: absolute;
-  top: 27px;
-  left: 26px;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.06em;
-
-  @include below(sm) {
-    left: 20px;
+    padding: 22px 20px;
   }
 }
 

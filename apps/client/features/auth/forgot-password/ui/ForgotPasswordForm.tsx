@@ -3,9 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
-import { useFieldError } from '@/entities/app/locale';
+import { useFieldError, useToastError } from '@/entities/app/locale';
 import { FormField, Input, SubmitButton, Text } from '@/ui-kit';
 
 import type { ForgotPasswordValues } from '../model/hooks';
@@ -20,6 +19,7 @@ const DEFAULT_VALUES: ForgotPasswordValues = { email: '' };
 export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   const t = useTranslations('auth');
   const fieldError = useFieldError();
+  const toastError = useToastError();
   const { isPending, isSuccess, mutate } = useForgotPassword();
 
   const {
@@ -33,7 +33,7 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
 
   const onSubmit = handleSubmit((values) => {
     mutate(values, {
-      onError: (error: Error) => toast.error(t(error.message))
+      onError: toastError
     });
   });
 
@@ -52,7 +52,7 @@ export const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   }
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <Text size='sm' tone='muted'>
         {t('forgotPasswordHint')}
       </Text>

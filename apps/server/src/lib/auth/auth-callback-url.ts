@@ -1,8 +1,10 @@
+import type { ClientCallbackInput } from './auth.types';
+
 import { validateEnv } from '../../config/env.schema';
 
 const env = validateEnv(process.env);
 
-export const withClientCallback = (url: string, path = '/'): string => {
+export const withClientCallback = ({ url, path = '/' }: ClientCallbackInput): string => {
   try {
     const parsed = new URL(url);
 

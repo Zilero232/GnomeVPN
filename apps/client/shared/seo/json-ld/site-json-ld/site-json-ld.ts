@@ -1,9 +1,11 @@
 import { CLIENT_REGISTRY, PLANS } from '@gnomevpn/schemas';
 
 import { SITE } from '@/shared/config';
+import { ROUTES } from '@/shared/constants';
 import { LOCALES } from '@/shared/i18n';
 
 import { absoluteUrl } from '../../site-metadata';
+import { SERVICE_TYPE } from '../service-json-ld';
 import { ORGANIZATION_LOGO, PLATFORM_LABELS } from './site-json-ld.constants';
 
 const priceRub = PLANS.map((plan) => plan.priceRub);
@@ -17,7 +19,7 @@ const offers = PLANS.map((plan) => ({
   priceCurrency: 'RUB',
   category: 'subscription',
   availability: 'https://schema.org/InStock',
-  url: absoluteUrl('/pricing')
+  url: absoluteUrl(ROUTES.pricing)
 }));
 
 export const siteJsonLd = {
@@ -73,7 +75,7 @@ export const productJsonLd = {
   name: SITE.name,
   description: SITE.description,
   brand: { '@id': `${SITE.url}/#organization` },
-  category: 'VPN service',
+  category: SERVICE_TYPE,
   offers: {
     '@type': 'AggregateOffer',
     priceCurrency: 'RUB',

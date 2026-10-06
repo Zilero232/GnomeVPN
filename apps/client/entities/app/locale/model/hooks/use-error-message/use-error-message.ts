@@ -2,10 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 
-import { apiErrorCode } from '@/shared/api';
+import { errorMessageKey } from './use-error-message.helpers';
 
 export const useErrorMessage = () => {
-  const t = useTranslations('errors');
+  const t = useTranslations();
 
-  return (error: unknown) => t(apiErrorCode(error));
+  return (error: unknown) => t(errorMessageKey(error));
 };

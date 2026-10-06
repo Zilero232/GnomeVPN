@@ -45,7 +45,7 @@ export const ChangeEmailForm = () => {
   });
 
   return (
-    <form className={s.form} onSubmit={onSubmit}>
+    <form noValidate className={s.form} onSubmit={onSubmit}>
       <div className={s.current}>
         <Text size='xs' tone='muted'>
           {hasEmail ? t('currentEmailLabel') : t('addEmailTitle')}

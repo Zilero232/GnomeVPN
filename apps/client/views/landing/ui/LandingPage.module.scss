@@ -15,6 +15,7 @@
   font-size: clamp(26px, 4vw, 38px);
   font-weight: 800;
   letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
 @include below(md) {

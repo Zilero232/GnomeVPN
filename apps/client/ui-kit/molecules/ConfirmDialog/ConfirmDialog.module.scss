@@ -12,7 +12,7 @@
   @include below(sm) {
     flex-direction: column-reverse;
 
-    button {
+    > * {
       width: 100%;
     }
   }

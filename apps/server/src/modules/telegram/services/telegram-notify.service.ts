@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Bot } from 'grammy';
 import { isNullish } from 'remeda';
 
+import type { ChatState } from '../lib/keyboard';
 import type { NotifyInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
@@ -27,20 +28,18 @@ export class TelegramNotifyService {
       return;
     }
 
-    const chat = await this.prisma.telegramAccount.findUnique({
-      where: { userId },
-      select: { telegramId: true, locale: true, languageCode: true }
-    });
-
-    if (isNullish(chat)) {
-      return;
-    }
-
-    const locale = resolveLocale(chat.locale ?? chat.languageCode);
-
     try {
-      const [isSubscribed, eligibility] = await Promise.all([this.subscription.hasActiveAccess(userId), this.trial.eligibility(userId)]);
-      const state = { isSubscribed, isTrialAvailable: eligibility === 'available' };
+      const chat = await this.prisma.telegramAccount.findUnique({
+        where: { userId },
+        select: { telegramId: true, locale: true, languageCode: true }
+      });
+
+      if (isNullish(chat)) {
+        return;
+      }
+
+      const locale = resolveLocale(chat.locale ?? chat.languageCode);
+      const state = await this.stateOf(userId);
 
       const tokens = { ...fill, ...(date && { date: formatDate({ iso: date.toISOString(), locale }) }) };
       const text = fillText({ text: pick(BOT_TEXT[locale]), fill: tokens });
@@ -49,5 +48,11 @@ export class TelegramNotifyService {
     } catch (error) {
       this.logger.warn(`could not tell ${userId} in telegram: ${describeError(error)}`);
     }
+  }
+
+  async stateOf(userId: string): Promise<ChatState> {
+    const [isSubscribed, eligibility] = await Promise.all([this.subscription.hasActiveAccess(userId), this.trial.eligibility(userId)]);
+
+    return { isSubscribed, isTrialAvailable: eligibility === 'available' };
   }
 }

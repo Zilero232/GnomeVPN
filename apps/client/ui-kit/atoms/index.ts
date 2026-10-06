@@ -4,7 +4,7 @@ export { Badge } from './Badge';
 export type { BadgeProps } from './Badge';
 export { BrandMark } from './BrandMark';
 export type { BrandMarkProps } from './BrandMark';
-export { Button } from './Button';
+export { Button, buttonVariants } from './Button';
 export type { ButtonProps } from './Button';
 export { CountryFlag } from './CountryFlag';
 export type { CountryFlagProps } from './CountryFlag';

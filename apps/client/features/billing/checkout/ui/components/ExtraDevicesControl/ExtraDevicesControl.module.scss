@@ -67,6 +67,7 @@
 }
 
 .title {
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
 }
@@ -87,11 +88,11 @@
 .slot {
   width: 26px;
   height: 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background-color: var(--color-border);
   transition:
-    background-color 0.18s ease,
-    box-shadow 0.18s ease;
+    background-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease;
 
   &[data-state='owned'] {
     background-color: var(--color-accent);
@@ -100,10 +101,6 @@
   &[data-state='pending'] {
     background-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 40%, transparent);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
   }
 }
 
@@ -132,10 +129,16 @@
 .step {
   width: 34px;
   border: none;
+  border-radius: var(--radius-sm);
   background: none;
   color: var(--color-text-muted);
   cursor: pointer;
   font-size: 15px;
+  transition: color var(--duration-fast) ease;
+
+  @media (pointer: coarse) {
+    width: var(--tap-target);
+  }
 
   &:hover:not(:disabled) {
     color: var(--color-accent);
@@ -151,6 +154,9 @@
   display: inline-flex;
   min-width: 26px;
   height: 38px;
+
+  @include touch-target;
+
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);

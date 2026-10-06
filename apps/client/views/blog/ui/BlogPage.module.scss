@@ -6,6 +6,7 @@
 
 .head {
   @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
 }
 
 .title {
@@ -28,22 +29,47 @@
 
 .card {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   padding: 18px 20px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-surface);
   color: inherit;
-  gap: 6px;
+  gap: 16px;
   text-decoration: none;
-  transition: border-color 0.15s ease;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
 
   &:hover {
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-dim);
+    background-color: var(--color-surface-raised);
   }
+}
+
+.cardBody {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .cardTitle {
   font-size: 17px;
   font-weight: 600;
+  text-wrap: balance;
+}
+
+.cardArrow {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  transition:
+    color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+
+  .card:hover & {
+    color: var(--color-accent);
+    transform: translateX(2px);
+  }
 }

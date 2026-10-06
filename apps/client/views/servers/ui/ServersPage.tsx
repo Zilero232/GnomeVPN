@@ -1,11 +1,7 @@
-'use client';
-
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { PROTOCOL_IDS, PROTOCOL_ROWS, SERVER_SECTIONS } from '@/entities/app/protocols';
 import { blogPostRoute, ROUTES } from '@/shared/constants';
-import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { Text } from '@/ui-kit';
 import { RelatedLinks } from '@/widgets/site/related-links';
 
@@ -15,8 +11,8 @@ export const ServersPage = () => {
   const t = useTranslations('servers');
 
   return (
-    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
-      <motion.header className={s.head} variants={HEAD_MOTION}>
+    <main className={s.root}>
+      <header className={s.head}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -24,9 +20,9 @@ export const ServersPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </motion.header>
+      </header>
 
-      <motion.section className={s.section} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section className={s.section}>
         <Text as='h2' className={s.heading}>
           {t('tableTitle')}
         </Text>
@@ -58,17 +54,10 @@ export const ServersPage = () => {
             </tbody>
           </table>
         </div>
-      </motion.section>
+      </section>
 
       {SERVER_SECTIONS.map((section) => (
-        <motion.section
-          key={section}
-          className={s.section}
-          initial='hidden'
-          variants={SECTION_MOTION}
-          viewport={REVEAL_VIEWPORT}
-          whileInView='visible'
-        >
+        <section key={section} className={s.section}>
           <Text as='h2' className={s.heading}>
             {t(`sections.${section}.title`)}
           </Text>
@@ -76,7 +65,7 @@ export const ServersPage = () => {
           <Text as='p' className={s.body}>
             {t(`sections.${section}.body`)}
           </Text>
-        </motion.section>
+        </section>
       ))}
 
       <RelatedLinks
@@ -86,6 +75,6 @@ export const ServersPage = () => {
           { href: ROUTES.setup, label: t('related.setup') }
         ]}
       />
-    </motion.main>
+    </main>
   );
 };

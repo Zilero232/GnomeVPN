@@ -1,4 +1,18 @@
-export { Avatar, Badge, BrandMark, Button, CountryFlag, Input, Label, PasswordInput, Spinner, Stack, StatusIcon, Text } from './atoms';
+export {
+  Avatar,
+  Badge,
+  BrandMark,
+  Button,
+  buttonVariants,
+  CountryFlag,
+  Input,
+  Label,
+  PasswordInput,
+  Spinner,
+  Stack,
+  StatusIcon,
+  Text
+} from './atoms';
 export type {
   AvatarProps,
   BadgeProps,
@@ -16,13 +30,17 @@ export type {
 export {
   Accordion,
   AppSplash,
+  ConfirmDialog,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  ErrorBlock,
   FormField,
   LinkCard,
+  LoadingBlock,
   Segmented,
   SelectableCard,
   SubmitButton,
@@ -32,8 +50,11 @@ export {
 export type {
   AccordionItem,
   AccordionProps,
+  ConfirmDialogProps,
+  ErrorBlockProps,
   FormFieldProps,
   LinkCardProps,
+  LoadingBlockProps,
   SegmentedOption,
   SegmentedProps,
   SelectableCardProps,

@@ -3,16 +3,14 @@ import type { TelegramWidget } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
 import { addMinutes } from 'date-fns';
 import { randomBytes } from 'node:crypto';
-import { isNullish } from 'remeda';
-
-import type { WidgetPayload } from '../lib';
+import { isEmpty, isNullish, isString } from 'remeda';
 
 import { AppBadRequestException, AppUnauthorizedException } from '../../../common/exceptions';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { IdentityService } from '../../auth';
 import { WEB_LOGIN } from '../config';
-import { verifyWidgetPayload, widgetIdentity } from '../lib';
+import { isWidgetPayload, verifyWidgetPayload, widgetIdentity } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 
 @Injectable()
@@ -46,11 +44,12 @@ export class TelegramWebLoginService {
     return url.toString();
   }
 
-  async signInWithWidget(payload: WidgetPayload): Promise<string> {
+  async signInWithWidget(raw: unknown): Promise<string> {
     const botToken = this.config.get('TELEGRAM_BOT_TOKEN');
-    const identity = widgetIdentity(payload);
+    const payload = isWidgetPayload(raw) ? raw : null;
+    const identity = isNullish(payload) ? null : widgetIdentity(payload);
 
-    if (!botToken || !verifyWidgetPayload({ payload, botToken }) || isNullish(identity)) {
+    if (!botToken || isNullish(payload) || isNullish(identity) || !verifyWidgetPayload({ payload, botToken })) {
       this.logger.warn('a telegram widget payload did not verify');
 
       throw new AppUnauthorizedException('TELEGRAM_WIDGET_INVALID', 'The Telegram sign-in payload is not signed by our bot');
@@ -61,7 +60,11 @@ export class TelegramWebLoginService {
     return this.identity.issueSessionToken(userId);
   }
 
-  async redeem(code: string): Promise<string> {
+  async redeem(code: unknown): Promise<string> {
+    if (!isString(code) || isEmpty(code)) {
+      throw new AppBadRequestException('TELEGRAM_CODE_INVALID', 'The sign-in link is unknown, already used or expired');
+    }
+
     const claimed = await this.prisma.telegramWebLogin.updateMany({
       where: { code, usedAt: null, expiresAt: { gt: new Date() } },
       data: { usedAt: new Date() }

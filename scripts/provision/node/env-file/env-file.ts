@@ -6,7 +6,7 @@ const read = async (filePath: string): Promise<string> => {
   try {
     return await readFile(filePath, 'utf8');
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return '';
     }
 

@@ -1,5 +1,5 @@
-import { INCY_DOWNLOADS } from '../clients';
+import { CLIENT_PLATFORMS, INCY_DOWNLOADS } from '../clients';
 
-export const PLATFORM_IDS = ['ios', 'android', 'windows', 'macos', 'linux', 'tv'] as const;
+export const PLATFORM_IDS = CLIENT_PLATFORMS;
 
 export const PLATFORMS = PLATFORM_IDS.map((id) => ({ id, href: INCY_DOWNLOADS[id] }));

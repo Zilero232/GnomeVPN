@@ -1,10 +1,6 @@
-'use client';
-
-import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { usePlatforms } from '@/entities/app/incy';
-import { HEAD_MOTION, PAGE_MOTION, REVEAL_VIEWPORT, SECTION_MOTION } from '@/shared/lib';
 import { LinkCard, Tabs, Text } from '@/ui-kit';
 
 import { SETUP_PLATFORMS, SETUP_STEPS } from '../config';
@@ -18,8 +14,8 @@ export const SetupPage = () => {
   const platforms = usePlatforms();
 
   return (
-    <motion.main animate='visible' className={s.root} initial='hidden' variants={PAGE_MOTION}>
-      <motion.header className={s.head} variants={HEAD_MOTION}>
+    <main className={s.root}>
+      <header className={s.head}>
         <Text as='h1' className={s.title}>
           {t('title')}
         </Text>
@@ -27,9 +23,9 @@ export const SetupPage = () => {
         <Text as='p' className={s.intro} tone='muted'>
           {t('intro')}
         </Text>
-      </motion.header>
+      </header>
 
-      <motion.section className={s.download} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section>
         <Text as='h2' className={s.sectionTitle}>
           {t('downloadTitle')}
         </Text>
@@ -39,9 +35,9 @@ export const SetupPage = () => {
             <LinkCard key={id} hint={tIncy(`downloads.${id}`)} href={href} icon={icon} label={tIncy(`platforms.${id}`)} />
           ))}
         </div>
-      </motion.section>
+      </section>
 
-      <motion.section className={s.steps} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section>
         <Text as='h2' className={s.sectionTitle}>
           {t('stepsTitle')}
         </Text>
@@ -61,15 +57,15 @@ export const SetupPage = () => {
             )
           }))}
         />
-      </motion.section>
+      </section>
 
-      <motion.section className={s.other} initial='hidden' variants={SECTION_MOTION} viewport={REVEAL_VIEWPORT} whileInView='visible'>
+      <section>
         <Text as='h2' className={s.sectionTitle}>
           {t('other.title')}
         </Text>
 
         <OtherClients />
-      </motion.section>
-    </motion.main>
+      </section>
+    </main>
   );
 };

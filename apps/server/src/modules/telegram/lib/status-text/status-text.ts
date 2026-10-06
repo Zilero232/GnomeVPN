@@ -2,7 +2,7 @@ import { match } from 'ts-pattern';
 
 import type { StatusTextInput } from './status-text.types';
 
-import { BOT_TEXT } from '../../config';
+import { BOT_TEXT, NEW_LINE } from '../../config';
 import { fillText } from '../fill-text';
 import { formatDate } from '../format-date';
 import { planLabel } from '../plan-label';
@@ -38,5 +38,5 @@ export const statusText = ({
     fillText({ text: text.planLine, fill: { plan: period } }),
     fillText({ text: text.devicesLine, fill: { count: String(limits.deviceLimit) } }),
     isTrial ? text.trialEnds : renewal
-  ].join('\n');
+  ].join(NEW_LINE);
 };

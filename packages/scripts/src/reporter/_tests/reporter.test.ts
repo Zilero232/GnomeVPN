@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const lines: string[] = [];
 
-const readLines = () => lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+const readLines = (): Record<string, unknown>[] => lines.map((line) => JSON.parse(line));
 
 beforeEach(async () => {
   lines.length = 0;

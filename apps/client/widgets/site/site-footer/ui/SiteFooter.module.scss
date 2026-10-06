@@ -18,7 +18,9 @@
   gap: 16px;
 
   @include below(md) {
-    padding: 0 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 16px;
   }
 }
 
@@ -26,7 +28,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 4px 16px;
 }
 
 .meta {
@@ -45,9 +47,15 @@
   color: var(--color-text-muted);
   font-size: 13px;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color var(--duration-fast) ease;
 
   &:hover {
     color: var(--color-text);
+  }
+
+  @media (pointer: coarse) {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
   }
 }

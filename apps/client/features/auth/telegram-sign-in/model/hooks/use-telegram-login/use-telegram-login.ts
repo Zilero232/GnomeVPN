@@ -6,15 +6,12 @@ import { isNullish } from 'remeda';
 import { ROUTES } from '@/shared/constants';
 import { useRouter } from '@/shared/i18n/navigation';
 
-import type { TelegramLoginState, TelegramWidgetUser } from './use-telegram-login.types';
+import type { TelegramLoginState } from './use-telegram-login.types';
 
 import { useTelegramWidget } from '../use-telegram-widget';
 import { useWidgetSignIn } from '../use-widget-sign-in';
 import { TELEGRAM_LOGIN } from './use-telegram-login.constants';
-import { widgetScript } from './use-telegram-login.helpers';
-
-const payloadOf = (user: TelegramWidgetUser): Record<string, string> =>
-  Object.fromEntries(Object.entries(user).map(([key, value]) => [key, String(value)]));
+import { payloadOf, widgetScript } from './use-telegram-login.helpers';
 
 export const useTelegramLogin = (): TelegramLoginState => {
   const router = useRouter();

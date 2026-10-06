@@ -59,6 +59,14 @@ export type BindCardServiceInput = {
   userId: string;
 };
 
+export type CanceledPayment = {
+  id: string;
+  userId: string;
+  isAutoCharge: boolean;
+  paymentId: string;
+  reason: string | null;
+};
+
 export type SettledPayment = {
   userId: string;
   kind: PaymentKind;

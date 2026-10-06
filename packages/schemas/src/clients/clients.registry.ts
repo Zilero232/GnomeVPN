@@ -1,12 +1,9 @@
-import type { ClientEntry, ClientId } from './clients.types';
+import type { ClientEntry, ClientId, ClientPlatform } from './clients.types';
 
 import { CLIENT_IMPORT_STYLE } from './clients.constants';
 
 const INCY_RELEASES = 'https://github.com/INCY-DEV/incy-platforms/releases/latest/download';
 
-// Only Hiddify, v2rayNG and Clash Meta document an import scheme. Streisand and
-// NekoBox have none, so they carry no importUrl and the user pastes the link by
-// hand — a made-up scheme would open nothing and look like a broken button.
 export const CLIENT_REGISTRY: Record<ClientId, ClientEntry> = {
   incy: {
     downloadUrl: 'https://incy.cc/',
@@ -53,4 +50,4 @@ export const INCY_DOWNLOADS = {
   macos: `${INCY_RELEASES}/incy-macos-arm64.dmg`,
   linux: `${INCY_RELEASES}/incy-linux-x64.deb`,
   tv: 'https://incy.cc/'
-} as const;
+} as const satisfies Record<ClientPlatform, string>;

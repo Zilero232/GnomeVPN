@@ -5,29 +5,23 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
-import { isBrowser } from '@/shared/lib';
-
 import { verifyEmailErrorCode } from '../../../lib';
 
 export const useVerifyEmailOutcome = () => {
   const t = useTranslations('auth.verifyEmail');
   const searchParams = useSearchParams();
-  const shown = useRef(false);
+  const shownRef = useRef(false);
 
   const code = verifyEmailErrorCode(searchParams.get('error'));
 
   useEffect(() => {
-    if (!code || shown.current) {
+    if (!code || shownRef.current) {
       return;
     }
 
-    shown.current = true;
+    shownRef.current = true;
 
     toast.error(t(code));
-
-    if (!isBrowser()) {
-      return;
-    }
 
     const rest = new URLSearchParams(searchParams);
 

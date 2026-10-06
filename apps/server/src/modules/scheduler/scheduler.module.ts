@@ -4,10 +4,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BillingModule } from '../billing';
 import { SubscriptionLinkModule } from '../subscription-link';
 import { TelegramNotifyModule } from '../telegram/telegram-notify.module';
-import { ExpiredAccessJob, NodeHealthJob, PeriodReminderJob, ReconcilePeersJob, RecurringChargeJob } from './jobs';
+import { ExpiredAccessJob, NodeHealthJob, PendingPaymentsJob, PeriodReminderJob, ReconcilePeersJob, RecurringChargeJob } from './jobs';
 
 @Module({
   imports: [ScheduleModule.forRoot(), BillingModule, SubscriptionLinkModule, TelegramNotifyModule],
-  providers: [ExpiredAccessJob, NodeHealthJob, PeriodReminderJob, ReconcilePeersJob, RecurringChargeJob]
+  providers: [ExpiredAccessJob, NodeHealthJob, PendingPaymentsJob, PeriodReminderJob, ReconcilePeersJob, RecurringChargeJob]
 })
 export class SchedulerModule {}

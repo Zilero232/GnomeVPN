@@ -9,13 +9,13 @@ import { match } from 'ts-pattern';
 import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
 import { TrialBanner } from '@/features/billing/claim-trial';
 import { DATE_FORMAT } from '@/shared/i18n';
-import { Text } from '@/ui-kit';
+import { ErrorBlock, LoadingBlock, Text } from '@/ui-kit';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
 
 import s from './SubscriptionCard.module.scss';
 
-export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardProps) => {
+export const SubscriptionCard = ({ subscription, isLoading, isError, onRetry }: SubscriptionCardProps) => {
   const t = useTranslations('account');
   const format = useFormatter();
 
@@ -23,14 +23,17 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
   const periodEnd = subscription?.currentPeriodEnd;
   const daysLeft = periodEnd ? clamp(differenceInCalendarDays(new Date(periodEnd), new Date()), { min: 0 }) : null;
 
-  return match({ isLoading, isActive })
-    .with({ isLoading: true }, () => <Text tone='muted'>{t('loading')}</Text>)
+  const isUnavailable = isError && !subscription;
+
+  return match({ isLoading, isUnavailable, isActive })
+    .with({ isLoading: true }, () => <LoadingBlock label={t('loading')} />)
+    .with({ isUnavailable: true }, () => <ErrorBlock message={t('unavailable')} retryLabel={t('retry')} onRetry={onRetry} />)
     .with({ isActive: true }, () => (
       <>
         <div className={s.hero}>
           <div className={s.heroMain}>
             <Text as='span' className={s.status}>
-              <span className={s.dot} />
+              <span aria-hidden className={s.dot} />
               {t('active')}
             </Text>
 
@@ -53,7 +56,7 @@ export const SubscriptionCard = ({ subscription, isLoading }: SubscriptionCardPr
             {periodEnd && (
               <div className={s.metaItem}>
                 <dt className={s.label}>
-                  <CalendarClock size={13} />
+                  <CalendarClock aria-hidden size={13} />
                   {t('untilLabel')}
                 </dt>
                 <dd className={s.value}>{format.dateTime(new Date(periodEnd), DATE_FORMAT)}</dd>

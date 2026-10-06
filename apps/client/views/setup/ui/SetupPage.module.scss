@@ -6,6 +6,7 @@
 
 .head {
   @include stack(12px);
+  @include rise(0.5s, 0s, 10px);
 }
 
 .title {
@@ -26,10 +27,6 @@
 .grid {
   display: grid;
   gap: 10px;
-
-  // Six tiles: an explicit count keeps them in even rows. `auto-fit` packs as
-  // many as fit and leaves a ragged last row — three then one, at the width
-  // this section is usually read at.
   grid-template-columns: repeat(3, 1fr);
 
   @include below(xl) {

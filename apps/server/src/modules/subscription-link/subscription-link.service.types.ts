@@ -19,13 +19,9 @@ export type SubscriptionNode = {
   lastHealthyAt: Date | null;
 };
 
-export type SubscriptionPeer = {
-  nodeCredential: string;
-};
-
-export type FeedTarget = {
-  node: SubscriptionNode;
+export type FeedPeer = {
   protocol: TunnelProtocol;
+  nodeCredential: string;
 };
 
 export type SubscriptionBody = {
@@ -47,11 +43,20 @@ export type ServerUrisInput = {
   tls: TlsMode;
 };
 
-export type EnsurePeerInput = {
+export type EnsureNodeInput = {
   userId: string;
   node: SubscriptionNode;
-  protocol: TunnelProtocol;
   limitIp: number;
+};
+
+export type IssueFeedPeerInput = EnsureNodeInput & {
+  protocol: TunnelProtocol;
+};
+
+export type ForgetPeersInput = {
+  userId: string;
+  nodeId: string;
+  protocols: TunnelProtocol[];
 };
 
 export type PersistPeerInput = {

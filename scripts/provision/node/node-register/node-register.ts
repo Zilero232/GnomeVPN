@@ -1,6 +1,6 @@
 import type { RegisterNodeInput, RememberNodeSecretsInput } from './node-register.types';
 
-import { LISTEN_PORT, log, MASQUERADE_HOST } from '../../config';
+import { log, MASQUERADE_HOST, PORTS } from '../../config';
 import { upsertEnvGroup } from '../env-file';
 import { nodeKeyName, panelPasswordName, panelPathName } from '../node-credentials';
 import { upsertNode } from '../upsert-node';
@@ -42,7 +42,7 @@ export const registerNode = async ({
       countryCode: config.countryCode,
       city: config.city,
       host: config.host,
-      port: LISTEN_PORT,
+      port: PORTS.hysteria,
       serverName: MASQUERADE_HOST,
       hysteriaAuth: auth,
       certFingerprint: cert.certFingerprint,

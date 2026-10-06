@@ -12,8 +12,8 @@
     0 0 0 3px color-mix(in srgb, var(--color-accent) 10%, transparent),
     0 8px 20px -10px color-mix(in srgb, var(--color-accent) 45%, transparent);
   transition:
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+    border-color var(--duration-base) ease,
+    box-shadow var(--duration-base) ease;
 }
 
 .root:hover {

@@ -27,6 +27,11 @@ describe('authErrorKey', () => {
     expect(authErrorKey({ code: 'INVALID_PASSWORD', fallbackKey: 'errors.signInFailed' })).toBe(invalid);
   });
 
+  it('ignores a code that only matches an inherited property, rather than returning a function as a key', () => {
+    expect(authErrorKey({ code: 'toString', fallbackKey: 'errors.signInFailed' })).toBe('errors.signInFailed');
+    expect(authErrorKey({ code: 'constructor', fallbackKey: 'errors.signInFailed' })).toBe('errors.signInFailed');
+  });
+
   it('returns a key under the auth namespace, which is what the forms translate against', () => {
     expect(authErrorKey({ code: 'EMAIL_NOT_VERIFIED', fallbackKey: 'errors.signInFailed' })).toMatch(/^errors\./);
   });

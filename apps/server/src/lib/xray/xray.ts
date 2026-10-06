@@ -34,8 +34,8 @@ export class XrayClient {
     });
 
     this.inbounds = new Inbounds(this.panel);
-    this.hysteria = new HysteriaClients(this.panel, this.inbounds, this.nodeKey);
-    this.vless = new VlessClients(this.panel, this.inbounds, this.nodeKey);
+    this.hysteria = new HysteriaClients({ panel: this.panel, inbounds: this.inbounds, nodeKey: this.nodeKey });
+    this.vless = new VlessClients({ panel: this.panel, inbounds: this.inbounds, nodeKey: this.nodeKey });
   }
 
   async hasInbound(): Promise<boolean> {
@@ -59,7 +59,7 @@ export class XrayClient {
 
     const settings = { ...(inbound.settings as object), clients };
 
-    await this.panel.updateInbound({ id: current.id, payload: inboundPayload({ ...inbound, settings }, remark) });
+    await this.panel.updateInbound({ id: current.id, payload: inboundPayload({ inbound: { ...inbound, settings }, remark }) });
   }
 
   async updateInbound(inbound: Record<string, unknown>): Promise<void> {

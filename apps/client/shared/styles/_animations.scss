@@ -3,7 +3,7 @@
 }
 
 @mixin rise($duration: 0.5s, $delay: 0s, $distance: 12px) {
-  animation: gnomevpn-rise $duration ease $delay both;
+  animation: gnomevpn-rise $duration var(--ease-out) $delay both;
 
   @media (prefers-reduced-motion: reduce) {
     animation: none;

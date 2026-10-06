@@ -4,19 +4,17 @@ import type { ChangePasswordValues } from '@gnomevpn/schemas';
 
 import { useMutation } from '@tanstack/react-query';
 
-import { authClient } from '@/shared/api';
+import { authClient, unwrapAuth } from '@/shared/api';
 
 export const useChangePassword = () =>
   useMutation({
     mutationFn: async ({ currentPassword, newPassword }: ChangePasswordValues) => {
-      const { error } = await authClient.changePassword({
+      const result = await authClient.changePassword({
         currentPassword,
         newPassword,
         revokeOtherSessions: true
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      unwrapAuth({ result, fallbackKey: 'errors.passwordResetFailed' });
     }
   });
