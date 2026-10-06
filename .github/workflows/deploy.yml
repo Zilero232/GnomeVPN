@@ -220,6 +220,7 @@ jobs:
             docker compose run --rm --no-deps server bunx prisma migrate deploy
 
             docker compose up -d
+            docker compose restart caddy
             docker image prune -f
 
             for container in gnomevpn-server gnomevpn-web; do
