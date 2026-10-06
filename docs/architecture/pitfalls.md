@@ -17,7 +17,8 @@ full, the entry links to it. Part of the [documentation index](../README.md).
 - **next-intl falls back to a default environment without an explicit `timeZone`.**
   Static generation then logs `ENVIRONMENT_FALLBACK` for every page that formats a
   date. Both `getRequestConfig` and `NextIntlClientProvider` pass `TIME_ZONE`.
-- **Caddy refuses a handshake without a matching SNI with `internal_error`.**
-  INCY refreshing through a live tunnel hit it on every fetch; `default_sni` and
-  `fallback_sni` now point at the API, and a Caddyfile change only applies after
-  `docker compose restart caddy` ([deploy](../ops/deploy.md)).
+- **A subscription link outlives the domain it was issued on.** Moving the API
+  from `api.gnomevpn.ru` to `api.gnome-vpn.com` broke every INCY refresh for
+  links imported before the move, with nothing but a TLS `internal_error` alert
+  in the app's log; the old name is served again ([deploy](../ops/deploy.md)).
+  A Caddyfile change only applies after `docker compose restart caddy`.
