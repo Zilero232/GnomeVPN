@@ -9,6 +9,7 @@ export { formatDate } from './format-date';
 export { identityOf } from './identity';
 export { buttonFor, mainKeyboard } from './keyboard';
 export { generateLinkCode, looksLikeLinkCode, normaliseLinkCode } from './link-code';
+export { retryNetworkErrors } from './network-retry';
 export { parsePlanId, planButtonLabel } from './plan-label';
 export { profileText } from './profile-text';
 export { statusText } from './status-text';

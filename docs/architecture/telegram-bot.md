@@ -131,6 +131,16 @@ Telegram caches DNS for a few minutes, so a record change is not visible to
 `setWebhook` immediately; it keeps answering for the old address until the cache
 expires.
 
+**Every outbound call retries a network failure.** IPv6 egress to
+`api.telegram.org` holds, but not every time: a renewal's "renewed" message was
+lost to a single `Network request for 'sendMessage' failed!`, logged and gone.
+`retryNetworkErrors` is a grammY API transformer installed on the bot itself,
+so a reply to a button, a notification and the boot announcement all retry an
+`HttpError` (the call never got an answer) `BOT_API.callRetries` times. A
+`GrammyError` is an answer — a blocked bot, a bad chat id — and is never
+retried. A retried `sendMessage` whose first attempt did arrive shows twice;
+that is the price of not losing one.
+
 The fallback, if IPv6 egress goes too, is long polling, which needs no inbound
 path at all.
 
