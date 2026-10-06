@@ -1,6 +1,6 @@
 'use client';
 
-import { CreditCard, LogOut, Send, Smartphone, UserRound } from 'lucide-react';
+import { CreditCard, LogOut, MonitorSmartphone, Send, Smartphone, UserRound } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
@@ -11,13 +11,13 @@ import { useVerifyEmailOutcome } from '@/features/auth/verify-email';
 import type { AccountTab } from './components';
 
 import { BLOCK_MOTION, HEADER_MOTION, PAGE_MOTION } from './AccountPage.motion';
-import { AccountIdentity, AccountTabs, AppCard, ProfileCard, SubscriptionCard, TelegramCard } from './components';
+import { AccountIdentity, AccountTabs, AppCard, DevicesCard, ProfileCard, SubscriptionCard, TelegramCard } from './components';
 
 import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
-  const { subscription, isLoading, isError, refetch } = useSubscriptionStatus();
+  const { subscription, isLoading, isError, refetch, hasAccess, limits } = useSubscriptionStatus();
 
   const signOut = useSignOut();
 
@@ -36,6 +36,16 @@ export const AccountPage = () => {
       icon: CreditCard,
       render: () => <SubscriptionCard isError={isError} isLoading={isLoading} subscription={subscription} onRetry={() => void refetch()} />
     },
+    ...(hasAccess
+      ? [
+          {
+            value: 'devices',
+            label: t('tabs.devices'),
+            icon: MonitorSmartphone,
+            render: () => <DevicesCard limits={limits} />
+          }
+        ]
+      : []),
     {
       value: 'telegram',
       label: t('tabs.telegram'),

@@ -14,6 +14,8 @@ const DAY_MS = 24 * 60 * 60 * 1_000;
 
 const peer = (overrides: Partial<ReconcilePeer> = {}): ReconcilePeer => ({
   id: 'peer-1',
+  deviceId: null,
+  revokedAt: null,
   userId: 'nZTp8U6AtElvrC60yGPq6GBfwLL9kxbX',
   kind: 'config',
   name: 'incy',

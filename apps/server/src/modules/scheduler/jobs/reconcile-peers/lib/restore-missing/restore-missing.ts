@@ -4,6 +4,7 @@ import { isEmpty } from 'remeda';
 import type { RestoreMissingInput } from './restore-missing.types';
 
 import { activeDeviceLimit, describeError } from '../../../../../../common/lib';
+import { DEVICE_PEER } from '../../../../../devices';
 import { peerClientName, peerClientNames } from '../../../../../peers';
 
 export const restoreMissing = async ({ logger, xray, node, peers, nodeClients }: RestoreMissingInput): Promise<boolean> => {
@@ -18,7 +19,7 @@ export const restoreMissing = async ({ logger, xray, node, peers, nodeClients }:
 
   for (const peer of missing) {
     const email = peerClientName(peer);
-    const limitIp = activeDeviceLimit(peer.user.subscription);
+    const limitIp = peer.deviceId ? DEVICE_PEER.ipsPerClient : activeDeviceLimit(peer.user.subscription);
 
     try {
       await (peer.protocol === TUNNEL_PROTOCOL.vless

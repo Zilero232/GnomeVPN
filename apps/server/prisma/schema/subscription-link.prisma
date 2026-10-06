@@ -7,6 +7,9 @@ model SubscriptionLink {
   lastSeenAt   DateTime? @map("last_seen_at") @db.Timestamptz(3)
   lastPlatform String?   @map("last_platform")
 
+  blockedKey      String?   @map("blocked_key")
+  blockedNoticeAt DateTime? @map("blocked_notice_at") @db.Timestamptz(3)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 

@@ -8,9 +8,11 @@ import { activeDeviceLimit, describeError, isPeriodActive } from '../../../commo
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
 import { NO_TRAFFIC } from '../../../lib/xray';
+import { DEVICE_HEADER, deviceIdentity, DevicesService, headerOf } from '../../devices';
 import { buildTunnelConfig } from '../../peers';
 import { NODE_FEED_SELECT } from '../config';
 import { announcement, clientPlatform, incyHeaders, incyServerUri, tlsMode } from '../lib';
+import { FeedNoticeService } from './feed-notice.service';
 import { SubscriptionPeersService } from './subscription-peers.service';
 
 @Injectable()
@@ -20,10 +22,12 @@ export class SubscriptionFeedService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly subscriptionPeers: SubscriptionPeersService,
+    private readonly devices: DevicesService,
+    private readonly notice: FeedNoticeService,
     private readonly config: AppConfigService
   ) {}
 
-  async build({ token, userAgent }: BuildFeedInput): Promise<SubscriptionBody> {
+  async build({ token, headers }: BuildFeedInput): Promise<SubscriptionBody> {
     const link = await this.prisma.subscriptionLink.findUnique({
       where: { token },
       select: { userId: true, user: { select: { subscription: { select: { currentPeriodEnd: true, extraDevices: true } } } } }
@@ -33,16 +37,31 @@ export class SubscriptionFeedService {
       throw new AppNotFoundException('SUBSCRIPTION_LINK_NOT_FOUND', 'Unknown subscription token');
     }
 
+    const identity = deviceIdentity(headers);
+    const userAgent = headerOf({ headers, name: DEVICE_HEADER.userAgent });
+
     void this.touch({ token, userAgent });
 
     const subscription = link.user.subscription;
     const currentPeriodEnd = subscription?.currentPeriodEnd ?? null;
     const hasAccess = isPeriodActive(currentPeriodEnd);
+    const deviceLimit = activeDeviceLimit(subscription);
     const nodes = await this.availableNodes();
 
-    const uris = hasAccess
-      ? await this.serverUris({ userId: link.userId, nodes, limitIp: activeDeviceLimit(subscription), tls: tlsMode(userAgent) })
-      : [];
+    const admitted = hasAccess ? await this.devices.admit({ userId: link.userId, identity, deviceLimit }) : null;
+    const deviceId = admitted?.isAllowed ? admitted.deviceId : null;
+
+    if (admitted?.isNew) {
+      void this.notice.deviceAdded({ userId: link.userId, identity, deviceCount: admitted.deviceCount, deviceLimit });
+    }
+
+    if (admitted && !admitted.isAllowed) {
+      void this.notice.deviceBlocked({ token, userId: link.userId, identity, deviceLimit }).catch((error: unknown) => {
+        this.logger.warn(`device-limit notice failed: ${describeError(error)}`);
+      });
+    }
+
+    const uris = isNonNullish(deviceId) ? await this.serverUris({ userId: link.userId, deviceId, nodes, tls: tlsMode(userAgent) }) : [];
 
     const traffic = hasAccess ? await this.subscriptionPeers.traffic({ userId: link.userId, nodes }) : NO_TRAFFIC;
 
@@ -53,7 +72,12 @@ export class SubscriptionFeedService {
         traffic,
         clientUrl: this.config.get('CLIENT_URL'),
         supportUrl: this.config.get('SUPPORT_URL') || null,
-        announce: announcement({ nodes, hasSubscription: isNonNullish(subscription), currentPeriodEnd })
+        announce: announcement({
+          nodes,
+          hasSubscription: isNonNullish(subscription),
+          currentPeriodEnd,
+          blockedAtLimit: admitted && !admitted.isAllowed ? deviceLimit : null
+        })
       })
     };
   }
@@ -77,8 +101,8 @@ export class SubscriptionFeedService {
     });
   }
 
-  private async serverUris({ userId, nodes, limitIp, tls }: ServerUrisInput): Promise<string[]> {
-    const issued = await Promise.all(nodes.map((node) => this.subscriptionPeers.ensureNode({ userId, node, limitIp })));
+  private async serverUris({ userId, deviceId, nodes, tls }: ServerUrisInput): Promise<string[]> {
+    const issued = await Promise.all(nodes.map((node) => this.subscriptionPeers.ensureNode({ userId, deviceId, node })));
 
     return nodes
       .flatMap((node, index) =>

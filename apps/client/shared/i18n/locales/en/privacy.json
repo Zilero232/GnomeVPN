@@ -4,11 +4,11 @@
   "intro": "GnomeVPN is a VPN service built on the Hysteria2 protocol. It is designed to know as little about you as possible: browsing history is never collected and is physically stored nowhere.",
   "collect": {
     "title": "What we collect",
-    "body": "Only what the service cannot run without: an email address and a hashed password for signing in; subscription details such as the plan and its expiry; a device identifier the app generates itself, unrelated to any advertising ID; and the country you picked."
+    "body": "Only what the service cannot run without: an email address and a hashed password for signing in; subscription details such as the plan and its expiry; the device identifier your VPN app sends (unrelated to any advertising ID), with the device model, system version and app name, so you can see your devices and their limit can be kept; and the country you picked."
   },
   "noLogs": {
     "title": "Connection logs",
-    "body": "We keep no logs of your traffic. Visited addresses, DNS queries, connection contents and browsing history are never recorded. Nodes count transferred bytes only, which is how an active session is told apart from an abandoned one so device slots can be freed."
+    "body": "We keep no logs of your traffic. Visited addresses, DNS queries, connection contents and browsing history are never recorded. Nodes count transferred bytes only, to show your usage in the app and to tell an active session apart from an abandoned one."
   },
   "payments": {
     "title": "Payments",

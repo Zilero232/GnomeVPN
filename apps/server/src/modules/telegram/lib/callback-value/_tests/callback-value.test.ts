@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { AUTO_RENEW_CHOICE, CONFIRMED } from '../../../config';
-import { autoRenewChoice, countFrom, isConfirmed } from '../callback-value';
+import { AUTO_RENEW_CHOICE, CONFIRMED, DECLINED, SUBJECT_SEPARATOR } from '../../../config';
+import { autoRenewChoice, countFrom, deviceAnswer, isConfirmed, parseDeviceId } from '../callback-value';
+
+const deviceId = '3f2b8c1e-9a4d-4e6f-8b7a-1c2d3e4f5a6b';
 
 describe('isConfirmed', () => {
   it('accepts only the exact confirming payload', () => {
@@ -50,5 +52,38 @@ describe('autoRenewChoice', () => {
     expect(autoRenewChoice('')).toBeNull();
     expect(autoRenewChoice('ON')).toBeNull();
     expect(autoRenewChoice(CONFIRMED)).toBeNull();
+  });
+});
+
+describe('parseDeviceId', () => {
+  it('accepts a device id', () => {
+    expect(parseDeviceId(deviceId)).toBe(deviceId);
+  });
+
+  it('refuses anything that is not shaped like one, so a crafted press reaches no query', () => {
+    expect(parseDeviceId('')).toBeNull();
+    expect(parseDeviceId(` ${deviceId}`)).toBeNull();
+    expect(parseDeviceId(`${deviceId}x`)).toBeNull();
+    expect(parseDeviceId('__proto__')).toBeNull();
+    expect(parseDeviceId(deviceId.replaceAll('-', ''))).toBeNull();
+  });
+});
+
+describe('deviceAnswer', () => {
+  it('reads a yes and a no for the same device', () => {
+    expect(deviceAnswer(`${CONFIRMED}${SUBJECT_SEPARATOR}${deviceId}`)).toEqual({ isConfirmed: true, deviceId });
+    expect(deviceAnswer(`${DECLINED}${SUBJECT_SEPARATOR}${deviceId}`)).toEqual({ isConfirmed: false, deviceId });
+  });
+
+  it('refuses an answer that is neither yes nor no rather than reading it as one', () => {
+    expect(deviceAnswer(`maybe${SUBJECT_SEPARATOR}${deviceId}`)).toBeNull();
+    expect(deviceAnswer(`${SUBJECT_SEPARATOR}${deviceId}`)).toBeNull();
+  });
+
+  it('refuses a payload without a well-formed device', () => {
+    expect(deviceAnswer(CONFIRMED)).toBeNull();
+    expect(deviceAnswer(`${CONFIRMED}${SUBJECT_SEPARATOR}`)).toBeNull();
+    expect(deviceAnswer(`${CONFIRMED}${SUBJECT_SEPARATOR}not-a-device`)).toBeNull();
+    expect(deviceAnswer(`${CONFIRMED}${SUBJECT_SEPARATOR}${deviceId}${SUBJECT_SEPARATOR}extra`)).toBeNull();
   });
 });

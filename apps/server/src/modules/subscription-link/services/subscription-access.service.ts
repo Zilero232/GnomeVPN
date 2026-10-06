@@ -9,6 +9,6 @@ export class SubscriptionAccessService {
   constructor(private readonly peers: PeersService) {}
 
   async setEnabledAll({ userId, enabled }: SetEnabledAllInput): Promise<void> {
-    await this.peers.setEnabled({ where: { userId, kind: 'config' }, enabled });
+    await this.peers.setEnabled({ where: { userId, kind: 'config', revokedAt: null }, enabled });
   }
 }

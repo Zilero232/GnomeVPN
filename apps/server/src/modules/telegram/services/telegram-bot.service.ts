@@ -14,6 +14,7 @@ import { buttonFor, callbackPattern, looksLikeLinkCode } from '../lib';
 import { TelegramAccountService } from './telegram-account.service';
 import { TelegramAppsService } from './telegram-apps.service';
 import { TelegramBillingService } from './telegram-billing.service';
+import { TelegramDevicesService } from './telegram-devices.service';
 import { TelegramProfileService } from './telegram-profile.service';
 import { TelegramSharedService } from './telegram-shared.service';
 import { TelegramSubscriptionService } from './telegram-subscription.service';
@@ -30,6 +31,7 @@ export class TelegramBotService implements OnModuleInit {
     private readonly subscription: TelegramSubscriptionService,
     private readonly apps: TelegramAppsService,
     private readonly billing: TelegramBillingService,
+    private readonly devices: TelegramDevicesService,
     private readonly profile: TelegramProfileService
   ) {
     if (this.bot) {
@@ -77,7 +79,7 @@ export class TelegramBotService implements OnModuleInit {
       { button: 'renew', run: (ctx) => this.subscription.buy(ctx) },
       { command: 'trial', button: 'trial', run: (ctx) => this.subscription.claimTrialDay(ctx) },
       { command: 'apps', button: 'apps', run: (ctx) => this.apps.list(ctx) },
-      { command: 'devices', button: 'devices', run: (ctx) => this.billing.devices(ctx) },
+      { command: 'devices', button: 'devices', run: (ctx) => this.devices.list(ctx) },
       { command: 'rotate', button: 'rotate', run: (ctx) => this.billing.askRotate(ctx) },
       { button: 'autoRenew', run: (ctx) => this.billing.autoRenew(ctx) },
       { command: 'website', button: 'website', run: (ctx) => this.account.openWebsite(ctx) },
@@ -97,7 +99,9 @@ export class TelegramBotService implements OnModuleInit {
       { prefix: CALLBACK_PREFIX.deleteAccount, run: (ctx) => this.account.confirmDelete(ctx) },
       { prefix: CALLBACK_PREFIX.rotate, run: (ctx) => this.billing.confirmRotate(ctx) },
       { prefix: CALLBACK_PREFIX.autoRenew, run: (ctx) => this.billing.changeAutoRenew(ctx) },
-      { prefix: CALLBACK_PREFIX.devices, run: (ctx) => this.billing.buyDevices(ctx) }
+      { prefix: CALLBACK_PREFIX.devices, run: (ctx) => this.devices.buyDevices(ctx) },
+      { prefix: CALLBACK_PREFIX.forgetDevice, run: (ctx) => this.devices.askRemove(ctx) },
+      { prefix: CALLBACK_PREFIX.removeDevice, run: (ctx) => this.devices.confirmRemove(ctx) }
     ];
   }
 

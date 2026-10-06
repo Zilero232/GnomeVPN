@@ -13,6 +13,7 @@ model User {
   accounts         Account[]
   payments         Payment[]
   peers            Peer[]
+  devices          Device[]
   subscription     Subscription?
   subscriptionLink SubscriptionLink?
   telegramAccount  TelegramAccount?

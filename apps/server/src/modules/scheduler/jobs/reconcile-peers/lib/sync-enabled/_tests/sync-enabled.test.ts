@@ -8,6 +8,8 @@ import { syncEnabled } from '../sync-enabled';
 
 const peer = (overrides: Partial<ReconcilePeer> = {}): ReconcilePeer => ({
   id: 'peer-1',
+  deviceId: null,
+  revokedAt: null,
   userId: 'nZTp8U6AtElvrC60yGPq6GBfwLL9kxbX',
   kind: 'config',
   name: 'incy',

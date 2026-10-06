@@ -20,6 +20,8 @@ export type PeerOwner = {
 
 export type ReconcilePeer = PeerIdentity & {
   id: string;
+  deviceId: string | null;
+  revokedAt: Date | null;
   state: PeerState;
   nodeCredential: string;
   user: PeerOwner;

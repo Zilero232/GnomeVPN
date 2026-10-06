@@ -6,7 +6,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { clamp, isNonNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
-import { AutoRenewControl, ExtraDevicesControl, PlanPicker } from '@/features/billing/checkout';
+import { AutoRenewControl, PlanPicker } from '@/features/billing/checkout';
 import { TrialBanner } from '@/features/billing/claim-trial';
 import { DATE_FORMAT } from '@/shared/i18n';
 import { ErrorBlock, LoadingBlock, Text } from '@/ui-kit';
@@ -65,15 +65,7 @@ export const SubscriptionCard = ({ subscription, isLoading, isError, onRetry }: 
           </dl>
         </div>
 
-        {subscription && (
-          <>
-            <ExtraDevicesControl limits={subscription.limits} />
-
-            <div className={s.addon}>
-              <AutoRenewControl subscription={subscription} />
-            </div>
-          </>
-        )}
+        {subscription && <AutoRenewControl subscription={subscription} />}
       </>
     ))
     .otherwise(() => (

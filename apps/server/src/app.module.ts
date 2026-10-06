@@ -8,6 +8,7 @@ import { AppConfigModule } from './config/config.module';
 import { PrismaModule } from './core';
 import { AuthModule } from './modules/auth';
 import { BillingModule } from './modules/billing';
+import { DevicesModule } from './modules/devices';
 import { HealthModule } from './modules/health';
 import { PeersModule } from './modules/peers';
 import { PlatformsModule } from './modules/platforms';
@@ -26,6 +27,7 @@ import { TelegramModule } from './modules/telegram';
     HealthModule,
     SubscriptionModule,
     BillingModule,
+    DevicesModule,
     PeersModule,
     PlatformsModule,
     SubscriptionLinkModule,

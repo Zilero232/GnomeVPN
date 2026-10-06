@@ -24,7 +24,7 @@ export class ExpiredAccessJob {
 
   private async ownersOf({ user, state }: OwnersOfInput): Promise<string[]> {
     const peers = await this.prisma.peer.findMany({
-      where: { kind: 'config', user, ...(state ? { state } : {}) },
+      where: { kind: 'config', revokedAt: null, user, ...(state ? { state } : {}) },
       select: { userId: true },
       distinct: ['userId']
     });

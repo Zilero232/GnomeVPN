@@ -61,30 +61,26 @@ which was then written back over the real one.
 
 ## Device limits
 
-A subscription covers `DEFAULT_DEVICE_LIMIT` (2) simultaneous connections, plus
-whatever `extraDevices` the user has bought. `resolveLimits` turns the two into a
-`deviceLimit`, and `activeDeviceLimit` in `common/lib/period` is the one place
-that reads it off a subscription — it returns the default whenever the period has
-lapsed, so extras stop counting the moment they stop being paid for.
+A subscription covers `DEFAULT_DEVICE_LIMIT` (2) devices, plus whatever
+`extraDevices` the user has bought; `activeDeviceLimit` in `common/lib/period`
+is the one place that reads it off a subscription, and it returns the default
+whenever the period has lapsed. **The limit is enforced by the device registry,
+not by the panel** — each device fetching the feed is registered and issued keys
+of its own, and a device past the limit is refused in the feed. The whole
+mechanism, and why the panel's per-client `limitIp` could not do it, is in
+[devices.md](devices.md).
 
-**The limit is enforced on the node, as `limitIp` on the panel client.** It
-travels from `SubscriptionFeedService` through `SubscriptionPeersService.ensureNode`
-and `PeersService.issue` into `addClient`/`addVlessClient`; `CLIENT_DEFAULTS` does
-not carry it, because it is the one client field that differs per user. Since
-3x-ui v3.3.1 the panel counts IPs through Xray's online-stats API rather than by
-parsing `access.log`, so nothing extra has to be installed on a node for it. Over
-the limit, `disconnectClientTemporarily` drops the client from the running core
-and re-adds it 100 ms later; it refuses the surplus connection rather than
-banning anybody.
+`limitIp` is still set on every client, as `DEVICE_PEER.ipsPerClient` (2) for a
+device's keys: a net against one device's config being copied elsewhere, not a
+seat count. 3x-ui counts the IPs through Xray's online-stats API and has
+fail2ban drop the oldest IP over the limit — it bans the address for 30 minutes,
+it does not refuse the new connection.
 
-**The limit is per node, not per account.** Each panel only sees the IPs
-connected to itself, so a subscription can hold `deviceLimit` connections on
-every node at once. That is a ceiling on sharing, not an exact seat count.
-
-**A restored peer must get its owner's limit back.** `restoreMissing` recreates a
-client the node has lost, and it reads the limit from the peer's own subscription
-— `RECONCILE_PEER_SELECT` pulls `user.subscription` for exactly this. Reissuing
-with the default would silently revoke devices the user paid for.
+**A restored peer gets the limit it was issued with.** `restoreMissing` recreates
+a client the node has lost: a device's peer with `DEVICE_PEER.ipsPerClient`, a
+shared legacy `incy` peer with its owner's `activeDeviceLimit` — which is why
+`RECONCILE_PEER_SELECT` still pulls `user.subscription`. Revoked peers are never
+restored; `releaseRevoked` deletes them first.
 
 **Liveness comes from the Xray core.** `onlineEmails()` reads
 `/panel/api/clients/onlines` — the sessions the core itself proxies. A node that

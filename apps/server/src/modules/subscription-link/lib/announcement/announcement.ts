@@ -1,18 +1,22 @@
 import { differenceInCalendarDays, isAfter } from 'date-fns';
-import { isEmpty, isNullish } from 'remeda';
+import { isEmpty, isNonNullish, isNullish } from 'remeda';
 
 import type { AnnouncementInput } from './announcement.types';
 
 import { ANNOUNCEMENTS, EXPIRY_WARNING_DAYS } from './announcement.constants';
 import { countryList, daysLeftLabel, isFresh, isStale } from './announcement.helpers';
 
-export const announcement = ({ currentPeriodEnd, hasSubscription, nodes, now = new Date() }: AnnouncementInput): string | null => {
+export const announcement = ({ currentPeriodEnd, hasSubscription, nodes, blockedAtLimit, now = new Date() }: AnnouncementInput): string | null => {
   if (!hasSubscription || isNullish(currentPeriodEnd)) {
     return ANNOUNCEMENTS.noSubscription;
   }
 
   if (!isAfter(currentPeriodEnd, now)) {
     return ANNOUNCEMENTS.expired;
+  }
+
+  if (isNonNullish(blockedAtLimit)) {
+    return ANNOUNCEMENTS.deviceLimit(blockedAtLimit);
   }
 
   const daysLeft = differenceInCalendarDays(currentPeriodEnd, now);

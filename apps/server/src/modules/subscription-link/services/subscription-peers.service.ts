@@ -19,8 +19,8 @@ import type {
 import { describeError, xrayClientForNode } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { NO_TRAFFIC, sumTraffic } from '../../../lib';
+import { DEVICE_PEER, devicePeerName } from '../../devices';
 import { hasReality, peerClientNames, PeersService } from '../../peers';
-import { FEED } from '../config';
 
 @Injectable()
 export class SubscriptionPeersService {
@@ -35,11 +35,12 @@ export class SubscriptionPeersService {
     return hasReality(node) ? [TUNNEL_PROTOCOL.hysteria2, TUNNEL_PROTOCOL.vless] : [TUNNEL_PROTOCOL.hysteria2];
   }
 
-  async ensureNode({ userId, node, limitIp }: EnsureNodeInput): Promise<FeedPeer[]> {
+  async ensureNode({ userId, deviceId, node }: EnsureNodeInput): Promise<FeedPeer[]> {
+    const name = devicePeerName(deviceId);
     const protocols = this.protocolsFor(node);
 
     const existing = await this.prisma.peer.findMany({
-      where: { userId, kind: 'config', name: FEED.peerName, nodeId: node.id, protocol: { in: protocols } },
+      where: { userId, kind: 'config', name, nodeId: node.id, protocol: { in: protocols }, revokedAt: null },
       select: { protocol: true, nodeCredential: true }
     });
 
@@ -49,7 +50,7 @@ export class SubscriptionPeersService {
       return existing;
     }
 
-    const issued = (await Promise.all(missing.map((protocol) => this.issue({ userId, node, protocol, limitIp })))).filter(isNonNullish);
+    const issued = (await Promise.all(missing.map((protocol) => this.issue({ userId, deviceId, node, protocol })))).filter(isNonNullish);
 
     if (isEmpty(issued)) {
       return existing;
@@ -60,7 +61,7 @@ export class SubscriptionPeersService {
     } catch (error) {
       this.logger.warn(`node ${node.id} did not restart after issuing, its new peers wait for the next fetch: ${describeError(error)}`);
 
-      await this.forget({ userId, nodeId: node.id, protocols: issued.map((peer) => peer.protocol) });
+      await this.forget({ userId, name, nodeId: node.id, protocols: issued.map((peer) => peer.protocol) });
 
       return existing;
     }
@@ -69,16 +70,21 @@ export class SubscriptionPeersService {
   }
 
   async traffic({ userId, nodes }: NodeTrafficInput): Promise<NodeTraffic> {
-    const emails = new Set(
-      nodes.flatMap((node) => this.protocolsFor(node).flatMap((protocol) => peerClientNames(this.identity({ userId, nodeId: node.id, protocol }))))
-    );
+    const peers = await this.prisma.peer.findMany({
+      where: { userId, kind: 'config', revokedAt: null, nodeId: { in: nodes.map((node) => node.id) } },
+      select: { userId: true, kind: true, name: true, nodeId: true, protocol: true }
+    });
+
+    const emails = new Set(peers.flatMap((peer) => peerClientNames(peer)));
 
     const perNode = await Promise.all(nodes.map((node) => this.nodeTraffic({ node, emails })));
 
     return sumTraffic(perNode);
   }
 
-  private async issue({ userId, node, protocol, limitIp }: IssueFeedPeerInput): Promise<FeedPeer | null> {
+  private async issue({ userId, deviceId, node, protocol }: IssueFeedPeerInput): Promise<FeedPeer | null> {
+    const name = devicePeerName(deviceId);
+
     try {
       const created = await this.peers.issueAndPersist({
         node,
@@ -86,10 +92,10 @@ export class SubscriptionPeersService {
         userId,
         kind: 'config',
         protocol,
-        limitIp,
-        name: FEED.peerName,
+        limitIp: DEVICE_PEER.ipsPerClient,
+        name,
         deferRestart: true,
-        persist: (peer) => this.persist({ userId, nodeId: node.id, protocol, nodeCredential: peer.nodeCredential })
+        persist: (peer) => this.persist({ userId, deviceId, name, nodeId: node.id, protocol, nodeCredential: peer.nodeCredential })
       });
 
       return { protocol, nodeCredential: created.nodeCredential };
@@ -100,12 +106,10 @@ export class SubscriptionPeersService {
     }
   }
 
-  private async forget({ userId, nodeId, protocols }: ForgetPeersInput): Promise<void> {
-    await this.prisma.peer
-      .deleteMany({ where: { userId, kind: 'config', name: FEED.peerName, nodeId, protocol: { in: protocols } } })
-      .catch((error: unknown) => {
-        this.logger.warn(`unrestarted peers on node ${nodeId} were not forgotten: ${describeError(error)}`);
-      });
+  private async forget({ userId, name, nodeId, protocols }: ForgetPeersInput): Promise<void> {
+    await this.prisma.peer.deleteMany({ where: { userId, kind: 'config', name, nodeId, protocol: { in: protocols } } }).catch((error: unknown) => {
+      this.logger.warn(`unrestarted peers on node ${nodeId} were not forgotten: ${describeError(error)}`);
+    });
   }
 
   private async nodeTraffic({ node, emails }: OneNodeTrafficInput): Promise<NodeTraffic> {
@@ -118,20 +122,16 @@ export class SubscriptionPeersService {
     }
   }
 
-  private identity({ userId, nodeId, protocol }: Omit<PersistPeerInput, 'nodeCredential'>) {
-    return { userId, kind: 'config', name: FEED.peerName, nodeId, protocol } as const;
-  }
-
-  private persist({ userId, nodeId, protocol, nodeCredential }: PersistPeerInput): Promise<void> {
-    const identity = this.identity({ userId, nodeId, protocol });
+  private persist({ userId, deviceId, name, nodeId, protocol, nodeCredential }: PersistPeerInput): Promise<void> {
+    const identity = { userId, kind: 'config', name, nodeId, protocol } as const;
 
     return withSerializableRetry(() =>
       this.prisma.$transaction(
         async (tx) => {
           await tx.peer.upsert({
             where: { userId_kind_name_nodeId_protocol: identity },
-            update: { nodeCredential },
-            create: { ...identity, nodeCredential }
+            update: { nodeCredential, deviceId, revokedAt: null, state: 'active' },
+            create: { ...identity, deviceId, nodeCredential }
           });
         },
         { isolationLevel: 'Serializable' }

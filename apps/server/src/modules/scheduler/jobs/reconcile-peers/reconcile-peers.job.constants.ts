@@ -1,5 +1,7 @@
 export const RECONCILE_PEER_SELECT = {
   id: true,
+  deviceId: true,
+  revokedAt: true,
   userId: true,
   kind: true,
   name: true,

@@ -1,12 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
 
 import type { AnsweredInput, AskInput, AttemptInput, BotContext, BotText, ConfirmedInput, ReplyInput, WithUserInput } from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
-import { BOT_TEXT, CONFIRMED, DECLINED } from '../config';
-import { identityOf, isConfirmed, mainKeyboard, resolveLocale } from '../lib';
+import { BOT_TEXT } from '../config';
+import { confirmKeyboard, identityOf, isConfirmed, mainKeyboard, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramNotifyService } from './telegram-notify.service';
 
@@ -54,10 +53,9 @@ export class TelegramSharedService {
     await this.withUser({
       ctx,
       act: ({ locale }) => {
-        const { ask, yes, no } = pick(BOT_TEXT[locale]);
-        const keyboard = new InlineKeyboard().text(yes, `${prefix}${CONFIRMED}`).text(no, `${prefix}${DECLINED}`);
+        const copy = pick(BOT_TEXT[locale]);
 
-        return ctx.reply(ask, { reply_markup: keyboard });
+        return ctx.reply(copy.ask, { reply_markup: confirmKeyboard({ copy, prefix }) });
       }
     });
   }

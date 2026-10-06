@@ -15,14 +15,14 @@
   "bindCard": "Add a card",
   "cardBound": "Card on file",
   "unbindCard": "Remove card",
-  "extraDevicesTitle": "Simultaneous connections",
-  "extraDevicesCount": "{limit} devices available",
+  "extraDevicesTitle": "Device slots",
+  "extraDevicesCount": "{limit, plural, one {# device} other {# devices}} on the subscription",
   "extraDevicesHint": "An extra device costs {price} ₽ and lasts as long as the subscription.",
-  "extraDevicesResult": "After this purchase — {total} devices",
+  "extraDevicesResult": "After this purchase — {total, plural, one {# device} other {# devices}}",
   "extraDevicesBuy": "Add for {price} ₽",
   "extraDevicesMore": "One more",
   "extraDevicesLess": "One fewer",
-  "extraDevicesMaxed": "Maximum of {limit} devices reached — no more can be added.",
+  "extraDevicesMaxed": "Maximum of {limit, plural, one {# device} other {# devices}} reached — no more can be added.",
   "inactive": "No active subscription",
   "pitch": "Access to every country, cancel in one click",
   "plans": {
@@ -64,6 +64,7 @@
   "tabs": {
     "subscription": "Subscription",
     "app": "App",
+    "devices": "Devices",
     "telegram": "Telegram",
     "label": "Account sections"
   },

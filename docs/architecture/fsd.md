@@ -41,7 +41,7 @@ A layer never imports from itself across slices. Two features that need the same
 
 ```text
 features/
-├── account/    # delete-account, link-telegram
+├── account/    # delete-account, link-telegram, manage-devices
 ├── app/        # cross-domain application concerns
 │   └── switch-locale/
 ├── auth/       # sign-in, sign-up, sign-out, telegram-sign-in, change-email,
@@ -52,7 +52,8 @@ features/
 entities/
 ├── app/        # about, blog, faq, incy, locale, protocols
 ├── auth/       # user
-└── billing/    # subscription
+├── billing/    # subscription
+└── vpn/        # device
 widgets/
 ├── billing/    # pricing-plans
 └── site/       # site-header, site-footer, related-links
