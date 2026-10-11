@@ -1,3 +1,5 @@
+import type { PeriodKind } from '@gnomevpn/schemas';
+
 import { TRIAL_DAYS } from '@gnomevpn/schemas';
 import { addDays } from 'date-fns';
 import { isNonNullish } from 'remeda';
@@ -14,12 +16,15 @@ const isTrialPeriod = (row: TrialRow | null): boolean => {
   return row.currentPeriodEnd <= addDays(row.trialStartedAt, TRIAL_DAYS);
 };
 
-export const trialState = (row: TrialRow | null): TrialState => {
-  const hadTrial = isNonNullish(row?.trialStartedAt);
-  const hasPeriod = isNonNullish(row?.currentPeriodEnd);
+export const periodKind = (row: TrialRow | null): PeriodKind => {
+  if (!isPeriodActive(row?.currentPeriodEnd)) {
+    return 'none';
+  }
 
-  return {
-    isTrial: isTrialPeriod(row) && isPeriodActive(row?.currentPeriodEnd),
-    isTrialAvailable: !hadTrial && !hasPeriod
-  };
+  return isTrialPeriod(row) ? 'trial' : 'paid';
 };
+
+export const trialState = (row: TrialRow | null): TrialState => ({
+  period: periodKind(row),
+  isTrialAvailable: !isNonNullish(row?.trialStartedAt) && !isNonNullish(row?.currentPeriodEnd)
+});

@@ -3,13 +3,12 @@ import { isNullish, unique } from 'remeda';
 
 import type { AnnouncementNode, NodeMomentInput } from './announcement.types';
 
+import { pluralize } from '../../../../common/lib';
 import { ANNOUNCE_LOCALE, DAY_FORMS, FRESH_NODE_DAYS, NODE_STALE_MINUTES } from './announcement.constants';
-
-const plural = new Intl.PluralRules(ANNOUNCE_LOCALE);
 
 const listFormat = new Intl.ListFormat(ANNOUNCE_LOCALE, { style: 'long', type: 'conjunction' });
 
-export const daysLeftLabel = (days: number): string => `${days} ${DAY_FORMS[plural.select(days)]}`;
+export const daysLeftLabel = (days: number): string => `${days} ${pluralize({ count: days, forms: DAY_FORMS, locale: ANNOUNCE_LOCALE })}`;
 
 export const isStale = ({ node, now }: NodeMomentInput): boolean => {
   if (isNullish(node.lastHealthyAt)) {

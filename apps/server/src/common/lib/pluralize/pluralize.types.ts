@@ -3,4 +3,5 @@ export type PluralForms = Partial<Record<Intl.LDMLPluralRule, string>> & { many:
 export type PluralizeInput = {
   count: number;
   forms: PluralForms;
+  locale?: string;
 };

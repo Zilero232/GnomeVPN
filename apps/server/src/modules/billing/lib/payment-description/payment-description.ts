@@ -2,8 +2,8 @@ import type { Plan } from '@gnomevpn/schemas';
 
 import type { DescribeSubscriptionInput } from './payment-description.types';
 
+import { pluralize } from '../../../../common/lib';
 import { DEVICE_FORMS, EXTRA_DEVICES_PREFIX, MONTH_FORMS, SUBSCRIPTION_PREFIX } from '../../config';
-import { pluralize } from '../pluralize';
 
 export const describeSubscription = ({ plan, kind }: DescribeSubscriptionInput): string =>
   `${SUBSCRIPTION_PREFIX[kind]} ${plan.months} ${pluralize({ count: plan.months, forms: MONTH_FORMS })}`;

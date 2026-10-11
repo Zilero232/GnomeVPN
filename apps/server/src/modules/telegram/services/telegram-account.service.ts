@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InlineKeyboard } from 'grammy';
 import { isNonNullish, isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
@@ -8,9 +7,10 @@ import type { BotContext, BotLocale, ChatCopy, ConsumeInput, RefusalInput, Speak
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { AccountService, IdentityService } from '../../auth';
-import { BOT_TEXT, CALLBACK_PREFIX, DEFAULT_BOT_LOCALE, LANGUAGE_BUTTONS, NEW_LINE } from '../config';
-import { deleteCopy, fillText, identityOf, resolveLocale, unlinkCopy } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, DEFAULT_BOT_LOCALE, MESSAGE_EFFECT } from '../config';
+import { deleteCopy, fillText, html, identityOf, languageKeyboard, moreKeyboard, resolveLocale, unlinkCopy, urlMessage } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
+import { TelegramNotifyService } from './telegram-notify.service';
 import { TelegramSharedService } from './telegram-shared.service';
 import { TelegramWebLoginService } from './telegram-web-login.service';
 
@@ -24,7 +24,8 @@ export class TelegramAccountService {
     private readonly identity: IdentityService,
     private readonly webLogin: TelegramWebLoginService,
     private readonly config: AppConfigService,
-    private readonly account: AccountService
+    private readonly account: AccountService,
+    private readonly notify: TelegramNotifyService
   ) {}
 
   async welcome(ctx: BotContext): Promise<void> {
@@ -43,14 +44,25 @@ export class TelegramAccountService {
     await this.speak({ ctx, pick: (copy) => copy.help });
   }
 
+  async more(ctx: BotContext): Promise<void> {
+    await this.shared.withUser({
+      ctx,
+      act: async (chat) => {
+        const state = await this.notify.stateOf(chat.userId);
+
+        return this.shared.reply({ ctx, chat, text: BOT_TEXT[chat.locale].moreTitle, markup: moreKeyboard({ locale: chat.locale, state }) });
+      }
+    });
+  }
+
   async openWebsite(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
-      act: async ({ userId, locale }) => {
-        const text = BOT_TEXT[locale];
-        const url = await this.webLogin.issue(userId);
+      act: async (chat) => {
+        const text = BOT_TEXT[chat.locale];
+        const url = await this.webLogin.issue(chat.userId);
 
-        return ctx.reply([text.websiteIntro, '', url].join(NEW_LINE), { link_preview_options: { is_disabled: true } });
+        return this.shared.reply({ ctx, chat, ...urlMessage({ intro: text.websiteIntro, url, label: text.openSite, style: 'primary' }) });
       }
     });
   }
@@ -99,14 +111,9 @@ export class TelegramAccountService {
   }
 
   async chooseLanguage(ctx: BotContext): Promise<void> {
-    const { copy } = await this.copyFor(ctx);
-    const keyboard = new InlineKeyboard();
+    const { chat, copy } = await this.copyFor(ctx);
 
-    for (const { locale, label } of LANGUAGE_BUTTONS) {
-      keyboard.text(label, `${CALLBACK_PREFIX.locale}${locale}`);
-    }
-
-    await ctx.reply(copy.chooseLanguage, { reply_markup: keyboard });
+    await ctx.reply(copy.chooseLanguage, { reply_markup: languageKeyboard(chat?.locale) });
   }
 
   async changeLocale(ctx: BotContext): Promise<void> {
@@ -116,7 +123,7 @@ export class TelegramAccountService {
       act: async ({ chat, value }) => {
         const locale = resolveLocale(value);
 
-        await this.link.setLocale({ telegramId: chat.telegramId, locale });
+        await Promise.all([this.link.setLocale({ telegramId: chat.telegramId, locale }), this.shared.settle(ctx)]);
 
         return this.shared.reply({ ctx, chat: { ...chat, locale }, text: BOT_TEXT[locale].languageChanged });
       }
@@ -144,9 +151,9 @@ export class TelegramAccountService {
     const chat = await this.link.findChat(identity.telegramId);
     const locale = chat?.locale ?? DEFAULT_BOT_LOCALE;
     const linked = BOT_TEXT[locale].linked;
-    const greeting = isNonNullish(known) ? linked : [this.startText(locale), '', linked].join(NEW_LINE);
+    const greeting = isNonNullish(known) ? linked : html.paragraphs([this.startText(locale), linked]);
 
-    await this.shared.reply({ ctx, chat, text: greeting });
+    await this.shared.reply({ ctx, chat, text: greeting, effect: MESSAGE_EFFECT.celebrate });
   }
 
   private startText(locale: BotLocale): string {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TelegramBotService } from '../telegram-bot.service';
 
-import { KEYBOARD_ROWS } from '../../config';
+import { KEYBOARD_ROWS, MORE_ROWS, NOTICES } from '../../config';
 import { TelegramBotService as Bot } from '../telegram-bot.service';
 
 const actionsOf = (): TelegramBotService['actions'] => {
@@ -17,6 +17,24 @@ describe('bot actions', () => {
 
     for (const { key } of KEYBOARD_ROWS.flat()) {
       expect(handled.has(key)).toBe(true);
+    }
+  });
+
+  it('handles every button of the More menu, which reaches the same actions through a callback', () => {
+    const handled = new Set(actionsOf().flatMap((action) => (action.button ? [action.button] : [])));
+
+    for (const { key } of MORE_ROWS.flat()) {
+      expect(handled.has(key)).toBe(true);
+    }
+  });
+
+  it('handles every button a notice can carry', () => {
+    const handled = new Set(actionsOf().flatMap((action) => (action.button ? [action.button] : [])));
+
+    for (const { markup } of Object.values(NOTICES)) {
+      for (const key of markup === 'main' ? [] : markup) {
+        expect(handled.has(key)).toBe(true);
+      }
     }
   });
 

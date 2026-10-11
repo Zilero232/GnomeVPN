@@ -8,7 +8,10 @@ export const TEXT_TOKEN = {
   amount: '{amount}',
   date: '{date}',
   plan: '{plan}',
-  site: '{site}'
+  site: '{site}',
+  card: '{card}',
+  days: '{days}',
+  percent: '{percent}'
 } as const;
 
 export const AUTO_RENEW_CHOICE = {

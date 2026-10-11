@@ -1,3 +1,5 @@
+import type { PluralForms } from '../../../../common/lib';
+
 export const EXPIRY_WARNING_DAYS = 3;
 
 export const NODE_STALE_MINUTES = 10;
@@ -6,13 +8,11 @@ export const FRESH_NODE_DAYS = 7;
 
 export const ANNOUNCE_LOCALE = 'ru-RU';
 
-export const DAY_FORMS: Record<Intl.LDMLPluralRule, string> = {
+export const DAY_FORMS: PluralForms = {
   one: 'день',
   few: 'дня',
   many: 'дней',
-  other: 'дня',
-  two: 'дня',
-  zero: 'дней'
+  other: 'дня'
 };
 
 export const ANNOUNCEMENTS = {

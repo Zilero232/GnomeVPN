@@ -9,7 +9,7 @@ import type { EndingSubscription } from './period-reminder.job.types';
 import { describeError } from '../../../../common/lib';
 import { AppConfigService } from '../../../../config';
 import { PrismaService } from '../../../../core';
-import { trialState } from '../../../subscription';
+import { periodKind } from '../../../subscription';
 import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 
@@ -27,14 +27,14 @@ export class PeriodReminderJob {
     const { userId, currentPeriodEnd } = subscription;
     const hoursLeft = differenceInHours(currentPeriodEnd, new Date());
 
-    if (trialState(subscription).isTrial) {
-      return hoursLeft < WINDOW.trialRemindHours ? { userId, pick: (copy) => copy.trialEndingSoon } : null;
+    if (periodKind(subscription) === 'trial') {
+      return hoursLeft < WINDOW.trialRemindHours ? { userId, notice: 'trialEndingSoon' } : null;
     }
 
     const willCharge = !subscription.cancelAtPeriodEnd && subscription.savedCardId !== null && this.config.get('YOOKASSA_RECURRING');
 
     if (!willCharge) {
-      return { userId, pick: (copy) => copy.endingSoon, date: currentPeriodEnd };
+      return { userId, notice: 'endingSoon', date: currentPeriodEnd };
     }
 
     if (hoursLeft < WINDOW.renewHours) {
@@ -43,7 +43,7 @@ export class PeriodReminderJob {
 
     const fill = { amount: String(findPlan(subscription.plan).priceRub), card: subscription.savedCardTitle ?? '****' };
 
-    return { userId, pick: (copy) => copy.renewSoon, date: currentPeriodEnd, fill };
+    return { userId, notice: 'renewSoon', date: currentPeriodEnd, fill };
   }
 
   private async remind(subscription: EndingSubscription): Promise<void> {

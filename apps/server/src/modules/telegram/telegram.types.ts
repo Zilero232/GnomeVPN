@@ -1,8 +1,8 @@
-import type { ClientId } from '@gnomevpn/schemas';
-import type { Bot, Context } from 'grammy';
+import type { ClientId, DeviceList } from '@gnomevpn/schemas';
+import type { Bot, Context, InlineKeyboard } from 'grammy';
 
 import type { Prisma } from '../../../generated';
-import type { AUTO_RENEW_CHOICE, BOT_LOCALES } from './config';
+import type { AUTO_RENEW_CHOICE, BOT_LOCALES, NOTICES } from './config';
 import type { TextFill } from './lib/fill-text';
 import type { ButtonKey } from './lib/keyboard';
 
@@ -81,10 +81,19 @@ export type UntouchedUserInput = {
   userId: string;
 };
 
-export type ReplyInput = {
-  ctx: BotContext;
+export type BotMessage = {
   text: string;
+  markup?: InlineKeyboard;
+};
+
+export type ReplyInput = BotMessage & {
+  ctx: BotContext;
   chat: ResolvedChat | null;
+  effect?: string;
+};
+
+export type EditInput = BotMessage & {
+  ctx: BotContext;
 };
 
 export type WithUserInput = {
@@ -154,19 +163,10 @@ export type ShowClientInput = {
   id: ClientId;
 };
 
-export type ReplyWithLinkInput = {
-  ctx: BotContext;
+export type DevicesViewInput = {
   chat: ResolvedChat;
-};
-
-export type ReplyWithPlansInput = {
-  ctx: BotContext;
-  locale: BotLocale;
-};
-
-export type ClaimTrialInput = {
-  ctx: BotContext;
-  chat: ResolvedChat;
+  notice?: string;
+  list?: DeviceList;
 };
 
 export type DescribeInput = {
@@ -175,16 +175,24 @@ export type DescribeInput = {
   isFallback?: boolean;
 };
 
-export type NotifyInput = {
-  userId: string;
-  pick: (copy: BotText) => string;
-  fill?: TextFill;
-  date?: Date | null;
+export type NoticeSpec = {
+  markup: 'main' | readonly ButtonKey[];
+  effect?: string;
 };
 
-export type ExtraTextInput = {
-  copy: BotText;
-  isAtMax: boolean;
+export type NoticeKey = keyof typeof NOTICES & keyof BotText;
+
+export type MarkupForInput = {
+  userId: string;
+  locale: BotLocale;
+  markup: NoticeSpec['markup'];
+};
+
+export type NotifyInput = {
+  userId: string;
+  notice: NoticeKey;
+  fill?: TextFill;
+  date?: Date | null;
 };
 
 export type RemovalInput = {

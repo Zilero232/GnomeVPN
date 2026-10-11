@@ -106,7 +106,7 @@ export class ReconcilePeersJob {
 
     this.logger.log(`Retired the shared feed keys of ${owners.length} account(s)`);
 
-    await Promise.all(done.map((userId) => this.notify.tell({ userId, pick: (copy) => copy.legacyRetired })));
+    await Promise.all(done.map((userId) => this.notify.tell({ userId, notice: 'legacyRetired' })));
   }
 
   @Cron(SCHEDULE.reconcileCron)

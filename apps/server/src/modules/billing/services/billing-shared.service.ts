@@ -4,9 +4,10 @@ import { isNullish } from 'remeda';
 
 import type { ActivateInput, AttachMethodInput, AutoRenewInput, GrantExtraDevicesInput, SetAutoRenewServiceInput } from '../billing.types';
 
-import { isPeriodActive, nextPeriodEnd } from '../../../common/lib';
+import { nextPeriodEnd } from '../../../common/lib';
 import { AppConfigService } from '../../../config';
 import { PrismaService } from '../../../core';
+import { periodKind } from '../../subscription';
 
 @Injectable()
 export class BillingSharedService {
@@ -52,28 +53,30 @@ export class BillingSharedService {
     return wasCancelled;
   }
 
-  async activate({ userId, planId, method, db = this.prisma }: ActivateInput): Promise<void> {
+  async activate({ userId, planId, method, orderedAt, db = this.prisma }: ActivateInput): Promise<void> {
     const subscription = await db.subscription.findUnique({
       where: { userId },
       select: {
         plan: true,
         currentPeriodEnd: true,
         cancelAtPeriodEnd: true,
-        savedCardId: true
+        savedCardId: true,
+        trialStartedAt: true
       }
     });
 
     const plan = findPlan(planId);
     const currentPeriodEnd = subscription?.currentPeriodEnd;
-
-    const paidPlan = isPeriodActive(currentPeriodEnd) ? (subscription?.plan ?? plan.id) : plan.id;
+    const isConsentGiven = periodKind(subscription) !== 'paid' && Boolean(method?.id);
+    const hadLapsedWhenOrdered = !currentPeriodEnd || currentPeriodEnd <= orderedAt;
 
     const data = {
-      plan: paidPlan,
+      plan: plan.id,
       currentPeriodEnd: nextPeriodEnd({ currentPeriodEnd, months: plan.months }),
+      ...(hadLapsedWhenOrdered && { extraDevices: 0 }),
       cancelAtPeriodEnd: this.resolveCancelAtPeriodEnd({
         hasMethod: Boolean(method?.id ?? subscription?.savedCardId),
-        wasCancelled: subscription?.cancelAtPeriodEnd ?? false
+        wasCancelled: !isConsentGiven && (subscription?.cancelAtPeriodEnd ?? false)
       }),
       ...(method?.id ? { savedCardId: method.id, savedCardTitle: method.title } : {})
     };

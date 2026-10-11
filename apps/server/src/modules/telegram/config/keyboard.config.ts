@@ -1,4 +1,4 @@
-import type { KeyboardRow } from '../lib/keyboard';
+import type { ButtonKey, ButtonStyle, KeyboardRow } from '../lib/keyboard';
 
 export const KEYBOARD_ROWS: KeyboardRow[] = [
   [
@@ -12,10 +12,16 @@ export const KEYBOARD_ROWS: KeyboardRow[] = [
   [{ key: 'trial', when: 'trialAvailable' }],
   [{ key: 'buy', when: 'unsubscribed' }],
   [
+    { key: 'devices', when: 'subscribed' },
+    { key: 'more', when: 'always' }
+  ]
+];
+
+export const MORE_ROWS: KeyboardRow[] = [
+  [
     { key: 'autoRenew', when: 'subscribed' },
     { key: 'rotate', when: 'subscribed' }
   ],
-  [{ key: 'devices', when: 'subscribed' }],
   [
     { key: 'website', when: 'always' },
     { key: 'help', when: 'always' }
@@ -26,3 +32,11 @@ export const KEYBOARD_ROWS: KeyboardRow[] = [
     { key: 'deleteAccount', when: 'always' }
   ]
 ];
+
+export const BUTTON_STYLE: Partial<Record<ButtonKey, ButtonStyle>> = {
+  connect: 'primary',
+  renew: 'success',
+  buy: 'success',
+  trial: 'success',
+  deleteAccount: 'danger'
+};

@@ -1,6 +1,11 @@
+import type { PeriodKind } from '@gnomevpn/schemas';
+import type { KeyboardButton } from 'grammy/types';
+
 import type { BotButtons, BotLocale } from '../../telegram.types';
 
 export type ButtonKey = keyof BotButtons;
+
+export type ButtonStyle = NonNullable<KeyboardButton.CommonButton['style']>;
 
 export type ButtonVisibility = 'always' | 'subscribed' | 'trialAvailable' | 'unsubscribed';
 
@@ -24,4 +29,19 @@ export type VisibilityInput = {
 export type KeyboardInput = {
   locale: BotLocale;
   state: ChatState;
+};
+
+export type MenuButtonsInput = {
+  locale: BotLocale;
+  keys: readonly ButtonKey[];
+};
+
+export type MenuButtonInput = {
+  locale: BotLocale;
+  key: ButtonKey;
+};
+
+export type OfferInput = {
+  period: PeriodKind;
+  isTrialAvailable: boolean;
 };

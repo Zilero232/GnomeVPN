@@ -1,1 +1,1 @@
-export const COMMAND_MENTION = /\/(?<name>[a-z]+)/gu;
+export const COMMAND_MENTION = /(?<!<)\/(?<name>[a-z]+)/gu;

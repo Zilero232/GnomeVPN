@@ -6,4 +6,7 @@ export type { IdentifiedNode, NodeAccess } from './node-credentials';
 export { activeDeviceLimit, isPeriodActive, nextPeriodEnd, resolveStatus } from './period';
 export type { PeriodInput } from './period';
 
+export { pluralize } from './pluralize';
+export type { PluralForms } from './pluralize';
+
 export { timingSafeEqual } from './timing-safe-equal';

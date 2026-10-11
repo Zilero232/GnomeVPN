@@ -6,6 +6,7 @@
   "daysLeft": "{count, plural, =0 {final day} one {day left} other {days left}}",
   "planLabel": "Plan",
   "trialPeriod": "Free day",
+  "trialUpgrade": "Subscribe now — the paid period starts right after the trial day, so you keep the time that is left.",
   "untilLabel": "Valid until",
   "autoRenewOff": "Auto-renewal is off",
   "autoRenewOn": "Auto-renewal is on",

@@ -13,6 +13,7 @@ export type ActivateInput = {
   userId: string;
   planId: PlanId;
   method: PaymentMethodRef | null;
+  orderedAt: Date;
   db?: PrismaExecutor;
 };
 

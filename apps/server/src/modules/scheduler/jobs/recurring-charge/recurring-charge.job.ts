@@ -10,7 +10,7 @@ import { describeError } from '../../../../common/lib';
 import { PrismaService } from '../../../../core';
 import { YooKassaClient } from '../../../../lib';
 import { CardService, CheckoutService, describeRenewal, renewalIdempotenceKey, WebhookService } from '../../../billing';
-import { trialState } from '../../../subscription';
+import { periodKind } from '../../../subscription';
 import { TelegramNotifyService } from '../../../telegram/services/telegram-notify.service';
 import { WINDOW } from '../../config';
 
@@ -42,7 +42,7 @@ export class RecurringChargeJob {
   }
 
   private async chargeIfDue(subscription: DueSubscription): Promise<void> {
-    if (!subscription.savedCardId || !subscription.currentPeriodEnd || trialState(subscription).isTrial) {
+    if (!subscription.savedCardId || !subscription.currentPeriodEnd || periodKind(subscription) === 'trial') {
       return;
     }
 
@@ -97,7 +97,7 @@ export class RecurringChargeJob {
   }
 
   private async tellChargeFailed({ userId, currentPeriodEnd }: DueSubscription): Promise<void> {
-    await this.notify.tell({ userId, pick: (copy) => copy.chargeFailed, date: currentPeriodEnd });
+    await this.notify.tell({ userId, notice: 'chargeFailed', date: currentPeriodEnd });
   }
 
   @Cron(CronExpression.EVERY_HOUR)

@@ -1,7 +1,7 @@
 import { addDays, addHours, subDays, subHours } from 'date-fns';
 import { describe, expect, it } from 'vitest';
 
-import { trialState } from '../trial-state';
+import { periodKind, trialState } from '../trial-state';
 
 const future = addDays(new Date(), 1);
 const past = subDays(new Date(), 1);
@@ -31,19 +31,32 @@ describe('trialState', () => {
     expect(trialState({ currentPeriodEnd: future, trialStartedAt: null }).isTrialAvailable).toBe(false);
   });
 
-  it('reports a running trial as one, so the interface can say what the access is', () => {
-    expect(trialState({ currentPeriodEnd: addHours(new Date(), 23), trialStartedAt: subHours(new Date(), 1) }).isTrial).toBe(true);
+  it('reports the period it computes, so the status and the server agree on what the access is', () => {
+    const row = { currentPeriodEnd: addHours(new Date(), 23), trialStartedAt: subHours(new Date(), 1) };
+
+    expect(trialState(row).period).toBe(periodKind(row));
+  });
+});
+
+describe('periodKind', () => {
+  it('calls a running trial a trial, so buying during one is a first purchase', () => {
+    expect(periodKind({ currentPeriodEnd: addHours(new Date(), 23), trialStartedAt: subHours(new Date(), 1) })).toBe('trial');
   });
 
-  it('stops calling it a trial once the period is over', () => {
-    expect(trialState({ currentPeriodEnd: past, trialStartedAt: past }).isTrial).toBe(false);
+  it('calls a period a payment extended past the trial day paid', () => {
+    expect(periodKind({ currentPeriodEnd: addDays(new Date(), 30), trialStartedAt: past })).toBe('paid');
   });
 
-  it('stops calling it a trial once a payment has extended the period past the trial day', () => {
-    expect(trialState({ currentPeriodEnd: addDays(new Date(), 30), trialStartedAt: past }).isTrial).toBe(false);
+  it('calls the period of an account that never had a trial paid', () => {
+    expect(periodKind({ currentPeriodEnd: future, trialStartedAt: null })).toBe('paid');
   });
 
-  it('does not call a paid period a trial', () => {
-    expect(trialState({ currentPeriodEnd: future, trialStartedAt: null }).isTrial).toBe(false);
+  it('says none once any period, trial or paid, is over', () => {
+    expect(periodKind({ currentPeriodEnd: past, trialStartedAt: past })).toBe('none');
+    expect(periodKind({ currentPeriodEnd: past, trialStartedAt: null })).toBe('none');
+  });
+
+  it('says none for an account with no row', () => {
+    expect(periodKind(null)).toBe('none');
   });
 });

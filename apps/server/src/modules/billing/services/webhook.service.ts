@@ -54,7 +54,8 @@ export class WebhookService {
         kind: true,
         extraDevices: true,
         isAutoCharge: true,
-        amount: true
+        amount: true,
+        createdAt: true
       }
     });
 
@@ -108,6 +109,7 @@ export class WebhookService {
             userId: row.userId,
             planId: row.plan,
             method: payment.paymentMethodId ? { id: payment.paymentMethodId, title: payment.paymentMethodTitle } : null,
+            orderedAt: row.createdAt,
             db: tx
           });
 
@@ -155,12 +157,12 @@ export class WebhookService {
       select: { currentPeriodEnd: true }
     });
 
-    await this.notify.tell({ userId, pick: (copy) => copy.chargeFailed, date: subscription?.currentPeriodEnd });
+    await this.notify.tell({ userId, notice: 'chargeFailed', date: subscription?.currentPeriodEnd });
   }
 
   private async announce({ userId, kind, isAutoCharge, amount }: SettledPayment): Promise<void> {
     if (kind === 'extraDevices') {
-      await this.notify.tell({ userId, pick: (copy) => copy.devicesAdded });
+      await this.notify.tell({ userId, notice: 'devicesAdded' });
 
       return;
     }
@@ -173,12 +175,12 @@ export class WebhookService {
     const date = subscription?.currentPeriodEnd;
 
     if (isAutoCharge) {
-      await this.notify.tell({ userId, pick: (copy) => copy.renewed, date, fill: { amount: String(amount) } });
+      await this.notify.tell({ userId, notice: 'renewed', date, fill: { amount: String(amount) } });
 
       return;
     }
 
-    await this.notify.tell({ userId, pick: (copy) => copy.paid, date });
+    await this.notify.tell({ userId, notice: 'paid', date });
   }
 
   private async handlePaymentMethodActive(paymentMethodId: string): Promise<void> {

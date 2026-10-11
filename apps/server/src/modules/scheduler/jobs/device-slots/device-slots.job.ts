@@ -30,7 +30,7 @@ export class DeviceSlotsJob {
         revocations.map(({ userId, deviceLimit, titles }) =>
           this.notify.tell({
             userId,
-            pick: (copy) => copy.devicesShrunk,
+            notice: 'devicesShrunk',
             fill: { limit: String(deviceLimit), names: titles.join(DEVICE_TITLE.listSeparator) }
           })
         )

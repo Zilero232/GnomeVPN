@@ -1,4 +1,4 @@
-export { mainKeyboard } from './keyboard';
+export { languageKeyboard, mainKeyboard, menuButtons, moreKeyboard, offerKeys } from './keyboard';
 export { buttonFor } from './keyboard.helpers';
 
-export type { ButtonKey, ButtonVisibility, ChatState, KeyboardInput, KeyboardRow, KeyboardSlot, VisibilityInput } from './keyboard.types';
+export type { ButtonKey, ButtonStyle, ChatState, KeyboardRow } from './keyboard.types';

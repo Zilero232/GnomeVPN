@@ -66,7 +66,7 @@ export class ExpiredAccessJob {
     if (!isEmpty(disabled)) {
       this.logger.log(`Disabled access for ${disabled.length} subscriber(s)`);
 
-      await Promise.allSettled(disabled.map((userId) => this.notify.tell({ userId, pick: (copy) => copy.expired })));
+      await Promise.allSettled(disabled.map((userId) => this.notify.tell({ userId, notice: 'expired' })));
     }
 
     if (!isEmpty(restored)) {

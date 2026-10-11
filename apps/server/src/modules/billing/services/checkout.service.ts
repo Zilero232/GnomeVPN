@@ -7,9 +7,9 @@ import { randomUUID } from 'node:crypto';
 import type { BuyExtraDevicesServiceInput, CreateCheckoutServiceInput, RecordPaymentInput } from '../billing.types';
 
 import { AppBadRequestException } from '../../../common/exceptions';
-import { isPeriodActive } from '../../../common/lib';
 import { PrismaService, withSerializableRetry } from '../../../core';
 import { YooKassaClient } from '../../../lib';
+import { periodKind } from '../../subscription';
 import { describeExtraDevices, describePlan } from '../lib';
 import { BillingSharedService } from './billing-shared.service';
 
@@ -25,10 +25,10 @@ export class CheckoutService {
     const plan = findPlan(planId);
     const subscription = await this.prisma.subscription.findUnique({
       where: { userId },
-      select: { plan: true, currentPeriodEnd: true }
+      select: { plan: true, currentPeriodEnd: true, trialStartedAt: true }
     });
 
-    if (isPeriodActive(subscription?.currentPeriodEnd) && subscription?.plan !== plan.id) {
+    if (periodKind(subscription) === 'paid' && subscription?.plan !== plan.id) {
       throw new AppBadRequestException('PLAN_CHANGE_LOCKED', 'Plan cannot change while the current period runs');
     }
 
@@ -58,7 +58,7 @@ export class CheckoutService {
     const [subscription, pending] = await Promise.all([
       this.prisma.subscription.findUnique({
         where: { userId },
-        select: { extraDevices: true, currentPeriodEnd: true }
+        select: { extraDevices: true, currentPeriodEnd: true, trialStartedAt: true }
       }),
       this.prisma.payment.aggregate({
         where: { userId, kind: 'extraDevices', status: 'pending' },
@@ -66,8 +66,8 @@ export class CheckoutService {
       })
     ]);
 
-    if (!isPeriodActive(subscription?.currentPeriodEnd)) {
-      throw new AppBadRequestException('SUBSCRIPTION_REQUIRED', 'Extra devices need an active subscription');
+    if (periodKind(subscription) !== 'paid') {
+      throw new AppBadRequestException('SUBSCRIPTION_REQUIRED', 'Extra devices need a paid subscription; a trial does not count');
     }
 
     const claimed = (subscription?.extraDevices ?? 0) + (pending._sum.extraDevices ?? 0);
