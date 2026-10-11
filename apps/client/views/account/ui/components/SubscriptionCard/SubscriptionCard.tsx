@@ -1,71 +1,44 @@
 'use client';
 
-import { differenceInCalendarDays } from 'date-fns';
-import { CalendarClock } from 'lucide-react';
-import { useFormatter, useTranslations } from 'next-intl';
-import { clamp, isNonNullish } from 'remeda';
-import { match } from 'ts-pattern';
+import { useTranslations } from 'next-intl';
+import { match, P } from 'ts-pattern';
 
 import { AutoRenewControl, PlanPicker } from '@/features/billing/checkout';
 import { TrialBanner } from '@/features/billing/claim-trial';
-import { DATE_FORMAT } from '@/shared/i18n';
 import { ErrorBlock, LoadingBlock, Text } from '@/ui-kit';
 
 import type { SubscriptionCardProps } from './SubscriptionCard.types';
+
+import { SubscriptionHero } from './components';
 
 import s from './SubscriptionCard.module.scss';
 
 export const SubscriptionCard = ({ subscription, isLoading, isError, onRetry }: SubscriptionCardProps) => {
   const t = useTranslations('account');
-  const format = useFormatter();
-
-  const isActive = subscription?.status === 'active';
-  const periodEnd = subscription?.currentPeriodEnd;
-  const daysLeft = periodEnd ? clamp(differenceInCalendarDays(new Date(periodEnd), new Date()), { min: 0 }) : null;
 
   const isUnavailable = isError && !subscription;
 
-  return match({ isLoading, isUnavailable, isActive })
+  return match({ isLoading, isUnavailable, subscription })
     .with({ isLoading: true }, () => <LoadingBlock label={t('loading')} />)
     .with({ isUnavailable: true }, () => <ErrorBlock message={t('unavailable')} retryLabel={t('retry')} onRetry={onRetry} />)
-    .with({ isActive: true }, () => (
+    .with({ subscription: P.select({ period: 'paid' }) }, (paid) => (
       <>
-        <div className={s.hero}>
-          <div className={s.heroMain}>
-            <Text as='span' className={s.status}>
-              <span aria-hidden className={s.dot} />
-              {t('active')}
-            </Text>
+        <SubscriptionHero subscription={paid} />
 
-            {isNonNullish(daysLeft) && (
-              <p className={s.countdown}>
-                <span className={s.countdownValue}>{daysLeft}</span>
-                <span className={s.countdownUnit}>{t('daysLeft', { count: daysLeft })}</span>
-              </p>
-            )}
-          </div>
+        <AutoRenewControl subscription={paid} />
+      </>
+    ))
+    .with({ subscription: P.select({ period: 'trial' }) }, (trial) => (
+      <>
+        <SubscriptionHero subscription={trial} />
 
-          <dl className={s.meta}>
-            {subscription && (
-              <div className={s.metaItem}>
-                <dt className={s.label}>{t('planLabel')}</dt>
-                <dd className={s.value}>{subscription.isTrial ? t('trialPeriod') : t(`plans.${subscription.plan}`)}</dd>
-              </div>
-            )}
+        <div className={s.upgrade}>
+          <Text size='xs' tone='muted'>
+            {t('trialUpgrade')}
+          </Text>
 
-            {periodEnd && (
-              <div className={s.metaItem}>
-                <dt className={s.label}>
-                  <CalendarClock aria-hidden size={13} />
-                  {t('untilLabel')}
-                </dt>
-                <dd className={s.value}>{format.dateTime(new Date(periodEnd), DATE_FORMAT)}</dd>
-              </div>
-            )}
-          </dl>
+          <PlanPicker />
         </div>
-
-        {subscription && <AutoRenewControl subscription={subscription} />}
       </>
     ))
     .otherwise(() => (

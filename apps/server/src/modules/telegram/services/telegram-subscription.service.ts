@@ -1,18 +1,28 @@
-import { PLANS } from '@gnomevpn/schemas';
-import { FormattedString } from '@grammyjs/parse-mode';
+import { findPlan } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { InlineKeyboard } from 'grammy';
-import { isNonNullish, isNullish } from 'remeda';
+import { isNullish } from 'remeda';
 import { match } from 'ts-pattern';
 
-import type { BotContext, ClaimTrialInput, ReplyWithLinkInput, ReplyWithPlansInput } from '../telegram.types';
+import type { BotContext } from '../telegram.types';
 
-import { describeError } from '../../../common/lib';
+import { describeError, errorCodeOf } from '../../../common/lib';
 import { CheckoutService } from '../../billing';
 import { SubscriptionService, TrialService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE } from '../config';
-import { parsePlanId, planButtonLabel, statusText } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, MESSAGE_EFFECT } from '../config';
+import {
+  fillLabel,
+  fillText,
+  linkMessage,
+  menuButtons,
+  offerKeys,
+  parsePlanId,
+  planKeyboard,
+  planLabel,
+  plansText,
+  statusText,
+  urlMessage
+} from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -33,21 +43,63 @@ export class TelegramSubscriptionService {
       act: async (chat) => {
         const status = await this.subscription.getStatus(chat.userId);
 
-        return this.shared.reply({ ctx, chat, text: statusText({ ...status, locale: chat.locale }) });
+        return this.shared.reply({
+          ctx,
+          chat,
+          text: statusText({ ...status, locale: chat.locale }),
+          markup: menuButtons({ locale: chat.locale, keys: offerKeys(status) })
+        });
       }
     });
   }
 
   async sendLink(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({ ctx, act: (chat) => this.replyWithLink({ ctx, chat }) });
+    await this.shared.withUser({
+      ctx,
+      act: async (chat) => {
+        const text = BOT_TEXT[chat.locale];
+        const status = await this.subscription.getStatus(chat.userId);
+
+        if (status.period === 'none') {
+          return this.shared.reply({ ctx, chat, text: text.noSubscription, markup: menuButtons({ locale: chat.locale, keys: offerKeys(status) }) });
+        }
+
+        const { url } = await this.subscriptionLink.get(chat.userId);
+
+        return this.shared.reply({ ctx, chat, ...linkMessage({ locale: chat.locale, intro: text.linkIntro, url }) });
+      }
+    });
   }
 
   async buy(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({ ctx, act: ({ locale }) => this.replyWithPlans({ ctx, locale }) });
+    await this.shared.withUser({
+      ctx,
+      act: ({ locale }) => ctx.reply(plansText(locale), { reply_markup: planKeyboard(locale) })
+    });
   }
 
   async claimTrialDay(ctx: BotContext): Promise<void> {
-    await this.shared.withUser({ ctx, act: (chat) => this.claimTrial({ ctx, chat }) });
+    await this.shared.withUser({
+      ctx,
+      act: async (chat) => {
+        const text = BOT_TEXT[chat.locale];
+        const eligibility = await this.trial.eligibility(chat.userId);
+
+        const refusal = match(eligibility)
+          .with('emailUnverified', () => text.trialNeedsEmail)
+          .with('used', () => text.trialUnavailable)
+          .with('available', () => null)
+          .exhaustive();
+
+        if (refusal) {
+          return this.shared.reply({ ctx, chat, text: refusal });
+        }
+
+        await this.trial.claim(chat.userId);
+
+        return this.shared.reply({ ctx, chat, text: text.trialGranted, effect: MESSAGE_EFFECT.celebrate });
+      }
+    });
   }
 
   async startCheckout(ctx: BotContext): Promise<void> {
@@ -62,62 +114,25 @@ export class TelegramSubscriptionService {
           return;
         }
 
+        this.shared.typing(ctx);
+
         try {
           const { confirmationUrl } = await this.checkout.createCheckout({ userId: chat.userId, planId });
+          const amount = String(findPlan(planId).priceRub);
+          const intro = fillText({ text: text.checkoutIntro, fill: { plan: planLabel({ planId, locale: chat.locale }), amount } });
+          const label = fillLabel({ text: text.checkoutButton, fill: { amount } });
 
-          await ctx.reply([text.checkoutIntro, '', confirmationUrl].join(NEW_LINE));
+          return this.shared.edit({ ctx, ...urlMessage({ intro, url: confirmationUrl, label, style: 'success' }) });
         } catch (error) {
+          if (errorCodeOf(error) === 'PLAN_CHANGE_LOCKED') {
+            return this.shared.reply({ ctx, chat, text: text.planChangeLocked });
+          }
+
           this.logger.warn(`telegram checkout failed: ${describeError(error)}`);
 
-          await ctx.reply(text.failed);
+          return this.shared.reply({ ctx, chat, text: text.failed });
         }
       }
     });
-  }
-
-  private async replyWithLink({ ctx, chat }: ReplyWithLinkInput): Promise<void> {
-    const text = BOT_TEXT[chat.locale];
-
-    if (!(await this.subscription.hasActiveAccess(chat.userId))) {
-      await ctx.reply(text.noSubscription);
-
-      return;
-    }
-
-    const { url } = await this.subscriptionLink.get(chat.userId);
-
-    const message = FormattedString.join([text.linkIntro, '', FormattedString.code(url), '', text.linkWarning], NEW_LINE);
-
-    await ctx.reply(message.text, { entities: message.entities, link_preview_options: { is_disabled: true } });
-  }
-
-  private async replyWithPlans({ ctx, locale }: ReplyWithPlansInput): Promise<void> {
-    const keyboard = new InlineKeyboard();
-
-    for (const plan of PLANS) {
-      keyboard.text(planButtonLabel({ plan, locale }), `${CALLBACK_PREFIX.plan}${plan.id}`).row();
-    }
-
-    await ctx.reply(BOT_TEXT[locale].choosePlan, { reply_markup: keyboard });
-  }
-
-  private async claimTrial({ ctx, chat }: ClaimTrialInput): Promise<void> {
-    const text = BOT_TEXT[chat.locale];
-    const eligibility = await this.trial.eligibility(chat.userId);
-
-    const refusal = match(eligibility)
-      .with('emailUnverified', () => text.trialNeedsEmail)
-      .with('used', () => text.trialUnavailable)
-      .otherwise(() => null);
-
-    if (isNonNullish(refusal)) {
-      await this.shared.reply({ ctx, chat, text: refusal });
-
-      return;
-    }
-
-    await this.trial.claim(chat.userId);
-
-    await this.shared.reply({ ctx, chat, text: text.trialGranted });
   }
 }

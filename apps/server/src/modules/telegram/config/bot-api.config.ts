@@ -3,5 +3,6 @@ export const BOT_API = {
   initAttempts: 4,
   initBackoffMs: 3_000,
   callRetries: 3,
-  callBackoffMs: 1_000
+  callBackoffMs: 1_000,
+  maxDelaySeconds: 10
 } as const;

@@ -1,3 +1,3 @@
-export { subscriptionStatusSchema } from './subscription.schemas';
+export { periodKindSchema, subscriptionStatusSchema } from './subscription.schemas';
 
-export type { SubscriptionStatus } from './subscription.types';
+export type { PeriodKind, SubscriptionStatus } from './subscription.types';

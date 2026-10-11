@@ -1,4 +1,5 @@
 export const CALLBACK_PREFIX = {
+  menu: 'menu:',
   plan: 'plan:',
   locale: 'locale:',
   client: 'client:',
@@ -16,3 +17,5 @@ export const CONFIRMED = 'yes';
 export const DECLINED = 'no';
 
 export const SUBJECT_SEPARATOR = ':';
+
+export const CLIENT_LIST = 'list';

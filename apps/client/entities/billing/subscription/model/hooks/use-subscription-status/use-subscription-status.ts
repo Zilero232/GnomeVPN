@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getSubscriptionStatus, useHasSession } from '@/shared/api';
 import { QUERY_KEYS } from '@/shared/constants';
 
+import { isCheckoutPending } from '../../../lib';
 import { SUBSCRIPTION_POLL } from './use-subscription-status.constants';
 
 export const useSubscriptionStatus = () => {
@@ -22,7 +23,9 @@ export const useSubscriptionStatus = () => {
         return Math.min(SUBSCRIPTION_POLL.errorMs * 2 ** query.state.fetchFailureCount, SUBSCRIPTION_POLL.maxErrorMs);
       }
 
-      return query.state.data?.status === 'active' ? SUBSCRIPTION_POLL.activeMs : SUBSCRIPTION_POLL.inactiveMs;
+      const isAwaitingPayment = query.state.data?.status !== 'active' || isCheckoutPending();
+
+      return isAwaitingPayment ? SUBSCRIPTION_POLL.inactiveMs : SUBSCRIPTION_POLL.activeMs;
     }
   });
 

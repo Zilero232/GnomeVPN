@@ -1,4 +1,4 @@
-import type { PluralForms } from '../lib/pluralize';
+import type { PluralForms } from '../../../common/lib';
 
 export const MONTH_FORMS: PluralForms = {
   one: 'месяц',

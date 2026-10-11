@@ -1,0 +1,1 @@
+export { SubscriptionHero } from './SubscriptionHero';

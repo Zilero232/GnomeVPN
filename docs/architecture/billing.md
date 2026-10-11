@@ -80,6 +80,67 @@ the card is dropped only on a definite "no" from `isPaymentMethodUsable`.
 never again, so clearing the flag when the period expires would hand out a
 second one; `trialState` reads the flag, not the period.
 
+**A trial is not a plan, so buying during one is a first purchase.** The trial
+row carries `plan: monthly` only because the column is not nullable. Checkout
+used to read that as a running paid month: six and twelve months were refused
+with `PLAN_CHANGE_LOCKED`, the account page showed no plan picker at all, and a
+purchase kept the `cancelAtPeriodEnd: true` the trial was granted with, so the
+card it saved never renewed. A trial is never charged, so it no longer stores a
+renewal preference at all; `20261011120000_trial_flag_and_lapsed_extras` cleared
+the flag on the trial rows that had it. `periodKind` (beside `trialState`) answers `none`, `trial` or `paid`
+from the row, and every decision reads it: checkout, `activate`, extra devices,
+`recurring-charge` and `period-reminder`. The status contract carries it as
+`period`, so the account page and the bot branch on the same word instead of
+re-deriving "active and not a trial" each in their own way.
+A purchase during the trial takes the chosen plan and starts when the trial
+ends (`nextPeriodEnd` builds on the active end), so the hours left are not
+lost. There is no "cancel the trial" action: it costs nothing and charges
+nothing, so cancelling would only take hours away.
+
+**The page polls fast only while a payment is on its way.** An active account
+polls once a minute. A trial also shows the plan picker, so someone back from
+YooKassa could stare at it for up to a minute after paying — long enough to pay
+twice. Polling every trial every three seconds for its whole day would cost a
+thousand requests an hour per open tab, so instead `useSettlePayment` stamps
+`checkoutStartedAt` in session storage before it redirects, and
+`useSubscriptionStatus` polls at the fast interval for `PENDING_CHECKOUT.windowMs`
+after that stamp. The same covers extra devices bought on a paid period.
+
+**A period takes the plan that was paid for.** `activate` writes the payment's
+plan every time. Inside a paid period a different plan cannot be bought
+(`PLAN_CHANGE_LOCKED`), so this only matters when two checkouts were opened
+before either settled — say monthly and yearly during a trial — where the row
+used to keep the first plan while the second one's months were added, and the
+next automatic charge billed the wrong price.
+
+**Auto-renewal on a fresh period follows the card the payment saved.** Outside
+a running paid period, a payment that saved a card turns renewal on — ticking
+"remember card" at checkout is the consent. Without a new card the stored
+preference stands, so a reader who turned renewal off and later pays by SBP
+stays off. Inside a paid period the stored preference always stands.
+
+**Extra devices need a paid period, and last as long as it does.** A trial day
+is a taster; extras bought on it would be paid for a few hours, so checkout
+refuses them and neither the account page nor the bot offers them. Once bought,
+they work "while the subscription is active", as the account page promises: a
+renewal — automatic or by hand, before the end — keeps them, and a lapse ends
+them. `activate` resets `extraDevices` when the period had already lapsed at the
+moment the payment was created (`orderedAt`, the payment row's `createdAt`), not
+at the moment it settled: a renewal paid just before the end whose webhook
+arrives just after it keeps the extras. Before this, a reader who let the subscription run out and came back months
+later got last year's extras back for free. The same migration zeroed the
+extras on rows that had already lapsed.
+
+The migration deliberately does not switch renewal back on for readers who
+bought during a trial under the old code and ended up with
+`cancelAtPeriodEnd: true` beside a saved card: the column cannot tell them from
+a reader who turned renewal off by hand, and charging someone who said no is
+worse than asking someone to press "Turn auto-renewal on".
+
+**Auto-renewal is not offered on a trial.** The bot answers the auto-renew
+button with `autoRenewTrial`, because `recurring-charge` never charges a trial
+and "renewal on" would be a promise nothing keeps.
+
 **The trial is a day, not an hour or a week.** A day is long enough to install
 the app, connect and judge the speed on the reader's own network, which is the
 only way a VPN can be judged at all.

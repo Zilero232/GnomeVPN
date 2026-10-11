@@ -1,1 +1,1 @@
-export { deviceLabel, deviceName, devicesText } from './device-text';
+export { deviceName, devicesText } from './device-text';

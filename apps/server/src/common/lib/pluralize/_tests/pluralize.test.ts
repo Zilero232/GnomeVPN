@@ -50,3 +50,12 @@ describe('pluralize', () => {
     expect(pluralize({ count: 8, forms: devices })).toBe('устройств');
   });
 });
+
+describe('pluralize in another locale', () => {
+  it('follows the rules of the locale it is given, so English has no few form', () => {
+    const days: PluralForms = { one: 'day', many: 'days' };
+
+    expect(pluralize({ count: 1, forms: days, locale: 'en' })).toBe('day');
+    expect(pluralize({ count: 3, forms: days, locale: 'en' })).toBe('days');
+  });
+});

@@ -135,12 +135,29 @@ expires.
 **Every outbound call retries a network failure.** IPv6 egress to
 `api.telegram.org` holds, but not every time: a renewal's "renewed" message was
 lost to a single `Network request for 'sendMessage' failed!`, logged and gone.
-`retryNetworkErrors` is a grammY API transformer installed on the bot itself,
-so a reply to a button, a notification and the boot announcement all retry an
-`HttpError` (the call never got an answer) `BOT_API.callRetries` times. A
-`GrammyError` is an answer — a blocked bot, a bad chat id — and is never
-retried. A retried `sendMessage` whose first attempt did arrive shows twice;
-that is the price of not losing one.
+Two API transformers on the bot itself split the work, so a reply to a button,
+a notification and the boot announcement all get both. `retryNetworkErrors`
+retries an `HttpError` (the call never got an answer) `BOT_API.callRetries`
+times. `@grammyjs/auto-retry` retries a `429` flood wait no longer than
+`BOT_API.maxDelaySeconds` and a Telegram 5xx `BOT_API.callRetries` times, and is
+told to rethrow an `HttpError` (`rethrowHttpErrors: true`): left to itself it
+retries network failures forever, ignoring `maxRetryAttempts`, and a Telegram
+that is down would then hang the YooKassa webhook and every scheduler job that
+announces something. Any other `GrammyError` is an answer — a blocked bot, a bad
+chat id — and is never retried. A retried `sendMessage` whose first attempt did
+arrive shows twice; that is the price of not losing one.
+
+**Every message is HTML, and a message Telegram cannot parse still arrives.**
+`sendDefaults`, the second API transformer, gives `sendMessage` and
+`editMessageText` `parse_mode: 'HTML'` and no link preview unless the caller
+says otherwise. If Telegram answers `can't parse entities` — or
+`EFFECT_ID_INVALID` for a message effect it no longer knows — it sends the same
+message once more with only the field that failed removed: broken markup goes
+out as plain text (tags stripped, entities unescaped), an unknown effect is
+dropped and the formatting kept. A broken tag costs the formatting, never the
+message. HTML rather than
+MarkdownV2 because only `&`, `<`, `>` need escaping, where MarkdownV2 would make
+every full stop and bracket in the copy a hazard.
 
 The fallback, if IPv6 egress goes too, is long polling, which needs no inbound
 path at all.
@@ -177,14 +194,49 @@ out of the app exception's body, which is where the app exceptions carry it.
 the first message and stores what `/language` chose, which then wins — someone
 who set it did so because the client was reporting the wrong thing.
 
-**The keyboard is the interface; the commands are the fallback.** A reply
-keyboard collapses into an icon beside the message box rather than holding the
-screen open — it is not `persistent()`, because a dozen buttons standing over
-the chat cost more than one tap costs. It changes with the chat: the link and the
-status only appear once there is a subscription to use, and the trial only while
-it can still be taken. `KEYBOARD_ROWS` is the whole layout — a button names the
-state it belongs to and a row that empties out is dropped rather than shipped
-blank. Adding a button is a row entry plus a label in both locale files.
+**The keyboard is the interface; the commands are the fallback.** The reply
+keyboard holds only what is pressed every week — connect, apps, subscription,
+renew, devices — and one "⚙️ More" that opens the rest (auto-charge, a new link,
+the website, help, language, unlink, delete) as an inline menu. With six
+buttons it can afford to be `persistent()`; the old layout of fourteen could
+not. It changes with the chat: the link and the status only appear once there
+is a subscription to use, and the trial only while it can still be taken.
+`KEYBOARD_ROWS` and `MORE_ROWS` are the whole layout — a button names the state
+it belongs to, and a row that empties out is dropped rather than shipped blank.
+A button's colour belongs to the button, not to the message it sits under, so
+`BUTTON_STYLE` holds it once per key (`success` for paying, `primary` for
+connecting, `danger` for deleting) and every keyboard reads it; Telegram added
+colours in Bot API 9.4 and older clients ignore them. Which actions to offer
+under a status or a refusal is `offerKeys(period)`, one rule for every place
+that asks.
+
+An inline button that stands for an action carries `menu:<button key>`, and
+`openMenu` runs the same handler the reply-keyboard press would. That is how the
+More menu, the buttons under `/status` and the buttons on a notice all reach
+existing handlers without a second routing table; a test asserts every key they
+can carry is handled.
+
+**Menus edit their message; answers that change the chat send a new one.**
+Picking an app, going back to the list, choosing a plan, flipping
+auto-renewal, asking to remove a device and answering that question all edit
+the message the button sat on (`TelegramSharedService.edit`), so stale buttons
+never pile up and a second press of an old one finds nothing to repeat. A yes/no
+confirmation clears its buttons (`settle`) the moment it is answered, for the
+same reason. An edit falls back to a new message only when Telegram says the
+message cannot be edited (`EDIT.uneditable`); any other failure is a real
+error and reaches the handler's error path, so a flaky network never produces
+the same screen twice. What changes the reply keyboard — linking, a new language, unlink,
+delete, the trial starting — still sends a new message, because only a new
+message can carry a reply keyboard.
+
+**Links are buttons where Telegram allows it.** A payment, the one-time website
+sign-in and an app's download page go behind an URL button rather than a bare
+link, but only when `isButtonUrl` says Telegram will take it: `https` and not a
+local host. `urlMessage` is the one place that decides, so every link falls
+back the same way. A dev setup on `http://localhost` gets the link as text instead of a
+`BUTTON_URL_INVALID`. The subscription link itself gets a `copy_text` button,
+which puts it on the clipboard in one tap, beside the `<code>` that copies on
+tap as well.
 
 A press arrives as a plain text message, so `buttonFor` maps a label back to its
 key across both languages before the text is read as a link code. The labels
@@ -197,6 +249,15 @@ hold every string the bot sends, mirroring the client's per-namespace files, and
 and missing from the other fails to typecheck rather than reaching a reader. The
 command menu is built from the `commands` block rather than listed a second time
 beside it.
+
+The `text` block is Telegram HTML — `<b>`, `<i>`, `<code>`, `<blockquote>`, and
+`<blockquote expandable>` for the long half of `/help`. A test runs every string
+in both languages through `isTelegramHtml` (known tags, balanced, no bare angle
+bracket) and fails the build on one Telegram would refuse. `fillText` escapes
+every value it substitutes, because a device names itself and a name like
+`<TV>` would otherwise close a tag nobody opened; `fillLabel` fills button
+labels verbatim, because a button shows text, not markup. The `buttons`,
+`profile` and `commands` blocks stay plain text.
 
 **Announcing the bot never blocks the boot.** Nest does not finish starting
 until `onModuleInit` returns, and `api.telegram.org` is unreachable from some
@@ -215,12 +276,20 @@ restart.
 settles in a webhook and a renewal in a cron, so without this nobody learns
 anything until they open the chat and press something — and the keyboard they
 are looking at still offers "Subscribe" on a subscription that is already paid.
-`TelegramNotifyService.tell` sends the message and the keyboard rebuilt from the
-current state, for a payment, extra devices bought, an automatic renewal, a card
-that was declined, a period about to end (`period-reminder`), a period that
-ran out, and every change to the device registry — a device added, a device
-refused at the limit, devices cut by a smaller limit, the shared keys retired
-([devices.md](devices.md)).
+`TelegramNotifyService.tell` sends one of the notices in `NOTICES` — a payment,
+extra devices bought, an automatic renewal, a card that was declined, a period
+about to end (`period-reminder`), a period that ran out, and every change to the
+device registry: a device added, a device refused at the limit, devices cut by
+a smaller limit, the shared keys retired ([devices.md](devices.md)).
+
+A caller names the notice (`notice: 'paid'`), not the string, and `NOTICES`
+says what each one carries. The two that change which buttons apply — `paid`
+and `expired` — carry the reply keyboard rebuilt from the current state; every
+other notice carries the one button that answers it (renew on a declined card
+or an ending period, devices on a registry change, auto-charge on a renewal).
+A message holds one markup or the other, never both. `paid` and `renewed` also
+carry a message effect, and so do the trial starting and a chat getting linked;
+an effect Telegram no longer knows falls back like broken markup does.
 
 It lives in `TelegramNotifyModule`, which imports only `SubscriptionModule` —
 `BillingModule` and the scheduler import that rather than the whole
@@ -241,7 +310,11 @@ raised: an unreachable Telegram must not fail a settled payment.
 **`/devices` is the bot's copy of the device page.** It lists what
 `DevicesService.list` holds — numbered, with the system, the app, when it was
 last seen and a mark on any device past the limit — and puts one "Remove"
-button per device above the existing `+1/+2/+3` purchase. An empty list says
+button per device above the `+1/+2/+3` purchase, each priced. The purchase row
+shows only on a paid period (the server refuses extras on a trial), and at the
+cap it becomes a disabled button saying so rather than three that would fail.
+Removing edits the list in place: the question replaces it, and the answer
+brings the list back with a line on top saying what happened. An empty list says
 when a device appears (the app's first subscription refresh), because that is
 the question someone asking with nothing listed has. This is also where the
 over-limit announcement in the feed sends people.

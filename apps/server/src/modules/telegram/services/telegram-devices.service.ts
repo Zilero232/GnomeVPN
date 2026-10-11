@@ -1,16 +1,26 @@
-import { DEFAULT_DEVICE_LIMIT, EXTRA_DEVICE_PRICE_RUB, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
+import { extraDevicesPriceRub, MAX_EXTRA_DEVICES } from '@gnomevpn/schemas';
 import { Injectable, Logger } from '@nestjs/common';
-import { InlineKeyboard } from 'grammy';
 import { isNullish } from 'remeda';
 
-import type { BotContext, ExtraTextInput, RemovalInput } from '../telegram.types';
+import type { BotContext, BotMessage, DevicesViewInput, RemovalInput } from '../telegram.types';
 
 import { describeError, errorCodeOf } from '../../../common/lib';
 import { CheckoutService } from '../../billing';
 import { DevicesService } from '../../devices';
 import { SubscriptionService } from '../../subscription';
-import { BOT_TEXT, CALLBACK_PREFIX, DEVICE_CHOICES, NEW_LINE } from '../config';
-import { confirmKeyboard, countFrom, deviceAnswer, deviceLabel, deviceName, devicesText, fillText, parseDeviceId, removeDeviceCopy } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX } from '../config';
+import {
+  confirmKeyboard,
+  countFrom,
+  deviceAnswer,
+  deviceName,
+  devicesView,
+  fillLabel,
+  fillText,
+  parseDeviceId,
+  removeDeviceCopy,
+  urlMessage
+} from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -27,28 +37,7 @@ export class TelegramDevicesService {
   async list(ctx: BotContext): Promise<void> {
     await this.shared.withUser({
       ctx,
-      act: async (chat) => {
-        const [list, status] = await Promise.all([this.devices.list(chat.userId), this.subscription.getStatus(chat.userId)]);
-        const text = BOT_TEXT[chat.locale];
-        const isAtMax = status.limits.deviceLimit - DEFAULT_DEVICE_LIMIT >= MAX_EXTRA_DEVICES;
-        const keyboard = new InlineKeyboard();
-
-        for (const [index, device] of list.devices.entries()) {
-          const name = deviceLabel({ device, index, locale: chat.locale });
-
-          keyboard.text(fillText({ text: text.deviceRemoveButton, fill: { name } }), `${CALLBACK_PREFIX.forgetDevice}${device.id}`).row();
-        }
-
-        if (!isAtMax) {
-          for (const quantity of DEVICE_CHOICES) {
-            keyboard.text(`+${quantity}`, `${CALLBACK_PREFIX.devices}${quantity}`);
-          }
-        }
-
-        const body = devicesText({ list, locale: chat.locale });
-
-        return ctx.reply([body, '', this.extraText({ copy: text, isAtMax })].join(NEW_LINE), { reply_markup: keyboard });
-      }
+      act: async (chat) => this.shared.reply({ ctx, chat, ...(await this.view({ chat })) })
     });
   }
 
@@ -63,17 +52,16 @@ export class TelegramDevicesService {
           return;
         }
 
-        const text = BOT_TEXT[chat.locale];
-        const { devices } = await this.devices.list(chat.userId);
-        const device = devices.find((candidate) => candidate.id === deviceId);
+        const list = await this.devices.list(chat.userId);
+        const device = list.devices.find((candidate) => candidate.id === deviceId);
 
         if (isNullish(device)) {
-          return this.shared.reply({ ctx, chat, text: text.deviceGone });
+          return this.shared.edit({ ctx, ...(await this.view({ chat, list, notice: BOT_TEXT[chat.locale].deviceGone })) });
         }
 
-        const copy = removeDeviceCopy({ copy: text, name: deviceName({ device, locale: chat.locale }) });
+        const copy = removeDeviceCopy({ copy: BOT_TEXT[chat.locale], name: deviceName({ device, locale: chat.locale }) });
 
-        return ctx.reply(copy.ask, { reply_markup: confirmKeyboard({ copy, prefix: CALLBACK_PREFIX.removeDevice, subject: deviceId }) });
+        return this.shared.edit({ ctx, text: copy.ask, markup: confirmKeyboard({ copy, prefix: CALLBACK_PREFIX.removeDevice, subject: deviceId }) });
       }
     });
   }
@@ -90,14 +78,9 @@ export class TelegramDevicesService {
         }
 
         const text = BOT_TEXT[chat.locale];
+        const notice = answer.isConfirmed ? await this.removal({ userId: chat.userId, deviceId: answer.deviceId, copy: text }) : text.deviceKept;
 
-        if (!answer.isConfirmed) {
-          return this.shared.reply({ ctx, chat, text: text.deviceKept });
-        }
-
-        const outcome = await this.removal({ userId: chat.userId, deviceId: answer.deviceId, copy: text });
-
-        return this.shared.reply({ ctx, chat, text: outcome });
+        return this.shared.edit({ ctx, ...(await this.view({ chat, notice })) });
       }
     });
   }
@@ -114,27 +97,32 @@ export class TelegramDevicesService {
           return;
         }
 
+        this.shared.typing(ctx);
+
         try {
           const { confirmationUrl } = await this.checkout.buyExtraDevices({ userId: chat.userId, quantity });
+          const amount = String(extraDevicesPriceRub(quantity));
+          const intro = fillText({ text: text.devicesIntro, fill: { count: String(quantity), amount } });
+          const label = fillLabel({ text: text.checkoutButton, fill: { amount } });
 
-          await ctx.reply([text.devicesIntro, '', confirmationUrl].join(NEW_LINE));
+          return this.shared.reply({ ctx, chat, ...urlMessage({ intro, url: confirmationUrl, label, style: 'success' }) });
         } catch (error) {
+          if (errorCodeOf(error) === 'EXTRA_DEVICES_LIMIT') {
+            return this.shared.reply({ ctx, chat, text: text.devicesFull });
+          }
+
           this.logger.warn(`telegram extra devices failed: ${describeError(error)}`);
 
-          await this.shared.reply({ ctx, chat, text: text.failed });
+          return this.shared.reply({ ctx, chat, text: text.failed });
         }
       }
     });
   }
 
-  private extraText({ copy, isAtMax }: ExtraTextInput): string {
-    if (isAtMax) {
-      return copy.devicesMax;
-    }
+  private async view({ chat, list, notice }: DevicesViewInput): Promise<BotMessage> {
+    const [devices, status] = await Promise.all([list ?? this.devices.list(chat.userId), this.subscription.getStatus(chat.userId)]);
 
-    const price = fillText({ text: copy.devicesExtra, fill: { price: String(EXTRA_DEVICE_PRICE_RUB) } });
-
-    return [price, copy.devicesChoose].join(NEW_LINE);
+    return devicesView({ list: devices, status, locale: chat.locale, notice });
   }
 
   private async removal({ userId, deviceId, copy }: RemovalInput): Promise<string> {

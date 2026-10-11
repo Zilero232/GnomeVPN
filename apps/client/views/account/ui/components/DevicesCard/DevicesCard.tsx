@@ -1,16 +1,19 @@
 'use client';
 
+import { useSubscriptionStatus } from '@/entities/billing/subscription';
 import { DevicesPanel } from '@/features/account/manage-devices';
 import { ExtraDevicesControl } from '@/features/billing/checkout';
 
-import type { DevicesCardProps } from './DevicesCard.types';
-
 import s from './DevicesCard.module.scss';
 
-export const DevicesCard = ({ limits }: DevicesCardProps) => (
-  <div className={s.root}>
-    <DevicesPanel />
+export const DevicesCard = () => {
+  const { subscription, limits } = useSubscriptionStatus();
 
-    <ExtraDevicesControl limits={limits} />
-  </div>
-);
+  return (
+    <div className={s.root}>
+      <DevicesPanel />
+
+      {subscription?.period === 'paid' && <ExtraDevicesControl limits={limits} />}
+    </div>
+  );
+};

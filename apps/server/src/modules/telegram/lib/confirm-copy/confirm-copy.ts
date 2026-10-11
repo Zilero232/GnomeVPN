@@ -22,4 +22,5 @@ export const removeDeviceCopy = ({ copy, name }: RemoveDeviceCopyInput): Confirm
 export const confirmKeyboard = ({ copy, prefix, subject }: ConfirmKeyboardInput): InlineKeyboard =>
   new InlineKeyboard()
     .text(copy.yes, answerData({ prefix, answer: CONFIRMED, subject }))
+    .danger()
     .text(copy.no, answerData({ prefix, answer: DECLINED, subject }));

@@ -18,7 +18,7 @@ export class FeedNoticeService {
   async deviceAdded({ userId, identity, deviceCount, deviceLimit }: DeviceAddedInput): Promise<void> {
     await this.notify.tell({
       userId,
-      pick: (copy) => copy.deviceAdded,
+      notice: 'deviceAdded',
       fill: { name: deviceTitle(identity), count: String(deviceCount), limit: String(deviceLimit) }
     });
   }
@@ -44,7 +44,7 @@ export class FeedNoticeService {
 
     await this.notify.tell({
       userId,
-      pick: (copy) => copy.deviceBlocked,
+      notice: 'deviceBlocked',
       fill: { name: deviceTitle(identity), limit: String(deviceLimit) }
     });
   }

@@ -5,6 +5,7 @@ import type { DeviceLineInput, DeviceNameInput, DevicesTextInput } from './devic
 import { BOT_TEXT, NEW_LINE } from '../../config';
 import { fillText } from '../fill-text';
 import { formatDate } from '../format-date';
+import { html } from '../html';
 import { present } from './device-text.helpers';
 
 export const deviceName = ({ device, locale }: DeviceNameInput): string =>
@@ -17,11 +18,11 @@ export const deviceLine = ({ device, index, locale }: DeviceLineInput): string =
   const name = deviceName({ device, locale });
   const system = present([device.platform, device.osVersion]).join(' ');
   const details = present([system, device.app === name ? null : device.app]).join(', ');
-  const title = present([deviceLabel({ device, index, locale }), details]).join(' — ');
-  const mark = device.isOverLimit ? ` ${text.deviceOverLimit}` : '';
+  const title = present([html.bold(deviceLabel({ device, index, locale })), html.escape(details)]).join(' — ');
+  const mark = device.isOverLimit ? `${NEW_LINE}${text.deviceOverLimit}` : '';
   const lastSeen = fillText({ text: text.deviceLastSeen, fill: { date: formatDate({ iso: device.lastSeenAt, locale }) } });
 
-  return [`${title}${mark}`, lastSeen].join(NEW_LINE);
+  return [`${title}${mark}`, html.italic(lastSeen)].join(NEW_LINE);
 };
 
 export const devicesText = ({ list, locale }: DevicesTextInput): string => {

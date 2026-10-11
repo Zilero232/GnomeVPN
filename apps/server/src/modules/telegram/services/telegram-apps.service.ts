@@ -1,17 +1,25 @@
-import type { Stringable } from '@grammyjs/parse-mode';
-
-import { CLIENT_IDS } from '@gnomevpn/schemas';
-import { FormattedString } from '@grammyjs/parse-mode';
 import { Injectable } from '@nestjs/common';
 import { InlineKeyboard } from 'grammy';
-import { isNonNullish, isNullish } from 'remeda';
+import { isNullish } from 'remeda';
 
 import type { BotContext, ShowClientInput } from '../telegram.types';
 
 import { SubscriptionService } from '../../subscription';
 import { SubscriptionLinkService } from '../../subscription-link';
-import { BOT_TEXT, CALLBACK_PREFIX, NEW_LINE } from '../config';
-import { clientName, fillText, parseClientId, platformNames } from '../lib';
+import { BOT_TEXT, CALLBACK_PREFIX, CLIENT_LIST, NEW_LINE } from '../config';
+import {
+  appsKeyboard,
+  clientLabel,
+  clientName,
+  fillLabel,
+  fillText,
+  html,
+  isButtonUrl,
+  menuButtons,
+  offerKeys,
+  parseClientId,
+  platformNames
+} from '../lib';
 import { TelegramSharedService } from './telegram-shared.service';
 
 @Injectable()
@@ -27,18 +35,13 @@ export class TelegramAppsService {
       ctx,
       act: async (chat) => {
         const text = BOT_TEXT[chat.locale];
+        const status = await this.subscription.getStatus(chat.userId);
 
-        if (!(await this.subscription.hasActiveAccess(chat.userId))) {
-          return this.shared.reply({ ctx, chat, text: text.noSubscription });
+        if (status.period === 'none') {
+          return this.shared.reply({ ctx, chat, text: text.noSubscription, markup: menuButtons({ locale: chat.locale, keys: offerKeys(status) }) });
         }
 
-        const keyboard = new InlineKeyboard();
-
-        for (const id of CLIENT_IDS) {
-          keyboard.text(clientName({ id, locale: chat.locale }), `${CALLBACK_PREFIX.client}${id}`).row();
-        }
-
-        return ctx.reply(text.appsIntro, { reply_markup: keyboard });
+        return this.shared.reply({ ctx, chat, text: text.appsIntro, markup: appsKeyboard(chat.locale) });
       }
     });
   }
@@ -48,6 +51,10 @@ export class TelegramAppsService {
       ctx,
       prefix: CALLBACK_PREFIX.client,
       act: async ({ chat, value }) => {
+        if (value === CLIENT_LIST) {
+          return this.shared.edit({ ctx, text: BOT_TEXT[chat.locale].appsIntro, markup: appsKeyboard(chat.locale) });
+        }
+
         const id = parseClientId(value);
 
         if (isNullish(id)) {
@@ -69,23 +76,28 @@ export class TelegramAppsService {
     }
 
     const platforms = platformNames({ platforms: client.platforms, locale: chat.locale });
-    const lines: Stringable[] = [
-      clientName({ id, locale: chat.locale }),
-      '',
-      fillText({ text: text.appsPlatforms, fill: { platforms } }),
-      '',
-      `${text.appsDownload}: ${client.downloadUrl}`,
-      ''
-    ];
+    const heading = [html.bold(clientName({ id, locale: chat.locale })), fillText({ text: text.appsPlatforms, fill: { platforms } })].join(NEW_LINE);
+    const lines = [heading];
+    const markup = new InlineKeyboard();
 
-    if (isNonNullish(client.importUrl)) {
-      lines.push(text.appsImport, FormattedString.code(client.importUrl));
+    if (isButtonUrl(client.downloadUrl)) {
+      markup.url(fillLabel({ text: text.appsDownload, fill: { name: clientLabel(id) } }), client.downloadUrl).row();
     } else {
-      lines.push(text.appsManual, '', FormattedString.code(url));
+      lines.push(html.escape(client.downloadUrl));
     }
 
-    const message = FormattedString.join(lines, NEW_LINE);
+    if (isButtonUrl(client.importUrl)) {
+      lines.push(text.appsImport);
+      markup.url(text.appsImportButton, client.importUrl).success().row();
+    } else if (client.importUrl) {
+      lines.push(text.appsImport, html.code(client.importUrl));
+    } else {
+      lines.push(text.appsManual);
+      markup.copyText(text.appsCopyLink, url).success().row();
+    }
 
-    await ctx.reply(message.text, { entities: message.entities, link_preview_options: { is_disabled: true } });
+    markup.text(text.appsBack, `${CALLBACK_PREFIX.client}${CLIENT_LIST}`);
+
+    await this.shared.edit({ ctx, text: html.paragraphs(lines), markup });
   }
 }

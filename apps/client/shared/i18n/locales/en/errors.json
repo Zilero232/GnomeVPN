@@ -15,7 +15,7 @@
   "NODE_UNAVAILABLE": "The node is not responding — try another country.",
   "DEVICE_LIMIT_REACHED": "All device slots are in use — remove a device in your account first.",
   "DEVICE_NOT_FOUND": "Device not found — it may already have been removed.",
-  "SUBSCRIPTION_REQUIRED": "Extra devices need an active subscription.",
+  "SUBSCRIPTION_REQUIRED": "Extra devices can only be added to a paid subscription, not to the trial day.",
   "EXTRA_DEVICES_LIMIT": "You already have the maximum number of devices.",
   "TRIAL_ALREADY_USED": "The trial has already been used",
   "TRIAL_EMAIL_UNVERIFIED": "Confirm your email address first",

@@ -80,6 +80,7 @@ export class TelegramBotService implements OnModuleInit {
       { command: 'trial', button: 'trial', run: (ctx) => this.subscription.claimTrialDay(ctx) },
       { command: 'apps', button: 'apps', run: (ctx) => this.apps.list(ctx) },
       { command: 'devices', button: 'devices', run: (ctx) => this.devices.list(ctx) },
+      { button: 'more', run: (ctx) => this.account.more(ctx) },
       { command: 'rotate', button: 'rotate', run: (ctx) => this.billing.askRotate(ctx) },
       { button: 'autoRenew', run: (ctx) => this.billing.autoRenew(ctx) },
       { command: 'website', button: 'website', run: (ctx) => this.account.openWebsite(ctx) },
@@ -92,6 +93,7 @@ export class TelegramBotService implements OnModuleInit {
 
   private get callbacks(): BotCallback[] {
     return [
+      { prefix: CALLBACK_PREFIX.menu, run: (ctx) => this.openMenu(ctx) },
       { prefix: CALLBACK_PREFIX.plan, run: (ctx) => this.subscription.startCheckout(ctx) },
       { prefix: CALLBACK_PREFIX.locale, run: (ctx) => this.account.changeLocale(ctx) },
       { prefix: CALLBACK_PREFIX.client, run: (ctx) => this.apps.show(ctx) },
@@ -127,15 +129,28 @@ export class TelegramBotService implements OnModuleInit {
     return looksLikeLinkCode(code) ? this.account.consume({ ctx, text: code }) : this.account.welcome(ctx);
   }
 
+  private async openMenu(ctx: BotContext): Promise<void> {
+    const pressed = this.actionFor(ctx.callbackQuery?.data?.slice(CALLBACK_PREFIX.menu.length));
+
+    await ctx.answerCallbackQuery();
+
+    if (isNonNullish(pressed)) {
+      await pressed.run(ctx);
+    }
+  }
+
   private read(ctx: BotContext): Promise<void> {
     const text = ctx.message?.text ?? '';
-    const button = buttonFor(text);
-    const pressed = this.actions.find((action) => action.button === button);
+    const pressed = this.actionFor(buttonFor(text));
 
     if (isNonNullish(pressed)) {
       return pressed.run(ctx);
     }
 
     return looksLikeLinkCode(text) ? this.account.consume({ ctx, text }) : this.account.help(ctx);
+  }
+
+  private actionFor(button: string | null | undefined): BotAction | undefined {
+    return this.actions.find((action) => action.button === button);
   }
 }

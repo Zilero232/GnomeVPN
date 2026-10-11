@@ -65,8 +65,8 @@ export type { ApiError, ApiErrorCode } from './errors';
 export { PLATFORM_IDS, PLATFORMS, platformSchema } from './platforms';
 export type { Platform, PlatformId } from './platforms';
 
-export { subscriptionStatusSchema } from './subscription';
-export type { SubscriptionStatus } from './subscription';
+export { periodKindSchema, subscriptionStatusSchema } from './subscription';
+export type { PeriodKind, SubscriptionStatus } from './subscription';
 
 export { subscriptionLinkSchema } from './subscription-link';
 export type { SubscriptionLink } from './subscription-link';

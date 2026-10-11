@@ -1,17 +1,18 @@
 import { PLANS } from '@gnomevpn/schemas';
+import { millisecondsInDay } from 'date-fns/constants';
 import { describe, expect, it } from 'vitest';
 
 import type { StatusTextInput } from '../status-text.types';
 
-import { BOT_TEXT } from '../../../config';
-import { statusText } from '../status-text';
+import { BOT_LOCALES, BOT_TEXT } from '../../../config';
+import { isTelegramHtml } from '../../html';
+import { daysLeft, statusText } from '../status-text';
 
 const active: StatusTextInput = {
   locale: 'ru',
-  status: 'active',
+  period: 'paid',
   plan: 'monthly',
   currentPeriodEnd: '2026-12-31T00:00:00.000Z',
-  isTrial: false,
   cancelAtPeriodEnd: false,
   hasPaymentMethod: true,
   isRecurringAvailable: true,
@@ -47,7 +48,7 @@ describe('statusText', () => {
   });
 
   it('falls back to the inactive copy for an expired subscription rather than rendering a stale date', () => {
-    expect(statusText({ ...active, status: 'expired' })).toBe(BOT_TEXT.ru.inactive);
+    expect(statusText({ ...active, period: 'none' })).toBe(BOT_TEXT.ru.inactive);
   });
 
   it('treats a missing period as no access rather than formatting an invalid date', () => {
@@ -63,14 +64,14 @@ describe('statusText', () => {
   });
 
   it('calls a trial a trial rather than the plan the row happens to carry', () => {
-    const trial = statusText({ ...active, isTrial: true });
+    const trial = statusText({ ...active, period: 'trial' });
 
     expect(trial).toContain(BOT_TEXT.ru.trialPeriod);
     expect(trial).not.toContain(BOT_TEXT.ru.monthShort);
   });
 
   it('tells a trial reader what happens next instead of talking about renewal', () => {
-    const trial = statusText({ ...active, isTrial: true });
+    const trial = statusText({ ...active, period: 'trial' });
 
     expect(trial).toContain(BOT_TEXT.ru.trialEnds);
     expect(trial).not.toContain(BOT_TEXT.ru.willRenew);
@@ -83,6 +84,37 @@ describe('statusText', () => {
 
       expect(rendered).toContain(String(plan.months));
       expect(rendered).not.toContain(plan.id);
+    }
+  });
+});
+
+describe('daysLeft', () => {
+  const now = new Date('2026-10-01T12:00:00.000Z');
+
+  it('rounds a part-day up, so a trial with hours left never reads as zero days', () => {
+    expect(daysLeft({ until: new Date('2026-10-01T15:00:00.000Z'), now, locale: 'en' })).toBe(`1 ${BOT_TEXT.en.dayOne}`);
+  });
+
+  it('says zero once the period is over rather than a negative count', () => {
+    expect(daysLeft({ until: new Date('2026-09-30T12:00:00.000Z'), now, locale: 'en' })).toBe(`0 ${BOT_TEXT.en.dayMany}`);
+  });
+
+  it('picks the Russian form the number takes', () => {
+    const inDays = (days: number) => daysLeft({ until: new Date(now.getTime() + days * millisecondsInDay), now, locale: 'ru' });
+
+    expect(inDays(1)).toBe(`1 ${BOT_TEXT.ru.dayOne}`);
+    expect(inDays(3)).toBe(`3 ${BOT_TEXT.ru.dayFew}`);
+    expect(inDays(5)).toBe(`5 ${BOT_TEXT.ru.dayMany}`);
+    expect(inDays(21)).toBe(`21 ${BOT_TEXT.ru.dayOne}`);
+  });
+});
+
+describe('statusText markup', () => {
+  it('is markup Telegram accepts, in every state and language', () => {
+    for (const locale of BOT_LOCALES) {
+      for (const overrides of [{}, { period: 'trial' as const }, { cancelAtPeriodEnd: true }, { period: 'none' as const }]) {
+        expect(isTelegramHtml(statusText({ ...active, ...overrides, locale }))).toBe(true);
+      }
     }
   });
 });

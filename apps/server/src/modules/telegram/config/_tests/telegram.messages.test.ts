@@ -1,8 +1,10 @@
-import { entries, values } from 'remeda';
+import { entries, keys, values } from 'remeda';
 import { describe, expect, it } from 'vitest';
 
 import type { BotLocale } from '../../telegram.types';
 
+import { html, isTelegramHtml } from '../../lib/html';
+import { NOTICES } from '../notice.config';
 import { BOT_BUTTONS, BOT_COMMANDS, BOT_LOCALES, BOT_PROFILE, BOT_TEXT, DEFAULT_BOT_LOCALE } from '../telegram.messages';
 import { COMMAND_MENTION } from './telegram.messages.constants';
 
@@ -38,9 +40,42 @@ describe('bot messages', () => {
 
   it('keeps the placeholders of the status lines in both languages', () => {
     for (const locale of BOT_LOCALES) {
-      expect(BOT_TEXT[locale].activeUntil).toContain('{date}');
-      expect(BOT_TEXT[locale].planLine).toContain('{plan}');
-      expect(BOT_TEXT[locale].devicesLine).toContain('{count}');
+      expect(BOT_TEXT[locale].statusUntil).toContain('{date}');
+      expect(BOT_TEXT[locale].statusLeft).toContain('{days}');
+      expect(BOT_TEXT[locale].statusPlan).toContain('{plan}');
+      expect(BOT_TEXT[locale].statusDevices).toContain('{count}');
+    }
+  });
+
+  it('has the same strings in every language, so no message falls back to a missing key', () => {
+    const [first, ...rest] = BOT_LOCALES.map((locale) => keys(BOT_TEXT[locale]).sort());
+
+    for (const each of rest) {
+      expect(each).toEqual(first);
+    }
+  });
+
+  it('writes every message in markup Telegram accepts, because one broken tag turns a reply into an error', () => {
+    for (const locale of BOT_LOCALES) {
+      for (const [key, value] of entries(BOT_TEXT[locale])) {
+        expect(isTelegramHtml(value), `${locale}.${key}`).toBe(true);
+      }
+    }
+  });
+
+  it('keeps markup out of button labels, which Telegram shows verbatim', () => {
+    for (const locale of BOT_LOCALES) {
+      for (const label of values(BOT_BUTTONS[locale])) {
+        expect(html.strip(label)).toBe(label);
+      }
+    }
+  });
+
+  it('has a string for every notice the bot can send', () => {
+    for (const locale of BOT_LOCALES) {
+      for (const notice of keys(NOTICES)) {
+        expect(BOT_TEXT[locale][notice], `${locale}.${notice}`).toBeTruthy();
+      }
     }
   });
 });

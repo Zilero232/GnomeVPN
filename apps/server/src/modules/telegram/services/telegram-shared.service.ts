@@ -1,10 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { GrammyError } from 'grammy';
 import { isNullish } from 'remeda';
 
-import type { AnsweredInput, AskInput, AttemptInput, BotContext, BotText, ConfirmedInput, ReplyInput, WithUserInput } from '../telegram.types';
+import type {
+  AnsweredInput,
+  AskInput,
+  AttemptInput,
+  BotContext,
+  BotText,
+  ConfirmedInput,
+  EditInput,
+  ReplyInput,
+  WithUserInput
+} from '../telegram.types';
 
 import { describeError } from '../../../common/lib';
-import { BOT_TEXT } from '../config';
+import { BOT_TEXT, EDIT } from '../config';
 import { confirmKeyboard, identityOf, isConfirmed, mainKeyboard, resolveLocale } from '../lib';
 import { TelegramLinkService } from './telegram-link.service';
 import { TelegramNotifyService } from './telegram-notify.service';
@@ -22,16 +33,48 @@ export class TelegramSharedService {
     return BOT_TEXT[resolveLocale(ctx.from?.language_code)];
   }
 
-  async reply({ ctx, text, chat }: ReplyInput): Promise<void> {
-    if (isNullish(chat)) {
-      await ctx.reply(text);
+  async reply({ ctx, chat, text, markup, effect }: ReplyInput): Promise<void> {
+    const keyboard = markup ?? (chat ? mainKeyboard({ locale: chat.locale, state: await this.notify.stateOf(chat.userId) }) : undefined);
+
+    await ctx.reply(text, { reply_markup: keyboard, message_effect_id: effect });
+  }
+
+  async edit({ ctx, text, markup }: EditInput): Promise<void> {
+    if (isNullish(ctx.callbackQuery?.message)) {
+      await ctx.reply(text, { reply_markup: markup });
 
       return;
     }
 
-    const state = await this.notify.stateOf(chat.userId);
+    try {
+      await ctx.editMessageText(text, { reply_markup: markup });
+    } catch (error) {
+      if (!(error instanceof GrammyError)) {
+        throw error;
+      }
 
-    await ctx.reply(text, { reply_markup: mainKeyboard({ locale: chat.locale, state }) });
+      if (EDIT.unchanged.test(error.description)) {
+        return;
+      }
+
+      if (!EDIT.uneditable.test(error.description)) {
+        throw error;
+      }
+
+      await ctx.reply(text, { reply_markup: markup });
+    }
+  }
+
+  async settle(ctx: BotContext): Promise<void> {
+    await ctx.editMessageReplyMarkup({ reply_markup: undefined }).catch((error: unknown) => {
+      this.logger.debug(`could not clear telegram buttons: ${describeError(error)}`);
+    });
+  }
+
+  typing(ctx: BotContext): void {
+    ctx.replyWithChatAction('typing').catch((error: unknown) => {
+      this.logger.debug(`could not show telegram typing: ${describeError(error)}`);
+    });
   }
 
   async answered({ ctx, prefix, act }: AnsweredInput): Promise<void> {
@@ -66,10 +109,10 @@ export class TelegramSharedService {
       prefix,
       act: async ({ chat, value }) => {
         if (!isConfirmed(value)) {
-          return this.reply({ ctx, chat, text: cancelled(BOT_TEXT[chat.locale]) });
+          return this.edit({ ctx, text: cancelled(BOT_TEXT[chat.locale]) });
         }
 
-        return act(chat);
+        return Promise.all([this.settle(ctx), act(chat)]);
       }
     });
   }

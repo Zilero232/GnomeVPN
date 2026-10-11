@@ -50,7 +50,7 @@ export class SubscriptionService {
         hasPaymentMethod: false,
         savedCardTitle: null,
         isRecurringAvailable,
-        isTrial: false,
+        period: 'none',
         isTrialAvailable: true,
         limits: resolveLimits(0)
       };

@@ -1,4 +1,4 @@
-import { useInvalidateSubscription } from '@/entities/billing/subscription';
+import { markCheckoutPending, useInvalidateSubscription } from '@/entities/billing/subscription';
 
 import type { SettlePaymentInput } from './use-settle-payment.types';
 
@@ -8,6 +8,8 @@ export const useSettlePayment = () => {
   const invalidateSubscription = useInvalidateSubscription();
 
   return async ({ confirmationUrl }: SettlePaymentInput): Promise<void> => {
+    markCheckoutPending();
+
     if (redirectToConfirmation(confirmationUrl)) {
       return;
     }

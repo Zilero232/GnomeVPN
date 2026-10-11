@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BOT_LOCALES, BOT_TEXT, NEW_LINE } from '../../../config';
 import { formatDate } from '../../format-date';
+import { html, isTelegramHtml } from '../../html';
 import { deviceLabel, deviceLine, deviceName, devicesText } from '../device-text';
 
 const device = (overrides: Partial<Device> = {}): Device => ({
@@ -69,7 +70,7 @@ describe('deviceLine', () => {
     const line = deviceLine({ device: device({ model: null, platform: null, osVersion: null, app: null }), index: 0, locale: 'en' });
     const [title] = line.split(NEW_LINE);
 
-    expect(title).toBe(`1. ${BOT_TEXT.en.deviceUnnamed}`);
+    expect(html.strip(title)).toBe(`1. ${BOT_TEXT.en.deviceUnnamed}`);
   });
 });
 
@@ -93,6 +94,17 @@ describe('devicesText', () => {
   it('explains how a device appears when there are none yet', () => {
     for (const locale of BOT_LOCALES) {
       expect(devicesText({ list: listOf([]), locale })).toContain(BOT_TEXT[locale].devicesEmpty);
+    }
+  });
+});
+
+describe('devicesText markup', () => {
+  it('escapes what a device reports about itself, so a hostile model name cannot break the message', () => {
+    for (const locale of BOT_LOCALES) {
+      const text = devicesText({ list: listOf([device({ model: '<b>Evil & Co', app: '</i>' })]), locale });
+
+      expect(isTelegramHtml(text)).toBe(true);
+      expect(html.strip(text)).toContain('<b>Evil & Co');
     }
   });
 });

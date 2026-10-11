@@ -17,7 +17,7 @@ import s from './AccountPage.module.scss';
 
 export const AccountPage = () => {
   const t = useTranslations('account');
-  const { subscription, isLoading, isError, refetch, hasAccess, limits } = useSubscriptionStatus();
+  const { subscription, isLoading, isError, refetch, hasAccess } = useSubscriptionStatus();
 
   const signOut = useSignOut();
 
@@ -42,7 +42,7 @@ export const AccountPage = () => {
             value: 'devices',
             label: t('tabs.devices'),
             icon: MonitorSmartphone,
-            render: () => <DevicesCard limits={limits} />
+            render: () => <DevicesCard />
           }
         ]
       : []),

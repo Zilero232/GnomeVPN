@@ -1,5 +1,7 @@
+import type { PeriodKind } from '@gnomevpn/schemas';
+
 export type TrialState = {
-  isTrial: boolean;
+  period: PeriodKind;
   isTrialAvailable: boolean;
 };
 
@@ -9,3 +11,8 @@ export type TrialRow = {
 };
 
 export type TrialEligibility = 'available' | 'emailUnverified' | 'used';
+
+export type TrialStanding = {
+  eligibility: TrialEligibility;
+  hasAccess: boolean;
+};

@@ -80,8 +80,8 @@ one without restarting the core (see [pitfalls.md](pitfalls.md)).
 ## Shrinking limits and the old shared keys
 
 **Over the limit.** `device-slots` runs every ten minutes. When the limit
-shrinks — paid extras end with the period — the devices past it lose their
-keys. They stay registered and come back on the next fetch once there is room
+shrinks — paid extras end when the subscription lapses, a renewal keeps them
+([billing.md](billing.md)) — the devices past it lose their keys. They stay registered and come back on the next fetch once there is room
 again.
 
 **The shared `incy` peers retire in the weekly garbage collection.** Before the
